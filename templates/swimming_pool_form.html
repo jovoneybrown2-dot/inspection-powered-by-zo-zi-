@@ -88,6 +88,16 @@
             outline: none;
             background: #fff;
         }
+        .date-input-field {
+            display: inline-block;
+            width: 120px;
+            padding: 4px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 12px;
+            background: #f9f9f9;
+            margin: 0 5px;
+        }
         .checkbox-group {
             display: flex;
             gap: 10px;
@@ -139,50 +149,16 @@
         #share-btn:hover { background: #138496; }
         #back-btn { background: #6c757d; }
         #back-btn:hover { background: #5a6268; }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            justify-content: center;
+        .na-checkbox {
+            display: inline-flex;
             align-items: center;
-            z-index: 1000;
+            gap: 5px;
+            margin-left: 10px;
+            font-size: 12px;
         }
-        .modal-content {
-            background: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            max-width: 400px;
-            width: 90%;
-        }
-        .success-circle {
-            width: 60px;
-            height: 60px;
-            background: #009b3a;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 10px;
-            color: #fff;
-            font-size: 30px;
-        }
-        .modal-content p {
-            font-size: 18px;
-            color: #333;
-            margin: 10px 0;
-        }
-        .modal-content .btn {
-            background: #009b3a;
-            color: #fff;
-        }
-        .modal-content .btn:hover {
-            background: #007b2f;
+        .na-checkbox input[type="checkbox"] {
+            width: 15px;
+            height: 15px;
         }
     </style>
 </head>
@@ -226,7 +202,7 @@
                 </tr>
                 <tr>
                     <td>C</td>
-                    <td>Date of last testing within required frequency</td>
+                    <td>Date of last testing <input type="text" class="date-input-field" name="last_testing_date" placeholder="DD/MM/YYYY"> within required frequency</td>
                     <td><div class="checkbox-group"><input type="radio" name="score_1C" value="2.5"> Yes <input type="radio" name="score_1C" value="0"> No</div></td>
                 </tr>
                 <tr class="critical">
@@ -234,7 +210,7 @@
                     <td>Acceptable monitoring procedures</td>
                     <td><div class="checkbox-group"><input type="radio" name="score_1D" value="5"> Yes <input type="radio" name="score_1D" value="0"> No</div></td>
                 </tr>
-                <tr class="critical">
+                <tr>
                     <td>E</td>
                     <td>Daily log books and records up-to-date</td>
                     <td><div class="checkbox-group"><input type="radio" name="score_1E" value="5"> Yes <input type="radio" name="score_1E" value="0"> No</div></td>
@@ -270,7 +246,7 @@
                 </tr>
                 <tr class="critical">
                     <td>C</td>
-                    <td>All surfaces of the deck and pool free from obstruction</td>
+                    <td>All surfaces of the deck and pool free from obstruction that can cause accident/injury</td>
                     <td><div class="checkbox-group"><input type="radio" name="score_2C" value="5"> Yes <input type="radio" name="score_2C" value="0"> No</div></td>
                 </tr>
                 <tr>
@@ -290,7 +266,7 @@
                 </tr>
                 <tr class="critical">
                     <td>G</td>
-                    <td>At least two suction orifices equipped with anti-entrapment devices</td>
+                    <td>At least two suction orifices equipped with anti-vortex plates</td>
                     <td><div class="checkbox-group"><input type="radio" name="score_2G" value="5"> Yes <input type="radio" name="score_2G" value="0"> No</div></td>
                 </tr>
                 <tr>
@@ -319,18 +295,13 @@
                 </tr>
                 <tr class="critical">
                     <td>B</td>
-                    <td>Chlorine residual > 0.5 mg/l</td>
+                    <td>Chlorine residual > 0.5 mg/l- Level</td>
                     <td><div class="checkbox-group"><input type="radio" name="score_3B" value="5"> Yes <input type="radio" name="score_3B" value="0"> No</div></td>
                 </tr>
                 <tr class="critical">
                     <td>C</td>
                     <td>pH value within range of 7.5 and 7.8</td>
                     <td><div class="checkbox-group"><input type="radio" name="score_3C" value="5"> Yes <input type="radio" name="score_3C" value="0"> No</div></td>
-                </tr>
-                <tr>
-                    <td>D</td>
-                    <td>Well supplied and equipped</td>
-                    <td><div class="checkbox-group"><input type="radio" name="score_3D" value="2.5"> Yes <input type="radio" name="score_3D" value="0"> No</div></td>
                 </tr>
             </table>
 
@@ -419,7 +390,12 @@
             <table>
                 <tr>
                     <td>A</td>
-                    <td>Licensed Lifeguards always on duty during pool opening hours [N/A]</td>
+                    <td>Licensed Lifeguards always on duty during pool opening hours
+                        <div class="na-checkbox">
+                            <input type="checkbox" id="na-8a" name="na_8a">
+                            <label for="na-8a">N/A</label>
+                        </div>
+                    </td>
                     <td><div class="checkbox-group"><input type="radio" name="score_8A" value="2.5"> Yes <input type="radio" name="score_8A" value="0"> No</div></td>
                 </tr>
                 <tr class="critical">
@@ -476,45 +452,292 @@
                 <button id="print-btn" class="btn" type="button" onclick="window.print()">Print</button>
                 <button id="save-btn" class="btn" type="button" onclick="alert('Save functionality not implemented yet.')">Save</button>
                 <button id="share-btn" class="btn" type="button" onclick="alert('Share functionality not implemented yet.')">Share</button>
-                <button id="back-btn" class="btn" type="button">Back to Dashboard</button>
+                <button id="back-btn" class="btn" type="button" onclick="window.location.href='/dashboard'">Back to Dashboard</button>
             </div>
         </form>
     </div>
-    <div class="modal" id="successModal">
-        <div class="modal-content">
-            <div class="success-circle">✓</div>
-            <p>Saved Successfully</p>
-            <button class="btn" onclick="window.location.reload()">Back to Dashboard</button>
-        </div>
-    </div>
+
     <script>
         const form = document.getElementById('inspectionForm');
         const radios = document.querySelectorAll('input[type="radio"]');
         const percentageScore = document.getElementById('percentageScore');
-        const successModal = document.getElementById('successModal');
 
-        // FIXED: Use actual weights from your checklist instead of simplified calculation
-        const actualMaxScore = 135; // Total of all weights: 16×5 + 20×2.5 + 5×1 = 80+50+5 = 135
+        // Maximum possible score from your checklist
+        const actualMaxScore = 100; // Total of all possible points
 
         function updateScore() {
             let totalScore = 0;
 
+            // Calculate total score from all radio buttons
             radios.forEach(radio => {
-                if (radio.checked && radio.value !== '0') {
+                if (radio.checked) {
                     totalScore += parseFloat(radio.value);
                 }
             });
 
-            // FIXED: Now uses the correct maximum score
-            const percentage = Math.min(((totalScore / actualMaxScore) * 100).toFixed(1), 100);
-            percentageScore.textContent = `${percentage}%`;
+            // Update display
+            const percentage = Math.round((totalScore / actualMaxScore) * 100);
+            percentageScore.textContent = percentage + '%';
         }
 
+        // Add event listeners to all radio buttons
         radios.forEach(radio => {
             radio.addEventListener('change', updateScore);
         });
 
-        // Form submission is now handled by the offline system
+        // Enhanced Form submission handler (same as Small Hotels)
+        document.getElementById('inspectionForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent default form submission
+
+            const submitBtn = document.getElementById('submit-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Submitting...';
+            submitBtn.disabled = true;
+
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showEnhancedSuccessPopup(data);
+                } else {
+                    alert('Error: ' + data.message);
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while submitting the form');
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+
+        // Enhanced success popup function
+        function showEnhancedSuccessPopup(data) {
+            // Remove any existing popup
+            const existingPopup = document.getElementById('successPopupOverlay');
+            if (existingPopup) {
+                existingPopup.remove();
+            }
+
+            // Get inspection details from response
+            const details = data.inspection_details || {};
+            const scores = details.scores || {};
+
+            // Create popup overlay
+            const popup = document.createElement('div');
+            popup.id = 'successPopupOverlay';
+            popup.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.6);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+                animation: fadeIn 0.3s ease-out;
+            `;
+
+            // Create popup content
+            const popupContent = document.createElement('div');
+            popupContent.style.cssText = `
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                max-width: 500px;
+                width: 90%;
+                max-height: 80vh;
+                overflow-y: auto;
+                font-family: 'Verdana', sans-serif;
+                animation: slideIn 0.3s ease-out;
+            `;
+
+            popupContent.innerHTML = `
+                <div style="padding: 30px;">
+                    <!-- Success Header -->
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <div style="font-size: 60px; color: #009b3a; margin-bottom: 15px;">🏊‍♂️</div>
+                        <h2 style="color: #009b3a; margin: 0; font-size: 24px; font-weight: bold;">
+                            Swimming Pool Inspection Successfully Submitted!
+                        </h2>
+                    </div>
+
+                    <!-- Inspection Summary -->
+                    <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px; border-left: 4px solid #009b3a;">
+                        <h3 style="color: #009b3a; margin: 0 0 15px 0; font-size: 18px;">Inspection Summary</h3>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+                                <span style="font-weight: bold; color: #495057;">Inspection ID:</span>
+                                <span style="color: #009b3a; font-weight: bold;">#${details.id || 'N/A'}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+                                <span style="font-weight: bold; color: #495057;">Date:</span>
+                                <span>${details.inspection_date || 'N/A'}</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 15px; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+                            <span style="font-weight: bold; color: #495057;">Pool Operator:</span>
+                            <span style="margin-left: 10px;">${details.establishment_name || 'N/A'}</span>
+                        </div>
+
+                        <div style="margin-bottom: 15px; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+                            <span style="font-weight: bold; color: #495057;">Inspector:</span>
+                            <span style="margin-left: 10px;">${details.inspector_name || 'N/A'}</span>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                            <span style="font-weight: bold; color: #495057;">Result:</span>
+                            <span style="padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 14px;
+                                   background: ${details.result === 'Pass' ? '#d4edda' : '#f8d7da'};
+                                   color: ${details.result === 'Pass' ? '#155724' : '#721c24'};">
+                                ${details.result || 'N/A'}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Scores Section -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+                        <div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px; border: 2px solid ${scores.overall >= 70 ? '#009b3a' : '#dc3545'};">
+                            <div style="font-size: 32px; font-weight: bold; color: ${scores.overall >= 70 ? '#009b3a' : '#dc3545'}; margin-bottom: 5px;">
+                                ${scores.overall || 0}%
+                            </div>
+                            <div style="font-size: 14px; font-weight: bold; color: #495057;">Overall Score</div>
+                        </div>
+                        <div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px; border: 2px solid ${scores.critical >= 70 ? '#009b3a' : '#dc3545'};">
+                            <div style="font-size: 32px; font-weight: bold; color: ${scores.critical >= 70 ? '#009b3a' : '#dc3545'}; margin-bottom: 5px;">
+                                ${scores.critical || 0}
+                            </div>
+                            <div style="font-size: 14px; font-weight: bold; color: #495057;">Critical Items</div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                        <button id="backToDashboard" style="padding: 12px 20px; background: #009b3a; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s;">
+                            Back to Dashboard
+                        </button>
+                        <button id="stayOnPage" style="padding: 12px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s;">
+                            Stay on Page
+                        </button>
+                    </div>
+
+                    <!-- Auto-redirect Notice -->
+                    <div id="autoRedirectNotice" style="text-align: center; padding: 15px; background: #e7f3ff; border-radius: 6px; border-left: 4px solid #0066cc;">
+                        <p style="margin: 0; color: #0066cc; font-weight: bold;">
+                            🕒 Redirecting to dashboard in <span id="redirectCounter">5</span> seconds...
+                        </p>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">
+                            Click "Stay on Page" to cancel auto-redirect
+                        </p>
+                    </div>
+                </div>
+            `;
+
+            // Add CSS animations
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes slideIn {
+                    from { transform: translateY(-50px); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+
+            popup.appendChild(popupContent);
+            document.body.appendChild(popup);
+
+            // Add button hover effects
+            const backBtn = document.getElementById('backToDashboard');
+            const stayBtn = document.getElementById('stayOnPage');
+
+            backBtn.addEventListener('mouseenter', () => backBtn.style.background = '#007b2f');
+            backBtn.addEventListener('mouseleave', () => backBtn.style.background = '#009b3a');
+
+            stayBtn.addEventListener('mouseenter', () => stayBtn.style.background = '#5a6268');
+            stayBtn.addEventListener('mouseleave', () => stayBtn.style.background = '#6c757d');
+
+            // Add event listeners
+            backBtn.addEventListener('click', redirectToDashboard);
+            stayBtn.addEventListener('click', closeSuccessPopup);
+
+            // Start auto-redirect countdown
+            startRedirectCountdown(5); // 5 seconds countdown
+        }
+
+        // Countdown and auto-redirect function
+        function startRedirectCountdown(seconds) {
+            const counter = document.getElementById('redirectCounter');
+            const notice = document.getElementById('autoRedirectNotice');
+            let timeLeft = seconds;
+
+            const countdown = setInterval(() => {
+                timeLeft--;
+                if (counter) {
+                    counter.textContent = timeLeft;
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    redirectToDashboard();
+                }
+            }, 1000);
+
+            // Store the interval ID so we can cancel it if user chooses to stay
+            window.redirectCountdownInterval = countdown;
+        }
+
+        // Redirect to dashboard function
+        function redirectToDashboard() {
+            if (window.redirectCountdownInterval) {
+                clearInterval(window.redirectCountdownInterval);
+            }
+            closeSuccessPopup();
+
+            // Reset the submit button before redirecting
+            const submitBtn = document.getElementById('submit-btn');
+            if (submitBtn) {
+                submitBtn.textContent = 'Submit';
+                submitBtn.disabled = false;
+            }
+
+            window.location.href = '/dashboard';
+        }
+
+        // Close popup function
+        function closeSuccessPopup() {
+            if (window.redirectCountdownInterval) {
+                clearInterval(window.redirectCountdownInterval);
+            }
+            const popup = document.getElementById('successPopupOverlay');
+            if (popup) {
+                popup.remove();
+            }
+
+            // Reset the submit button
+            const submitBtn = document.getElementById('submit-btn');
+            if (submitBtn) {
+                submitBtn.textContent = 'Submit';
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Initialize score calculation
+        updateScore();
     </script>
 </body>
 </html>

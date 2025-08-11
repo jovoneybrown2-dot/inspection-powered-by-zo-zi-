@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Small Hotels Inspection Details</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #1a1a1a;
+            background-image: url('/static/d.jpg'), linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 25%, #1a1a1a 50%, #2d2d2d 75%, #1a1a1a 100%);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .form-container {
+            width: 8.5in;
+            min-height: 11in;
+            background: white;
+            padding: 0.5in;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .form-header {
+            text-align: center;
+            border: 2px solid black;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-title {
+            font-weight: bold;
+            font-size: 18px;
+            text-transform: uppercase;
+        }
+
+        .form-number {
+            float: right;
+            color: red;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .info-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            border: 1px solid black;
+            padding: 8px;
+            height: 40px;
+            position: relative;
+        }
+
+        .info-box span {
+            font-size: 14px;
+            position: absolute;
+            top: 18px;
+            left: 4px;
+            font-weight: normal;
+        }
+
+        .info-label {
+            font-size: 12px;
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            font-weight: bold;
+        }
+
+        .wide-box {
+            grid-column: span 2;
+        }
+
+        .inspection-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+
+        .inspection-table th,
+        .inspection-table td {
+            border: 1px solid black;
+            padding: 4px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .inspection-table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+
+        .section-header {
+            background-color: #d0d0d0;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        .critical-item {
+            background-color: rgba(0, 0, 255, 0.1);
+        }
+
+        .score-cell {
+            width: 60px;
+            text-align: center;
+        }
+
+        .scores-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid black;
+            background: #f8f8f8;
+        }
+
+        .score-box {
+            text-align: center;
+        }
+
+        .score-box label {
+            font-weight: bold;
+            font-size: 14px;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .score-display {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid black;
+            background: white;
+            font-size: 16px;
+            text-align: center;
+            font-weight: bold;
+            color: #000;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .comments-section {
+            margin: 20px 0;
+        }
+
+        .comments-display {
+            width: 100%;
+            min-height: 80px;
+            border: 1px solid black;
+            padding: 8px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+            background: #f9f9f9;
+        }
+
+        .signature-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid black;
+            font-size: 14px;
+        }
+
+        .signature-box {
+            text-align: center;
+        }
+
+        .signature-box label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .signature-display {
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid black;
+            padding: 5px 0;
+            text-align: center;
+            font-size: 14px;
+            background: transparent;
+        }
+
+        .buttons-section {
+            margin-top: 30px;
+            text-align: center;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .page-number {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 12px;
+        }
+
+        .result-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .result-badge.pass {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .result-badge.fail {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="page-number">Page 1 of 1</div>
+
+        <div class="form-header">
+            <div class="form-number">NO. 58402</div>
+            <div class="form-title">Ministry of Health<br>Small Hotels Inspection Form - Jamaica</div>
+        </div>
+
+        <div class="info-section">
+            <div class="info-box">
+                <div class="info-label">Hotel Name</div>
+                <span>{{ inspection.establishment_name }}</span>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Date</div>
+                <span>{{ inspection.inspection_date }}</span>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Inspector's ID</div>
+                <span>{{ inspection.inspector_name }}</span>
+            </div>
+            <div class="info-box wide-box">
+                <div class="info-label">Address</div>
+                <span>{{ inspection.address }}</span>
+            </div>
+            <div class="info-box">
+                <div class="info-label">Physical Location</div>
+                <span>{{ inspection.physical_location or 'N/A' }}</span>
+            </div>
+        </div>
+
+        <table class="inspection-table">
+            <thead>
+                <tr>
+                    <th style="width: 8%;">Item</th>
+                    <th style="width: 62%;">Details</th>
+                    <th style="width: 15%;">Obser</th>
+                    <th style="width: 15%;">Error</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Documentation Section -->
+                <tr>
+                    <td colspan="4" class="section-header">1 - Documentation (8%)</td>
+                </tr>
+                <tr>
+                    <td>A</td>
+                    <td>Action plan for foodborne illness occurrence</td>
+                    <td class="score-cell">{{ inspection.obser.get('1a', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('1a', '0') }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>B</td>
+                    <td>Food Handlers have valid food handlers permits</td>
+                    <td class="score-cell">{{ inspection.obser.get('1b', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('1b', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>C</td>
+                    <td>Relevant policy in place to restrict activities of sick employees</td>
+                    <td class="score-cell">{{ inspection.obser.get('1c', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('1c', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>D</td>
+                    <td>Establishments have a written policy for the proper disposal of waste</td>
+                    <td class="score-cell">{{ inspection.obser.get('1d', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('1d', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>E</td>
+                    <td>Cleaning schedule for equipment utensil etc available</td>
+                    <td class="score-cell">{{ inspection.obser.get('1e', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('1e', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>F</td>
+                    <td>Material safety data sheet available for record of hazardous chemicals used</td>
+                    <td class="score-cell">{{ inspection.obser.get('1f', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('1f', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>G</td>
+                    <td>Record of hazardous chemicals used</td>
+                    <td class="score-cell">{{ inspection.obser.get('1g', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('1g', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>H</td>
+                    <td>Food suppliers list available</td>
+                    <td class="score-cell">{{ inspection.obser.get('1h', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('1h', '0') }}</td>
+                </tr>
+
+                <!-- Food Handlers Section -->
+                <tr>
+                    <td colspan="4" class="section-header">2 - Food Handlers (5%)</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>A</td>
+                    <td>Clean appropriate protective garments</td>
+                    <td class="score-cell">{{ inspection.obser.get('2a', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('2a', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>B</td>
+                    <td>Hands free of jewellery</td>
+                    <td class="score-cell">{{ inspection.obser.get('2b', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('2b', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>C</td>
+                    <td>Suitable hair restraints</td>
+                    <td class="score-cell">{{ inspection.obser.get('2c', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('2c', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>D</td>
+                    <td>Nails clean, short and unpolished</td>
+                    <td class="score-cell">{{ inspection.obser.get('2d', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('2d', '0') }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>E</td>
+                    <td>Hands washed as required</td>
+                    <td class="score-cell">{{ inspection.obser.get('2e', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('2e', '0') }}</td>
+                </tr>
+
+                <!-- Food Storage Section -->
+                <tr>
+                    <td colspan="4" class="section-header">3 - Food Storage (13%)</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>A</td>
+                    <td>Approved source</td>
+                    <td class="score-cell">{{ inspection.obser.get('3a', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('3a', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>B</td>
+                    <td>Correct stocking procedures practiced</td>
+                    <td class="score-cell">{{ inspection.obser.get('3b', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('3b', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>C</td>
+                    <td>Food stored on pallets or shelves off the floor</td>
+                    <td class="score-cell">{{ inspection.obser.get('3c', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('3c', '0') }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>D</td>
+                    <td>No cats, rodents or other animals present in the store</td>
+                    <td class="score-cell">{{ inspection.obser.get('3d', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('3d', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>E</td>
+                    <td>Products free of infestation</td>
+                    <td class="score-cell">{{ inspection.obser.get('3e', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('3e', '0') }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>F</td>
+                    <td>No pesticides or other hazardous chemicals in food stores</td>
+                    <td class="score-cell">{{ inspection.obser.get('3f', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('3f', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>G</td>
+                    <td>Satisfactory condition of refrigeration units</td>
+                    <td class="score-cell">{{ inspection.obser.get('3g', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('3g', '0') }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>H</td>
+                    <td>Refrigerated foods < 4°C</td>
+                    <td class="score-cell">{{ inspection.obser.get('3h', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('3h', '0') }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>I</td>
+                    <td>Frozen foods -18°C</td>
+                    <td class="score-cell">{{ inspection.obser.get('3i', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('3i', '0') }}</td>
+                </tr>
+
+                <!-- Food Holding and Preparation Section -->
+                <tr>
+                    <td colspan="4" class="section-header">4 - Food Holding and Preparation Practices (8%)</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>A</td>
+                    <td>Foods thawed according to recommended procedures</td>
+                    <td class="score-cell">{{ inspection.obser.get('4a', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('4a', '0') }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>B</td>
+                    <td>No evidence of cross-contamination during preparation</td>
+                    <td class="score-cell">{{ inspection.obser.get('4b', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('4b', '0') }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>C</td>
+                    <td>No evidence of cross-contamination during holding in refrigerators/coolers</td>
+                    <td class="score-cell">{{ inspection.obser.get('4c', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('4c', '0') }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>D</td>
+                    <td>Foods cooled according to recommended procedures</td>
+                    <td class="score-cell">{{ inspection.obser.get('4d', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('4d', '0') }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>E</td>
+                    <td>Manual dishwashing wash, rinse, sanitize, rinse technique</td>
+                    <td class="score-cell">{{ inspection.obser.get('4e', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('4e', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>F</td>
+                    <td>Food contact surfaces washed-rinsed-sanitized before & after each use</td>
+                    <td class="score-cell">{{ inspection.obser.get('4f', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('4f', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>G</td>
+                    <td>Wiping cloths handled properly (sanitizing solution used)</td>
+                    <td class="score-cell">{{ inspection.obser.get('4g', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('4g', '0') }}</td>
+                </tr>
+
+                <!-- Post preparation Section -->
+                <tr>
+                    <td colspan="4" class="section-header">5 - Post preparation (10%)</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>A</td>
+                    <td>Food protected during transportation</td>
+                    <td class="score-cell">{{ inspection.obser.get('5a', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('5a', '0') }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>B</td>
+                    <td>Dishes identified and labelled</td>
+                    <td class="score-cell">{{ inspection.obser.get('5b', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('5b', '0') }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>C</td>
+                    <td>Food covered or protected from contamination</td>
+                    <td class="score-cell">{{ inspection.obser.get('5c', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('5c', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>D</td>
+                    <td>Sufficient, appropriate utensils on service line</td>
+                    <td class="score-cell">{{ inspection.obser.get('5d', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('5d', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>E</td>
+                    <td>Hot holding temperatures > 63°C</td>
+                    <td class="score-cell">{{ inspection.obser.get('5e', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('5e', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>F</td>
+                    <td>Cold holding temperatures ≤ 5°C</td>
+                    <td class="score-cell">{{ inspection.obser.get('5f', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('5f', '0') }}</td>
+                </tr>
+
+                <!-- Hand Washing Facilities Section -->
+                <tr>
+                    <td colspan="4" class="section-header">6 - Hand Washing Facilities (3%)</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>A</td>
+                    <td>Hand washing facility installed and maintained for every 40 square meters of floor space or in each principal food area</td>
+                    <td class="score-cell">{{ inspection.obser.get('6a', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('6a', '0') }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>B</td>
+                    <td>Equipped with hot and cold water, soap dispenser and hand drying facility</td>
+                    <td class="score-cell">{{ inspection.obser.get('6b', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('6b', '0') }}</td>
+                </tr>
+
+                <!-- Building Section -->
+                <tr>
+                    <td colspan="4" class="section-header">7 - Building (8.5%)</td>
+                </tr>
+                <tr>
+                    <td>A</td>
+                    <td>Provides adequate space</td>
+                    <td class="score-cell">{{ inspection.obser.get('7a', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('7a', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>B</td>
+                    <td>Food areas kept clean, free from vermin and unpleasant odours</td>
+                    <td class="score-cell">{{ inspection.obser.get('7b', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('7b', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>C</td>
+                    <td>Floor, walls and ceiling clean, in good repair</td>
+                    <td class="score-cell">{{ inspection.obser.get('7c', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('7c', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>D</td>
+                    <td>Mechanical ventilation operable where required</td>
+                    <td class="score-cell">{{ inspection.obser.get('7d', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('7d', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>E</td>
+                    <td>Lighting adequate for food preparation and cleaning</td>
+                    <td class="score-cell">{{ inspection.obser.get('7e', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('7e', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>F</td>
+                    <td>General housekeeping satisfactory</td>
+                    <td class="score-cell">{{ inspection.obser.get('7f', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('7f', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>G</td>
+                    <td>Animals, insect and pest excluded</td>
+                    <td class="score-cell">{{ inspection.obser.get('7g', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('7g', '0') }}</td>
+                </tr>
+
+                <!-- Food contact surfaces Section -->
+                <tr>
+                    <td colspan="4" class="section-header">8 - Food contact surfaces (3%)</td>
+                </tr>
+                <tr>
+                    <td>A</td>
+                    <td>Made from material which is non-absorbent and non-toxic</td>
+                    <td class="score-cell">{{ inspection.obser.get('8a', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('8a', '0') }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>B</td>
+                    <td>Smooth, cleanable, corrosion resistant</td>
+                    <td class="score-cell">{{ inspection.obser.get('8b', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('8b', '0') }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>C</td>
+                    <td>Proper storage and use of clean utensils</td>
+                    <td class="score-cell">{{ inspection.obser.get('8c', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('8c', '0') }}</td>
+                </tr>
+
+                <!-- Continue with remaining sections... -->
+                <!-- Food flow Section -->
+                <tr>
+                    <td colspan="4" class="section-header">9 - Food flow (5.5%)</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>A</td>
+                    <td>Employee traffic pattern avoids food cross-contamination</td>
+                    <td class="score-cell">{{ inspection.obser.get('9a', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('9a', '0') }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>B</td>
+                    <td>Product flow not at risk for cross-contamination</td>
+                    <td class="score-cell">{{ inspection.obser.get('9b', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('9b', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>C</td>
+                    <td>Living quarters, toilets, washrooms, locker separated from areas where food is handled</td>
+                    <td class="score-cell">{{ inspection.obser.get('9c', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('9c', '0') }}</td>
+                </tr>
+
+                <!-- Equipment and utensils sanitization Section -->
+                <tr>
+                    <td colspan="4" class="section-header">10 - Equipment and utensils sanitization (9.5%)</td>
+                </tr>
+                <tr>
+                    <td>A</td>
+                    <td>Mechanical dishwashing: Wash-rinse water clean</td>
+                    <td class="score-cell">{{ inspection.obser.get('10a', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('10a', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>B</td>
+                    <td>Proper water temperature</td>
+                    <td class="score-cell">{{ inspection.obser.get('10b', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('10b', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>C</td>
+                    <td>Proper timing of cycles</td>
+                    <td class="score-cell">{{ inspection.obser.get('10c', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('10c', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>D</td>
+                    <td>Sanitizer for low temperature</td>
+                    <td class="score-cell">{{ inspection.obser.get('10d', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('10d', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>E</td>
+                    <td>Proper handling of hazardous materials</td>
+                    <td class="score-cell">{{ inspection.obser.get('10e', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('10e', '0') }}</td>
+                </tr>
+
+                <!-- Waste Management Section -->
+                <tr>
+                    <td colspan="4" class="section-header">11 - Waste Management: Waste Containers (3%)</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>A</td>
+                    <td>Appropriate design, convenient placement</td>
+                    <td class="score-cell">{{ inspection.obser.get('11a', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('11a', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>B</td>
+                    <td>Kept covered when not in continuous use</td>
+                    <td class="score-cell">{{ inspection.obser.get('11b', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('11b', '0') }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>C</td>
+                    <td>Emptied as often as necessary</td>
+                    <td class="score-cell">{{ inspection.obser.get('11c', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('11c', '0') }}</td>
+                </tr>
+
+                <!-- Solid Waste Storage Area Section -->
+                <tr>
+                    <td colspan="4" class="section-header">12 - Solid Waste Storage Area (4%)</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>A</td>
+                    <td>Insect and vermin-proof containers provided where required</td>
+                    <td class="score-cell">{{ inspection.obser.get('12a', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('12a', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>B</td>
+                    <td>The area around each waste container kept clean</td>
+                    <td class="score-cell">{{ inspection.obser.get('12b', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('12b', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>C</td>
+                    <td>Effluent from waste bins disposed of in a sanitary manner</td>
+                    <td class="score-cell">{{ inspection.obser.get('12c', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('12c', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>D</td>
+                    <td>Frequency of garbage removal adequate</td>
+                    <td class="score-cell">{{ inspection.obser.get('12d', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('12d', '0') }}</td>
+                </tr>
+
+                <!-- Disposal of solid waste Section -->
+                <tr>
+                    <td colspan="4" class="section-header">13 - Disposal of solid waste</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>A</td>
+                    <td>Garbage, refuse properly disposed of, facilities maintained</td>
+                    <td class="score-cell">{{ inspection.obser.get('13a', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('13a', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>B</td>
+                    <td>Stored away from living quarters and food areas</td>
+                    <td class="score-cell">{{ inspection.obser.get('13b', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('13b', '0') }}</td>
+                </tr>
+
+                <!-- Hazardous Materials Section -->
+                <tr>
+                    <td colspan="4" class="section-header">14 - Hazardous Materials Storage, Handling and Disposal (4%)</td>
+                </tr>
+                <tr>
+                    <td>A</td>
+                    <td>Hazardous materials stored in properly labelled containers</td>
+                    <td class="score-cell">{{ inspection.obser.get('14a', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('14a', '0') }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>B</td>
+                    <td>Stored away from living quarters and food areas</td>
+                    <td class="score-cell">{{ inspection.obser.get('14b', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('14b', '0') }}</td>
+                </tr>
+
+                <!-- Sanitary Facilities Section -->
+                <tr>
+                    <td colspan="4" class="section-header">15 - Sanitary Facilities (4%)</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>A</td>
+                    <td>Approved Sewage Disposal System</td>
+                    <td class="score-cell">{{ inspection.obser.get('15a', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('15a', '0') }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>B</td>
+                    <td>Sanitary maintenance of facilities and protection against the entrance of vermin, rodents, dust, and fumes</td>
+                    <td class="score-cell">{{ inspection.obser.get('15b', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('15b', '0') }}</td>
+                </tr>
+
+                <!-- Pest Control Section -->
+                <tr>
+                    <td colspan="4" class="section-header">16 - Pest Control (2%)</td>
+                </tr>
+                <tr>
+                    <td>A</td>
+                    <td>Adequate provision against the entrance of insects, vermin, rodents, dust and fumes</td>
+                    <td class="score-cell">{{ inspection.obser.get('16a', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('16a', '0') }}</td>
+                </tr>
+
+                <!-- Water supply Section -->
+                <tr>
+                    <td colspan="4" class="section-header">17 - Water supply (3%)</td>
+                </tr>
+                <tr>
+                    <td>A</td>
+                    <td>Approved source(s) sufficient pressure and capacity</td>
+                    <td class="score-cell">{{ inspection.obser.get('17a', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('17a', '0') }}</td>
+                </tr>
+                <tr>
+                    <td>B</td>
+                    <td>Water quality satisfactory</td>
+                    <td class="score-cell">{{ inspection.obser.get('17b', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('17b', '0') }}</td>
+                </tr>
+
+                <!-- Ice Section -->
+                <tr>
+                    <td colspan="4" class="section-header">18 - Ice (1.5%)</td>
+                </tr>
+                <tr>
+                    <td>A</td>
+                    <td>Satisfactory ice storage conditions</td>
+                    <td class="score-cell">{{ inspection.obser.get('18a', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('18a', '0') }}</td>
+                </tr>
+
+                <!-- Grey Water Facilities Section -->
+                <tr>
+                    <td colspan="4" class="section-header">19 - Grey Water Facilities (1%)</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>A</td>
+                    <td>Traps and vent in good condition</td>
+                    <td class="score-cell">{{ inspection.obser.get('19a', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('19a', '0') }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>B</td>
+                    <td>Floor drains clear and drain freely</td>
+                    <td class="score-cell">{{ inspection.obser.get('19b', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('19b', '0') }}</td>
+                </tr>
+
+                <!-- Manholes Section -->
+                <tr>
+                    <td colspan="4" class="section-header">20 - Manholes (0.5%)</td>
+                </tr>
+                <tr>
+                    <td>A</td>
+                    <td>Properly constructed with vents and traps where necessary</td>
+                    <td class="score-cell">{{ inspection.obser.get('20a', '0') }}</td>
+                    <td class="score-cell">{{ inspection.error.get('20a', '0') }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="scores-section">
+            <div class="score-box">
+                <label>Critical Score:</label>
+                <div class="score-display">{{ inspection.critical_score }}%</div>
+            </div>
+            <div class="score-box">
+                <label>Overall Score:</label>
+                <div class="score-display">{{ inspection.overall_score }}%</div>
+            </div>
+        </div>
+
+        <div class="scores-section" style="grid-template-columns: 1fr;">
+            <div class="score-box">
+                <label>Result:</label>
+                <div class="result-badge {{ 'pass' if inspection.result == 'Pass' else 'fail' }}">
+                    {{ inspection.result }}
+                </div>
+            </div>
+        </div>
+
+        <div class="comments-section">
+            <label for="comments" style="font-weight: bold; font-size: 14px; display: block; margin-bottom: 5px;">Inspector's Comments:</label>
+            <div class="comments-display">{{ inspection.comments or 'No comments provided.' }}</div>
+        </div>
+
+        <div class="signature-section">
+            <div class="signature-box">
+                <label>Inspector Signature</label>
+                <div class="signature-display">{{ inspection.inspector_signature or 'N/A' }}</div>
+                <label style="margin-top: 10px;">Date</label>
+                <div class="signature-display">{{ inspection.inspector_signature_date or 'N/A' }}</div>
+            </div>
+            <div class="signature-box">
+                <label>Manager Signature</label>
+                <div class="signature-display">{{ inspection.manager_signature or 'N/A' }}</div>
+                <label style="margin-top: 10px;">Date</label>
+                <div class="signature-display">{{ inspection.manager_signature_date or 'N/A' }}</div>
+            </div>
+            <div class="signature-box">
+                <label>Received By</label>
+                <div class="signature-display">{{ inspection.received_by or 'N/A' }}</div>
+                <label style="margin-top: 10px;">Date</label>
+                <div class="signature-display">{{ inspection.received_by_date or 'N/A' }}</div>
+            </div>
+        </div>
+
+        <div class="buttons-section">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+            <a href="{{ url_for('download_inspection_pdf', form_id=inspection.id) }}" class="btn btn-primary">Download PDF</a>
+            <button type="button" class="btn btn-secondary" onclick="window.print()">Print</button>
+        </div>
+    </div>
+</body>
+</html>

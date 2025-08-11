@@ -7,7 +7,7 @@ from datetime import datetime
 # Flask Imports
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, make_response, Response
 
-# ReportLab Imports
+#ReportLab Imports
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.units import inch
 from reportlab.lib import colors
@@ -30,7 +30,7 @@ from database import (
     get_burial_inspection_details
 )
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')
 app.secret_key = os.urandom(24)
 
 # Corrected Checklist for Food Establishment Inspection Form
@@ -195,7 +195,7 @@ SWIMMING_POOL_CHECKLIST_ITEMS = [
     {"id": "2D", "desc": "Exposed piping: - identified/colour coded", "wt": 2.5, "category": "Physical Condition"},
     {"id": "2E", "desc": "In good repair", "wt": 2.5, "category": "Physical Condition"},
     {"id": "2F", "desc": "Suction fittings/inlets: - in good repair", "wt": 2.5, "category": "Physical Condition"},
-    {"id": "2G", "desc": "At least two suction orifices equipped with anti-entrapment devices", "wt": 5, "category": "Physical Condition"},
+    {"id": "2G", "desc": "At least two suction orifices equipped with anti-vortex plates", "wt": 5, "category": "Physical Condition"},
     {"id": "2H", "desc": "Perimeter drains free of debris", "wt": 2.5, "category": "Physical Condition"},
     {"id": "2I", "desc": "Pool walls and floor clean", "wt": 2.5, "category": "Physical Condition"},
     {"id": "2J", "desc": "Components of the re-circulating system maintained", "wt": 2.5, "category": "Physical Condition"},
@@ -334,8 +334,114 @@ SMALL_HOTELS_CHECKLIST_ITEMS = [
     # 18 - Sanitary Engineering: Ice (1.5%)
     {"id": "18a", "description": "Satisfactory ice storage conditions", "critical": False},
 ]
-# ... (Other checklists omitted as per your request; paste them back if needed)
 
+### Instructions checklist for babershop
+BARBERSHOP_CHECKLIST_ITEMS = [
+    {'id': '01', 'desc': 'Overall Condition', 'wt': 2, 'critical': False},
+    {'id': '02', 'desc': 'Floors, walls, ceiling', 'wt': 2, 'critical': False},
+    {'id': '03', 'desc': 'Lighting', 'wt': 2, 'critical': False},
+    {'id': '04', 'desc': 'Ventilation', 'wt': 2, 'critical': False},
+    {'id': '05', 'desc': 'Health Certification Building', 'wt': 2, 'critical': False},
+    {'id': '06', 'desc': 'Tables, counters, chairs', 'wt': 2, 'critical': True},
+    {'id': '07', 'desc': 'Shampoo basin', 'wt': 4, 'critical': True},
+    {'id': '08', 'desc': 'Hair dryers, steamers, hand dryers, hand held tools', 'wt': 4, 'critical': True},
+    {'id': '09', 'desc': 'Wash basin', 'wt': 2, 'critical': True},
+    {'id': '10', 'desc': 'Towels and linen', 'wt': 4, 'critical': True},
+    {'id': '11', 'desc': 'Soap & hand towels', 'wt': 2, 'critical': True},
+    {'id': '12', 'desc': 'Sterile cotton swabs', 'wt': 2, 'critical': True},
+    {'id': '13', 'desc': 'Tools Cleaning & Sanitization', 'wt': 5, 'critical': True},
+    {'id': '14', 'desc': 'Equipment Cleaning & Sanitization', 'wt': 5, 'critical': True},
+    {'id': '15', 'desc': 'Linen Cleaning & Sanitization', 'wt': 5, 'critical': True},
+    {'id': '16', 'desc': 'Hot water Sanitizing Agent', 'wt': 5, 'critical': True},
+    {'id': '17', 'desc': 'Chemicals Sanitizing Agent', 'wt': 5, 'critical': True},
+    {'id': '18', 'desc': 'Health certification Personnel', 'wt': 3, 'critical': False},
+    {'id': '19', 'desc': 'Personal cleanliness', 'wt': 2, 'critical': False},
+    {'id': '20', 'desc': 'Hand washing', 'wt': 2, 'critical': False},
+    {'id': '21', 'desc': 'First aid kit provided and stocked', 'wt': 5, 'critical': False},
+    {'id': '22', 'desc': 'Potable & adequate water supply', 'wt': 5, 'critical': True},
+    {'id': '23', 'desc': 'Lavatories', 'wt': 5, 'critical': True},
+    {'id': '24', 'desc': 'Sanitary waste water disposal', 'wt': 5, 'critical': True},
+    {'id': '25', 'desc': 'Plumbing maintained', 'wt': 2, 'critical': False},
+    {'id': '26', 'desc': 'Drains maintained', 'wt': 2, 'critical': False},
+    {'id': '27', 'desc': 'Hair, Towels, Swabs Disposed', 'wt': 2, 'critical': False},
+    {'id': '28', 'desc': 'Separation of aerosols', 'wt': 2, 'critical': False},
+    {'id': '29', 'desc': 'Garbage receptacles', 'wt': 3, 'critical': False},
+    {'id': '30', 'desc': 'Absence of pests', 'wt': 3, 'critical': False},
+    {'id': '31', 'desc': 'Approved Insecticide', 'wt': 2, 'critical': False},
+    {'id': '32', 'desc': 'General cleanliness', 'wt': 2, 'critical': False}
+]
+
+# Add this after your BARBERSHOP_CHECKLIST_ITEMS
+INSTITUTIONAL_CHECKLIST_ITEMS = [
+    {'id': '01', 'desc': 'Absence of overcrowding', 'wt': 5, 'critical': True},
+    {'id': '02', 'desc': 'Structural Integrity', 'wt': 2, 'critical': False},
+    {'id': '03', 'desc': 'Housekeeping', 'wt': 2, 'critical': False},
+    {'id': '04', 'desc': 'Clean Floor', 'wt': 1, 'critical': False},
+    {'id': '05', 'desc': 'Clean Walls', 'wt': 1, 'critical': False},
+    {'id': '06', 'desc': 'Clean Ceiling', 'wt': 1, 'critical': False},
+    {'id': '07', 'desc': 'Lighting', 'wt': 1, 'critical': False},
+    {'id': '08', 'desc': 'Ventilation', 'wt': 3, 'critical': False},
+    {'id': '09', 'desc': 'Adequacy', 'wt': 5, 'critical': True},
+    {'id': '10', 'desc': 'Potability', 'wt': 5, 'critical': True},
+    {'id': '11', 'desc': 'Sanitary excreta disposal', 'wt': 5, 'critical': True},
+    {'id': '12', 'desc': 'Adequacy', 'wt': 5, 'critical': True},
+    {'id': '13', 'desc': 'Food Storage', 'wt': 5, 'critical': True},
+    {'id': '14', 'desc': 'Kitchen', 'wt': 5, 'critical': True},
+    {'id': '15', 'desc': 'Dining Room', 'wt': 5, 'critical': True},
+    {'id': '16', 'desc': 'Food handling practices', 'wt': 5, 'critical': True},
+    {'id': '17', 'desc': 'Storage', 'wt': 5, 'critical': True},
+    {'id': '18', 'desc': 'Disposal', 'wt': 5, 'critical': True},
+    {'id': '19', 'desc': 'Absence', 'wt': 5, 'critical': True},
+    {'id': '20', 'desc': 'Control system in place', 'wt': 5, 'critical': True},
+    {'id': '21', 'desc': 'General Cleanliness', 'wt': 2, 'critical': False},
+    {'id': '22', 'desc': 'Drainage', 'wt': 2, 'critical': False},
+    {'id': '23', 'desc': 'Protected from stray animals', 'wt': 2, 'critical': False},
+    {'id': '24', 'desc': 'Vegetation', 'wt': 2, 'critical': False},
+    {'id': '25', 'desc': 'Provision for physically challenged', 'wt': 2, 'critical': False},
+    {'id': '26', 'desc': 'Fire extinguishers', 'wt': 5, 'critical': True},
+    {'id': '27', 'desc': 'Access to medical care', 'wt': 2, 'critical': False},
+    {'id': '28', 'desc': 'First Aid available', 'wt': 2, 'critical': False},
+    {'id': '29', 'desc': 'Emergency exit', 'wt': 2, 'critical': False},
+    {'id': '30', 'desc': 'Veterinary certification of pets', 'wt': 1, 'critical': False},
+    {'id': '31', 'desc': 'Adequacy', 'wt': 2, 'critical': False}
+]
+
+
+@app.route('/debug/stats')
+def debug_stats():
+    if 'admin' not in session and 'inspector' not in session:
+        return "Access denied"
+
+    conn = sqlite3.connect('inspections.db')
+    c = conn.cursor()
+
+    # Check what form_types exist
+    c.execute("SELECT form_type, COUNT(*) FROM inspections GROUP BY form_type")
+    form_types = c.fetchall()
+
+    # Check total count
+    c.execute("SELECT COUNT(*) FROM inspections")
+    total = c.fetchone()[0]
+
+    # Check each table
+    c.execute("SELECT COUNT(*) FROM residential_inspections")
+    residential = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM burial_site_inspections")
+    burial = c.fetchone()[0]
+
+    conn.close()
+
+    return f"""
+    <h2>Debug Stats:</h2>
+    <p>Total inspections: {total}</p>
+    <p>Residential: {residential}</p>
+    <p>Burial: {burial}</p>
+    <h3>Form types in database:</h3>
+    <ul>
+    {''.join([f'<li>{ft[0]}: {ft[1]} records</li>' for ft in form_types])}
+    </ul>
+    """
 def get_establishment_data():
     conn = sqlite3.connect('inspections.db')
     c = conn.cursor()
@@ -358,19 +464,49 @@ def admin():
     conn = sqlite3.connect('inspections.db')
     c = conn.cursor()
     c.execute("""
-        SELECT id, form_type, inspector_name, created_at, establishment_name, result
+        SELECT id, form_type, inspector_name, created_at, establishment_name, result, owner
         FROM inspections
-        WHERE form_type IN ('Food Establishment', 'Spirit Licence Premises', 'Swimming Pool', 'Small Hotel')
+        WHERE form_type IN (
+            'Food Establishment', 'Spirit Licence Premises', 'Swimming Pool', 
+            'Small Hotel', 'Barbershop', 'Institutional Health'
+        )
         UNION
-        SELECT id, 'Residential' AS form_type, inspector_name, created_at, premises_name, result
+        SELECT id, 'Residential' AS form_type, inspector_name, created_at, premises_name, result, owner
         FROM residential_inspections
         UNION
-        SELECT id, 'Burial' AS form_type, '' AS inspector_name, created_at, applicant_name, 'Completed' AS result
+        SELECT id, 'Burial' AS form_type, '' AS inspector_name, created_at, applicant_name, 'Completed' AS result, deceased_name
         FROM burial_site_inspections
+        ORDER BY created_at DESC
     """)
     forms = c.fetchall()
     conn.close()
     return render_template('admin.html', forms=forms)
+
+
+@app.route('/admin_form_scores')
+def admin_form_scores():
+    form_type = request.args.get('form_type', 'all')
+
+    # Query to get actual scores from inspection forms
+    # This should return an array of numerical scores (0-100)
+    # Example query might look like:
+
+    if form_type == 'all':
+        # Get scores from all form types
+        scores = db.execute("""
+            SELECT score FROM food_establishment_forms WHERE score IS NOT NULL
+            UNION ALL
+            SELECT score FROM residential_forms WHERE score IS NOT NULL
+            UNION ALL
+            SELECT score FROM burial_forms WHERE score IS NOT NULL
+            -- Add other form types...
+        """).fetchall()
+    else:
+        # Get scores for specific form type
+        table_name = get_table_name_for_form_type(form_type)
+        scores = db.execute(f"SELECT score FROM {table_name} WHERE score IS NOT NULL").fetchall()
+
+    return jsonify([score[0] for score in scores])
 
 
 @app.route('/admin_metrics', methods=['GET'])
@@ -385,7 +521,7 @@ def admin_metrics():
             SELECT strftime('%Y-%m-%d', created_at) AS date, result, COUNT(*) AS count
             FROM (
                 SELECT created_at, result FROM inspections
-                WHERE form_type IN ('Food Establishment', 'Spirit Licence Premises', 'Swimming Pool', 'Small Hotel')
+                WHERE form_type IN ('Food Establishment', 'Spirit Licence Premises', 'Swimming Pool', 'Small Hotel', 'Barbershop', 'Institutional Health')
                 UNION
                 SELECT created_at, result FROM residential_inspections
                 UNION
@@ -443,6 +579,12 @@ def process_metrics(results, time_frame):
             data['fail'][idx] += count
 
     return data
+
+@app.route('/view_institutional/<int:form_id>')
+def view_institutional(form_id):
+    if 'inspector' not in session and 'admin' not in session:
+        return redirect(url_for('login'))
+    return institutional_inspection_detail(form_id)
 
 @app.route('/generate_report', methods=['GET'])
 def generate_report():
@@ -604,6 +746,262 @@ def new_small_hotels_form():
     today = datetime.now().strftime('%Y-%m-%d')
     return render_template('small_hotels_form.html', checklist_items=SMALL_HOTELS_CHECKLIST_ITEMS, today=today)
 
+
+@app.route('/submit_institutional', methods=['POST'])
+def submit_institutional():
+    if 'inspector' not in session:
+        return jsonify({'status': 'error', 'message': 'Not logged in'}), 401
+
+    try:
+        print("=== INSTITUTIONAL FORM SUBMISSION DEBUG ===")
+        print("All form data received:")
+        for key, value in request.form.items():
+            print(f"  {key}: '{value}'")
+        print("=" * 50)
+
+        # Get form data with proper field names
+        establishment_name = request.form.get('establishment_name', '')
+        owner_operator = request.form.get('owner_operator', '')
+        address = request.form.get('address', '')
+        inspector_name = request.form.get('inspector_name', '')
+
+        # Institutional specific fields
+        staff_complement = request.form.get('staff_complement', '')
+        num_occupants = request.form.get('num_occupants', '')
+        institution_type = request.form.get('institution_type', '')
+
+        # Building details
+        building_size_ft2 = 'Yes' if request.form.get('building_size_ft2') else ''
+        building_size_m2 = 'Yes' if request.form.get('building_size_m2') else ''
+        building_size_value = request.form.get('building_size_value', '')
+        telephone_no = request.form.get('telephone_no', '')
+        num_buildings = request.form.get('num_buildings', '')
+
+        # Date and inspection details
+        inspection_date = request.form.get('inspection_date', '')
+        inspector_code = request.form.get('inspector_code', '')
+
+        # Scores
+        overall_score = float(request.form.get('overall_score', 0))
+        critical_score = float(request.form.get('critical_score', 0))
+
+        # Calculate Pass/Fail based on scores
+        if overall_score >= 70 and critical_score >= 50:
+            result = 'Pass'
+        else:
+            result = 'Fail'
+
+        # Other fields
+        license_no = request.form.get('license_no', '')
+        registration_status = request.form.get('registration_status', '')
+        purpose_of_visit = request.form.get('purpose_of_visit', '')
+        action = request.form.get('action', '')
+        comments = request.form.get('comments', '')
+        inspector_signature = request.form.get('inspector_signature', '')
+        received_by = request.form.get('received_by', '')
+
+        print("=== PROCESSED FIELD VALUES ===")
+        print(f"Staff Complement: '{staff_complement}'")
+        print(f"Occupants: '{num_occupants}'")
+        print(f"Institution Type: '{institution_type}'")
+        print(f"Building Size: '{building_size_value}' (ft²: {building_size_ft2}, m²: {building_size_m2})")
+        print(f"Telephone: '{telephone_no}'")
+        print(f"Num Buildings: '{num_buildings}'")
+        print(f"Purpose of Visit: '{purpose_of_visit}'")
+        print(f"Inspection Date: '{inspection_date}'")
+        print(f"Inspector Code: '{inspector_code}'")
+        print(f"Result: '{result}' (calculated from scores)")
+        print(f"License No: '{license_no}'")
+        print(f"Registration Status: '{registration_status}'")
+        print(f"Action: '{action}'")
+        print(f"Comments: '{comments}'")
+        print(f"Inspector Signature: '{inspector_signature}'")
+        print(f"Received By: '{received_by}'")
+        print(f"Overall Score: {overall_score}")
+        print(f"Critical Score: {critical_score}")
+
+        conn = sqlite3.connect('inspections.db')
+        cursor = conn.cursor()
+
+        # Check if columns exist and add them if needed
+        cursor.execute("PRAGMA table_info(inspections)")
+        existing_columns = [row[1] for row in cursor.fetchall()]
+
+        required_columns = [
+            'staff_complement', 'num_occupants', 'institution_type',
+            'building_size_ft2', 'building_size_m2', 'building_size_value',
+            'telephone_no', 'num_buildings', 'inspector_code',
+            'registration_status', 'purpose_of_visit', 'action'
+        ]
+
+        for column in required_columns:
+            if column not in existing_columns:
+                try:
+                    cursor.execute(f'ALTER TABLE inspections ADD COLUMN {column} TEXT')
+                    print(f"Added missing column: {column}")
+                except sqlite3.OperationalError as e:
+                    print(f"Error adding column {column}: {e}")
+
+        # Insert the inspection with ALL the data
+        cursor.execute("""
+            INSERT INTO inspections (
+                establishment_name, owner, address, inspector_name,
+                staff_complement, num_occupants, institution_type,
+                building_size_ft2, building_size_m2, building_size_value,
+                telephone_no, num_buildings, inspection_date, inspector_code,
+                overall_score, critical_score, result, license_no,
+                registration_status, purpose_of_visit, action, comments,
+                inspector_signature, received_by, form_type, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            establishment_name, owner_operator, address, inspector_name,
+            staff_complement, num_occupants, institution_type,
+            building_size_ft2, building_size_m2, building_size_value,
+            telephone_no, num_buildings, inspection_date, inspector_code,
+            overall_score, critical_score, result, license_no,
+            registration_status, purpose_of_visit, action, comments,
+            inspector_signature, received_by, 'Institutional Health', datetime.now()
+        ))
+
+        inspection_id = cursor.lastrowid
+        print(f"Created inspection record with ID: {inspection_id}")
+
+        # Save individual scores - Debug each one
+        print("=== SAVING INDIVIDUAL SCORES ===")
+        scores_saved = 0
+        for i in range(1, 32):  # Items 01-31
+            score_key = f'score_{i:02d}'
+            score_value = request.form.get(score_key, '0')
+
+            print(f"Processing {score_key}: received '{score_value}'")
+
+            if score_value and score_value != '0':
+                cursor.execute(
+                    "INSERT INTO inspection_items (inspection_id, item_id, details) VALUES (?, ?, ?)",
+                    (inspection_id, f'{i:02d}', score_value)
+                )
+                scores_saved += 1
+                print(f"  → Saved {score_key} = {score_value}")
+            else:
+                print(f"  → Skipped {score_key} (value was '{score_value}')")
+
+        print(f"Total scores saved: {scores_saved}")
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Institutional Health inspection submitted successfully!',
+            'redirect': '/dashboard'
+        })
+
+    except Exception as e:
+        print(f"ERROR in submit_institutional: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/fix_institutional_status')
+def fix_institutional_status():
+    """Run this once to update existing institutional records with Pass/Fail status"""
+    if 'admin' not in session and 'inspector' not in session:
+        return "Access denied"
+
+    conn = sqlite3.connect('inspections.db')
+    cursor = conn.cursor()
+
+    # Get all institutional records
+    cursor.execute("""
+        SELECT id, overall_score, critical_score 
+        FROM inspections 
+        WHERE form_type = 'Institutional Health'
+    """)
+    records = cursor.fetchall()
+
+    updated_count = 0
+    for record in records:
+        inspection_id, overall_score, critical_score = record
+        overall_score = overall_score or 0
+        critical_score = critical_score or 0
+
+        # Calculate Pass/Fail
+        if overall_score >= 70 and critical_score >= 50:
+            result = 'Pass'
+        else:
+            result = 'Fail'
+
+        # Update the record
+        cursor.execute("""
+            UPDATE inspections 
+            SET result = ? 
+            WHERE id = ?
+        """, (result, inspection_id))
+        updated_count += 1
+        print(
+            f"Updated inspection {inspection_id}: Overall={overall_score}, Critical={critical_score}, Result={result}")
+
+    conn.commit()
+    conn.close()
+
+    return f"Updated {updated_count} institutional inspection records! <a href='/dashboard'>Back to Dashboard</a>"
+
+
+@app.route('/institutional/inspection/<int:id>')
+def institutional_inspection_detail(id):
+    if 'inspector' not in session and 'admin' not in session:
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('inspections.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM inspections WHERE id = ? AND form_type = 'Institutional Health'", (id,))
+    inspection = cursor.fetchone()
+
+    if not inspection:
+        conn.close()
+        return "Inspection not found", 404
+
+    inspection_dict = dict(inspection)
+
+    # Recalculate Pass/Fail status based on scores
+    overall_score = inspection_dict.get('overall_score', 0) or 0
+    critical_score = inspection_dict.get('critical_score', 0) or 0
+
+    if overall_score >= 70 and critical_score >= 50:
+        inspection_dict['result'] = 'Pass'
+    else:
+        inspection_dict['result'] = 'Fail'
+
+    # DEBUG: Print what's in the database
+    print("=== DATABASE VALUES ===")
+    for key, value in inspection_dict.items():
+        if value:  # Only print non-empty values
+            print(f"{key}: {value}")
+
+    # Get individual scores from inspection_items table
+    cursor.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = ?", (id,))
+    item_scores = {}
+    for row in cursor.fetchall():
+        item_key = row[0]
+        score_value = float(row[1]) if row[1] and str(row[1]).replace('.', '', 1).isdigit() else 0.0
+        item_scores[item_key] = score_value
+
+    # Create the scores dictionary that the template expects
+    scores = {}
+    for item in INSTITUTIONAL_CHECKLIST_ITEMS:
+        item_id = item['id']
+        scores[item_id] = item_scores.get(item_id, 0.0)
+
+    inspection_dict['scores'] = scores
+
+    conn.close()
+
+    return render_template('institutional_inspection_detail.html',
+                           inspection=inspection_dict,
+                           checklist=INSTITUTIONAL_CHECKLIST_ITEMS)
 
 @app.route('/submit_spirit_licence', methods=['POST'])
 def submit_spirit_licence():
@@ -925,6 +1323,40 @@ def submit_swimming_pools():
     return jsonify({'status': 'success', 'message': 'Inspection submitted successfully'})
 
 
+@app.route('/admin/update_database_schema')
+def update_database_schema():
+    """Update database schema to support all form types"""
+    if 'admin' not in session:
+        return "Admin access required"
+
+    conn = sqlite3.connect('inspections.db')
+    cursor = conn.cursor()
+
+    # Add columns that might be missing
+    new_columns = [
+        'staff_complement', 'num_occupants', 'institution_type',
+        'building_size_ft2', 'building_size_m2', 'building_size_value',
+        'telephone_no', 'num_buildings', 'inspector_code',
+        'registration_status', 'purpose_of_visit', 'action'
+    ]
+
+    cursor.execute("PRAGMA table_info(inspections)")
+    existing_columns = [row[1] for row in cursor.fetchall()]
+
+    for column in new_columns:
+        if column not in existing_columns:
+            try:
+                cursor.execute(f'ALTER TABLE inspections ADD COLUMN {column} TEXT')
+                print(f"Added column: {column}")
+            except sqlite3.OperationalError:
+                pass  # Column might already exist
+
+    conn.commit()
+    conn.close()
+
+    return "Database schema updated! <a href='/admin'>Back to Admin Dashboard</a>"
+
+
 @app.route('/fix_swimming_pool_db')
 def fix_swimming_pool_db():
     """Run this once to add missing columns to the inspections table"""
@@ -950,6 +1382,42 @@ def fix_swimming_pool_db():
     return f"Database updated! Added {columns_added} new columns."
 
 
+@app.route('/new_institutional_form')
+def new_institutional_form():
+    if 'inspector' not in session:
+        return redirect(url_for('login'))
+
+    inspection = {
+        'id': '',
+        'establishment_name': '',
+        'owner_operator': '',
+        'address': '',
+        'inspector_name': session.get('inspector', 'Inspector'),
+        'staff_complement': '',
+        'occupants': '',
+        'institution_type': '',
+        'building_size': '',
+        'telephone': '',
+        'num_buildings': '',
+        'critical_score': 0,
+        'inspection_day': '',
+        'inspection_month': '',
+        'inspection_year': '',
+        'inspector_code': '',
+        'overall_score': 0,
+        'compliance_result': '',
+        'license_no': '',
+        'registration_status': '',
+        'purpose_of_visit': '',
+        'action': '',
+        'comments': '',
+        'inspector_signature': '',
+        'received_by': '',
+        'scores': {}
+    }
+    return render_template('institutional_form.html', inspection=inspection)
+
+
 @app.route('/submit_small_hotels', methods=['POST'])
 def submit_small_hotels():
     if 'inspector' not in session:
@@ -959,46 +1427,115 @@ def submit_small_hotels():
     conn = sqlite3.connect('inspections.db')
     c = conn.cursor()
 
-    # Calculate scores
-    scores = []
-    critical_score = 0
-    overall_score = 0
-    for item in SMALL_HOTELS_CHECKLIST_ITEMS:
-        item_id = item['id'].lower()
-        error = data.get(f'error_{item_id}', '0').strip()
-        score = 2.5 if error == '0' else 0
-        scores.append(score)
-        if item['critical']:
-            critical_score += score
-        overall_score += score
+    # Updated critical items list based on your corrected form
+    critical_items = [
+        '1b', '2a', '2e', '3a', '3d', '3f', '3h', '3i', '4a', '4b', '4c', '4d', '4e',
+        '5a', '5b', '5c', '6a', '6b', '8b', '8c', '9a', '9b', '11a', '11c', '12a',
+        '13a', '15a', '15b', '19a', '19b'
+    ]
 
-    # Insert inspection
+    # All possible item IDs from your form
+    all_item_ids = [
+        '1a', '1b', '1c', '1d', '1e', '1f', '1g', '1h',
+        '2a', '2b', '2c', '2d', '2e',
+        '3a', '3b', '3c', '3d', '3e', '3f', '3g', '3h', '3i',
+        '4a', '4b', '4c', '4d', '4e', '4f', '4g',
+        '5a', '5b', '5c', '5d', '5e', '5f',
+        '6a', '6b',
+        '7a', '7b', '7c', '7d', '7e', '7f', '7g',
+        '8a', '8b', '8c',
+        '9a', '9b', '9c',
+        '10a', '10b', '10c', '10d', '10e',
+        '11a', '11b', '11c',
+        '12a', '12b', '12c', '12d',
+        '13a', '13b',
+        '14a', '14b',
+        '15a', '15b',
+        '16a',
+        '17a', '17b',
+        '18a',
+        '19a', '19b',
+        '20a'
+    ]
+
+    # Count total items and critical items
+    total_critical_items = len(critical_items)  # 31 critical items
+    total_items = len(all_item_ids)  # 62 total items
+
+    # Calculate scores - item passes if error = 0 (no error)
+    critical_items_passed = 0
+    total_items_passed = 0
+
+    for item_id in all_item_ids:
+        error_value = int(data.get(f'error_{item_id}', 0) or 0)
+
+        # Item passes if error = 0 (no error found)
+        if error_value == 0:
+            total_items_passed += 1
+
+            if item_id in critical_items:
+                critical_items_passed += 1
+
+    # Calculate percentages
+    critical_score = round((critical_items_passed / total_critical_items) * 100)
+    overall_score = round((total_items_passed / total_items) * 100)
+
+    # Insert inspection with ALL required fields
     c.execute('''
-        INSERT INTO inspections (establishment_name, address, physical_location, inspector_name, 
-                                inspection_date, comments, result, overall_score, critical_score, 
-                                created_at, form_type)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?)
+        INSERT INTO inspections (
+            establishment_name, address, physical_location, inspector_name, 
+            inspection_date, comments, result, overall_score, critical_score,
+            inspector_signature, inspector_signature_date,
+            manager_signature, manager_signature_date,
+            received_by, received_by_date,
+            created_at, form_type
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?)
     ''', (
-        data.get('establishment_name'), data.get('address'), data.get('physical_location'),
-        data.get('inspector_name'), data.get('inspection_date'), data.get('comments'),
-        data.get('result'), overall_score, critical_score, 'Small Hotel'
+        data.get('establishment_name', ''),
+        data.get('address', ''),
+        data.get('physical_location', ''),
+        data.get('inspector_name', ''),
+        data.get('inspection_date', ''),
+        data.get('comments', ''),
+        'Pass' if overall_score >= 70 else 'Fail',
+        overall_score,
+        critical_score,
+        data.get('inspector_signature', ''),
+        data.get('inspector_signature_date', ''),
+        data.get('manager_signature', ''),
+        data.get('manager_signature_date', ''),
+        data.get('received_by', ''),
+        data.get('received_by_date', ''),
+        'Small Hotel'
     ))
     inspection_id = c.lastrowid
 
-    # Insert checklist items
-    for item in SMALL_HOTELS_CHECKLIST_ITEMS:
-        item_id = item['id'].lower()
+    # Insert ALL checklist items to preserve form data
+    for item_id in all_item_ids:
         c.execute('''
             INSERT INTO inspection_items (inspection_id, item_id, obser, error)
             VALUES (?, ?, ?, ?)
         ''', (
-            inspection_id, item_id, data.get(f'obser_{item_id}', ''),
+            inspection_id,
+            item_id,
+            data.get(f'obser_{item_id}', ''),
             data.get(f'error_{item_id}', '0')
         ))
 
     conn.commit()
     conn.close()
-    return jsonify({"status": "success", "message": "Inspection submitted successfully"})
+
+    return jsonify({
+        "status": "success",
+        "message": "Inspection submitted successfully",
+        "inspection_id": inspection_id,
+        "scores": {
+            "critical": critical_score,
+            "overall": overall_score
+        }
+    })
+
 
 @app.route('/medical_officer')
 def medical_officer():
@@ -1012,8 +1549,160 @@ def dashboard():
         return redirect(url_for('admin'))  # Send admin users back to admin dashboard
     if 'inspector' not in session:
         return redirect(url_for('login'))
-    inspections = get_inspections()
+
+    # Get inspections with proper Pass/Fail calculation
+    inspections = get_inspections_with_status()
     return render_template('dashboard.html', inspections=inspections)
+
+def get_inspections_with_status():
+    """Get inspections with calculated Pass/Fail status"""
+    conn = sqlite3.connect('inspections.db')
+    c = conn.cursor()
+
+    # Get all inspections and calculate status based on scores
+    c.execute("""
+        SELECT id, establishment_name, owner, address, license_no, inspector_name, 
+               inspection_date, inspection_time, type_of_establishment, purpose_of_visit, 
+               action, result, scores, comments, created_at, form_type, inspector_code, 
+               no_of_employees, food_inspected, food_condemned, overall_score, critical_score
+        FROM inspections 
+        ORDER BY created_at DESC
+    """)
+
+    inspections = []
+    for row in c.fetchall():
+        inspection_data = {
+            'id': row[0],
+            'establishment_name': row[1] or '',
+            'owner': row[2] or '',
+            'address': row[3] or '',
+            'license_no': row[4] or '',
+            'inspector_name': row[5] or '',
+            'inspection_date': row[6] or '',
+            'inspection_time': row[7] or '',
+            'type_of_establishment': row[8] or '',
+            'purpose_of_visit': row[9] or '',
+            'action': row[10] or '',
+            'result': row[11] or '',
+            'scores': row[12] or '',
+            'comments': row[13] or '',
+            'created_at': row[14] or '',
+            'form_type': row[15] or '',
+            'inspector_code': row[16] or '',
+            'no_of_employees': row[17] or '',
+            'food_inspected': row[18] or 0,
+            'food_condemned': row[19] or 0,
+            'overall_score': row[20] or 0,
+            'critical_score': row[21] or 0
+        }
+
+        # Calculate Pass/Fail status if not already set
+        if not inspection_data['result'] or inspection_data['result'] == 'N/A':
+            overall_score = float(inspection_data['overall_score']) if inspection_data['overall_score'] else 0
+            critical_score = float(inspection_data['critical_score']) if inspection_data['critical_score'] else 0
+
+            # Different criteria for different form types
+            if inspection_data['form_type'] == 'Food Establishment':
+                # Food establishment: Pass if overall >= 70 and critical >= 70% of critical items
+                if overall_score >= 70 and critical_score >= 70:
+                    inspection_data['result'] = 'Pass'
+                else:
+                    inspection_data['result'] = 'Fail'
+            elif inspection_data['form_type'] == 'Spirit Licence Premises':
+                # Spirit licence: Pass if overall >= 70 and critical >= 59
+                if overall_score >= 70 and critical_score >= 59:
+                    inspection_data['result'] = 'Pass'
+                else:
+                    inspection_data['result'] = 'Fail'
+            elif inspection_data['form_type'] == 'Swimming Pool':
+                # Swimming pool: Pass if overall >= 70
+                if overall_score >= 70:
+                    inspection_data['result'] = 'Pass'
+                else:
+                    inspection_data['result'] = 'Fail'
+            elif inspection_data['form_type'] == 'Small Hotel':
+                # Small hotel: Pass if overall >= 70
+                if overall_score >= 70:
+                    inspection_data['result'] = 'Pass'
+                else:
+                    inspection_data['result'] = 'Fail'
+            elif inspection_data['form_type'] == 'Barbershop':
+                # Barbershop: Pass if overall >= 70 and meets critical threshold
+                if overall_score >= 70:
+                    inspection_data['result'] = 'Satisfactory'
+                else:
+                    inspection_data['result'] = 'Unsatisfactory'
+            elif inspection_data['form_type'] == 'Institutional Health':
+                # Institutional: Pass if overall >= 70 and critical >= 50
+                if overall_score >= 70 and critical_score >= 50:
+                    inspection_data['result'] = 'Pass'
+                else:
+                    inspection_data['result'] = 'Fail'
+            else:
+                # Default: Pass if overall >= 70
+                if overall_score >= 70:
+                    inspection_data['result'] = 'Pass'
+                else:
+                    inspection_data['result'] = 'Fail'
+
+        inspections.append(inspection_data)
+
+    conn.close()
+    return inspections
+
+
+@app.route('/fix_inspection_results')
+def fix_inspection_results():
+    """One-time fix to update all inspection results based on scores"""
+    if 'admin' not in session and 'inspector' not in session:
+        return "Access denied"
+
+    conn = sqlite3.connect('inspections.db')
+    c = conn.cursor()
+
+    # Get all inspections that need status updates
+    c.execute("""
+        SELECT id, overall_score, critical_score, form_type, result
+        FROM inspections 
+        WHERE result IS NULL OR result = 'N/A' OR result = ''
+    """)
+
+    inspections_to_update = c.fetchall()
+    updated_count = 0
+
+    for row in inspections_to_update:
+        inspection_id, overall_score, critical_score, form_type, current_result = row
+        overall_score = float(overall_score) if overall_score else 0
+        critical_score = float(critical_score) if critical_score else 0
+
+        # Calculate new result based on form type
+        if form_type == 'Food Establishment':
+            new_result = 'Pass' if overall_score >= 70 and critical_score >= 70 else 'Fail'
+        elif form_type == 'Spirit Licence Premises':
+            new_result = 'Pass' if overall_score >= 70 and critical_score >= 59 else 'Fail'
+        elif form_type == 'Swimming Pool':
+            new_result = 'Pass' if overall_score >= 70 else 'Fail'
+        elif form_type == 'Small Hotel':
+            new_result = 'Pass' if overall_score >= 70 else 'Fail'
+        elif form_type == 'Barbershop':
+            new_result = 'Satisfactory' if overall_score >= 70 else 'Unsatisfactory'
+        elif form_type == 'Institutional Health':
+            new_result = 'Pass' if overall_score >= 70 and critical_score >= 50 else 'Fail'
+        else:
+            new_result = 'Pass' if overall_score >= 70 else 'Fail'
+
+        # Update the database
+        c.execute("UPDATE inspections SET result = ? WHERE id = ?", (new_result, inspection_id))
+        updated_count += 1
+        print(
+            f"Updated inspection {inspection_id}: {form_type} - Overall: {overall_score}, Critical: {critical_score} → {new_result}")
+
+    conn.commit()
+    conn.close()
+
+    return f"Updated {updated_count} inspection results! <a href='/dashboard'>Back to Dashboard</a>"
+
+
 
 @app.route('/stats')
 def get_stats():
@@ -1033,15 +1722,21 @@ def get_stats():
     swimming_pool = c.fetchone()[0]
     c.execute("SELECT COUNT(*) FROM inspections WHERE form_type = 'Small Hotel'")
     small_hotels = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM inspections WHERE form_type = 'Barbershop'")
+    barbershop = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM inspections WHERE form_type = 'Institutional Health'")
+    institutional = c.fetchone()[0]
     conn.close()
     return jsonify({
-        'total': total,
+        'total': total + residential + burial,  # Include all in total
         'food': food,
         'residential': residential,
         'burial': burial,
         'spirit_licence': spirit_licence,
         'swimming_pool': swimming_pool,
-        'small_hotels': small_hotels
+        'small_hotels': small_hotels,
+        'barbershop': barbershop,
+        'institutional': institutional
     })
 
 @app.route('/search', methods=['GET'])
@@ -1050,11 +1745,12 @@ def search():
         return redirect(url_for('login'))
     query = request.args.get('q', '').lower()
     data = get_establishment_data()
-    burial_data = []
     conn = sqlite3.connect('inspections.db')
     c = conn.cursor()
-    c.execute("SELECT id, applicant_name, deceased_name FROM burial_site_inspections")
+    c.execute("SELECT id, applicant_name, deceased_name FROM burial_site_inspections WHERE LOWER(applicant_name) LIKE ? OR LOWER(deceased_name) LIKE ?", (f'%{query}%', f'%{query}%'))
     burial_records = c.fetchall()
+    c.execute("SELECT id, establishment_name, owner, license_no FROM inspections WHERE form_type = 'Barbershop' AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ? OR LOWER(license_no) LIKE ?)", (f'%{query}%', f'%{query}%', f'%{query}%'))
+    barbershop_records = c.fetchall()
     conn.close()
     suggestions = []
     for establishment_name, owner, license_no, id in data:
@@ -1063,104 +1759,11 @@ def search():
     for id, applicant_name, deceased_name in burial_records:
         if query in (applicant_name or '').lower() or query in (deceased_name or '').lower():
             suggestions.append({'text': f"{deceased_name} (Applicant: {applicant_name})", 'id': id, 'type': 'burial'})
+    for id, establishment_name, owner, license_no in barbershop_records:
+        if query in (establishment_name or '').lower() or query in (owner or '').lower() or query in (license_no or '').lower():
+            suggestions.append({'text': f"{establishment_name} (Owner: {owner}, License: {license_no})", 'id': id, 'type': 'barbershop'})
     return jsonify({'suggestions': suggestions})
 
-@app.route('/search_forms', methods=['GET'])
-def search_forms():
-    if 'inspector' not in session:
-        return redirect(url_for('login'))
-    query = request.args.get('query', '').lower()
-    form_type = request.args.get('type', '')
-    conn = sqlite3.connect('inspections.db')
-    c = conn.cursor()
-    forms = []
-
-    if not form_type or form_type == 'all':
-        c.execute("""
-            SELECT id, establishment_name, created_at, result, form_type 
-            FROM inspections 
-            WHERE form_type IN ('Food Establishment', 'Residential & Non-Residential', 'Water Supply', 'Spirit Licence Premises', 'Swimming Pool', 'Small Hotel')
-            AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ? OR LOWER(address) LIKE ?)
-            UNION
-            SELECT id, applicant_name AS establishment_name, created_at, 'Completed' AS result, 'Burial Site' AS form_type
-            FROM burial_site_inspections
-            WHERE LOWER(applicant_name) LIKE ? OR LOWER(deceased_name) LIKE ?
-        """, (f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%'))
-        records = c.fetchall()
-        for record in records:
-            forms.append({
-                'id': record[0],
-                'establishment_name': record[1],
-                'created_at': record[2],
-                'result': record[3] or '',
-                'type': record[4]
-            })
-    else:
-        if form_type == 'food':
-            c.execute(
-                "SELECT id, establishment_name, created_at, result FROM inspections WHERE form_type = 'Food Establishment' AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ?)",
-                (f'%{query}%', f'%{query}%'))
-            records = c.fetchall()
-            for record in records:
-                forms.append({'id': record[0], 'establishment_name': record[1], 'created_at': record[2],
-                              'result': record[3] or '', 'type': 'food'})
-        elif form_type == 'residential':
-            c.execute(
-                "SELECT id, premises_name, created_at, result, owner FROM residential_inspections WHERE (LOWER(premises_name) LIKE ? OR LOWER(owner) LIKE ?)",
-                (f'%{query}%', f'%{query}%'))
-            records = c.fetchall()
-            for record in records:
-                forms.append({'id': record[0], 'premises_name': record[1], 'created_at': record[2],
-                              'result': record[3] or '', 'owner': record[4], 'type': 'residential'})
-        elif form_type == 'burial':
-            c.execute(
-                "SELECT id, applicant_name, deceased_name, created_at, 'Completed' AS status FROM burial_site_inspections WHERE LOWER(applicant_name) LIKE ? OR LOWER(deceased_name) LIKE ?",
-                (f'%{query}%', f'%{query}%'))
-            records = c.fetchall()
-            for record in records:
-                forms.append({
-                    'id': record[0],
-                    'applicant_name': record[1],
-                    'deceased_name': record[2],
-                    'created_at': record[3],
-                    'status': record[4],
-                    'type': 'burial'
-                })
-        elif form_type == 'water_supply':
-            c.execute(
-                "SELECT id, establishment_name, created_at, result FROM inspections WHERE form_type = 'Water Supply' AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ?)",
-                (f'%{query}%', f'%{query}%'))
-            records = c.fetchall()
-            for record in records:
-                forms.append({'id': record[0], 'establishment_name': record[1], 'created_at': record[2],
-                              'result': record[3] or '', 'type': 'water_supply'})
-        elif form_type == 'spirit_licence':
-            c.execute(
-                "SELECT id, establishment_name, created_at, result FROM inspections WHERE form_type = 'Spirit Licence Premises' AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ?)",
-                (f'%{query}%', f'%{query}%'))
-            records = c.fetchall()
-            for record in records:
-                forms.append({'id': record[0], 'establishment_name': record[1], 'created_at': record[2],
-                              'result': record[3] or '', 'type': 'spirit_licence'})
-        elif form_type == 'swimming_pool':
-            c.execute(
-                "SELECT id, establishment_name, created_at, result FROM inspections WHERE form_type = 'Swimming Pool' AND (LOWER(establishment_name) LIKE ? OR LOWER(address) LIKE ?)",
-                (f'%{query}%', f'%{query}%'))
-            records = c.fetchall()
-            for record in records:
-                forms.append({'id': record[0], 'establishment_name': record[1], 'created_at': record[2],
-                              'result': record[3] or '', 'type': 'swimming_pool'})
-        elif form_type == 'small_hotels':
-            c.execute(
-                "SELECT id, establishment_name, created_at, result FROM inspections WHERE form_type = 'Small Hotel' AND (LOWER(establishment_name) LIKE ? OR LOWER(address) LIKE ?)",
-                (f'%{query}%', f'%{query}%'))
-            records = c.fetchall()
-            for record in records:
-                forms.append({'id': record[0], 'establishment_name': record[1], 'created_at': record[2],
-                              'result': record[3] or '', 'type': 'small_hotels'})
-
-    conn.close()
-    return jsonify({'forms': forms})
 
 @app.route('/search_residential', methods=['GET'])
 def search_residential():
@@ -1777,47 +2380,101 @@ def download_residential_pdf(form_id):
     response.headers['Content-Disposition'] = f'attachment; filename=residential_inspection_{form_id}.pdf'
     return response
 
-@app.route('/view_small_hotels/<int:inspection_id>')
-def view_small_hotels(inspection_id):
-    if 'inspector' not in session and 'admin' not in session:
-        return redirect(url_for('login'))
+
+import sqlite3
+
+
+def get_small_hotels_inspection_details(form_id):
     conn = sqlite3.connect('inspections.db')
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
+
+    # Get the main inspection record
     c.execute('''
-        SELECT id, establishment_name, address, physical_location, inspector_name, 
-               inspection_date, type_of_establishment, comments, result, overall_score, 
-               critical_score, created_at, owner, license_no, purpose_of_visit, action, 
-               food_inspected, food_condemned, inspector_code, no_of_employees, scores
-        FROM inspections WHERE id = ? AND form_type = 'Small Hotel'
-    ''', (inspection_id,))
+        SELECT id, establishment_name, address, physical_location, inspector_name, inspection_date, 
+               result, overall_score, critical_score, comments, inspector_signature, 
+               inspector_signature_date, manager_signature, manager_signature_date,
+               received_by, received_by_date, created_at, form_type
+        FROM inspections 
+        WHERE id = ? AND form_type = 'Small Hotel'
+    ''', (form_id,))
+
     inspection = c.fetchone()
 
     if not inspection:
         conn.close()
-        return "Inspection not found", 404
+        return None
 
+    # Get all the observation and error data from inspection_items
     c.execute('''
-        SELECT item_id, details, obser, error 
-        FROM inspection_items WHERE inspection_id = ?
-    ''', (inspection_id,))
+        SELECT item_id, obser, error 
+        FROM inspection_items 
+        WHERE inspection_id = ?
+    ''', (form_id,))
+
     items = c.fetchall()
 
+    # Convert to dictionary format
     inspection_dict = dict(inspection)
-    inspection_dict['details'] = {item['item_id']: item['details'] for item in items}
-    inspection_dict['obser'] = {item['item_id']: item['obser'] for item in items}
-    inspection_dict['error'] = {item['item_id']: item['error'] for item in items}
 
-    if inspection['scores']:
-        scores = [float(x) for x in inspection['scores'].split(',')]
-        inspection_dict['scores'] = dict(zip([item['id'].lower() for item in SMALL_HOTELS_CHECKLIST_ITEMS], scores))
-    else:
-        inspection_dict['scores'] = {item['id'].lower(): 0.0 for item in SMALL_HOTELS_CHECKLIST_ITEMS}
+    # Initialize observation and error dictionaries
+    inspection_dict['obser'] = {}
+    inspection_dict['error'] = {}
+
+    # Populate the obser and error data
+    for item in items:
+        item_id = item['item_id']
+        inspection_dict['obser'][item_id] = item['obser'] or '0'
+        inspection_dict['error'][item_id] = item['error'] or '0'
+
+    # Ensure all possible item IDs have values (even if not in database)
+    all_item_ids = [
+        '1a', '1b', '1c', '1d', '1e', '1f', '1g', '1h',
+        '2a', '2b', '2c', '2d', '2e',
+        '3a', '3b', '3c', '3d', '3e', '3f', '3g', '3h', '3i',
+        '4a', '4b', '4c', '4d', '4e', '4f', '4g',
+        '5a', '5b', '5c', '5d', '5e', '5f',
+        '6a', '6b',
+        '7a', '7b', '7c', '7d', '7e', '7f', '7g',
+        '8a', '8b', '8c',
+        '9a', '9b', '9c',
+        '10a', '10b', '10c', '10d', '10e',
+        '11a', '11b', '11c',
+        '12a', '12b', '12c', '12d',
+        '13a', '13b',
+        '14a', '14b',
+        '15a', '15b',
+        '16a',
+        '17a', '17b',
+        '18a',
+        '19a', '19b',
+        '20a'
+    ]
+
+    for item_id in all_item_ids:
+        if item_id not in inspection_dict['obser']:
+            inspection_dict['obser'][item_id] = '0'
+        if item_id not in inspection_dict['error']:
+            inspection_dict['error'][item_id] = '0'
 
     conn.close()
-    return render_template('small_hotel_inspection_detail.html',
-                          inspection=inspection_dict,
-                          checklist_items=SMALL_HOTELS_CHECKLIST_ITEMS)
+    return inspection_dict
+
+
+@app.route('/small_hotels/inspection/<int:form_id>')
+def small_hotels_inspection(form_id):
+    if 'inspector' not in session and 'admin' not in session:
+        return redirect(url_for('login'))
+
+    # Get the inspection details using the updated function
+    inspection = get_small_hotels_inspection_details(form_id)
+
+    if not inspection:
+        return "Inspection not found", 404
+
+    # The updated function returns everything we need in the right format
+    # Just pass it directly to the template
+    return render_template('small_hotels_inspection_details.html', inspection=inspection)
 
 
 @app.route('/spirit_licence/inspection/<int:id>')
@@ -1968,6 +2625,817 @@ def swimming_pool_inspection_detail(id):
 @app.route('/debug_session')
 def debug_session():
     return jsonify(dict(session))
+
+# Placeholder for create_form_header (implement based on your app's needs)
+def create_form_header(pdf_canvas, title, form_id, width, height):
+    pdf_canvas.setFont("Helvetica-Bold", 14)
+    pdf_canvas.drawCentredString(width / 2, height - 50, title)
+    pdf_canvas.drawString(50, height - 70, f"Form ID: {form_id}")
+    return height - 90
+
+# Placeholder for draw_checkbox (implement based on your app's needs)
+def draw_checkbox(pdf_canvas, x, y, checked=False):
+    pdf_canvas.rect(x, y, 8, 8)
+    if checked:
+        pdf_canvas.drawString(x + 2, y, "X")
+
+
+@app.route('/search_forms', methods=['GET'])
+def search_forms():
+    if 'inspector' not in session:
+        return redirect(url_for('login'))
+
+    query = request.args.get('query', '').lower()
+    form_type = request.args.get('type', '')
+    conn = sqlite3.connect('inspections.db')
+    c = conn.cursor()
+    forms = []
+
+    def calculate_status(overall_score, critical_score, form_type_val):
+        """Calculate Pass/Fail status based on scores and form type"""
+        overall_score = float(overall_score) if overall_score else 0
+        critical_score = float(critical_score) if critical_score else 0
+
+        if form_type_val == 'Food Establishment':
+            return 'Pass' if overall_score >= 70 and critical_score >= 59 else 'Fail'
+        elif form_type_val == 'Spirit Licence Premises':
+            return 'Pass' if overall_score >= 70 and critical_score >= 60 else 'Fail'
+        elif form_type_val == 'Swimming Pool':
+            return 'Pass' if overall_score >= 70 else 'Fail'
+        elif form_type_val == 'Small Hotel':
+            return 'Pass' if overall_score >= 70 else 'Fail'
+        elif form_type_val == 'Barbershop':
+            return 'Satisfactory' if overall_score >= 60 and critical_score >= 60 else 'Unsatisfactory'
+        elif form_type_val == 'Institutional Health':
+            return 'Pass' if overall_score >= 70 and critical_score >= 70 else 'Fail'
+        elif form_type_val == 'Residential':
+            return 'Pass' if overall_score >= 70 and critical_score >= 61 else 'Fail'
+        else:
+            return 'Pass' if overall_score >= 70 else 'Fail'
+
+    if not form_type or form_type == 'all':
+        c.execute("""
+            SELECT id, establishment_name, created_at, result, form_type, overall_score, critical_score 
+            FROM inspections 
+            WHERE form_type IN (
+                'Food Establishment', 'Residential & Non-Residential', 'Water Supply', 
+                'Spirit Licence Premises', 'Swimming Pool', 'Small Hotel', 'Barbershop', 'Institutional Health'
+            )
+            AND (
+                LOWER(establishment_name) LIKE ? 
+                OR LOWER(owner) LIKE ? 
+                OR LOWER(address) LIKE ?
+            )
+            UNION
+            SELECT id, applicant_name AS establishment_name, created_at, 'Completed' AS result, 'Burial Site' AS form_type, 0 AS overall_score, 0 AS critical_score
+            FROM burial_site_inspections
+            WHERE LOWER(applicant_name) LIKE ? OR LOWER(deceased_name) LIKE ?
+            UNION
+            SELECT id, premises_name AS establishment_name, created_at, result, 'Residential' AS form_type, overall_score, critical_score
+            FROM residential_inspections
+            WHERE LOWER(premises_name) LIKE ? OR LOWER(owner) LIKE ?
+        """, (f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%'))
+
+        records = c.fetchall()
+        for record in records:
+            overall_score = record[5] or 0
+            critical_score = record[6] or 0
+            form_type_val = record[4]
+            current_status = record[3]
+
+            # Calculate status if missing or N/A
+            if not current_status or current_status == 'N/A':
+                if form_type_val == 'Burial Site':
+                    status = 'Completed'
+                elif form_type_val == 'Residential':
+                    status = calculate_status(overall_score, critical_score, 'Residential')
+                else:
+                    status = calculate_status(overall_score, critical_score, form_type_val)
+            else:
+                status = current_status
+
+            forms.append({
+                'id': record[0],
+                'establishment_name': record[1],
+                'created_at': record[2],
+                'status': status,
+                'result': status,  # Add both for compatibility
+                'type': record[4]
+            })
+
+    else:
+        # Handle specific form types
+        if form_type == 'food':
+            c.execute("""
+                SELECT id, establishment_name, created_at, result, overall_score, critical_score
+                FROM inspections 
+                WHERE form_type = 'Food Establishment' 
+                AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ?)
+            """, (f'%{query}%', f'%{query}%'))
+        elif form_type == 'residential':
+            c.execute("""
+                SELECT id, premises_name, created_at, result, owner, overall_score, critical_score
+                FROM residential_inspections 
+                WHERE (LOWER(premises_name) LIKE ? OR LOWER(owner) LIKE ?)
+            """, (f'%{query}%', f'%{query}%'))
+        elif form_type == 'burial':
+            c.execute("""
+                SELECT id, applicant_name, deceased_name, created_at
+                FROM burial_site_inspections 
+                WHERE LOWER(applicant_name) LIKE ? OR LOWER(deceased_name) LIKE ?
+            """, (f'%{query}%', f'%{query}%'))
+        elif form_type == 'spirit_licence':
+            c.execute("""
+                SELECT id, establishment_name, created_at, result, overall_score, critical_score
+                FROM inspections 
+                WHERE form_type = 'Spirit Licence Premises' 
+                AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ?)
+            """, (f'%{query}%', f'%{query}%'))
+        elif form_type == 'swimming_pool':
+            c.execute("""
+                SELECT id, establishment_name, created_at, result, overall_score, critical_score
+                FROM inspections 
+                WHERE form_type = 'Swimming Pool' 
+                AND (LOWER(establishment_name) LIKE ? OR LOWER(address) LIKE ?)
+            """, (f'%{query}%', f'%{query}%'))
+        elif form_type == 'small_hotels':
+            c.execute("""
+                SELECT id, establishment_name, created_at, result, overall_score, critical_score
+                FROM inspections 
+                WHERE form_type = 'Small Hotel' 
+                AND (LOWER(establishment_name) LIKE ? OR LOWER(address) LIKE ?)
+            """, (f'%{query}%', f'%{query}%'))
+        elif form_type == 'barbershop':
+            c.execute("""
+                SELECT id, establishment_name, created_at, result, overall_score, critical_score
+                FROM inspections 
+                WHERE form_type = 'Barbershop' 
+                AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ?)
+            """, (f'%{query}%', f'%{query}%'))
+        elif form_type == 'institutional':
+            c.execute("""
+                SELECT id, establishment_name, created_at, result, overall_score, critical_score
+                FROM inspections 
+                WHERE form_type = 'Institutional Health' 
+                AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ?)
+            """, (f'%{query}%', f'%{query}%'))
+        else:
+            conn.close()
+            return jsonify({'forms': []}), 404
+
+        records = c.fetchall()
+        for record in records:
+            form_data = {
+                'id': record[0],
+                'created_at': record[2] if len(record) > 2 else '',
+                'type': form_type
+            }
+
+            if form_type == 'residential':
+                form_data['premises_name'] = record[1]
+                form_data['owner'] = record[4] if len(record) > 4 else ''
+                overall_score = record[5] if len(record) > 5 else 0
+                critical_score = record[6] if len(record) > 6 else 0
+                current_result = record[3] if len(record) > 3 else ''
+
+                if not current_result or current_result == 'N/A':
+                    form_data['status'] = calculate_status(overall_score, critical_score, 'Residential')
+                else:
+                    form_data['status'] = current_result
+                form_data['result'] = form_data['status']
+
+            elif form_type == 'burial':
+                form_data['applicant_name'] = record[1]
+                form_data['deceased_name'] = record[2]
+                form_data['status'] = 'Completed'
+                form_data['result'] = 'Completed'
+
+            elif form_type == 'institutional':
+                form_data['establishment_name'] = record[1]
+                overall_score = record[4] if len(record) > 4 else 0
+                critical_score = record[5] if len(record) > 5 else 0
+                current_result = record[3] if len(record) > 3 else ''
+
+                if not current_result or current_result == 'N/A':
+                    form_data['status'] = calculate_status(overall_score, critical_score, 'Institutional Health')
+                else:
+                    form_data['status'] = current_result
+                form_data['result'] = form_data['status']
+
+            else:
+                # All other form types
+                form_data['establishment_name'] = record[1]
+                overall_score = record[4] if len(record) > 4 else 0
+                critical_score = record[5] if len(record) > 5 else 0
+                current_result = record[3] if len(record) > 3 else ''
+
+                if not current_result or current_result == 'N/A':
+                    if form_type == 'food':
+                        form_data['status'] = calculate_status(overall_score, critical_score, 'Food Establishment')
+                    elif form_type == 'spirit_licence':
+                        form_data['status'] = calculate_status(overall_score, critical_score, 'Spirit Licence Premises')
+                    elif form_type == 'swimming_pool':
+                        form_data['status'] = calculate_status(overall_score, critical_score, 'Swimming Pool')
+                    elif form_type == 'small_hotels':
+                        form_data['status'] = calculate_status(overall_score, critical_score, 'Small Hotel')
+                    elif form_type == 'barbershop':
+                        form_data['status'] = calculate_status(overall_score, critical_score, 'Barbershop')
+                    else:
+                        form_data['status'] = 'Unknown'
+                else:
+                    form_data['status'] = current_result
+                form_data['result'] = form_data['status']
+
+            forms.append(form_data)
+
+    conn.close()
+    return jsonify({'forms': forms})
+
+
+# Database schema update for barbershop inspections
+def update_barbershop_db_schema():
+    conn = sqlite3.connect('inspections.db')
+    cursor = conn.cursor()
+    columns_added = 0
+    for item in BARBERSHOP_CHECKLIST_ITEMS:
+        try:
+            cursor.execute(f'ALTER TABLE inspections ADD COLUMN score_{item["id"]} REAL DEFAULT 0')
+            columns_added += 1
+            logging.info(f"Added column score_{item['id']}")
+        except sqlite3.OperationalError as e:
+            if "duplicate column name" not in str(e):
+                logging.error(f"Error adding score_{item['id']}: {e}")
+    for column in ['telephone_no', 'inspector_code', 'purpose_of_visit', 'action', 'registration_status']:
+        try:
+            cursor.execute(f'ALTER TABLE inspections ADD COLUMN {column} TEXT')
+            columns_added += 1
+            logging.info(f"Added column {column}")
+        except sqlite3.OperationalError as e:
+            if "duplicate column name" not in str(e):
+                logging.error(f"Error adding {column}: {e}")
+    conn.commit()
+    conn.close()
+
+
+    return columns_added
+
+# Route to render new barbershop inspection form
+@app.route('/new_barbershop_form')
+def new_barbershop_form():
+    if 'inspector' not in session:
+        return redirect(url_for('login'))
+    inspection = {
+        'id': '',
+        'establishment_name': '',
+        'owner': '',
+        'address': '',
+        'license_no': '',
+        'inspector_name': session.get('inspector', 'Inspector'),
+        'inspection_date': datetime.now().strftime('%Y-%m-%d'),
+        'inspection_time': '',
+        'type_of_establishment': 'Barbershop',
+        'no_of_employees': '',
+        'result': '',
+        'overall_score': 0,
+        'critical_score': 0,
+        'comments': '',
+        'inspector_signature': '',
+        'received_by': '',
+        'scores': {},
+        'created_at': '',
+        'telephone_no': '',
+        'inspector_code': '',
+        'purpose_of_visit': '',
+        'action': '',
+        'registration_status': ''
+    }
+    return render_template('barbershop_form.html', checklist=BARBERSHOP_CHECKLIST_ITEMS, inspections=get_inspections(),
+                           show_form=True, establishment_data=get_establishment_data(), read_only=False,
+                           inspection=inspection)
+
+
+@app.route('/submit_barbershop', methods=['POST'])
+def submit_barbershop():
+    if 'inspector' not in session:
+        return jsonify({'status': 'error', 'message': 'Please log in.'}), 401
+
+    conn = sqlite3.connect('inspections.db')
+    cursor = conn.cursor()
+
+    # Ensure score columns exist
+    try:
+        cursor.execute("SELECT score_01 FROM inspections LIMIT 1")
+    except sqlite3.OperationalError:
+        update_barbershop_db_schema()
+
+    # Extract form data
+    data = {
+        'establishment_name': request.form.get('establishment_name', ''),
+        'owner': request.form.get('owner', ''),
+        'address': request.form.get('address', ''),
+        'license_no': request.form.get('license_no', ''),
+        'inspector_name': request.form.get('inspector_name', ''),
+        'inspection_date': request.form.get('inspection_date', ''),
+        'inspection_time': request.form.get('inspection_time', ''),
+        'type_of_establishment': 'Barbershop',
+        'no_of_employees': request.form.get('no_of_employees', ''),
+        'telephone_no': request.form.get('telephone_no', ''),
+        'inspector_code': request.form.get('inspector_code', ''),
+        'purpose_of_visit': request.form.get('purpose_of_visit', ''),
+        'action': request.form.get('action', ''),
+        'registration_status': request.form.get('registration_status', ''),
+        'comments': request.form.get('comments', ''),  # Get comments directly from form
+        'inspector_signature': request.form.get('inspector_signature', ''),
+        'received_by': request.form.get('received_by', ''),
+        'form_type': 'Barbershop',
+        'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+
+    # Calculate scores
+    scores = []
+    total_score = 0
+    critical_score = 0
+    max_possible_score = sum(item['wt'] for item in BARBERSHOP_CHECKLIST_ITEMS)
+    critical_max_score = sum(item['wt'] for item in BARBERSHOP_CHECKLIST_ITEMS if item['critical'])
+    score_updates = {}
+
+    for item in BARBERSHOP_CHECKLIST_ITEMS:
+        score_key = f"score_{item['id']}"
+        score = float(request.form.get(score_key, 0))
+        score_updates[score_key] = score
+        scores.append(str(score))
+        total_score += score
+        if item['critical']:
+            critical_score += score
+
+    # Calculate overall score as percentage
+    overall_score = (total_score / max_possible_score) * 100 if max_possible_score > 0 else 0
+    overall_score = round(min(overall_score, 100), 1)
+    data['overall_score'] = overall_score
+    data['critical_score'] = critical_score
+    data['scores'] = ','.join(scores)  # Store scores as comma-separated string
+
+    # Determine result based on scores
+    critical_pass_threshold = critical_max_score * 0.7  # 70% of critical items
+    if overall_score >= 70 and critical_score >= critical_pass_threshold:
+        data['result'] = 'Satisfactory'
+    else:
+        data['result'] = 'Unsatisfactory'
+
+    # Build dynamic INSERT query
+    base_columns = '''establishment_name, owner, address, license_no, inspector_name, 
+                     inspection_date, inspection_time, type_of_establishment, no_of_employees, 
+                     telephone_no, inspector_code, purpose_of_visit, action, registration_status,
+                     comments, result, overall_score, critical_score, scores, inspector_signature, 
+                     received_by, form_type, created_at'''
+
+    score_columns = ', '.join([f"score_{item['id']}" for item in BARBERSHOP_CHECKLIST_ITEMS])
+    all_columns = f"{base_columns}, {score_columns}"
+
+    base_placeholders = '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?'
+    score_placeholders = ', '.join(['?' for _ in BARBERSHOP_CHECKLIST_ITEMS])
+    all_placeholders = f"{base_placeholders}, {score_placeholders}"
+
+    base_values = (
+        data['establishment_name'], data['owner'], data['address'], data['license_no'],
+        data['inspector_name'], data['inspection_date'], data['inspection_time'],
+        data['type_of_establishment'], data['no_of_employees'], data['telephone_no'],
+        data['inspector_code'], data['purpose_of_visit'], data['action'], data['registration_status'],
+        data['comments'], data['result'], data['overall_score'], data['critical_score'],
+        data['scores'], data['inspector_signature'], data['received_by'], data['form_type'],
+        data['created_at']
+    )
+    score_values = tuple(score_updates[f"score_{item['id']}"] for item in BARBERSHOP_CHECKLIST_ITEMS)
+    all_values = base_values + score_values
+
+    try:
+        # Insert inspection
+        cursor.execute(f'''
+            INSERT INTO inspections ({all_columns})
+            VALUES ({all_placeholders})
+        ''', all_values)
+        inspection_id = cursor.lastrowid
+
+        # Insert inspection items
+        for item in BARBERSHOP_CHECKLIST_ITEMS:
+            score = score_updates[f"score_{item['id']}"]
+            cursor.execute('''
+                INSERT INTO inspection_items (inspection_id, item_id, details)
+                VALUES (?, ?, ?)
+            ''', (inspection_id, item['id'], str(score)))
+
+        conn.commit()
+        conn.close()
+
+        # Return success with redirect
+        return jsonify({
+            'status': 'success',
+            'message': 'Inspection submitted successfully',
+            'redirect': '/dashboard'
+        })
+
+    except sqlite3.Error as e:
+        conn.close()
+        return jsonify({'status': 'error', 'message': f'Database error: {str(e)}'}), 500
+
+@app.route('/barbershop/inspection/<int:id>')
+def barbershop_inspection_detail(id):
+    if 'inspector' not in session and 'admin' not in session:
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('inspections.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM inspections WHERE id = ? AND form_type = 'Barbershop'", (id,))
+    inspection = cursor.fetchone()
+
+    if not inspection:
+        conn.close()
+        return "Inspection not found", 404
+
+    inspection_dict = dict(inspection)
+    inspection_dict['overall_score'] = round(float(inspection_dict['overall_score']), 1) if inspection_dict.get('overall_score') else 0.0
+    inspection_dict['critical_score'] = round(float(inspection_dict['critical_score']), 1) if inspection_dict.get('critical_score') else 0.0
+
+    # Ensure all score fields exist
+    for item in BARBERSHOP_CHECKLIST_ITEMS:
+        score_field = f"score_{item['id']}"
+        if score_field not in inspection_dict or inspection_dict[score_field] is None:
+            inspection_dict[score_field] = 0.0
+        else:
+            inspection_dict[score_field] = float(inspection_dict[score_field])
+
+    # Get backup scores from inspection_items
+    cursor.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = ?", (id,))
+    item_scores = {row[0]: float(row[1]) if row[1] and str(row[1]).replace('.', '', 1).isdigit() else 0.0 for row in cursor.fetchall()}
+
+    for item in BARBERSHOP_CHECKLIST_ITEMS:
+        score_field = f"score_{item['id']}"
+        if inspection_dict[score_field] == 0.0 and item['id'] in item_scores:
+            inspection_dict[score_field] = item_scores[item['id']]
+
+    # ADD THIS: Create the scores dictionary that the template expects
+    scores = {}
+    for item in BARBERSHOP_CHECKLIST_ITEMS:
+        item_id = item['id']
+        score_field = f"score_{item_id}"
+        scores[item_id] = inspection_dict.get(score_field, 0.0)
+
+    # Add the scores dictionary to inspection_dict
+    inspection_dict['scores'] = scores
+
+    conn.close()
+    return render_template('barbershop_inspection_detail.html', inspection=inspection_dict, checklist=BARBERSHOP_CHECKLIST_ITEMS)
+# Route to download barbershop inspection PDF
+@app.route('/download_barbershop_pdf/<int:form_id>')
+def download_barbershop_pdf(form_id):
+    if 'inspector' not in session and 'admin' not in session:
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('inspections.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute("SELECT * FROM inspections WHERE id = ? AND form_type = 'Barbershop'", (form_id,))
+    form_data = c.fetchone()
+
+    if not form_data:
+        conn.close()
+        return jsonify({'error': 'Inspection not found'}), 404
+
+    c.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = ?", (form_id,))
+    checklist_scores = {str(row[0]): float(row[1]) if row[1] and row[1].replace('.', '', 1).isdigit() else 0.0 for row in c.fetchall()}
+    conn.close()
+
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    # Form Header
+    y = create_form_header(p, "BARBERSHOP & BEAUTY SALON INSPECTION FORM", form_id, width, height)
+
+    # Basic Information
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y, "ESTABLISHMENT INFORMATION")
+    y -= 25
+
+    p.setFont("Helvetica", 10)
+    basic_info = [
+        ("Establishment Name:", form_data['establishment_name'] or ''),
+        ("Owner/Operator:", form_data['owner'] or ''),
+        ("Address and Parish:", form_data['address'] or ''),
+        ("License No:", form_data['license_no'] or ''),
+        ("Inspector Name:", form_data['inspector_name'] or ''),
+        ("Inspection Date:", form_data['inspection_date'] or ''),
+        ("Inspection Time:", form_data['inspection_time'] or ''),
+        ("Telephone No:", form_data['telephone_no'] or ''),
+        ("No. of Employees:", form_data['no_of_employees'] or ''),
+        ("Inspector Code:", form_data['inspector_code'] or ''),
+        ("Purpose of Visit:", form_data['purpose_of_visit'] or ''),
+        ("Action:", form_data['action'] or ''),
+        ("Registration Status:", form_data['registration_status'] or '')
+    ]
+
+    col1_x, col2_x = 50, 320
+    col_y = y
+
+    for i, (label, value) in enumerate(basic_info):
+        if i % 2 == 0:
+            x = col1_x
+            y = col_y
+        else:
+            x = col2_x
+            y = col_y
+            col_y -= 20
+        p.drawString(x, y, label)
+        p.line(x + 100, y - 2, x + 250, y - 2)
+        p.drawString(x + 105, y, str(value))
+
+    y = col_y - 30
+
+    # Checklist Section
+    if y < 300:
+        p.showPage()
+        y = height - 50
+
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y, "INSPECTION CHECKLIST")
+    y -= 25
+
+    p.setFont("Helvetica-Bold", 9)
+    p.drawString(50, y, "Item")
+    p.drawString(80, y, "Description")
+    p.drawString(400, y, "Weight")
+    p.drawString(450, y, "Score")
+    p.drawString(500, y, "✓")
+    y -= 5
+    p.line(50, y, 550, y)
+    y -= 15
+
+    p.setFont("Helvetica", 8)
+    for item in BARBERSHOP_CHECKLIST_ITEMS:
+        if y < 50:
+            p.showPage()
+            y = height - 50
+            p.setFont("Helvetica-Bold", 9)
+            p.drawString(50, y, "Item")
+            p.drawString(80, y, "Description")
+            p.drawString(400, y, "Weight")
+            p.drawString(450, y, "Score")
+            p.drawString(500, y, "✓")
+            y -= 5
+            p.line(50, y, 550, y)
+            y -= 15
+            p.setFont("Helvetica", 8)
+
+        item_id = str(item['id'])
+        score = checklist_scores.get(item_id, 0)
+        p.drawString(50, y, item_id)
+        desc = item.get('desc', '')
+        if len(desc) > 45:
+            desc = desc[:42] + "..."
+        p.drawString(80, y, desc)
+        p.drawString(400, y, str(item.get('wt', '')))
+        p.drawString(450, y, str(score))
+        draw_checkbox(p, 505, y - 2, checked=(score > 0))
+        y -= 12
+
+    # Scoring Summary
+    y -= 20
+    if y < 150:
+        p.showPage()
+        y = height - 50
+
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y, "SCORING SUMMARY")
+    y -= 25
+
+    p.setFont("Helvetica", 10)
+    p.drawString(50, y, f"Overall Score: {form_data['overall_score'] or 0}")
+    p.drawString(200, y, f"Critical Score: {form_data['critical_score'] or 0}")
+    p.drawString(350, y, f"Result: {form_data['result'] or ''}")
+    y -= 40
+
+    # Comments Section
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y, "COMMENTS")
+    y -= 25
+
+    p.rect(50, y - 60, 500, 60)
+    p.setFont("Helvetica", 9)
+    comments = form_data['comments'] or ''
+    if comments:
+        lines = []
+        words = comments.split()
+        current_line = ""
+        for word in words:
+            if len(current_line + word) < 70:
+                current_line += word + " "
+            else:
+                lines.append(current_line.strip())
+                current_line = word + " "
+        lines.append(current_line.strip())
+        for i, line in enumerate(lines[:5]):
+            p.drawString(55, y - 15 - (i * 10), line)
+
+    y -= 80
+
+    # Signatures Section
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y, "SIGNATURES")
+    y -= 25
+
+    p.setFont("Helvetica", 10)
+    p.drawString(50, y, "Inspector Signature:")
+    p.line(150, y - 2, 300, y - 2)
+    p.drawString(155, y, form_data['inspector_signature'] or '')
+    p.drawString(350, y, "Received By:")
+    p.line(420, y - 2, 550, y - 2)
+    p.drawString(425, y, form_data['received_by'] or '')
+
+    p.save()
+    buffer.seek(0)
+    pdf_data = buffer.getvalue()
+    buffer.close()
+
+    response = make_response(pdf_data)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename=barbershop_inspection_{form_id}.pdf'
+    return response
+
+
+@app.route('/fix_all_forms_to_pass_fail')
+def fix_all_forms_to_pass_fail():
+    """Fix ALL forms to show Pass/Fail instead of Satisfactory/Unsatisfactory"""
+    if 'admin' not in session and 'inspector' not in session:
+        return "Access denied"
+
+    conn = sqlite3.connect('inspections.db')
+    c = conn.cursor()
+
+    total_updated = 0
+
+    # 1. Fix RESIDENTIAL inspections
+    print("=== FIXING RESIDENTIAL INSPECTIONS ===")
+    c.execute("""
+        SELECT id, overall_score, critical_score, result
+        FROM residential_inspections
+    """)
+
+    residential_inspections = c.fetchall()
+    residential_updated = 0
+
+    for row in residential_inspections:
+        inspection_id, overall_score, critical_score, current_result = row
+        overall_score = float(overall_score) if overall_score else 0
+        critical_score = float(critical_score) if critical_score else 0
+
+        # Residential: Pass if overall >= 70 and critical >= 61
+        new_result = 'Pass' if overall_score >= 70 and critical_score >= 61 else 'Fail'
+
+        c.execute("UPDATE residential_inspections SET result = ? WHERE id = ?", (new_result, inspection_id))
+        residential_updated += 1
+        print(f"Residential {inspection_id}: Overall: {overall_score}, Critical: {critical_score} → {new_result}")
+
+    # 2. Fix MAIN INSPECTIONS (Food, Barbershop, etc.)
+    print("=== FIXING MAIN INSPECTIONS ===")
+    c.execute("""
+        SELECT id, overall_score, critical_score, form_type, result
+        FROM inspections
+    """)
+
+    main_inspections = c.fetchall()
+    main_updated = 0
+
+    for row in main_inspections:
+        inspection_id, overall_score, critical_score, form_type, current_result = row
+        overall_score = float(overall_score) if overall_score else 0
+        critical_score = float(critical_score) if critical_score else 0
+
+        # Calculate new result based on form type (ALL should be Pass/Fail)
+        if form_type == 'Food Establishment':
+            new_result = 'Pass' if overall_score >= 70 and critical_score >= 59 else 'Fail'
+        elif form_type == 'Spirit Licence Premises':
+            new_result = 'Pass' if overall_score >= 70 and critical_score >= 60 else 'Fail'
+        elif form_type == 'Swimming Pool':
+            new_result = 'Pass' if overall_score >= 70 else 'Fail'
+        elif form_type == 'Small Hotel':
+            new_result = 'Pass' if overall_score >= 70 else 'Fail'
+        elif form_type == 'Barbershop':
+            # CHANGED: Barbershop now uses Pass/Fail instead of Satisfactory/Unsatisfactory
+            new_result = 'Pass' if overall_score >= 60 and critical_score >= 60 else 'Fail'
+        elif form_type == 'Institutional Health':
+            new_result = 'Pass' if overall_score >= 70 and critical_score >= 70 else 'Fail'
+        else:
+            new_result = 'Pass' if overall_score >= 70 else 'Fail'
+
+        c.execute("UPDATE inspections SET result = ? WHERE id = ?", (new_result, inspection_id))
+        main_updated += 1
+        print(f"{form_type} {inspection_id}: Overall: {overall_score}, Critical: {critical_score} → {new_result}")
+
+    total_updated = residential_updated + main_updated
+
+    conn.commit()
+    conn.close()
+
+    return f"""
+    <h1>✅ Fixed ALL Forms to Pass/Fail!</h1>
+    <p><strong>Residential inspections updated:</strong> {residential_updated}</p>
+    <p><strong>Main inspections updated:</strong> {main_updated}</p>
+    <p><strong>Total records updated:</strong> {total_updated}</p>
+    <br>
+    <h3>All forms now show:</h3>
+    <ul>
+        <li>✅ <strong>Pass</strong> - when criteria are met</li>
+        <li>❌ <strong>Fail</strong> - when criteria are not met</li>
+        <li>🏁 <strong>Completed</strong> - for burial forms only</li>
+    </ul>
+    <br>
+    <a href='/dashboard' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Back to Dashboard</a>
+    """
+
+
+@app.route('/get_inspections_with_status')
+def get_inspections_with_status():
+    """Get inspections with calculated Pass/Fail status for dashboard"""
+    if 'inspector' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    conn = sqlite3.connect('inspections.db')
+    c = conn.cursor()
+
+    # Get all inspections and calculate status based on scores
+    c.execute("""
+        SELECT id, establishment_name, owner, address, license_no, inspector_name, 
+               inspection_date, inspection_time, type_of_establishment, purpose_of_visit, 
+               action, result, scores, comments, created_at, form_type, inspector_code, 
+               no_of_employees, food_inspected, food_condemned, overall_score, critical_score
+        FROM inspections 
+        ORDER BY created_at DESC
+    """)
+
+    inspections = []
+    for row in c.fetchall():
+        inspection_data = {
+            'id': row[0],
+            'establishment_name': row[1] or '',
+            'owner': row[2] or '',
+            'address': row[3] or '',
+            'license_no': row[4] or '',
+            'inspector_name': row[5] or '',
+            'inspection_date': row[6] or '',
+            'inspection_time': row[7] or '',
+            'type_of_establishment': row[8] or '',
+            'purpose_of_visit': row[9] or '',
+            'action': row[10] or '',
+            'result': row[11] or '',
+            'scores': row[12] or '',
+            'comments': row[13] or '',
+            'created_at': row[14] or '',
+            'form_type': row[15] or '',
+            'inspector_code': row[16] or '',
+            'no_of_employees': row[17] or '',
+            'food_inspected': row[18] or 0,
+            'food_condemned': row[19] or 0,
+            'overall_score': row[20] or 0,
+            'critical_score': row[21] or 0
+        }
+
+        # Calculate Pass/Fail status if not already set
+        if not inspection_data['result'] or inspection_data['result'] == 'N/A':
+            overall_score = float(inspection_data['overall_score']) if inspection_data['overall_score'] else 0
+            critical_score = float(inspection_data['critical_score']) if inspection_data['critical_score'] else 0
+
+            # Different criteria for different form types
+            if inspection_data['form_type'] == 'Food Establishment':
+                inspection_data['result'] = 'Pass' if overall_score >= 70 and critical_score >= 59 else 'Fail'
+            elif inspection_data['form_type'] == 'Spirit Licence Premises':
+                inspection_data['result'] = 'Pass' if overall_score >= 70 and critical_score >= 60 else 'Fail'
+            elif inspection_data['form_type'] == 'Swimming Pool':
+                inspection_data['result'] = 'Pass' if overall_score >= 70 else 'Fail'
+            elif inspection_data['form_type'] == 'Small Hotel':
+                inspection_data['result'] = 'Pass' if overall_score >= 70 else 'Fail'
+            elif inspection_data['form_type'] == 'Barbershop':
+                inspection_data[
+                    'result'] = 'Satisfactory' if overall_score >= 60 and critical_score >= 60 else 'Unsatisfactory'
+            elif inspection_data['form_type'] == 'Institutional Health':
+                inspection_data['result'] = 'Pass' if overall_score >= 70 and critical_score >= 70 else 'Fail'
+            else:
+                inspection_data['result'] = 'Pass' if overall_score >= 70 else 'Fail'
+
+        inspections.append(inspection_data)
+
+    conn.close()
+    return jsonify({'inspections': inspections})
+
+
+# Route to fix barbershop database schema
+@app.route('/fix_barbershop_db')
+def fix_barbershop_db():
+    if 'admin' not in session:
+        return "Admin access required", 403
+    columns_added = update_barbershop_db_schema()
+    return f"Database updated! Added {columns_added} new columns."
 
 
 def get_db_connection():
@@ -2239,6 +3707,93 @@ def update_schema():
         return "✅ Database schema updated successfully! <a href='/admin'>Back to Admin</a>"
     except Exception as e:
         return f"❌ Error updating schema: {str(e)}"
+
+
+# Add this route to your app.py file after the other admin routes
+
+@app.route('/api/admin/search_inspections', methods=['GET'])
+def search_inspections():
+    if 'admin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    query = request.args.get('q', '').strip().lower()
+
+    if len(query) < 2:
+        return jsonify([])
+
+    try:
+        conn = sqlite3.connect('inspections.db')
+        cursor = conn.cursor()
+
+        results = []
+
+        # Search in main inspections table
+        cursor.execute("""
+            SELECT id, establishment_name, owner, license_no, form_type, inspector_name
+            FROM inspections
+            WHERE LOWER(establishment_name) LIKE ? 
+               OR LOWER(owner) LIKE ?
+               OR LOWER(license_no) LIKE ?
+               OR LOWER(inspector_name) LIKE ?
+            LIMIT 20
+        """, (f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%'))
+
+        for row in cursor.fetchall():
+            results.append({
+                'id': row[0],
+                'type': row[4] or 'Unknown',
+                'name': row[1] or 'N/A',
+                'owner': row[2] or 'N/A',
+                'license': row[3] or 'N/A',
+                'inspector': row[5] or 'N/A'
+            })
+
+        # Search in residential inspections
+        cursor.execute("""
+            SELECT id, premises_name, owner, address, inspector_name
+            FROM residential_inspections
+            WHERE LOWER(premises_name) LIKE ?
+               OR LOWER(owner) LIKE ?
+               OR LOWER(inspector_name) LIKE ?
+            LIMIT 10
+        """, (f'%{query}%', f'%{query}%', f'%{query}%'))
+
+        for row in cursor.fetchall():
+            results.append({
+                'id': row[0],
+                'type': 'Residential',
+                'name': row[1] or 'N/A',
+                'owner': row[2] or 'N/A',
+                'address': row[3] or 'N/A',
+                'inspector': row[4] or 'N/A'
+            })
+
+        # Search in burial inspections
+        cursor.execute("""
+            SELECT id, applicant_name, deceased_name, burial_location
+            FROM burial_site_inspections
+            WHERE LOWER(applicant_name) LIKE ?
+               OR LOWER(deceased_name) LIKE ?
+               OR LOWER(burial_location) LIKE ?
+            LIMIT 10
+        """, (f'%{query}%', f'%{query}%', f'%{query}%'))
+
+        for row in cursor.fetchall():
+            results.append({
+                'id': row[0],
+                'type': 'Burial',
+                'applicant': row[1] or 'N/A',
+                'deceased': row[2] or 'N/A',
+                'location': row[3] or 'N/A',
+                'inspector': 'N/A'
+            })
+
+        conn.close()
+        return jsonify(results[:20])  # Limit total results to 20
+
+    except Exception as e:
+        print(f"Search error: {str(e)}")
+        return jsonify({'error': 'Search failed'}), 500
 
 # Add these routes to your app.py file
 

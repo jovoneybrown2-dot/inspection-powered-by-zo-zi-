@@ -81,6 +81,16 @@
             font-size: 14px;
             background: #f5f5f5;
         }
+        .date-input-field {
+            display: inline-block;
+            width: 120px;
+            padding: 4px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 12px;
+            background: #f9f9f9;
+            margin: 0 5px;
+        }
         .checkbox-group {
             display: flex;
             gap: 10px;
@@ -140,6 +150,17 @@
         #print-btn:hover {
             background: #e6b800;
         }
+        .na-checkbox {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-left: 10px;
+            font-size: 12px;
+        }
+        .na-checkbox input[type="checkbox"] {
+            width: 15px;
+            height: 15px;
+        }
     </style>
 </head>
 <body>
@@ -191,7 +212,7 @@
             </tr>
             <tr>
                 <td>C</td>
-                <td>Date of last testing within required frequency</td>
+                <td>Date of last testing <input type="text" class="date-input-field" placeholder="DD/MM/YYYY"> within required frequency</td>
                 <td><div class="checkbox-group">
                     <span class="{{ 'score-yes' if inspection.score_1C|default(0)|float > 0 else 'score-no' }}">
                         {{ 'Yes' if inspection.score_1C|default(0)|float > 0 else 'No' }}
@@ -209,7 +230,7 @@
                     <span class="score-display">({{ inspection.score_1D|default(0) }} pts)</span>
                 </div></td>
             </tr>
-            <tr class="critical">
+            <tr>
                 <td>E</td>
                 <td>Daily log books and records up-to-date</td>
                 <td><div class="checkbox-group">
@@ -549,7 +570,12 @@
         <table>
             <tr>
                 <td>A</td>
-                <td>Licensed Lifeguards always on duty during pool opening hours [N/A]</td>
+                <td>Licensed Lifeguards always on duty during pool opening hours
+                    <div class="na-checkbox">
+                        <input type="checkbox" id="na-8a">
+                        <label for="na-8a">N/A</label>
+                    </div>
+                </td>
                 <td><div class="checkbox-group">
                     <span class="{{ 'score-yes' if inspection.score_8A|default(0)|float > 0 else 'score-no' }}">
                         {{ 'Yes' if inspection.score_8A|default(0)|float > 0 else 'No' }}

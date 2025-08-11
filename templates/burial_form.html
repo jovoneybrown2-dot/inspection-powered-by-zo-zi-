@@ -171,7 +171,7 @@
                 <li>Perimeter Boundaries (≥3m): <input type="text" name="proximity_perimeter_boundaries" value="{{ inspection.proximity_perimeter_boundaries if inspection else '' }}" placeholder="metres"></li>
                 <li>Road or pathway (≥6m): <input type="text" name="proximity_road_pathway" value="{{ inspection.proximity_road_pathway if inspection else '' }}" placeholder="metres"></li>
                 <li>Trees (≥3m): <input type="text" name="proximity_trees" value="{{ inspection.proximity_trees if inspection else '' }}" placeholder="metres"></li>
-                <li>Houses/Buildings (≥2m): <input type="text" name="proximity_houses_buildings" value="{{ inspection.proximity_houses_buildings if inspection else '' }}" placeholder="metres"></li>
+                <li>Houses/Buildings (≥3m): <input type="text" name="proximity_houses_buildings" value="{{ inspection.proximity_houses_buildings if inspection else '' }}" placeholder="metres"></li>
             </ul>
             <p>Proposed type of grave to be built: <input type="text" name="proposed_grave_type" value="{{ inspection.proposed_grave_type if inspection else '' }}" required></p>
             <p>General Remarks:</p>

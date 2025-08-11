@@ -145,11 +145,11 @@
             margin-top: 0;
             color: #333;
         }
-        .search-container, .residential-search-container, .burial-search-container, .spirit-licence-search-container, .swimming-pool-search-container, .small-hotels-search-container {
+        .search-container, .residential-search-container, .burial-search-container, .spirit-licence-search-container, .swimming-pool-search-container, .small-hotels-search-container, .barbershop-search-container {
             position: relative;
             margin-bottom: 20px;
         }
-        #search, #residential-search, #burial-search, #spirit-licence-search, #swimming-pool-search, #small-hotels-search {
+        #search, #residential-search, #burial-search, #spirit-licence-search, #swimming-pool-search, #small-hotels-search, #barbershop-search {
             width: 60%;
             max-width: 400px;
             padding: 10px 40px 10px 10px;
@@ -157,7 +157,7 @@
             border: 1px solid #ccc;
             border-radius: 5px;
         }
-        .search-icon, .residential-search-icon, .burial-search-icon, .spirit-licence-search-icon, .swimming-pool-search-icon, .small-hotels-search-icon {
+        .search-icon, .residential-search-icon, .burial-search-icon, .spirit-licence-search-icon, .swimming-pool-search-icon, .small-hotels-search-icon, .barbershop-search-icon {
             position: absolute;
             right: 10px;
             top: 50%;
@@ -782,6 +782,100 @@
         .close-modal:hover {
             color: #333;
         }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+
+        .status-pass {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+            display: inline-block;
+            min-width: 60px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+            border: none;
+            cursor: default;
+            transition: all 0.3s ease;
+        }
+
+        .status-pass:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4);
+        }
+
+        .status-fail {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+            display: inline-block;
+            min-width: 60px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+            border: none;
+            cursor: default;
+            transition: all 0.3s ease;
+        }
+
+        .status-fail:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+        }
+
+        .status-completed {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+            display: inline-block;
+            min-width: 80px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+            border: none;
+            cursor: default;
+            transition: all 0.3s ease;
+        }
+
+        .status-completed:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.4);
+        }
+
+        .status-unknown, .status-na {
+            background: linear-gradient(135deg, #6c757d, #5a6268);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+            display: inline-block;
+            min-width: 70px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3);
+            border: none;
+            cursor: default;
+            transition: all 0.3s ease;
+        }
+
+        .status-unknown:hover, .status-na:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(108, 117, 125, 0.4);
+        }
+
     </style>
 </head>
 <body>
@@ -810,6 +904,8 @@
                 <option value="/new_burial_form">Burial Site Inspection Form</option>
                 <option value="/new_spirit_licence_form">Spirit Licence Premises Inspection Form</option>
                 <option value="/new_swimming_pool_form">Swimming Pool Inspection Form</option>
+                <option value="/new_barbershop_form">Barbershop & Beauty Salon Inspection Form</option>
+                <option value="/new_institutional_form">Institutional Health Inspection Form</option>
             </select>
         </div>
         <div class="tab-container">
@@ -820,6 +916,8 @@
             <div class="tab" data-tab="spirit_licence">Spirit Licence Inspection</div>
             <div class="tab" data-tab="swimming_pool">Swimming Pool Inspection</div>
             <div class="tab" data-tab="small_hotels">Small Hotels Inspection</div>
+            <div class="tab" data-tab="barbershop">Barbershop & Beauty Salon</div>
+            <div class="tab" data-tab="institutional">Institutional Health</div>
         </div>
 
         <div class="tab-content active" id="overview">
@@ -853,6 +951,14 @@
                     <h3>Small Hotels Inspections</h3>
                     <p id="small-hotels-inspections">0</p>
                 </div>
+                <div class="stat-card">
+                    <h3>Barbershop & Beauty Salon Inspections</h3>
+                    <p id="barbershop-inspections">0</p>
+                </div>
+                <div class="stat-card">
+    <h3>Institutional Health Inspections</h3>
+    <p id="institutional-inspections">0</p>
+</div>
             </div>
         </div>
 
@@ -983,7 +1089,48 @@
                 </table>
             </div>
         </div>
+
+        <div class="tab-content" id="barbershop">
+            <h2>Barbershop & Beauty Salon Inspection Forms</h2>
+            <div class="barbershop-search-container">
+                <input type="text" id="barbershop-search" placeholder="Search completed barbershop forms...">
+                <span class="barbershop-search-icon">🔍</span>
+            </div>
+            <div class="results" id="barbershop-results">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Form ID</th>
+                            <th>Establishment Name</th>
+                            <th>Date Completed</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="barbershop-results-body"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
+    <div class="tab-content" id="institutional">
+    <h2>Institutional Health Inspection Forms</h2>
+    <div class="institutional-search-container">
+        <input type="text" id="institutional-search" placeholder="Search completed institutional forms...">
+        <span class="institutional-search-icon">🔍</span>
+    </div>
+    <div class="results" id="institutional-results">
+        <table>
+            <thead>
+                <tr>
+                    <th>Form ID</th>
+                    <th>Establishment Name</th>
+                    <th>Date Completed</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="institutional-results-body"></tbody>
+        </table>
+    </div>
+</div>
 
     <!-- Task Modal -->
     <div class="task-modal" id="taskModal">
@@ -1099,12 +1246,14 @@
             burial: [],
             spirit_licence: [],
             swimming_pool: [],
-            small_hotels: []
+            small_hotels: [],
+            barbershop: [],
+            institutional: []
         };
 
         // Enhanced Search System - Load all data once and filter locally
         async function loadAllFormsData() {
-            const formTypes = ['food', 'residential', 'burial', 'spirit_licence', 'swimming_pool', 'small_hotels'];
+            const formTypes = ['food', 'residential', 'burial', 'spirit_licence', 'swimming_pool', 'small_hotels', 'barbershop', 'institutional'];
 
             for (const formType of formTypes) {
                 try {
@@ -1148,6 +1297,9 @@
                         searchableText = `${form.establishment_name || ''} ${form.id || ''} ${form.result || ''} ${form.status || ''}`.toLowerCase();
                         break;
                     case 'small_hotels':
+                        searchableText = `${form.establishment_name || ''} ${form.id || ''} ${form.result || ''} ${form.status || ''}`.toLowerCase();
+                        break;
+                    case 'barbershop':
                         searchableText = `${form.establishment_name || ''} ${form.id || ''} ${form.result || ''} ${form.status || ''}`.toLowerCase();
                         break;
                 }
@@ -1196,6 +1348,7 @@
                 case 'spirit_licence':
                 case 'swimming_pool':
                 case 'small_hotels':
+                case 'barbershop':
                     return form.establishment_name || '';
                 default:
                     return '';
@@ -1270,109 +1423,178 @@
                 const filteredForms = predictiveSearch(query, 'small_hotels');
                 displaySearchResults(filteredForms, 'small_hotels');
             });
+
+            // Barbershop search
+            document.querySelector('#barbershop-search').addEventListener('input', function() {
+                const query = this.value.trim();
+                const filteredForms = predictiveSearch(query, 'barbershop');
+                displaySearchResults(filteredForms, 'barbershop');
+            });
+
+            // Institutional search
+document.querySelector('#institutional-search').addEventListener('input', function() {
+    const query = this.value.trim();
+    const filteredForms = predictiveSearch(query, 'institutional');
+    displaySearchResults(filteredForms, 'institutional');
+});
         }
 
         // Display search results function
-        function displaySearchResults(forms, formType) {
-            let tbody;
-            switch (formType) {
-                case 'food':
-                    tbody = document.querySelector('#food-results-body');
-                    break;
-                case 'residential':
-                    tbody = document.querySelector('#residential-results-body');
-                    break;
-                case 'burial':
-                    tbody = document.querySelector('#burial-results-body');
-                    break;
-                case 'spirit_licence':
-                    tbody = document.querySelector('#spirit-licence-results-body');
-                    break;
-                case 'swimming_pool':
-                    tbody = document.querySelector('#swimming-pool-results-body');
-                    break;
-                case 'small_hotels':
-                    tbody = document.querySelector('#small-hotels-results-body');
-                    break;
-                default:
-                    return;
+        // Fixed displaySearchResults function with correct routing for all form types
+// Fixed displaySearchResults function with correct routing for all form types
+
+// Replace the displaySearchResults function in your dashboard.html with this updated version
+
+function displaySearchResults(forms, formType) {
+    let tbody;
+    switch (formType) {
+        case 'food':
+            tbody = document.querySelector('#food-results-body');
+            break;
+        case 'residential':
+            tbody = document.querySelector('#residential-results-body');
+            break;
+        case 'burial':
+            tbody = document.querySelector('#burial-results-body');
+            break;
+        case 'spirit_licence':
+            tbody = document.querySelector('#spirit-licence-results-body');
+            break;
+        case 'swimming_pool':
+            tbody = document.querySelector('#swimming-pool-results-body');
+            break;
+        case 'small_hotels':
+            tbody = document.querySelector('#small-hotels-results-body');
+            break;
+        case 'barbershop':
+            tbody = document.querySelector('#barbershop-results-body');
+            break;
+        case 'institutional':
+            tbody = document.querySelector('#institutional-results-body');
+            break;
+        default:
+            return;
+    }
+
+    tbody.innerHTML = '';
+
+    if (forms && forms.length > 0) {
+        forms.forEach(form => {
+            const row = document.createElement('tr');
+
+            // Function to get status with styling
+            // CORRECTED VERSION - Replace the getStyledStatus function in your dashboard.html with this:
+
+// Function to get status with styling
+            function getStyledStatus(status) {
+                if (!status || status === 'N/A') return '<span class="status-unknown">Unknown</span>';
+
+                const statusLower = status.toLowerCase();
+                let cssClass = '';
+
+                if (statusLower === 'pass') {
+                    cssClass = 'status-pass';
+                } else if (statusLower === 'fail') {
+                    cssClass = 'status-fail';
+                } else if (statusLower === 'completed') {
+                    cssClass = 'status-completed';
+                } else {
+                    cssClass = 'status-unknown';
+                }
+
+                return `<span class="${cssClass}">${status}</span>`;
             }
 
-            tbody.innerHTML = '';
-
-            if (forms && forms.length > 0) {
-                forms.forEach(form => {
-                    const row = document.createElement('tr');
-
-                    if (formType === 'burial') {
-                        row.innerHTML = `
-                            <td>${form.id}</td>
-                            <td>${form.applicant_name || 'N/A'}</td>
-                            <td>${form.deceased_name || 'N/A'}</td>
-                            <td>${form.created_at || 'N/A'}</td>
-                            <td>${form.status || 'N/A'}</td>
-                        `;
-                        row.addEventListener('click', () => {
-                            window.location.href = `/burial/inspection/${form.id}`;
-                        });
-                    } else if (formType === 'residential') {
-                        row.innerHTML = `
-                            <td>${form.id}</td>
-                            <td>${form.premises_name || 'N/A'}</td>
-                            <td>${form.owner || 'N/A'}</td>
-                            <td>${form.created_at || 'N/A'}</td>
-                            <td>${form.result || 'N/A'}</td>
-                        `;
-                        row.addEventListener('click', () => {
-                            window.location.href = `/residential/inspection/${form.id}`;
-                        });
-                    } else if (formType === 'swimming_pool') {
-                        row.innerHTML = `
-                            <td>${form.id}</td>
-                            <td>${form.establishment_name || 'N/A'}</td>
-                            <td>${form.created_at || 'N/A'}</td>
-                            <td>${form.result || 'N/A'}</td>
-                        `;
-                        row.addEventListener('click', () => {
-                            window.location.href = `/swimming_pool/inspection/${form.id}`;
-                        });
-                    } else if (formType === 'spirit_licence') {
-                        row.innerHTML = `
-                            <td>${form.id}</td>
-                            <td>${form.establishment_name || 'N/A'}</td>
-                            <td>${form.created_at || 'N/A'}</td>
-                            <td>${form.result || 'N/A'}</td>
-                        `;
-                        row.addEventListener('click', () => {
-                            window.location.href = `/spirit_licence/inspection/${form.id}`;
-                        });
-                    } else if (formType === 'small_hotels') {
-                        row.innerHTML = `
-                            <td>${form.id}</td>
-                            <td>${form.establishment_name || 'N/A'}</td>
-                            <td>${form.created_at || 'N/A'}</td>
-                            <td>${form.result || 'N/A'}</td>
-                        `;
-                        row.addEventListener('click', () => {
-                            window.location.href = `/view_small_hotels/${form.id}`;
-                        });
-                    } else {
-                        row.innerHTML = `
-                            <td>${form.id}</td>
-                            <td>${form.establishment_name || 'N/A'}</td>
-                            <td>${form.created_at || 'N/A'}</td>
-                            <td>${form.result || 'N/A'}</td>
-                        `;
-                        row.addEventListener('click', () => {
-                            window.location.href = `/inspection/${form.id}`;
-                        });
-                    }
-                    tbody.appendChild(row);
+            if (formType === 'burial') {
+                row.innerHTML = `
+                    <td>${form.id}</td>
+                    <td>${form.applicant_name || 'N/A'}</td>
+                    <td>${form.deceased_name || 'N/A'}</td>
+                    <td>${form.created_at || 'N/A'}</td>
+                    <td>${getStyledStatus(form.status || form.result)}</td>
+                `;
+                row.addEventListener('click', () => {
+                    window.location.href = `/burial/inspection/${form.id}`;
+                });
+            } else if (formType === 'residential') {
+                row.innerHTML = `
+                    <td>${form.id}</td>
+                    <td>${form.premises_name || 'N/A'}</td>
+                    <td>${form.owner || 'N/A'}</td>
+                    <td>${form.created_at || 'N/A'}</td>
+                    <td>${getStyledStatus(form.status || form.result)}</td>
+                `;
+                row.addEventListener('click', () => {
+                    window.location.href = `/residential/inspection/${form.id}`;
+                });
+            } else if (formType === 'swimming_pool') {
+                row.innerHTML = `
+                    <td>${form.id}</td>
+                    <td>${form.establishment_name || 'N/A'}</td>
+                    <td>${form.created_at || 'N/A'}</td>
+                    <td>${getStyledStatus(form.status || form.result)}</td>
+                `;
+                row.addEventListener('click', () => {
+                    window.location.href = `/swimming_pool/inspection/${form.id}`;
+                });
+            } else if (formType === 'spirit_licence') {
+                row.innerHTML = `
+                    <td>${form.id}</td>
+                    <td>${form.establishment_name || 'N/A'}</td>
+                    <td>${form.created_at || 'N/A'}</td>
+                    <td>${getStyledStatus(form.status || form.result)}</td>
+                `;
+                row.addEventListener('click', () => {
+                    window.location.href = `/spirit_licence/inspection/${form.id}`;
+                });
+            } else if (formType === 'small_hotels') {
+                row.innerHTML = `
+                    <td>${form.id}</td>
+                    <td>${form.establishment_name || 'N/A'}</td>
+                    <td>${form.created_at || 'N/A'}</td>
+                    <td>${getStyledStatus(form.status || form.result)}</td>
+                `;
+                row.addEventListener('click', () => {
+                    window.location.href = `/small_hotels/inspection/${form.id}`;
+                });
+            } else if (formType === 'barbershop') {
+                row.innerHTML = `
+                    <td>${form.id}</td>
+                    <td>${form.establishment_name || 'N/A'}</td>
+                    <td>${form.created_at || 'N/A'}</td>
+                    <td>${getStyledStatus(form.status || form.result)}</td>
+                `;
+                row.addEventListener('click', () => {
+                    window.location.href = `/barbershop/inspection/${form.id}`;
+                });
+            } else if (formType === 'institutional') {
+                row.innerHTML = `
+                    <td>${form.id}</td>
+                    <td>${form.establishment_name || 'N/A'}</td>
+                    <td>${form.created_at || 'N/A'}</td>
+                    <td>${getStyledStatus(form.status || form.result)}</td>
+                `;
+                row.addEventListener('click', () => {
+                    window.location.href = `/institutional/inspection/${form.id}`;
                 });
             } else {
-                tbody.innerHTML = '<tr><td colspan="5">No results found</td></tr>';
+                // This is the food establishment case
+                row.innerHTML = `
+                    <td>${form.id}</td>
+                    <td>${form.establishment_name || 'N/A'}</td>
+                    <td>${form.created_at || 'N/A'}</td>
+                    <td>${getStyledStatus(form.status || form.result)}</td>
+                `;
+                row.addEventListener('click', () => {
+                    window.location.href = `/inspection/${form.id}`;
+                });
             }
-        }
+            tbody.appendChild(row);
+        });
+    } else {
+        tbody.innerHTML = '<tr><td colspan="5">No results found</td></tr>';
+    }
+}
 
         // Chat Functions
         function toggleChat() {
@@ -1969,7 +2191,8 @@
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
                 const totalCount = (data.food || 0) + (data.residential || 0) + (data.burial || 0) +
-                                  (data.spirit_licence || 0) + (data.swimming_pool || 0) + (data.small_hotels || 0);
+                                  (data.spirit_licence || 0) + (data.swimming_pool || 0) + (data.small_hotels || 0) +
+                                  (data.barbershop || 0) + (data.institutional || 0);
                 document.querySelector('#total-inspections').textContent = totalCount || 0;
                 document.querySelector('#food-inspections').textContent = data.food || 0;
                 document.querySelector('#residential-inspections').textContent = data.residential || 0;
@@ -1977,6 +2200,8 @@
                 document.querySelector('#spirit-licence-inspections').textContent = data.spirit_licence || 0;
                 document.querySelector('#swimming-pool-inspections').textContent = data.swimming_pool || 0;
                 document.querySelector('#small-hotels-inspections').textContent = data.small_hotels || 0;
+                document.querySelector('#barbershop-inspections').textContent = data.barbershop || 0;
+                document.querySelector('#institutional-inspections').textContent = data.institutional || 0;
             } catch (error) {
                 console.error('Error loading stats:', error);
                 document.querySelector('#total-inspections').textContent = '0';
@@ -1986,6 +2211,7 @@
                 document.querySelector('#spirit-licence-inspections').textContent = '0';
                 document.querySelector('#swimming-pool-inspections').textContent = '0';
                 document.querySelector('#small-hotels-inspections').textContent = '0';
+                document.querySelector('#barbershop-inspections').textContent = '0';
             }
         }
 
@@ -2018,6 +2244,9 @@
                         break;
                     case 'small_hotels':
                         tbody = document.querySelector('#small-hotels-results-body');
+                        break;
+                    case 'barbershop':
+                        tbody = document.querySelector('#barbershop-results-body');
                         break;
                     default:
                         return;
