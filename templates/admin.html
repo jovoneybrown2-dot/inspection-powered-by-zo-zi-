@@ -7,6 +7,358 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
+        /* Messaging System Styles */
+.messaging-toggle {
+    position: fixed;
+    top: 60px;
+    right: 20px;
+    z-index: 1000;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.messaging-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+}
+
+.messaging-toggle svg {
+    width: 24px;
+    height: 24px;
+    fill: white;
+}
+
+.message-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff4757;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.messaging-panel {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100vh;
+    background: white;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+}
+
+.messaging-panel.open {
+    right: 0;
+}
+
+.messaging-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.messaging-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.close-messaging {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.users-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+}
+
+.loading-message {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+}
+
+.error-message {
+    padding: 20px;
+    text-align: center;
+    color: #e53e3e;
+    background: #fed7d7;
+    margin: 10px;
+    border-radius: 8px;
+}
+
+.user-item {
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-item:hover {
+    background: #f8f9ff;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 4px 0;
+}
+
+.user-role {
+    font-size: 12px;
+    color: #666;
+    text-transform: capitalize;
+}
+
+.user-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    margin-left: auto;
+}
+
+.unread-count {
+    background: #ff4757;
+    color: white;
+    border-radius: 10px;
+    padding: 2px 6px;
+    font-size: 11px;
+    font-weight: bold;
+    margin-left: auto;
+}
+
+/* Chat Window Styles */
+.chat-window {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 350px;
+    height: 450px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    display: none;
+    flex-direction: column;
+    z-index: 1001;
+    border: 1px solid #e5e7eb;
+}
+
+.chat-window.open {
+    display: flex;
+}
+
+.chat-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chat-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.chat-username {
+    font-weight: 600;
+}
+
+.close-chat {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    background: #f8f9fa;
+}
+
+.message {
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+}
+
+.message.sent {
+    align-items: flex-end;
+}
+
+.message.received {
+    align-items: flex-start;
+}
+
+.message-bubble {
+    max-width: 80%;
+    padding: 10px 15px;
+    border-radius: 18px;
+    font-size: 14px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.message.sent .message-bubble {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-bottom-right-radius: 5px;
+}
+
+.message.received .message-bubble {
+    background: white;
+    color: #333;
+    border: 1px solid #e5e7eb;
+    border-bottom-left-radius: 5px;
+}
+
+.message-time {
+    font-size: 11px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.chat-input-area {
+    padding: 15px;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    border-radius: 0 0 10px 10px;
+}
+
+.chat-input-form {
+    display: flex;
+    gap: 10px;
+}
+
+.chat-input {
+    flex: 1;
+    padding: 10px 15px;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    outline: none;
+    font-size: 14px;
+}
+
+.chat-input:focus {
+    border-color: #667eea;
+}
+
+.send-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.send-button:hover {
+    transform: scale(1.05);
+}
+
+.send-button svg {
+    width: 16px;
+    height: 16px;
+    fill: white;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .messaging-panel {
+        width: 100%;
+        right: -100%;
+    }
+
+    .chat-window {
+        width: calc(100% - 40px);
+        height: 400px;
+        bottom: 10px;
+        right: 20px;
+    }
+}
         body {
             font-family: Arial, sans-serif;
             background: url('{{ url_for("static", filename="heart2.jpg") }}') no-repeat center center fixed;
@@ -42,6 +394,16 @@
         .chart-controls {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .timeframe-group {
+            display: flex;
+            gap: 5px;
+            margin-left: 15px;
+            border-left: 1px solid #444;
+            padding-left: 15px;
         }
 
         .chart-btn {
@@ -52,6 +414,7 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 13px;
+            transition: all 0.3s ease;
         }
 
         .chart-btn:hover {
@@ -62,6 +425,12 @@
         .chart-btn.active {
             background: #2962ff;
             color: white;
+        }
+
+        .chart-btn.time-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            min-width: 60px;
         }
 
         .chart-area {
@@ -404,6 +773,7 @@
 
         <h1 class="text-3xl font-bold text-center black-bold mb-6">Admin Dashboard</h1>
 
+
         <!-- Alert Bell -->
         <div class="absolute top-4 right-4">
             <div class="relative">
@@ -420,15 +790,59 @@
             </div>
         </div>
 
+        <button id="messagingToggleBtn" class="messaging-toggle">
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
+        <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H5.17L4 17.17V4H20V16Z"/>
+        <path d="M7 9H17V11H7V9ZM7 12H15V14H7V12Z"/>
+    </svg>
+    <div id="messageBadge" class="message-badge" style="display: none;">0</div>
+</button>
+
+<!-- Messaging Panel -->
+<div id="messagingPanel" class="messaging-panel">
+    <div class="messaging-header">
+        <h3>💬 Messages</h3>
+        <button class="close-messaging" onclick="toggleMessaging()">×</button>
+    </div>
+    <div class="users-list" id="usersList">
+        <!-- Users will be loaded here -->
+    </div>
+</div>
+
+<!-- Chat Window -->
+<div id="chatWindow" class="chat-window">
+    <div class="chat-header">
+        <div class="chat-user-info">
+            <div class="chat-avatar" id="chatAvatar">U</div>
+            <div class="chat-username" id="chatUsername">User</div>
+        </div>
+        <button class="close-chat" onclick="closeChatWindow()">×</button>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+        <!-- Messages will appear here -->
+    </div>
+    <div class="chat-input-area">
+        <form class="chat-input-form" onsubmit="sendMessage(event)">
+            <input type="text" class="chat-input" id="messageInput" placeholder="Type a message..." required>
+            <input type="hidden" id="currentChatUserId">
+            <button type="submit" class="send-button">
+                <svg viewBox="0 0 24 24">
+                    <path d="M2.01 21L23 12 2.01 3 2 10L17 12 2 14L2.01 21Z"/>
+                </svg>
+            </button>
+        </form>
+    </div>
+</div>
+
         <!-- Global Search Bar -->
         <div class="search-container">
             <input
-                type="text"
-                id="globalSearchInput"
-                placeholder="Search inspections by name, owner, or license..."
-                class="search-input"
-                autocomplete="off"
-            >
+    type="text"
+    id="globalSearchInput"
+    placeholder="Search by establishment name, owner, or license holder..."
+    class="search-input"
+    autocomplete="off"
+>
             <div id="searchSuggestions" class="search-suggestions"></div>
         </div>
 
@@ -478,9 +892,14 @@
                         <button class="chart-btn chart-type-btn active" data-type="candlestick">Candlestick</button>
                         <button class="chart-btn chart-type-btn" data-type="line">Line</button>
                         <button class="chart-btn chart-type-btn" data-type="area">Area</button>
-                        <button class="chart-btn time-btn active" data-time="daily">Daily</button>
-                        <button class="chart-btn time-btn" data-time="weekly">Weekly</button>
-                        <button class="chart-btn time-btn" data-time="monthly">Monthly</button>
+                        <div class="timeframe-group">
+                            <button class="chart-btn time-btn" data-time="5min">5 Min</button>
+                            <button class="chart-btn time-btn" data-time="30min">30 Min</button>
+                            <button class="chart-btn time-btn" data-time="1hour">1 Hour</button>
+                            <button class="chart-btn time-btn active" data-time="daily">Daily</button>
+                            <button class="chart-btn time-btn" data-time="weekly">Weekly</button>
+                            <button class="chart-btn time-btn" data-time="monthly">Monthly</button>
+                        </div>
                         <div class="stats-toggles">
                             <button class="stat-toggle" data-stat="mean" data-tab="overview">Mean</button>
                             <button class="stat-toggle" data-stat="median" data-tab="overview">Median</button>
@@ -580,9 +999,14 @@
                         <button class="chart-btn chart-type-btn active" data-type="candlestick" data-tab="{{ tab }}">Candlestick</button>
                         <button class="chart-btn chart-type-btn" data-type="line" data-tab="{{ tab }}">Line</button>
                         <button class="chart-btn chart-type-btn" data-type="area" data-tab="{{ tab }}">Area</button>
-                        <button class="chart-btn time-btn active" data-time="daily" data-tab="{{ tab }}">Daily</button>
-                        <button class="chart-btn time-btn" data-time="weekly" data-tab="{{ tab }}">Weekly</button>
-                        <button class="chart-btn time-btn" data-time="monthly" data-tab="{{ tab }}">Monthly</button>
+                        <div class="timeframe-group">
+                            <button class="chart-btn time-btn" data-time="5min" data-tab="{{ tab }}">5 Min</button>
+                            <button class="chart-btn time-btn" data-time="30min" data-tab="{{ tab }}">30 Min</button>
+                            <button class="chart-btn time-btn" data-time="1hour" data-tab="{{ tab }}">1 Hour</button>
+                            <button class="chart-btn time-btn active" data-time="daily" data-tab="{{ tab }}">Daily</button>
+                            <button class="chart-btn time-btn" data-time="weekly" data-tab="{{ tab }}">Weekly</button>
+                            <button class="chart-btn time-btn" data-time="monthly" data-tab="{{ tab }}">Monthly</button>
+                        </div>
                         <div class="stats-toggles">
                             <button class="stat-toggle" data-stat="mean" data-tab="{{ tab }}">Mean</button>
                             <button class="stat-toggle" data-stat="median" data-tab="{{ tab }}">Median</button>
@@ -866,6 +1290,68 @@
         </div>
     </div>
 
+
+<!-- ADD THIS NEW MODAL RIGHT HERE -->
+<div id="add_user_modal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <span class="modal-close" onclick="closeModal('add_user')">&times;</span>
+        <h2 class="text-2xl font-bold mb-4 black-bold">Add New User</h2>
+
+        <form id="addUserForm" class="space-y-4">
+            <div>
+                <label for="newUsername" class="block text-sm font-medium text-gray-700">Username</label>
+                <input type="text" id="newUsername" name="username" required
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <small class="text-gray-500">Username must be unique</small>
+            </div>
+
+            <div>
+                <label for="newEmail" class="block text-sm font-medium text-gray-700">Email</label>
+                <input type="email" id="newEmail" name="email" required
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div>
+                <label for="newPassword" class="block text-sm font-medium text-gray-700">Password</label>
+                <input type="password" id="newPassword" name="password" required minlength="6"
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <small class="text-gray-500">Minimum 6 characters</small>
+            </div>
+
+            <div>
+                <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div>
+                <label for="newUserRole" class="block text-sm font-medium text-gray-700">Role</label>
+                <select id="newUserRole" name="role" required
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Select a role</option>
+                    <option value="inspector">Inspector</option>
+                    <option value="admin">Admin</option>
+                    <option value="medical_officer">Medical Officer</option>
+                </select>
+            </div>
+
+            <div id="addUserError" class="text-red-600 text-sm" style="display: none;"></div>
+            <div id="addUserSuccess" class="text-green-600 text-sm" style="display: none;"></div>
+
+            <div class="flex justify-end space-x-3 pt-4">
+                <button type="button" onclick="closeModal('add_user')"
+                        class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    Create User
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
     <!-- System Health Modal -->
     <div id="system_health_modal" class="modal">
         <div class="modal-content">
@@ -961,9 +1447,13 @@
         let searchDebounceTimer;
         let currentStatistics = {};
 
+        // MESSAGING SYSTEM VARIABLES - FIXED VERSION
+        let messagingOpen = false;
+        let currentChatUser = null;
+
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Initializing TradingView charts...');
+            console.log('Initializing Admin Dashboard...');
 
             // Check if TradingView library is loaded
             if (typeof LightweightCharts === 'undefined') {
@@ -986,8 +1476,361 @@
 
             // Initialize Statistics Toggles
             initializeStatisticsToggles();
+
+            // FIXED MESSAGING INITIALIZATION
+            initializeMessaging();
         });
 
+        // FIXED MESSAGING FUNCTIONS
+        function initializeMessaging() {
+            console.log('Setting up messaging system...');
+
+            // Add click event listener to messaging button
+            const messagingBtn = document.getElementById('messagingToggleBtn');
+            if (messagingBtn) {
+                messagingBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Messaging button clicked!');
+                    toggleMessaging();
+                });
+                console.log('Messaging button event listener added');
+            } else {
+                console.error('Messaging button not found!');
+            }
+
+            // Initialize some demo data
+            setTimeout(() => {
+                showMessageBadge(3);
+            }, 1000);
+        }
+
+        // Toggle messaging panel - Updated to use real data only
+        function toggleMessaging() {
+            console.log('toggleMessaging called!');
+            const panel = document.getElementById('messagingPanel');
+
+            if (!panel) {
+                console.error('messagingPanel element not found!');
+                return;
+            }
+
+            messagingOpen = !messagingOpen;
+
+            if (messagingOpen) {
+                panel.classList.add('open');
+                loadUsersList();
+                initializeMessagePolling(); // Start polling when messaging is opened
+                console.log('Opening messaging panel');
+            } else {
+                panel.classList.remove('open');
+                console.log('Closing messaging panel');
+            }
+        }
+
+        // Load users list - only real users from system
+        async function loadUsersList() {
+            console.log('Loading users list...');
+            const usersList = document.getElementById('usersList');
+
+            if (!usersList) {
+                console.error('usersList element not found!');
+                return;
+            }
+
+            // Show loading state
+            usersList.innerHTML = '<div class="loading-message">Loading users...</div>';
+
+            try {
+                // Fetch all users from the system
+                const response = await fetch('/api/admin/users');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const users = await response.json();
+                console.log('Users loaded from API:', users);
+
+                if (!users || users.length === 0) {
+                    usersList.innerHTML = '<div class="loading-message">No users found in the system.</div>';
+                    return;
+                }
+
+                displayUsers(users);
+
+            } catch (error) {
+                console.error('Error loading users:', error);
+
+                // Show error message - no demo fallback
+                usersList.innerHTML = `
+                    <div class="error-message">
+                        Failed to load users: ${error.message}<br>
+                        <small>Please check your connection and try again.</small>
+                    </div>
+                `;
+            }
+        }
+
+        // Display users in the list - only real users from the system
+        function displayUsers(users) {
+            const usersList = document.getElementById('usersList');
+
+            if (!users || users.length === 0) {
+                usersList.innerHTML = '<div class="loading-message">No users found in the system</div>';
+                return;
+            }
+
+            usersList.innerHTML = '';
+
+            users.forEach(user => {
+                const userItem = document.createElement('div');
+                userItem.className = 'user-item';
+                userItem.onclick = () => openChat(user);
+
+                const avatar = user.username.charAt(0).toUpperCase();
+                const roleColor = getRoleColor(user.role);
+
+                // Build unread indicator
+                let unreadIndicator = '<div class="user-status"></div>';
+                if (user.unread_count && user.unread_count > 0) {
+                    unreadIndicator = `<div class="unread-count">${user.unread_count}</div>`;
+                }
+
+                userItem.innerHTML = `
+                    <div class="user-avatar" style="background: ${roleColor};">${avatar}</div>
+                    <div class="user-info">
+                        <div class="user-name">${user.username}</div>
+                        <div class="user-role">${formatRole(user.role)}</div>
+                    </div>
+                    ${unreadIndicator}
+                `;
+
+                usersList.appendChild(userItem);
+            });
+
+            console.log('Real users displayed successfully:', users.length);
+        }
+
+        // Open chat with a user
+        function openChat(user) {
+            console.log('Opening chat with:', user);
+            currentChatUser = user;
+
+            // Update chat window header
+            document.getElementById('chatAvatar').textContent = user.username.charAt(0).toUpperCase();
+            document.getElementById('chatUsername').textContent = user.username;
+            document.getElementById('currentChatUserId').value = user.id;
+
+            // Load demo messages for this user
+            loadDemoMessages(user.id);
+
+            // Show chat window, hide contact list
+            document.getElementById('chatWindow').classList.add('open');
+            document.getElementById('messagingPanel').classList.remove('open');
+            messagingOpen = false;
+
+            // Clear unread count
+            updateUnreadCount(user.id, 0);
+        }
+
+        // Check for unread messages on page load
+        async function checkUnreadMessages() {
+            try {
+                const response = await fetch('/api/admin/unread_message_count');
+                if (!response.ok) throw new Error('Failed to get unread count');
+
+                const data = await response.json();
+                if (data.count > 0) {
+                    showMessageBadge(data.count);
+                }
+            } catch (error) {
+                console.error('Error checking unread messages:', error);
+                // Don't show any badge if API fails
+            }
+        }
+
+        // Load messages for a specific user - only real messages
+        async function loadChatMessages(userId) {
+            try {
+                const response = await fetch(`/api/admin/messages/${userId}`);
+                if (!response.ok) throw new Error('Failed to load messages');
+
+                const messages = await response.json();
+
+                const messagesContainer = document.getElementById('chatMessages');
+                messagesContainer.innerHTML = '';
+
+                if (messages.length === 0) {
+                    messagesContainer.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">No messages yet. Start the conversation!</div>';
+                } else {
+                    messages.forEach(msg => {
+                        const div = document.createElement('div');
+                        div.className = `message ${msg.is_sent ? 'sent' : 'received'}`;
+                        div.innerHTML = `
+                            <div class="message-bubble">${msg.content}</div>
+                            <div class="message-time">${new Date(msg.timestamp).toLocaleTimeString()}</div>
+                        `;
+                        messagesContainer.appendChild(div);
+                    });
+                }
+
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            } catch (error) {
+                console.error('Error loading messages:', error);
+                const messagesContainer = document.getElementById('chatMessages');
+                messagesContainer.innerHTML = `
+                    <div style="text-align: center; color: #e53e3e; padding: 20px; background: #fed7d7; margin: 10px; border-radius: 8px;">
+                        Failed to load messages: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Send message function
+        async function sendMessage(event) {
+            event.preventDefault();
+
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            const recipientId = document.getElementById('currentChatUserId').value;
+
+            if (!content || !recipientId) {
+                console.log('Missing content or recipient');
+                return;
+            }
+
+            console.log('Sending message:', content, 'to user:', recipientId);
+
+            // Add message to chat immediately (optimistic update)
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message sent';
+            messageDiv.innerHTML = `
+                <div class="message-bubble">${content}</div>
+                <div class="message-time">${new Date().toLocaleTimeString()}</div>
+            `;
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            // Clear input
+            input.value = '';
+
+            try {
+                // Try to send via API
+                const response = await fetch('/api/admin/send_message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        recipient_id: parseInt(recipientId),
+                        content: content
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to send message');
+                }
+
+                console.log('Message sent successfully');
+
+            } catch (error) {
+                console.warn('Failed to send message via API:', error);
+                // Message is already shown optimistically, so we just log the error
+                // In a real app, you might want to show a retry button or mark as failed
+            }
+        }
+
+        // Close chat window
+        function closeChatWindow() {
+            document.getElementById('chatWindow').classList.remove('open');
+            currentChatUser = null;
+        }
+
+        // Helper function to get role color
+        function getRoleColor(role) {
+            const colors = {
+                'admin': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                'inspector': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                'medical_officer': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
+            };
+            return colors[role] || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        }
+
+        // Helper function to format role
+        function formatRole(role) {
+            switch(role) {
+                case 'medical_officer': return 'Medical Officer';
+                case 'admin': return 'Admin';
+                case 'inspector': return 'Inspector';
+                default: return role;
+            }
+        }
+
+        // Show message badge - only for real unread messages
+        function showMessageBadge(count) {
+            const badge = document.getElementById('messageBadge');
+            if (badge) {
+                if (count > 0) {
+                    badge.textContent = count;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+
+        // Update unread count for a user in the UI
+        function updateUnreadCount(userId, count) {
+            const userItems = document.querySelectorAll('.user-item');
+            userItems.forEach(item => {
+                // Find the user by matching the onclick handler or data attribute
+                if (item.onclick && item.onclick.toString().includes(`openChat`) &&
+                    item.querySelector('.user-name') &&
+                    item.querySelector('.user-name').textContent) {
+
+                    const unreadEl = item.querySelector('.unread-count');
+                    if (count > 0) {
+                        if (unreadEl) {
+                            unreadEl.textContent = count;
+                        } else {
+                            // Add unread count
+                            const newUnread = document.createElement('div');
+                            newUnread.className = 'unread-count';
+                            newUnread.textContent = count;
+                            item.appendChild(newUnread);
+                        }
+                    } else {
+                        if (unreadEl) {
+                            unreadEl.remove();
+                            // Add status dot back
+                            const statusDot = document.createElement('div');
+                            statusDot.className = 'user-status';
+                            item.appendChild(statusDot);
+                        }
+                    }
+                }
+            });
+
+            // Update global message badge
+            checkUnreadMessages();
+        }
+
+        // Periodically check for new messages
+        function startMessagePolling() {
+            setInterval(() => {
+                checkUnreadMessages();
+
+                // If a chat is open, refresh the messages
+                if (currentChatUser && currentChatUser.id) {
+                    loadChatMessages(currentChatUser.id);
+                }
+            }, 5000); // Check every 5 seconds
+        }
+
+        // Rest of your original code continues here...
         function initializeCharts() {
             createChart('overview');
             ['food', 'residential', 'burial', 'spirit_licence', 'swimming_pool', 'small_hotels', 'barbershop', 'institutional'].forEach(tab => {
@@ -1099,111 +1942,130 @@
         }
 
         function performClientSideSearch(query) {
-            const results = [];
-            const lowerQuery = query.toLowerCase();
+    const results = [];
+    const lowerQuery = query.toLowerCase();
 
-            // Search through all visible forms in the current table
-            const currentTab = document.querySelector('.tab-content.active');
-            const rows = currentTab.querySelectorAll('tbody tr');
+    // Search through all visible forms in the current table
+    const currentTab = document.querySelector('.tab-content.active');
+    const rows = currentTab.querySelectorAll('tbody tr');
 
-            rows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                if (cells.length > 0) {
-                    const formId = cells[0].textContent;
-                    const name = cells[1] ? cells[1].textContent : '';
-                    const owner = cells[2] ? cells[2].textContent : '';
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length > 0) {
+            const formId = cells[0].textContent.trim();
+            const establishmentCell = cells[1];
+            const name = establishmentCell ? establishmentCell.textContent.trim() : '';
+            const owner = cells[2] ? cells[2].textContent.trim() : '';
 
-                    const searchText = `${formId} ${name} ${owner}`.toLowerCase();
+            // Extract just the establishment name (first line of the cell)
+            const establishmentName = name.split('\n')[0].trim();
 
-                    if (searchText.includes(lowerQuery)) {
-                        results.push({
-                            id: formId,
-                            name: name || 'Unknown',
-                            owner: owner || 'N/A',
-                            match: searchText
-                        });
-                    }
-                }
-            });
-
-            displaySearchResults(results);
-        }
-
-        function displaySearchResults(results) {
-            const suggestions = document.getElementById('searchSuggestions');
-
-            if (!results || results.length === 0) {
-                suggestions.innerHTML = '<div class="suggestion-item">No results found</div>';
-                suggestions.classList.add('active');
-                return;
+            // Extract form type from the second line
+            const lines = name.split('\n');
+            let formType = 'Food Establishment'; // default
+            if (lines.length > 1) {
+                const typeText = lines[1].trim();
+                const typeMap = {
+                    'Small Hotel': 'Small Hotel',
+                    'Swimming Pool': 'Swimming Pool',
+                    'Residential': 'Residential',
+                    'Barbershop': 'Barbershop',
+                    'Spirit Licence Premises': 'Spirit Licence Premises',
+                    'Food Establishment': 'Food Establishment',
+                    'Burial': 'Burial',
+                    'Institutional': 'Institutional Health'
+                };
+                formType = typeMap[typeText] || 'Food Establishment';
             }
 
-            suggestions.innerHTML = '';
-
-            results.slice(0, 10).forEach(result => {
-                const item = document.createElement('div');
-                item.className = 'suggestion-item';
-                item.innerHTML = `
-                    <strong>Form #${result.id}</strong>
-                    <span class="suggestion-type">${result.name || 'Unknown'}</span>
-                    <br>
-                    <small>Owner: ${result.owner || 'N/A'}</small>
-                `;
-
-                item.addEventListener('click', () => {
-                    // Find and highlight the form in the table
-                    highlightFormInTable(result.id);
-                    suggestions.classList.remove('active');
-                    document.getElementById('globalSearchInput').value = '';
+            // Search primarily by establishment name, then owner
+            if (establishmentName.toLowerCase().includes(lowerQuery) || owner.toLowerCase().includes(lowerQuery)) {
+                results.push({
+                    id: formId,
+                    name: establishmentName || 'Unknown',
+                    owner: owner || 'N/A',
+                    formType: formType,
+                    match: `${establishmentName} ${owner}`.toLowerCase()
                 });
-
-                suggestions.appendChild(item);
-            });
-
-            suggestions.classList.add('active');
-        }
-
-        function highlightFormInTable(formId) {
-            // Remove any existing highlights
-            document.querySelectorAll('.highlighted-row').forEach(row => {
-                row.classList.remove('highlighted-row');
-            });
-
-            // Find and highlight the matching row
-            const currentTab = document.querySelector('.tab-content.active');
-            const rows = currentTab.querySelectorAll('tbody tr');
-
-            rows.forEach(row => {
-                const idCell = row.querySelector('td:first-child');
-                if (idCell && idCell.textContent.trim() === formId.trim()) {
-                    row.classList.add('highlighted-row');
-                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                    // Remove highlight after 3 seconds
-                    setTimeout(() => {
-                        row.classList.remove('highlighted-row');
-                    }, 3000);
-                }
-            });
-        }
-
-        // Add CSS for highlighting
-        const style = document.createElement('style');
-        style.textContent = `
-            .highlighted-row {
-                background-color: #fef3c7 !important;
-                border: 2px solid #f59e0b !important;
-                animation: highlight-pulse 2s ease-in-out;
             }
+        }
+    });
 
-            @keyframes highlight-pulse {
-                0%, 100% { background-color: #fef3c7; }
-                50% { background-color: #fde68a; }
-            }
+    displaySearchResults(results);
+}
+
+     function displaySearchResults(results) {
+    const suggestions = document.getElementById('searchSuggestions');
+
+    if (!results || results.length === 0) {
+        suggestions.innerHTML = '<div class="suggestion-item">No results found</div>';
+        suggestions.classList.add('active');
+        return;
+    }
+
+    suggestions.innerHTML = '';
+
+    results.slice(0, 10).forEach(result => {
+        const item = document.createElement('div');
+        item.className = 'suggestion-item';
+        item.innerHTML = `
+            <strong>${result.name}</strong>
+            <span class="suggestion-type">Form #${result.id}</span>
+            <br>
+            <small>Owner: ${result.owner}</small>
         `;
-        document.head.appendChild(style);
 
-        // Rest of your existing JavaScript functions...
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            console.log('Search result clicked:', result);
+
+            try {
+                // Extract just the numeric part of the form ID
+                const numericId = result.id.replace(/\D/g, '');
+                console.log('Form ID:', numericId, 'Form Type:', result.formType);
+
+                // Check if viewForm function exists
+                if (typeof viewForm === 'function') {
+                    console.log('Calling viewForm...');
+                    viewForm(numericId, result.formType);
+                } else {
+                    console.error('viewForm function not found!');
+                    // Fallback: construct URL manually
+                    let endpoint;
+                    switch (result.formType) {
+                        case 'Food Establishment': endpoint = `/inspection/${numericId}`; break;
+                        case 'Residential': endpoint = `/residential/inspection/${numericId}`; break;
+                        case 'Burial': endpoint = `/burial/inspection/${numericId}`; break;
+                        case 'Spirit Licence Premises': endpoint = `/spirit_licence/inspection/${numericId}`; break;
+                        case 'Swimming Pool': endpoint = `/swimming_pool/inspection/${numericId}`; break;
+                        case 'Small Hotel': endpoint = `/small_hotels/inspection/${numericId}`; break;
+                        case 'Barbershop': endpoint = `/barbershop/inspection/${numericId}`; break;
+                        case 'Institutional Health': endpoint = `/institutional/inspection/${numericId}`; break;
+                        default: endpoint = `/inspection/${numericId}`;
+                    }
+                    console.log('Navigating to:', endpoint);
+                    window.location.href = endpoint;
+                }
+
+            } catch (error) {
+                console.error('Error in search result click:', error);
+            }
+
+            // Close suggestions
+            suggestions.classList.remove('active');
+
+            // Clear search input
+            document.getElementById('globalSearchInput').value = '';
+        });
+
+        suggestions.appendChild(item);
+    });
+
+    suggestions.classList.add('active');
+}
+
         function setupTabs() {
             const tabs = document.querySelectorAll('.tab');
             const tabContents = document.querySelectorAll('.tab-content');
@@ -1246,10 +2108,21 @@
                     const timePeriod = this.dataset.time;
                     const tab = this.dataset.tab || 'overview';
 
-                    this.parentElement.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+                    // Remove active class from all time buttons for this tab
+                    const tabSelector = tab === 'overview' ? ':not([data-tab])' : `[data-tab="${tab}"]`;
+                    document.querySelectorAll(`.time-btn${tabSelector}`).forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
 
+                    // Show timeframe information
+                    showTimeframeInfo(timePeriod);
+
+                    // Load data with new timeframe
                     loadTabData(tab, timePeriod);
+
+                    // Show notification about pattern analysis capabilities
+                    if (timePeriod === '5min' || timePeriod === '30min' || timePeriod === '1hour') {
+                        showNotification(`Switched to ${timePeriod} timeframe - More candlesticks for detailed pattern analysis!`, 'info');
+                    }
                 });
             });
         }
@@ -1285,14 +2158,14 @@
                     scoresData = generateDummyScores();
                 }
 
-                processInspectionData(tab, metricsData, scoresData);
+                processInspectionData(tab, metricsData, scoresData, timePeriod);
 
             } catch (error) {
                 console.error(`Error loading data for ${tab}:`, error);
                 showErrorMessage(tab, `Failed to load data: ${error.message}`);
-                const dummyData = generateDummyData();
+                const dummyData = generateDummyData(timePeriod);
                 const dummyScores = generateDummyScores();
-                processInspectionData(tab, dummyData, dummyScores);
+                processInspectionData(tab, dummyData, dummyScores, timePeriod);
             }
         }
 
@@ -1311,23 +2184,104 @@
             return formTypeMap[tab] || 'all';
         }
 
-        function generateDummyData() {
+        function generateDummyData(timePeriod = 'daily') {
             const dates = [];
             const pass = [];
             const fail = [];
 
-            for (let i = 29; i >= 0; i--) {
-                const date = new Date();
-                date.setDate(date.getDate() - i);
-                dates.push(date.toISOString().split('T')[0]);
+            let dataPoints, timeIncrement, dateFormat;
 
-                const passCount = Math.floor(Math.random() * 20) + 5;
-                const failCount = Math.floor(Math.random() * 5) + 1;
+            // Configure data points based on timeframe for intricate analysis
+            switch (timePeriod) {
+                case '5min':
+                    dataPoints = 288; // 24 hours of 5-minute intervals (1440 min / 5 min)
+                    timeIncrement = 5 * 60 * 1000; // 5 minutes in milliseconds
+                    dateFormat = 'minute';
+                    break;
+                case '30min':
+                    dataPoints = 336; // 7 days of 30-minute intervals (168 hours * 2)
+                    timeIncrement = 30 * 60 * 1000; // 30 minutes in milliseconds
+                    dateFormat = 'hour';
+                    break;
+                case '1hour':
+                    dataPoints = 168; // 7 days of hourly data (24 * 7)
+                    timeIncrement = 60 * 60 * 1000; // 1 hour in milliseconds
+                    dateFormat = 'hour';
+                    break;
+                case 'daily':
+                    dataPoints = 30; // 30 days
+                    timeIncrement = 24 * 60 * 60 * 1000; // 1 day in milliseconds
+                    dateFormat = 'day';
+                    break;
+                case 'weekly':
+                    dataPoints = 52; // 52 weeks
+                    timeIncrement = 7 * 24 * 60 * 60 * 1000; // 1 week in milliseconds
+                    dateFormat = 'day';
+                    break;
+                case 'monthly':
+                    dataPoints = 12; // 12 months
+                    timeIncrement = 30 * 24 * 60 * 60 * 1000; // ~1 month in milliseconds
+                    dateFormat = 'day';
+                    break;
+                default:
+                    dataPoints = 30;
+                    timeIncrement = 24 * 60 * 60 * 1000;
+                    dateFormat = 'day';
+            }
 
+            const now = new Date();
+            const startTime = new Date(now.getTime() - (dataPoints * timeIncrement));
+
+            for (let i = 0; i < dataPoints; i++) {
+                const currentTime = new Date(startTime.getTime() + (i * timeIncrement));
+
+                // Create more realistic patterns for shorter timeframes
+                let baseActivity, volatility;
+
+                if (timePeriod === '5min' || timePeriod === '30min') {
+                    // Higher frequency, more volatile data for pattern analysis
+                    const hour = currentTime.getHours();
+
+                    // Simulate business hours patterns (higher activity 8 AM - 6 PM)
+                    if (hour >= 8 && hour <= 18) {
+                        baseActivity = 15 + Math.sin(hour / 24 * Math.PI * 2) * 5; // Peak mid-day
+                        volatility = 0.3;
+                    } else {
+                        baseActivity = 3 + Math.random() * 2; // Low activity off-hours
+                        volatility = 0.6;
+                    }
+
+                    // Add day-of-week patterns
+                    const dayOfWeek = currentTime.getDay();
+                    if (dayOfWeek === 0 || dayOfWeek === 6) { // Weekend
+                        baseActivity *= 0.4; // Lower weekend activity
+                    }
+
+                } else if (timePeriod === '1hour') {
+                    // Hourly patterns with realistic fluctuations
+                    const hour = currentTime.getHours();
+                    baseActivity = 8 + Math.sin((hour - 6) / 24 * Math.PI * 2) * 4;
+                    volatility = 0.25;
+
+                } else {
+                    // Daily and longer timeframes
+                    baseActivity = Math.random() * 15 + 5;
+                    volatility = 0.2;
+                }
+
+                // Generate pass/fail counts with realistic patterns
+                const totalInspections = Math.max(1, Math.round(baseActivity + (Math.random() - 0.5) * baseActivity * volatility));
+                const passRate = 0.65 + (Math.random() - 0.5) * 0.3; // 50-80% pass rate with variation
+
+                const passCount = Math.round(totalInspections * passRate);
+                const failCount = totalInspections - passCount;
+
+                dates.push(currentTime.toISOString());
                 pass.push(passCount);
                 fail.push(failCount);
             }
 
+            console.log(`Generated ${dataPoints} data points for ${timePeriod} timeframe`);
             return { dates, pass, fail };
         }
 
@@ -1341,10 +2295,10 @@
             return scores;
         }
 
-        function processInspectionData(tab, data, scoresData = []) {
+        function processInspectionData(tab, data, scoresData = [], timePeriod = 'daily') {
             if (!data || !data.dates || !Array.isArray(data.dates)) {
                 console.warn(`Invalid data structure for ${tab}, using dummy data`);
-                data = generateDummyData();
+                data = generateDummyData(timePeriod);
                 scoresData = generateDummyScores();
             }
 
@@ -1359,27 +2313,72 @@
                 totalFail = data.fail.reduce((sum, count) => sum + (count || 0), 0);
             }
 
+            // Enhanced candlestick generation for pattern analysis
+            let previousClose = 65; // Starting baseline pass rate
+
             for (let i = 0; i < data.dates.length; i++) {
                 const date = data.dates[i];
                 const passCount = data.pass ? (data.pass[i] || 0) : 0;
                 const failCount = data.fail ? (data.fail[i] || 0) : 0;
                 const total = passCount + failCount;
-                const passRate = total > 0 ? (passCount / total) * 100 : 0;
+                const currentPassRate = total > 0 ? (passCount / total) * 100 : previousClose;
 
-                const prevRate = i > 0 ? chartData[i-1].close : passRate;
-                const open = prevRate;
-                const close = passRate;
-                const high = Math.max(open, close) + (Math.random() * 2);
-                const low = Math.min(open, close) - (Math.random() * 2);
+                // Create realistic OHLC data for candlestick patterns
+                let open, high, low, close;
+
+                if (timePeriod === '5min' || timePeriod === '30min') {
+                    // More volatile data for shorter timeframes
+                    const volatility = timePeriod === '5min' ? 3 : 2;
+                    open = previousClose + (Math.random() - 0.5) * volatility;
+                    close = currentPassRate;
+
+                    // Create realistic high/low with occasional spikes
+                    const range = Math.abs(close - open) + volatility;
+                    high = Math.max(open, close) + Math.random() * range * 0.8;
+                    low = Math.min(open, close) - Math.random() * range * 0.8;
+
+                } else if (timePeriod === '1hour') {
+                    // Medium volatility for hourly data
+                    const volatility = 1.5;
+                    open = previousClose + (Math.random() - 0.5) * volatility;
+                    close = currentPassRate;
+
+                    const range = Math.abs(close - open) + volatility;
+                    high = Math.max(open, close) + Math.random() * range * 0.6;
+                    low = Math.min(open, close) - Math.random() * range * 0.6;
+
+                } else {
+                    // Lower volatility for daily+ timeframes
+                    const volatility = 1;
+                    open = previousClose;
+                    close = currentPassRate;
+
+                    high = Math.max(open, close) + Math.random() * volatility;
+                    low = Math.min(open, close) - Math.random() * volatility;
+                }
+
+                // Ensure values stay within realistic bounds (0-100%)
+                open = Math.max(0, Math.min(100, open));
+                high = Math.max(0, Math.min(100, high));
+                low = Math.max(0, Math.min(100, low));
+                close = Math.max(0, Math.min(100, close));
+
+                // Ensure high >= max(open, close) and low <= min(open, close)
+                high = Math.max(high, open, close);
+                low = Math.min(low, open, close);
+
+                const timestamp = Math.floor(new Date(date).getTime() / 1000);
 
                 chartData.push({
-                    time: Math.floor(new Date(date).getTime() / 1000),
-                    open: Math.max(0, Math.min(100, open)),
-                    high: Math.max(0, Math.min(100, high)),
-                    low: Math.max(0, Math.min(100, low)),
-                    close: Math.max(0, Math.min(100, close)),
-                    value: passRate
+                    time: timestamp,
+                    open: parseFloat(open.toFixed(2)),
+                    high: parseFloat(high.toFixed(2)),
+                    low: parseFloat(low.toFixed(2)),
+                    close: parseFloat(close.toFixed(2)),
+                    value: parseFloat(close.toFixed(2))
                 });
+
+                previousClose = close;
             }
 
             // Calculate and store statistics
@@ -1387,8 +2386,10 @@
             currentStatistics[tab] = statistics;
 
             updateMetricsDisplay(tab, totalPass, totalFail, scoresData);
-            updateChart(tab, chartData);
+            updateChart(tab, chartData, timePeriod);
             currentData[tab] = chartData;
+
+            console.log(`Processed ${chartData.length} candlesticks for ${tab} (${timePeriod})`);
         }
 
         function calculateStatistics(scores) {
@@ -1509,7 +2510,7 @@
             return mode;
         }
 
-        function updateChart(tab, data) {
+        function updateChart(tab, data, timePeriod = 'daily') {
             const chartObj = charts[tab];
             if (!chartObj || !chartObj.chart) return;
 
@@ -1527,6 +2528,35 @@
                     }
                 });
 
+                // Configure time scale based on timeframe for better pattern visibility
+                let timeScaleOptions = {
+                    borderColor: '#2a2e39',
+                    timeVisible: true,
+                    secondsVisible: false,
+                };
+
+                switch (timePeriod) {
+                    case '5min':
+                        timeScaleOptions.timeVisible = true;
+                        timeScaleOptions.secondsVisible = false;
+                        break;
+                    case '30min':
+                    case '1hour':
+                        timeScaleOptions.timeVisible = true;
+                        timeScaleOptions.secondsVisible = false;
+                        break;
+                    case 'daily':
+                    case 'weekly':
+                    case 'monthly':
+                        timeScaleOptions.timeVisible = false;
+                        timeScaleOptions.secondsVisible = false;
+                        break;
+                }
+
+                chartObj.chart.applyOptions({
+                    timeScale: timeScaleOptions
+                });
+
                 switch (chartObj.currentType) {
                     case 'candlestick':
                         chartObj.series = chartObj.chart.addCandlestickSeries({
@@ -1535,6 +2565,11 @@
                             borderVisible: false,
                             wickUpColor: '#26a69a',
                             wickDownColor: '#ef5350',
+                            priceFormat: {
+                                type: 'price',
+                                precision: 2,
+                                minMove: 0.01,
+                            },
                         });
                         chartObj.series.setData(data);
                         break;
@@ -1543,6 +2578,11 @@
                         chartObj.series = chartObj.chart.addLineSeries({
                             color: '#26a69a',
                             lineWidth: 2,
+                            priceFormat: {
+                                type: 'price',
+                                precision: 2,
+                                minMove: 0.01,
+                            },
                         });
                         const lineData = data.map(d => ({
                             time: d.time,
@@ -1557,6 +2597,11 @@
                             bottomColor: 'rgba(38, 166, 154, 0.04)',
                             lineColor: 'rgba(38, 166, 154, 1)',
                             lineWidth: 2,
+                            priceFormat: {
+                                type: 'price',
+                                precision: 2,
+                                minMove: 0.01,
+                            },
                         });
                         const areaData = data.map(d => ({
                             time: d.time,
@@ -1567,6 +2612,8 @@
                 }
 
                 chartObj.chart.timeScale().fitContent();
+
+                console.log(`Chart updated with ${data.length} data points for ${timePeriod} timeframe`);
             } catch (error) {
                 console.error(`Error updating chart for ${tab}:`, error);
             }
@@ -1579,7 +2626,11 @@
             chartObj.currentType = newType;
 
             if (currentData[tab]) {
-                updateChart(tab, currentData[tab]);
+                // Get current timeframe from active button
+                const activeTimeBtn = document.querySelector(`.time-btn.active[data-tab="${tab}"], .time-btn.active:not([data-tab])`);
+                const currentTimeframe = activeTimeBtn ? activeTimeBtn.dataset.time : 'daily';
+
+                updateChart(tab, currentData[tab], currentTimeframe);
 
                 // Reapply active statistics lines
                 document.querySelectorAll(`.stat-toggle[data-tab="${tab}"].active`).forEach(btn => {
@@ -1587,6 +2638,20 @@
                     toggleStatisticLine(tab, stat, true);
                 });
             }
+        }
+
+        // Add timeframe information tooltip
+        function showTimeframeInfo(timePeriod) {
+            const info = {
+                '5min': 'Shows 24 hours of data with 5-minute intervals (288 candlesticks) - Perfect for intraday pattern analysis',
+                '30min': 'Shows 7 days of data with 30-minute intervals (336 candlesticks) - Great for short-term trend analysis',
+                '1hour': 'Shows 7 days of data with hourly intervals (168 candlesticks) - Ideal for detailed weekly patterns',
+                'daily': 'Shows 30 days of daily data (30 candlesticks) - Standard daily trend analysis',
+                'weekly': 'Shows 52 weeks of data (52 candlesticks) - Long-term seasonal patterns',
+                'monthly': 'Shows 12 months of data (12 candlesticks) - Yearly trend analysis'
+            };
+
+            console.log(`Timeframe: ${timePeriod} - ${info[timePeriod] || 'Custom timeframe'}`);
         }
 
         function viewForm(formId, formType) {
@@ -1964,7 +3029,6 @@
                                 ${user.is_flagged ? 'Flagged' : 'Active'}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">Recently</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <button onclick="editUser(${user.id})" class="text-blue-600 hover:text-blue-900 mr-2">Edit</button>
                             <button onclick="toggleUserFlag(${user.id}, ${!user.is_flagged})" class="text-${user.is_flagged ? 'green' : 'red'}-600 hover:text-${user.is_flagged ? 'green' : 'red'}-900 mr-2">
@@ -2155,12 +3219,50 @@
                 'bg-blue-500 text-white'
             }`;
             notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: bold;
+                max-width: 350px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                background: ${type === 'success' ? 'linear-gradient(135deg, #28a745, #20c997)' :
+                           type === 'error' ? 'linear-gradient(135deg, #dc3545, #e83e8c)' :
+                           type === 'warning' ? 'linear-gradient(135deg, #ffc107, #fd7e14)' :
+                           'linear-gradient(135deg, #007bff, #6610f2)'};
+                animation: slideInNotification 0.3s ease-out;
+            `;
+
+            // Add slide-in animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideInNotification {
+                    from {
+                        opacity: 0;
+                        transform: translateX(100%);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
 
             document.body.appendChild(notification);
 
+            // Auto remove after 5 seconds
             setTimeout(() => {
-                notification.remove();
-            }, 3000);
+                notification.style.animation = 'slideInNotification 0.3s ease-out reverse';
+                setTimeout(() => {
+                    notification.remove();
+                    style.remove();
+                }, 300);
+            }, 5000);
         }
 
         function showComingSoon(feature) {
@@ -2198,7 +3300,7 @@
             showNotification('Map updated with current filters', 'success');
         }
 
-        function generateCustomReport() {
+        function generateReport() {
             const reportType = document.getElementById('reportType') ? document.getElementById('reportType').value : 'general';
             const timeframe = document.getElementById('reportTimeframe') ? document.getElementById('reportTimeframe').value : 'monthly';
 
@@ -2208,6 +3310,95 @@
         function downloadReport() {
             showNotification('Report download functionality coming soon', 'info');
         }
+
+        // ADD THESE FUNCTIONS TO YOUR EXISTING <script> SECTION
+
+// Open Add User Form
+function openAddUserForm() {
+    document.getElementById('add_user_modal').classList.add('open');
+
+    // Reset form
+    document.getElementById('addUserForm').reset();
+    document.getElementById('addUserError').style.display = 'none';
+    document.getElementById('addUserSuccess').style.display = 'none';
+}
+
+// Handle Add User Form Submission
+document.getElementById('addUserForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const userData = {
+        username: formData.get('username'),
+        email: formData.get('email'),
+        password: formData.get('password'),
+        role: formData.get('role')
+    };
+
+    const confirmPassword = formData.get('confirmPassword');
+
+    // Clear previous messages
+    document.getElementById('addUserError').style.display = 'none';
+    document.getElementById('addUserSuccess').style.display = 'none';
+
+    // Validate passwords match
+    if (userData.password !== confirmPassword) {
+        showFormError('addUser', 'Passwords do not match');
+        return;
+    }
+
+    // Validate required fields
+    if (!userData.username || !userData.email || !userData.password || !userData.role) {
+        showFormError('addUser', 'All fields are required');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/admin/users', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            showFormSuccess('addUser', 'User created successfully!');
+
+            // Reload users table
+            setTimeout(() => {
+                loadUsers();
+                closeModal('add_user');
+            }, 1000);
+
+        } else {
+            showFormError('addUser', result.error || 'Failed to create user');
+        }
+
+    } catch (error) {
+        console.error('Error creating user:', error);
+        showFormError('addUser', 'Network error. Please try again.');
+    }
+});
+
+// Helper functions for form messages
+function showFormError(formType, message) {
+    const errorEl = document.getElementById(`${formType}Error`);
+    if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.style.display = 'block';
+    }
+}
+
+function showFormSuccess(formType, message) {
+    const successEl = document.getElementById(`${formType}Success`);
+    if (successEl) {
+        successEl.textContent = message;
+        successEl.style.display = 'block';
+    }
+}
 
         // Window resize handler for charts
         window.addEventListener('resize', function() {
@@ -2240,6 +3431,27 @@
             }
         };
 
+        // Close messaging panel when clicking outside
+        document.addEventListener('click', function(e) {
+            const messagingPanel = document.getElementById('messagingPanel');
+            const messagingBtn = document.getElementById('messagingToggleBtn');
+            const chatWindow = document.getElementById('chatWindow');
+
+            if (messagingOpen &&
+                !messagingPanel.contains(e.target) &&
+                !messagingBtn.contains(e.target) &&
+                !chatWindow.contains(e.target)) {
+                toggleMessaging();
+            }
+        });
+
+        // Debug function
+        window.testMessaging = function() {
+            console.log('Testing messaging system...');
+            toggleMessaging();
+        };
+
+        console.log('Admin Dashboard initialized successfully!');
     </script>
 </body>
 </html>

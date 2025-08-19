@@ -8,7 +8,11 @@
         body {
             margin: 0;
             padding: 20px;
-            background: white; /* Changed from dark gradient to white */
+            background-color: #1a1a1a;
+            background-image: url('static/d.jpg'), linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 25%, #1a1a1a 50%, #2d2d2d 75%, #1a1a1a 100%);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             min-height: 100vh;
             font-family: Arial, sans-serif;
             display: flex;
@@ -19,19 +23,11 @@
         .form-container {
             width: 8.5in;
             min-height: 11in;
-            background: white url('/static/d.jpg') no-repeat center center;
-            background-size: cover;
+            background: white;
             padding: 0.5in;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             border-radius: 8px;
             position: relative;
-        }
-
-        /* Removed the ::before overlay completely to show your background image clearly */
-
-        .form-container > * {
-            position: relative;
-            z-index: 2;
         }
 
         .form-header {
@@ -73,6 +69,7 @@
             position: absolute;
             top: 18px;
             left: 4px;
+            font-weight: bold;
         }
 
         .info-label {
@@ -112,6 +109,7 @@
         .score-cell {
             width: 30px;
             text-align: center;
+            font-weight: bold;
         }
 
         .section-header {
@@ -140,6 +138,7 @@
             display: inline-block;
             font-size: 14px;
             vertical-align: bottom;
+            padding-left: 5px;
         }
 
         .page-number {
@@ -186,6 +185,24 @@
         .back-button:hover {
             background-color: #5a6268;
         }
+
+        .license-section {
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .comments-section {
+            margin-top: 20px;
+        }
+
+        .comments-box {
+            border: 1px solid black;
+            min-height: 60px;
+            width: 100%;
+            padding: 5px;
+            font-size: 14px;
+            background: #f9f9f9;
+        }
     </style>
 </head>
 <body>
@@ -231,7 +248,7 @@
 
         <div class="checkbox-row">
             <strong>Action:</strong>
-            <span>{{ inspection.action or 'N/A' }}</span>
+            <span>{{ inspection.action or 'NAI' }}</span>
         </div>
 
         <div class="compliance-section">
@@ -257,7 +274,7 @@
             </div>
         </div>
 
-        <div style="margin: 10px 0;">
+        <div class="license-section">
             <strong>License No.</strong>
             <span>{{ inspection.license_no or 'N/A' }}</span>
             <strong style="margin-left: 20px;">Registration Status:</strong>
@@ -268,160 +285,236 @@
             <thead>
                 <tr>
                     <th>Item</th>
-                    <th style="width: 200px;">Description</th>
-                    <th class="score-cell">Wt</th>
-                    <th class="score-cell">Sc</th>
-                    <th>Item</th>
-                    <th class="score-cell">Wt</th>
-                    <th class="score-cell">Sc</th>
+                    <th>Wt</th>
+                    <th>Sc</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td colspan="7" class="section-header">Building</td>
+                    <td colspan="3" class="section-header">BUILDING</td>
                 </tr>
-                {% for item in checklist[:5] %}
                 <tr>
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td class="score-cell">{{ item.wt }}</td>
-                    <td class="score-cell">{{ inspection.scores.get(item.id, 0) }}</td>
-                    {% if item.id == '01' %}
-                    <td colspan="3" class="section-header">PLUMBING AND DRAINAGE</td>
-                    {% else %}
-                    <td>{{ checklist[loop.index0 + 24].id }}</td>
-                    <td class="score-cell">{{ checklist[loop.index0 + 24].wt }}</td>
-                    <td class="score-cell">{{ inspection.scores.get(checklist[loop.index0 + 24].id, 0) }}</td>
-                    {% endif %}
+                    <td>01 Overall Condition</td>
+                    <td class="score-cell">2</td>
+                    <td class="score-cell">{{ inspection.score_01 or '0' }}</td>
                 </tr>
-                {% endfor %}
                 <tr>
-                    <td colspan="4" class="section-header">FIXTURES, EQUIPMENT & SUPPLIES</td>
-                    <td colspan="3" class="section-header">SOLID WASTE DISPOSAL</td>
+                    <td>02 Floors, walls, ceiling</td>
+                    <td class="score-cell">2</td>
+                    <td class="score-cell">{{ inspection.score_02 or '0' }}</td>
                 </tr>
-                {% for item in checklist[5:10] %}
+                <tr>
+                    <td>03 Lighting</td>
+                    <td class="score-cell">2</td>
+                    <td class="score-cell">{{ inspection.score_03 or '0' }}</td>
+                </tr>
+                <tr>
+                    <td>04 Ventilation</td>
+                    <td class="score-cell">2</td>
+                    <td class="score-cell">{{ inspection.score_04 or '0' }}</td>
+                </tr>
+                <tr>
+                    <td>05 Health Certification</td>
+                    <td class="score-cell">2</td>
+                    <td class="score-cell">{{ inspection.score_05 or '0' }}</td>
+                </tr>
+
+                <tr>
+                    <td colspan="3" class="section-header">FIXTURES, EQUIPMENT & SUPPLIES</td>
+                </tr>
                 <tr class="critical-item">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td class="score-cell">{{ item.wt }}</td>
-                    <td class="score-cell">{{ inspection.scores.get(item.id, 0) }}</td>
-                    {% if item.id == '06' %}
-                    <td>{{ checklist[loop.index0 + 22].id }}</td>
-                    <td class="score-cell">{{ checklist[loop.index0 + 22].wt }}</td>
-                    <td class="score-cell">{{ inspection.scores.get(checklist[loop.index0 + 22].id, 0) }}</td>
-                    {% elif item.id in ['07', '08', '09'] %}
-                    <td>{{ checklist[loop.index0 + 23].id }}</td>
-                    <td class="score-cell">{{ checklist[loop.index0 + 23].wt }}</td>
-                    <td class="score-cell">{{ inspection.scores.get(checklist[loop.index0 + 23].id, 0) }}</td>
-                    {% else %}
-                    <td colspan="3"></td>
-                    {% endif %}
+                    <td>06 Tables, counters, chairs</td>
+                    <td class="score-cell">2</td>
+                    <td class="score-cell">{{ inspection.score_06 or '0' }}</td>
                 </tr>
-                {% endfor %}
+                <tr class="critical-item">
+                    <td>07 Shampoo basin</td>
+                    <td class="score-cell">4</td>
+                    <td class="score-cell">{{ inspection.score_07 or '0' }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>08 Hair dryers, steamers, hand dryers, hand held tools</td>
+                    <td class="score-cell">4</td>
+                    <td class="score-cell">{{ inspection.score_08 or '0' }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>09 Wash basin</td>
+                    <td class="score-cell">2</td>
+                    <td class="score-cell">{{ inspection.score_09 or '0' }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>10 Towels and linen</td>
+                    <td class="score-cell">4</td>
+                    <td class="score-cell">{{ inspection.score_10 or '0' }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>11 Soap & hand towels</td>
+                    <td class="score-cell">2</td>
+                    <td class="score-cell">{{ inspection.score_11 or '0' }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>12 Sterile cotton swabs</td>
+                    <td class="score-cell">2</td>
+                    <td class="score-cell">{{ inspection.score_12 or '0' }}</td>
+                </tr>
+
                 <tr>
-                    <td colspan="4" class="section-header">CLEANING & SANITIZATION</td>
+                    <td colspan="3" class="section-header">CLEANING & SANITIZATION</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>13 Tools</td>
+                    <td class="score-cell">5</td>
+                    <td class="score-cell">{{ inspection.score_13 or '0' }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>14 Equipment</td>
+                    <td class="score-cell">5</td>
+                    <td class="score-cell">{{ inspection.score_14 or '0' }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>15 Linen</td>
+                    <td class="score-cell">5</td>
+                    <td class="score-cell">{{ inspection.score_15 or '0' }}</td>
+                </tr>
+
+                <tr>
+                    <td colspan="3" class="section-header">TYPE OF SANITIZING AGENT</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>16 Hot water</td>
+                    <td class="score-cell">5</td>
+                    <td class="score-cell">{{ inspection.score_16 or '0' }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>17 Chemicals</td>
+                    <td class="score-cell">5</td>
+                    <td class="score-cell">{{ inspection.score_17 or '0' }}</td>
+                </tr>
+
+                <tr>
+                    <td colspan="3" class="section-header">PERSONNEL</td>
+                </tr>
+                <tr>
+                    <td>18 Health certification</td>
+                    <td class="score-cell">3</td>
+                    <td class="score-cell">{{ inspection.score_18 or '0' }}</td>
+                </tr>
+                <tr>
+                    <td>19 Personal cleanliness</td>
+                    <td class="score-cell">2</td>
+                    <td class="score-cell">{{ inspection.score_19 or '0' }}</td>
+                </tr>
+                <tr>
+                    <td>20 Hand washing</td>
+                    <td class="score-cell">2</td>
+                    <td class="score-cell">{{ inspection.score_20 or '0' }}</td>
+                </tr>
+
+                <tr>
+                    <td colspan="3" class="section-header">FIRST AID KIT</td>
+                </tr>
+                <tr>
+                    <td>21 Provided and stocked</td>
+                    <td class="score-cell">5</td>
+                    <td class="score-cell">{{ inspection.score_21 or '0' }}</td>
+                </tr>
+
+                <tr>
+                    <td colspan="3" class="section-header">WATER SUPPLY</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>22 Potable & adequate</td>
+                    <td class="score-cell">5</td>
+                    <td class="score-cell">{{ inspection.score_22 or '0' }}</td>
+                </tr>
+
+                <tr>
+                    <td colspan="3" class="section-header">SANITARY FACILITIES</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>23 Lavatories</td>
+                    <td class="score-cell">5</td>
+                    <td class="score-cell">{{ inspection.score_23 or '0' }}</td>
+                </tr>
+                <tr class="critical-item">
+                    <td>24 Sanitary waste water disposal</td>
+                    <td class="score-cell">5</td>
+                    <td class="score-cell">{{ inspection.score_24 or '0' }}</td>
+                </tr>
+
+                <tr>
+                    <td colspan="3" class="section-header">PLUMBING AND DRAINAGE</td>
+                </tr>
+                <tr>
+                    <td>25 Plumbing maintained</td>
+                    <td class="score-cell">2</td>
+                    <td class="score-cell">{{ inspection.score_25 or '0' }}</td>
+                </tr>
+                <tr>
+                    <td>26 Drains maintained</td>
+                    <td class="score-cell">2</td>
+                    <td class="score-cell">{{ inspection.score_26 or '0' }}</td>
+                </tr>
+
+                <tr>
+                    <td colspan="3" class="section-header">WASTE DISPOSAL</td>
+                </tr>
+                <tr>
+                    <td>27 Hair, Towels, Swabs Disposed</td>
+                    <td class="score-cell">2</td>
+                    <td class="score-cell">{{ inspection.score_27 or '0' }}</td>
+                </tr>
+                <tr>
+                    <td>28 Separation of aerosols</td>
+                    <td class="score-cell">2</td>
+                    <td class="score-cell">{{ inspection.score_28 or '0' }}</td>
+                </tr>
+                <tr>
+                    <td>29 Garbage receptacles</td>
+                    <td class="score-cell">3</td>
+                    <td class="score-cell">{{ inspection.score_29 or '0' }}</td>
+                </tr>
+
+                <tr>
                     <td colspan="3" class="section-header">PEST CONTROL</td>
                 </tr>
-                {% for item in checklist[10:15] %}
-                <tr class="critical-item">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td class="score-cell">{{ item.wt }}</td>
-                    <td class="score-cell">{{ inspection.scores.get(item.id, 0) }}</td>
-                    {% if item.id == '10' %}
-                    <td>{{ checklist[loop.index0 + 20].id }}</td>
-                    <td class="score-cell">{{ checklist[loop.index0 + 20].wt }}</td>
-                    <td class="score-cell">{{ inspection.scores.get(checklist[loop.index0 + 20].id, 0) }}</td>
-                    {% elif item.id == '11' %}
-                    <td>{{ checklist[loop.index0 + 21].id }}</td>
-                    <td class="score-cell">{{ checklist[loop.index0 + 21].wt }}</td>
-                    <td class="score-cell">{{ inspection.scores.get(checklist[loop.index0 + 21].id, 0) }}</td>
-                    {% else %}
-                    <td colspan="3"></td>
-                    {% endif %}
-                </tr>
-                {% endfor %}
                 <tr>
-                    <td colspan="4" class="section-header">TYPE OF SANITIZING AGENT</td>
-                    <td colspan="3" class="section-header">COMPOUND</td>
-                </tr>
-                {% for item in checklist[15:17] %}
-                <tr class="critical-item">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td class="score-cell">{{ item.wt }}</td>
-                    <td class="score-cell">{{ inspection.scores.get(item.id, 0) }}</td>
-                    {% if item.id == '15' %}
-                    <td>{{ checklist[loop.index0 + 17].id }}</td>
-                    <td class="score-cell">{{ checklist[loop.index0 + 17].wt }}</td>
-                    <td class="score-cell">{{ inspection.scores.get(checklist[loop.index0 + 17].id, 0) }}</td>
-                    {% else %}
-                    <td colspan="3"></td>
-                    {% endif %}
-                </tr>
-                {% endfor %}
-                <tr>
-                    <td colspan="7" class="section-header">PERSONNEL</td>
-                </tr>
-                {% for item in checklist[17:20] %}
-                <tr>
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td class="score-cell">{{ item.wt }}</td>
-                    <td class="score-cell">{{ inspection.scores.get(item.id, 0) }}</td>
-                    <td colspan="3"></td>
-                </tr>
-                {% endfor %}
-                <tr>
-                    <td colspan="7" class="section-header">FIRST AID KIT</td>
+                    <td>30 Absence of pests</td>
+                    <td class="score-cell">3</td>
+                    <td class="score-cell">{{ inspection.score_30 or '0' }}</td>
                 </tr>
                 <tr>
-                    <td>{{ checklist[20].id }}</td>
-                    <td>{{ checklist[20].desc }}</td>
-                    <td class="score-cell">{{ checklist[20].wt }}</td>
-                    <td class="score-cell">{{ inspection.scores.get(checklist[20].id, 0) }}</td>
-                    <td colspan="3"></td>
+                    <td>31 Approved Insecticides</td>
+                    <td class="score-cell">2</td>
+                    <td class="score-cell">{{ inspection.score_31 or '0' }}</td>
+                </tr>
+
+                <tr>
+                    <td colspan="3" class="section-header">Compound</td>
                 </tr>
                 <tr>
-                    <td colspan="7" class="section-header">WATER SUPPLY</td>
+                    <td>32 General cleanliness</td>
+                    <td class="score-cell">2</td>
+                    <td class="score-cell">{{ inspection.score_32 or '0' }}</td>
                 </tr>
-                <tr>
-                    <td>{{ checklist[21].id }}</td>
-                    <td>{{ checklist[21].desc }}</td>
-                    <td class="score-cell">{{ checklist[21].wt }}</td>
-                    <td class="score-cell">{{ inspection.scores.get(checklist[21].id, 0) }}</td>
-                    <td colspan="3"></td>
-                </tr>
-                <tr>
-                    <td colspan="7" class="section-header">SANITARY FACILITIES</td>
-                </tr>
-                {% for item in checklist[22:24] %}
-                <tr class="critical-item">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td class="score-cell">{{ item.wt }}</td>
-                    <td class="score-cell">{{ inspection.scores.get(item.id, 0) }}</td>
-                    <td colspan="3"></td>
-                </tr>
-                {% endfor %}
             </tbody>
         </table>
 
-        <div style="margin-top: 20px;">
+        <div class="comments-section">
             <strong>Inspector's Comments:</strong>
-            <div style="border: 1px solid black; min-height: 60px; width: 100%; padding: 5px; font-size: 14px;">
-                {{ inspection.comments or 'N/A' }}
+            <div class="comments-box">
+                {{ inspection.comments or 'No comments provided.' }}
             </div>
         </div>
 
         <div class="signature-section">
             <div>
                 <strong>Inspector's Signature:</strong>
-                <span class="signature-line">{{ inspection.inspector_signature or 'N/A' }}</span>
+                <span class="signature-line">{{ inspection.inspector_signature or '' }}</span>
             </div>
             <div>
                 <strong>Rec'd By:</strong>
-                <span class="signature-line">{{ inspection.received_by or 'N/A' }}</span>
+                <span class="signature-line">{{ inspection.received_by or '' }}</span>
             </div>
         </div>
 

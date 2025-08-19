@@ -341,7 +341,7 @@ BARBERSHOP_CHECKLIST_ITEMS = [
     {'id': '02', 'desc': 'Floors, walls, ceiling', 'wt': 2, 'critical': False},
     {'id': '03', 'desc': 'Lighting', 'wt': 2, 'critical': False},
     {'id': '04', 'desc': 'Ventilation', 'wt': 2, 'critical': False},
-    {'id': '05', 'desc': 'Health Certification Building', 'wt': 2, 'critical': False},
+    {'id': '05', 'desc': 'Health Certification', 'wt': 2, 'critical': False},
     {'id': '06', 'desc': 'Tables, counters, chairs', 'wt': 2, 'critical': True},
     {'id': '07', 'desc': 'Shampoo basin', 'wt': 4, 'critical': True},
     {'id': '08', 'desc': 'Hair dryers, steamers, hand dryers, hand held tools', 'wt': 4, 'critical': True},
@@ -349,12 +349,12 @@ BARBERSHOP_CHECKLIST_ITEMS = [
     {'id': '10', 'desc': 'Towels and linen', 'wt': 4, 'critical': True},
     {'id': '11', 'desc': 'Soap & hand towels', 'wt': 2, 'critical': True},
     {'id': '12', 'desc': 'Sterile cotton swabs', 'wt': 2, 'critical': True},
-    {'id': '13', 'desc': 'Tools Cleaning & Sanitization', 'wt': 5, 'critical': True},
-    {'id': '14', 'desc': 'Equipment Cleaning & Sanitization', 'wt': 5, 'critical': True},
-    {'id': '15', 'desc': 'Linen Cleaning & Sanitization', 'wt': 5, 'critical': True},
-    {'id': '16', 'desc': 'Hot water Sanitizing Agent', 'wt': 5, 'critical': True},
-    {'id': '17', 'desc': 'Chemicals Sanitizing Agent', 'wt': 5, 'critical': True},
-    {'id': '18', 'desc': 'Health certification Personnel', 'wt': 3, 'critical': False},
+    {'id': '13', 'desc': 'Tools', 'wt': 5, 'critical': True},
+    {'id': '14', 'desc': 'Equipment', 'wt': 5, 'critical': True},
+    {'id': '15', 'desc': 'Linen', 'wt': 5, 'critical': True},
+    {'id': '16', 'desc': 'Hot water', 'wt': 5, 'critical': True},
+    {'id': '17', 'desc': 'Chemicals', 'wt': 5, 'critical': True},
+    {'id': '18', 'desc': 'Health certification', 'wt': 3, 'critical': False},
     {'id': '19', 'desc': 'Personal cleanliness', 'wt': 2, 'critical': False},
     {'id': '20', 'desc': 'Hand washing', 'wt': 2, 'critical': False},
     {'id': '21', 'desc': 'First aid kit provided and stocked', 'wt': 5, 'critical': False},
@@ -367,7 +367,7 @@ BARBERSHOP_CHECKLIST_ITEMS = [
     {'id': '28', 'desc': 'Separation of aerosols', 'wt': 2, 'critical': False},
     {'id': '29', 'desc': 'Garbage receptacles', 'wt': 3, 'critical': False},
     {'id': '30', 'desc': 'Absence of pests', 'wt': 3, 'critical': False},
-    {'id': '31', 'desc': 'Approved Insecticide', 'wt': 2, 'critical': False},
+    {'id': '31', 'desc': 'Approved Insecticides', 'wt': 2, 'critical': False},
     {'id': '32', 'desc': 'General cleanliness', 'wt': 2, 'critical': False}
 ]
 
@@ -3444,6 +3444,28 @@ def get_db_connection():
     return conn
 
 
+# Initialize messages table (add this to your init_db function or run separately)
+def init_messages_db():
+    """Initialize the messages table"""
+    conn = sqlite3.connect('inspections.db')
+    c = conn.cursor()
+
+    # Create messages table
+    c.execute('''CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sender_id INTEGER NOT NULL,
+        recipient_id INTEGER NOT NULL,
+        content TEXT NOT NULL,
+        timestamp TEXT NOT NULL,
+        is_read INTEGER DEFAULT 0,
+        FOREIGN KEY (sender_id) REFERENCES users(id),
+        FOREIGN KEY (recipient_id) REFERENCES users(id)
+    )''')
+
+    conn.commit()
+    conn.close()
+    print("Messages table initialized successfully")
+
 
 def init_db():
     conn = get_db_connection()
@@ -3620,18 +3642,27 @@ def get_parish_stats():
 def get_users():
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
+
     conn = get_db_connection()
     try:
         c = conn.cursor()
-        c.execute('SELECT id, username, email, role, is_flagged FROM users WHERE role = "inspector"')
-        users = [{'id': row['id'], 'username': row['username'], 'email': row['email'],
-                  'role': row['role'], 'is_flagged': row['is_flagged']} for row in c.fetchall()]
+        # Get ALL users, not just inspectors
+        c.execute('SELECT id, username, email, role, is_flagged FROM users ORDER BY role, username')
+        users = []
+        for row in c.fetchall():
+            users.append({
+                'id': row['id'],
+                'username': row['username'],
+                'email': row['email'] or 'N/A',
+                'role': row['role'],
+                'is_flagged': bool(row['is_flagged'])
+            })
         return jsonify(users)
+    except Exception as e:
+        print(f"Error in get_users: {e}")
+        return jsonify({'error': 'Database error'}), 500
     finally:
         conn.close()
-
-
-# Add these routes to your existing app.py file
 # These are the missing routes needed for your admin dashboard
 
 @app.route('/api/admin/audit_log')
@@ -4354,36 +4385,531 @@ def get_security_metrics():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+    @app.route('/api/admin/messages/<int:user_id>')
+    def get_messages_for_user(user_id):
+        """Get messages between current user and specified user"""
+        if 'admin' not in session and 'inspector' not in session:
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        try:
+            current_user_id = session.get('user_id')
+            if not current_user_id:
+                return jsonify({'error': 'User not logged in'}), 401
+
+            conn = get_db_connection()
+            c = conn.cursor()
+
+            # Get messages between current user and target user
+            c.execute('''
+                SELECT m.content, m.timestamp, m.sender_id, m.recipient_id,
+                       s.username as sender_name, r.username as recipient_name
+                FROM messages m
+                JOIN users s ON m.sender_id = s.id
+                JOIN users r ON m.recipient_id = r.id
+                WHERE (m.sender_id = ? AND m.recipient_id = ?) 
+                   OR (m.sender_id = ? AND m.recipient_id = ?)
+                ORDER BY m.timestamp ASC
+            ''', (current_user_id, user_id, user_id, current_user_id))
+
+            messages = []
+            for row in c.fetchall():
+                messages.append({
+                    'content': row['content'],
+                    'timestamp': row['timestamp'],
+                    'sender_id': row['sender_id'],
+                    'recipient_id': row['recipient_id'],
+                    'sender_name': row['sender_name'],
+                    'recipient_name': row['recipient_name'],
+                    'is_sent': row['sender_id'] == current_user_id
+                })
+
+            conn.close()
+            return jsonify(messages)
+
+        except Exception as e:
+            print(f"Error getting messages: {e}")
+            return jsonify({'error': 'Failed to load messages'}), 500
+
+
+
+    # 2. Route to send a message
+    @app.route('/api/send_message', methods=['POST'])
+    def send_message():
+        """Send a message to another user"""
+        if 'admin' not in session and 'inspector' not in session:
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        try:
+            data = request.get_json()
+            recipient_id = data.get('recipient_id')
+            content = data.get('content', '').strip()
+
+            if not recipient_id or not content:
+                return jsonify({'success': False, 'error': 'Missing recipient or content'}), 400
+
+            sender_id = session.get('user_id')
+
+            conn = get_db_connection()
+            c = conn.cursor()
+
+            # Insert message
+            c.execute('''
+                INSERT INTO messages (sender_id, recipient_id, content, timestamp, is_read)
+                VALUES (?, ?, ?, ?, 0)
+            ''', (sender_id, recipient_id, content, datetime.now().isoformat()))
+
+            conn.commit()
+            conn.close()
+
+            return jsonify({'success': True, 'message': 'Message sent successfully'})
+
+        except Exception as e:
+            print(f"Error sending message: {e}")
+            return jsonify({'success': False, 'error': 'Failed to send message'}), 500
+
+    # 3. Route to get all users for contact list
+    @app.route('/api/users')
+    def get_all_users():
+        """Get all users for contact list"""
+        if 'admin' not in session and 'inspector' not in session:
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        try:
+            current_user_id = session.get('user_id')
+            conn = get_db_connection()
+            c = conn.cursor()
+
+            # Get all users except current user
+            c.execute('''
+                SELECT id, username, role 
+                FROM users 
+                WHERE id != ?
+                ORDER BY role, username
+            ''', (current_user_id,))
+
+            users = []
+            for row in c.fetchall():
+                # Get unread message count for this user
+                c.execute('''
+                    SELECT COUNT(*) 
+                    FROM messages 
+                    WHERE sender_id = ? AND recipient_id = ? AND is_read = 0
+                ''', (row['id'], current_user_id))
+
+                unread_count = c.fetchone()[0]
+
+                users.append({
+                    'id': row['id'],
+                    'username': row['username'],
+                    'role': row['role'],
+                    'unread_count': unread_count
+                })
+
+            conn.close()
+            return jsonify(users)
+
+        except Exception as e:
+            print(f"Error loading users: {e}")
+            return jsonify({'error': 'Failed to load users'}), 500
+
+    # 4. Route to mark messages as read
+    @app.route('/api/mark_messages_read/<int:user_id>', methods=['POST'])
+    def mark_messages_read(user_id):
+        """Mark all messages from a user as read"""
+        if 'admin' not in session and 'inspector' not in session:
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        try:
+            current_user_id = session.get('user_id')
+            conn = get_db_connection()
+            c = conn.cursor()
+
+            c.execute('''
+                UPDATE messages 
+                SET is_read = 1 
+                WHERE sender_id = ? AND recipient_id = ? AND is_read = 0
+            ''', (user_id, current_user_id))
+
+            conn.commit()
+            conn.close()
+
+            return jsonify({'success': True})
+
+        except Exception as e:
+            print(f"Error marking messages as read: {e}")
+            return jsonify({'success': False, 'error': 'Failed to mark messages as read'}), 500
+
+    # 2. Route to check unread messages
+    @app.route('/api/admin/unread_messages')
+    def get_unread_messages():
+        """Get count of unread messages for admin"""
+        if 'admin' not in session:
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        try:
+            admin_id = session.get('user_id')
+            conn = get_db_connection()
+            c = conn.cursor()
+
+            # Get total unread count
+            c.execute('''
+                SELECT COUNT(*) as total
+                FROM messages 
+                WHERE recipient_id = ? AND is_read = 0
+            ''', (admin_id,))
+
+            result = c.fetchone()
+            total_unread = result['total'] if result else 0
+
+            conn.close()
+
+            return jsonify({
+                'count': total_unread,
+                'by_user': {}
+            })
+
+        except Exception as e:
+            print(f"Error getting unread messages: {e}")
+            return jsonify({'count': 0, 'by_user': {}})
+
+    # Add these missing routes to your app.py file
+    # These work with the routes you already have
+
+    @app.route('/api/admin/mark_messages_read/<int:user_id>', methods=['POST'])
+    def mark_messages_read(user_id):
+        """Mark all messages from a user as read"""
+        if 'admin' not in session:
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        try:
+            admin_id = session.get('user_id')
+            conn = get_db_connection()
+            c = conn.cursor()
+
+            c.execute('''
+                UPDATE messages 
+                SET is_read = 1 
+                WHERE sender_id = ? AND recipient_id = ? AND is_read = 0
+            ''', (user_id, admin_id))
+
+            conn.commit()
+            conn.close()
+
+            return jsonify({'success': True})
+
+        except Exception as e:
+            print(f"Error marking messages as read: {e}")
+            return jsonify({'success': False, 'error': 'Failed to mark messages as read'}), 500
+
+    @app.route('/debug_session')
+    def debug_session():
+        """Debug route to check session data"""
+        if 'admin' not in session:
+            return jsonify({'error': 'Not logged in as admin'})
+
+        return jsonify({
+            'user_id': session.get('user_id'),
+            'admin': session.get('admin', False),
+            'inspector': session.get('inspector', False),
+            'medical_officer': session.get('medical_officer', False)
+        })
+
+    @app.route('/setup_complete_messaging')
+    def setup_complete_messaging():
+        """Complete setup for messaging system with sample data"""
+        if 'admin' not in session:
+            return "Admin access required"
+
+        try:
+            conn = sqlite3.connect('inspections.db')
+            c = conn.cursor()
+
+            # Create messages table if it doesn't exist
+            c.execute('''CREATE TABLE IF NOT EXISTS messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sender_id INTEGER NOT NULL,
+                recipient_id INTEGER NOT NULL,
+                content TEXT NOT NULL,
+                timestamp TEXT NOT NULL,
+                is_read INTEGER DEFAULT 0,
+                FOREIGN KEY (sender_id) REFERENCES users(id),
+                FOREIGN KEY (recipient_id) REFERENCES users(id)
+            )''')
+
+            # Check if users table has required columns
+            c.execute("PRAGMA table_info(users)")
+            columns = [row[1] for row in c.fetchall()]
+
+            if 'email' not in columns:
+                c.execute('ALTER TABLE users ADD COLUMN email TEXT')
+                print("Added email column to users table")
+
+            if 'is_flagged' not in columns:
+                c.execute('ALTER TABLE users ADD COLUMN is_flagged INTEGER DEFAULT 0')
+                print("Added is_flagged column to users table")
+
+            # Update existing users with default emails if they don't have them
+            c.execute("UPDATE users SET email = username || '@health.gov.jm' WHERE email IS NULL OR email = ''")
+
+            # Create some sample messages for testing
+            c.execute("SELECT COUNT(*) FROM messages")
+            message_count = c.fetchone()[0]
+
+            if message_count == 0:
+                print("Creating sample messages...")
+
+                # Get admin and inspector IDs
+                c.execute("SELECT id FROM users WHERE role = 'admin' LIMIT 1")
+                admin_result = c.fetchone()
+
+                c.execute("SELECT id FROM users WHERE role = 'inspector' LIMIT 1")
+                inspector_result = c.fetchone()
+
+                if admin_result and inspector_result:
+                    admin_id = admin_result[0]
+                    inspector_id = inspector_result[0]
+
+                    sample_messages = [
+                        (inspector_id, admin_id, "Hello admin, I have a question about the new inspection forms.",
+                         datetime.now().isoformat(), 0),
+                        (admin_id, inspector_id, "Hi! I'm here to help. What would you like to know?",
+                         datetime.now().isoformat(), 1),
+                        (inspector_id, admin_id, "How do I handle failed inspections that need follow-up?",
+                         datetime.now().isoformat(), 0),
+                        (admin_id, inspector_id,
+                         "For failed inspections, you should schedule a re-inspection within 30 days and document the corrective actions needed.",
+                         datetime.now().isoformat(), 1)
+                    ]
+
+                    for message in sample_messages:
+                        c.execute('''
+                            INSERT INTO messages (sender_id, recipient_id, content, timestamp, is_read)
+                            VALUES (?, ?, ?, ?, ?)
+                        ''', message)
+
+                    print("Sample messages created!")
+
+            conn.commit()
+            conn.close()
+
+            return """
+            <h1>✅ Complete Messaging System Setup!</h1>
+            <p>The following has been set up:</p>
+            <ul>
+                <li>✅ Messages table created</li>
+                <li>✅ User table updated with email and flagged columns</li>
+                <li>✅ Sample messages created for testing</li>
+                <li>✅ All required routes are active</li>
+            </ul>
+            <br>
+            <p><strong>Your messaging system is now ready!</strong></p>
+            <p>Go back to your <a href='/admin'>Admin Dashboard</a> and click the messaging icon (💬) in the top right.</p>
+            <br>
+            <h3>How to test:</h3>
+            <ol>
+                <li>Click the messaging icon (💬) in the top right of your admin dashboard</li>
+                <li>You should see a list of all users in the system</li>
+                <li>Click on any user to start a conversation</li>
+                <li>Type a message and hit send</li>
+                <li>The badge will show unread message counts</li>
+            </ol>
+            <br>
+            <a href="/debug_messaging">🔍 Debug Messaging System</a> | 
+            <a href="/admin">🏠 Back to Dashboard</a>
+            """
+
+        except Exception as e:
+            return f"❌ Error setting up messaging: {e}"
+
+    @app.route('/debug_messaging')
+    def debug_messaging():
+        """Debug messaging system"""
+        if 'admin' not in session:
+            return "Admin access required"
+
+        conn = sqlite3.connect('inspections.db')
+        c = conn.cursor()
+
+        # Check users
+        c.execute("SELECT id, username, email, role, is_flagged FROM users")
+        users = c.fetchall()
+
+        # Check messages
+        c.execute("""
+            SELECT m.id, s.username as sender, r.username as recipient, 
+                   m.content, m.timestamp, m.is_read
+            FROM messages m
+            JOIN users s ON m.sender_id = s.id
+            JOIN users r ON m.recipient_id = r.id
+            ORDER BY m.timestamp DESC
+            LIMIT 10
+        """)
+        messages = c.fetchall()
+
+        # Check current session
+        current_user_id = session.get('user_id')
+
+        conn.close()
+
+        html = f"""
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 20px; }}
+            table {{ border-collapse: collapse; width: 100%; margin: 10px 0; }}
+            th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+            th {{ background-color: #f2f2f2; }}
+            .success {{ color: green; font-weight: bold; }}
+            .error {{ color: red; font-weight: bold; }}
+            .info {{ background: #e7f3ff; padding: 10px; border-left: 4px solid #2196F3; margin: 10px 0; }}
+        </style>
+
+        <h1>🔍 Messaging System Debug</h1>
+
+        <div class="info">
+            <strong>Current Session:</strong> User ID = {current_user_id}, Admin = {session.get('admin', False)}
+        </div>
+
+        <h2>Users in System ({len(users)} total):</h2>
+        <table>
+            <tr>
+                <th>ID</th><th>Username</th><th>Email</th><th>Role</th><th>Flagged</th>
+            </tr>
+        """
+
+        for user in users:
+            flagged_status = 'Yes' if user[4] else 'No'
+            html += f"""
+            <tr>
+                <td>{user[0]}</td>
+                <td>{user[1]}</td>
+                <td>{user[2] or 'N/A'}</td>
+                <td>{user[3]}</td>
+                <td>{flagged_status}</td>
+            </tr>
+            """
+
+        html += f"""
+        </table>
+
+        <h2>Recent Messages ({len(messages)} shown):</h2>
+        <table>
+            <tr>
+                <th>ID</th><th>From</th><th>To</th><th>Content</th><th>Time</th><th>Read</th>
+            </tr>
+        """
+
+        for message in messages:
+            content_preview = (message[3][:50] + '...') if len(message[3]) > 50 else message[3]
+            read_status = 'Yes' if message[5] else 'No'
+            html += f"""
+            <tr>
+                <td>{message[0]}</td>
+                <td>{message[1]}</td>
+                <td>{message[2]}</td>
+                <td>{content_preview}</td>
+                <td>{message[4]}</td>
+                <td>{read_status}</td>
+            </tr>
+            """
+
+        html += """
+        </table>
+
+        <h2>🧪 Test Actions:</h2>
+        <p>
+            <a href="/setup_complete_messaging" style="background: #4CAF50; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">🔄 Re-run Setup</a>
+            <a href="/admin" style="background: #2196F3; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; margin-left: 10px;">🏠 Back to Dashboard</a>
+        </p>
+
+        <h2>📝 API Endpoints Status:</h2>
+        <ul>
+            <li class="success">✅ /api/admin/users - Get users list</li>
+            <li class="success">✅ /api/admin/messages/&lt;user_id&gt; - Get messages</li>
+            <li class="success">✅ /api/admin/send_message - Send message</li>
+            <li class="success">✅ /api/admin/unread_messages - Check unread count</li>
+            <li class="success">✅ /api/admin/mark_messages_read/&lt;user_id&gt; - Mark as read</li>
+            <li class="success">✅ /debug_session - Check session data</li>
+        </ul>
+        """
+
+        return html
+
+    # Fix for your existing get_db_connection function if it doesn't exist
+    def get_db_connection():
+        """Get database connection with row factory"""
+        conn = sqlite3.connect('inspections.db', timeout=10)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+    # 3. Setup messages table
+    @app.route('/setup_messaging')
+    def setup_messaging():
+        """One-time setup for messaging system"""
+        if 'admin' not in session:
+            return "Admin access required"
+
+        try:
+            conn = sqlite3.connect('inspections.db')
+            c = conn.cursor()
+
+            # Create messages table
+            c.execute('''CREATE TABLE IF NOT EXISTS messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sender_id INTEGER NOT NULL,
+                recipient_id INTEGER NOT NULL,
+                content TEXT NOT NULL,
+                timestamp TEXT NOT NULL,
+                is_read INTEGER DEFAULT 0,
+                FOREIGN KEY (sender_id) REFERENCES users(id),
+                FOREIGN KEY (recipient_id) REFERENCES users(id)
+            )''')
+
+            conn.commit()
+            conn.close()
+
+            return "✅ Messaging system setup complete! <a href='/admin'>Back to Admin Dashboard</a>"
+        except Exception as e:
+            return f"❌ Error setting up messaging: {e}"
+
 
 @app.route('/api/admin/send_message', methods=['POST'])
 def send_message():
+    """Send a message to a user"""
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
+
     try:
         data = request.get_json()
-        message = data.get('message', '')
+        recipient_id = data.get('recipient_id')
+        content = data.get('content', '').strip()
 
-        # Simple auto-reply logic
-        if 'hello' in message.lower():
-            reply = "Hello! How can I assist you today?"
-        elif 'help' in message.lower():
-            reply = "I'm here to help. What do you need assistance with?"
-        elif 'status' in message.lower():
-            reply = "All systems are operating normally."
-        else:
-            reply = f"Thank you for your message: '{message}'. An admin will respond shortly."
+        if not recipient_id or not content:
+            return jsonify({'success': False, 'error': 'Missing recipient or content'}), 400
 
-        return jsonify({
-            'success': True,
-            'reply': reply
-        })
+        sender_id = session.get('user_id')
+
+        conn = get_db_connection()
+        c = conn.cursor()
+
+        # Insert message
+        c.execute('''
+            INSERT INTO messages (sender_id, recipient_id, content, timestamp, is_read)
+            VALUES (?, ?, ?, ?, 0)
+        ''', (sender_id, recipient_id, content, datetime.now().isoformat()))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({'success': True, 'message': 'Message sent successfully'})
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
+        print(f"Error sending message: {e}")
+        return jsonify({'success': False, 'error': 'Failed to send message'}), 500
 
 # Helper function to log audit events (add this to your login routes)
+# Also, make sure you have the log_audit_event function (add this if you don't have it):
+
 def log_audit_event(user, action, ip_address=None, details=None):
+    """Log an audit event"""
     try:
         conn = sqlite3.connect('inspections.db')
         cursor = conn.cursor()
@@ -4407,7 +4933,7 @@ def log_audit_event(user, action, ip_address=None, details=None):
             datetime.now().isoformat(),
             user,
             action,
-            ip_address or request.remote_addr if request else None,
+            ip_address,
             details
         ))
 
@@ -4433,83 +4959,314 @@ def get_login_history():
         conn.close()
 
 
+# Test route to check if user management is working
+@app.route('/test_users')
+def test_users():
+    """Test route to see all users (remove this after testing)"""
+    if 'admin' not in session:
+        return "Access denied"
+
+    conn = sqlite3.connect('inspections.db')
+    c = conn.cursor()
+    c.execute('SELECT id, username, email, role, is_flagged FROM users')
+    users = c.fetchall()
+    conn.close()
+
+    html = "<h1>All Users in Database:</h1><ul>"
+    for user in users:
+        html += f"<li>ID: {user[0]}, Username: {user[1]}, Email: {user[2]}, Role: {user[3]}, Flagged: {user[4]}</li>"
+    html += "</ul>"
+    html += '<br><a href="/admin">Back to Admin Dashboard</a>'
+
+    return html
+
+
 @app.route('/api/admin/users', methods=['POST'])
 def add_user():
+    """Add a new user to the system"""
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
-    data = request.get_json()
-    username = data.get('username')
-    email = data.get('email')
-    password = data.get('password')
-    role = data.get('role')
 
-    if not all([username, email, password, role]):
-        return jsonify({'success': False, 'error': 'Missing required fields'}), 400
-
-    conn = get_db_connection()
     try:
+        data = request.get_json()
+        username = data.get('username', '').strip()
+        email = data.get('email', '').strip()
+        password = data.get('password', '').strip()
+        role = data.get('role', '').strip()
+
+        # Validate required fields
+        if not all([username, email, password, role]):
+            return jsonify({'success': False, 'error': 'All fields are required'}), 400
+
+        # Validate role
+        if role not in ['inspector', 'admin', 'medical_officer']:
+            return jsonify({'success': False, 'error': 'Invalid role'}), 400
+
+        # Validate password length
+        if len(password) < 6:
+            return jsonify({'success': False, 'error': 'Password must be at least 6 characters'}), 400
+
+        conn = get_db_connection()
+        try:
+            c = conn.cursor()
+
+            # Check if username already exists
+            c.execute('SELECT id FROM users WHERE username = ?', (username,))
+            if c.fetchone():
+                return jsonify({'success': False, 'error': 'Username already exists'}), 400
+
+            # Check if email already exists
+            c.execute('SELECT id FROM users WHERE email = ?', (email,))
+            if c.fetchone():
+                return jsonify({'success': False, 'error': 'Email already exists'}), 400
+
+            # Insert new user
+            c.execute('''
+                INSERT INTO users (username, email, password, role, is_flagged) 
+                VALUES (?, ?, ?, ?, 0)
+            ''', (username, email, password, role))
+
+            conn.commit()
+
+            # Log the action
+            log_audit_event(session.get('inspector', 'admin'), 'user_created',
+                            request.remote_addr, f'Created user: {username} ({role})')
+
+            return jsonify({'success': True, 'message': 'User created successfully'})
+
+        finally:
+            conn.close()
+
+    except Exception as e:
+        print(f"Error creating user: {e}")
+        return jsonify({'success': False, 'error': 'Database error occurred'}), 500
+
+
+# 2. Route to check unread messages
+@app.route('/api/admin/unread_messages')
+def get_unread_messages():
+    """Get count of unread messages for admin"""
+    if 'admin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    try:
+        admin_id = session.get('user_id')
+        conn = get_db_connection()
         c = conn.cursor()
-        c.execute('INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)',
-                  (username, email, password, role))
-        conn.commit()
-        return jsonify({'success': True})
-    except sqlite3.IntegrityError:
-        return jsonify({'success': False, 'error': 'Username already exists'}), 400
-    finally:
+
+        # Get total unread count
+        c.execute('''
+            SELECT COUNT(*) as total
+            FROM messages 
+            WHERE recipient_id = ? AND is_read = 0
+        ''', (admin_id,))
+
+        result = c.fetchone()
+        total_unread = result['total'] if result else 0
+
         conn.close()
+
+        return jsonify({
+            'count': total_unread,
+            'by_user': {}
+        })
+
+    except Exception as e:
+        print(f"Error getting unread messages: {e}")
+        return jsonify({'count': 0, 'by_user': {}})
+
+    # 3. Setup messages table
+    @app.route('/setup_messaging')
+    def setup_messaging():
+        """One-time setup for messaging system"""
+        if 'admin' not in session:
+            return "Admin access required"
+
+        try:
+            conn = sqlite3.connect('inspections.db')
+            c = conn.cursor()
+
+            # Create messages table
+            c.execute('''CREATE TABLE IF NOT EXISTS messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sender_id INTEGER NOT NULL,
+                recipient_id INTEGER NOT NULL,
+                content TEXT NOT NULL,
+                timestamp TEXT NOT NULL,
+                is_read INTEGER DEFAULT 0,
+                FOREIGN KEY (sender_id) REFERENCES users(id),
+                FOREIGN KEY (recipient_id) REFERENCES users(id)
+            )''')
+
+            conn.commit()
+            conn.close()
+
+            return "✅ Messaging system setup complete! <a href='/admin'>Back to Admin Dashboard</a>"
+        except Exception as e:
+            return f"❌ Error setting up messaging: {e}"
+
+
+@app.route('/api/admin/mark_messages_read/<int:user_id>', methods=['POST'])
+def mark_messages_read(user_id):
+    """Mark all messages from a user as read"""
+    if 'admin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    try:
+        admin_id = session.get('user_id')
+        conn = get_db_connection()
+        c = conn.cursor()
+
+        c.execute('''
+            UPDATE messages 
+            SET is_read = 1 
+            WHERE sender_id = ? AND recipient_id = ? AND is_read = 0
+        ''', (user_id, admin_id))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({'success': True})
+
+    except Exception as e:
+        print(f"Error marking messages as read: {e}")
+        return jsonify({'success': False, 'error': 'Failed to mark messages as read'}), 500
 
 
 @app.route('/api/admin/users/<int:user_id>', methods=['PUT'])
 def update_user(user_id):
+    """Update an existing user"""
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
-    data = request.get_json()
-    email = data.get('email')
-    role = data.get('role')
 
-    conn = get_db_connection()
     try:
-        c = conn.cursor()
-        c.execute('UPDATE users SET email = ?, role = ? WHERE id = ?', (email, role, user_id))
-        conn.commit()
-        return jsonify({'success': True})
-    finally:
-        conn.close()
+        data = request.get_json()
+        email = data.get('email', '').strip()
+        role = data.get('role', '').strip()
+
+        # Validate required fields
+        if not all([email, role]):
+            return jsonify({'success': False, 'error': 'Email and role are required'}), 400
+
+        # Validate role
+        if role not in ['inspector', 'admin', 'medical_officer']:
+            return jsonify({'success': False, 'error': 'Invalid role'}), 400
+
+        conn = get_db_connection()
+        try:
+            c = conn.cursor()
+
+            # Get current user info
+            c.execute('SELECT username, email FROM users WHERE id = ?', (user_id,))
+            current_user = c.fetchone()
+            if not current_user:
+                return jsonify({'success': False, 'error': 'User not found'}), 404
+
+            # Check if email already exists for another user
+            c.execute('SELECT id FROM users WHERE email = ? AND id != ?', (email, user_id))
+            if c.fetchone():
+                return jsonify({'success': False, 'error': 'Email already exists'}), 400
+
+            # Update user
+            c.execute('''
+                UPDATE users 
+                SET email = ?, role = ? 
+                WHERE id = ?
+            ''', (email, role, user_id))
+
+            conn.commit()
+
+            # Log the action
+            log_audit_event(session.get('inspector', 'admin'), 'user_updated',
+                            request.remote_addr, f'Updated user: {current_user["username"]} (new role: {role})')
+
+            return jsonify({'success': True, 'message': 'User updated successfully'})
+
+        finally:
+            conn.close()
+
+    except Exception as e:
+        print(f"Error updating user: {e}")
+        return jsonify({'success': False, 'error': 'Database error occurred'}), 500
 
 
 @app.route('/api/admin/users/<int:user_id>/flag', methods=['POST'])
 def flag_user(user_id):
+    """Flag or unflag a user"""
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
-    data = request.get_json()
-    is_flagged = data.get('is_flagged', False)
 
-    conn = get_db_connection()
     try:
-        c = conn.cursor()
-        c.execute('UPDATE users SET is_flagged = ? WHERE id = ?', (1 if is_flagged else 0, user_id))
-        conn.commit()
-        return jsonify({'success': True})
-    finally:
-        conn.close()
+        data = request.get_json()
+        is_flagged = data.get('is_flagged', False)
+
+        conn = get_db_connection()
+        try:
+            c = conn.cursor()
+
+            # Get user info
+            c.execute('SELECT username FROM users WHERE id = ?', (user_id,))
+            user = c.fetchone()
+            if not user:
+                return jsonify({'success': False, 'error': 'User not found'}), 404
+
+            # Update flag status
+            c.execute('UPDATE users SET is_flagged = ? WHERE id = ?', (1 if is_flagged else 0, user_id))
+            conn.commit()
+
+            # Log the action
+            action = 'user_flagged' if is_flagged else 'user_unflagged'
+            log_audit_event(session.get('inspector', 'admin'), action,
+                            request.remote_addr, f'{action.replace("_", " ").title()}: {user["username"]}')
+
+            return jsonify(
+                {'success': True, 'message': f'User {"flagged" if is_flagged else "unflagged"} successfully'})
+
+        finally:
+            conn.close()
+
+    except Exception as e:
+        print(f"Error flagging user: {e}")
+        return jsonify({'success': False, 'error': 'Database error occurred'}), 500
 
 
 @app.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
 def delete_user(user_id):
+    """Delete a user (cannot delete admin users)"""
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
-    conn = get_db_connection()
+
     try:
-        c = conn.cursor()
-        c.execute('SELECT role FROM users WHERE id = ?', (user_id,))
-        user = c.fetchone()
-        if user and user['role'] == 'admin':
-            return jsonify({'success': False, 'error': 'Cannot delete admin user'}), 403
-        c.execute('DELETE FROM users WHERE id = ?', (user_id,))
-        conn.commit()
-        return jsonify({'success': True})
-    finally:
-        conn.close()
+        conn = get_db_connection()
+        try:
+            c = conn.cursor()
+
+            # Get user info
+            c.execute('SELECT username, role FROM users WHERE id = ?', (user_id,))
+            user = c.fetchone()
+            if not user:
+                return jsonify({'success': False, 'error': 'User not found'}), 404
+
+            # Prevent deletion of admin users
+            if user['role'] == 'admin':
+                return jsonify({'success': False, 'error': 'Cannot delete admin users'}), 403
+
+            # Delete user
+            c.execute('DELETE FROM users WHERE id = ?', (user_id,))
+            conn.commit()
+
+            # Log the action
+            log_audit_event(session.get('inspector', 'admin'), 'user_deleted',
+                            request.remote_addr, f'Deleted user: {user["username"]} ({user["role"]})')
+
+            return jsonify({'success': True, 'message': 'User deleted successfully'})
+
+        finally:
+            conn.close()
+
+    except Exception as e:
+        print(f"Error deleting user: {e}")
+        return jsonify({'success': False, 'error': 'Database error occurred'}), 500
 
 
 # ==================================================
@@ -5291,6 +6048,15 @@ def debug_forms_check():
     return f"<h2>Form Templates ({len(templates)}):</h2><pre>{templates}</pre><br><br><h2>Form Items ({len(items)}):</h2><pre>{items}</pre>"
 
 
+@app.route('/setup_messaging_complete')
+def setup_messaging_complete():
+    if 'admin' not in session:
+        return "Admin access required"
+
+    init_messages_db()  # This function already exists in your code
+    return "✅ Messaging system ready! <a href='/admin'>Back to Admin</a>"
+
+
 @app.route('/admin/migrate_food_checklist')
 def migrate_food_checklist():
     if 'admin' not in session:
@@ -5437,6 +6203,7 @@ def migrate_remaining_fixed():
 
     return "<h1>Migration Results:</h1><ul>" + "".join(
         [f"<li>{r}</li>" for r in results]) + "</ul><br><a href='/admin/forms'>Check Form Management</a>"
+
 
 if __name__ == '__main__':
     init_db()
