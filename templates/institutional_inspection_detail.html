@@ -128,8 +128,16 @@
             text-transform: uppercase;
         }
 
-        .critical-item {
-            background-color: rgba(255, 255, 0, 0.2);
+        .inspection-table tr {
+            background-color: white;
+        }
+
+        .inspection-table tr.critical-item {
+            background-color: rgba(128, 128, 128, 0.2);
+        }
+
+        .inspection-table td.critical-item {
+            background-color: rgba(128, 128, 128, 0.2);
         }
 
         .signature-section {
@@ -315,7 +323,7 @@
 
         <div class="checkbox-row">
             <strong>Action:</strong>
-            <span>{{ inspection.action or 'N/A' }}</span>
+            <span>{{ inspection.action or 'NAI' }}</span>
         </div>
 
         <table class="inspection-table">
@@ -339,16 +347,16 @@
                     <td class="score-cell">5</td>
                     <td class="score-cell">{{ inspection.scores.get('01', 0) }}</td>
                     <td class="critical-item">19 Absence</td>
-                    <td class="score-cell">5</td>
-                    <td class="score-cell">{{ inspection.scores.get('19', 0) }}</td>
+                    <td class="score-cell critical-item">5</td>
+                    <td class="score-cell critical-item">{{ inspection.scores.get('19', 0) }}</td>
                 </tr>
                 <tr>
                     <td>02 Structural Integrity</td>
                     <td class="score-cell">2</td>
                     <td class="score-cell">{{ inspection.scores.get('02', 0) }}</td>
                     <td class="critical-item">20 Control system in place</td>
-                    <td class="score-cell">5</td>
-                    <td class="score-cell">{{ inspection.scores.get('20', 0) }}</td>
+                    <td class="score-cell critical-item">5</td>
+                    <td class="score-cell critical-item">{{ inspection.scores.get('20', 0) }}</td>
                 </tr>
                 <tr>
                     <td>03 Housekeeping</td>
@@ -405,13 +413,13 @@
                     <td class="score-cell">5</td>
                     <td class="score-cell">{{ inspection.scores.get('09', 0) }}</td>
                     <td class="critical-item">26 Fire extinguishers</td>
-                    <td class="score-cell">5</td>
-                    <td class="score-cell">{{ inspection.scores.get('26', 0) }}</td>
+                    <td class="score-cell critical-item">5</td>
+                    <td class="score-cell critical-item">{{ inspection.scores.get('26', 0) }}</td>
                 </tr>
-                <tr class="critical-item">
-                    <td>10 Potability</td>
-                    <td class="score-cell">5</td>
-                    <td class="score-cell">{{ inspection.scores.get('10', 0) }}</td>
+                <tr>
+                    <td class="critical-item">10 Potability</td>
+                    <td class="score-cell critical-item">5</td>
+                    <td class="score-cell critical-item">{{ inspection.scores.get('10', 0) }}</td>
                     <td>27 Access to medical care</td>
                     <td class="score-cell">2</td>
                     <td class="score-cell">{{ inspection.scores.get('27', 0) }}</td>
@@ -422,18 +430,18 @@
                     <td class="score-cell">2</td>
                     <td class="score-cell">{{ inspection.scores.get('28', 0) }}</td>
                 </tr>
-                <tr class="critical-item">
-                    <td>11 Sanitary excreta disposal</td>
-                    <td class="score-cell">5</td>
-                    <td class="score-cell">{{ inspection.scores.get('11', 0) }}</td>
+                <tr>
+                    <td class="critical-item">11 Sanitary excreta disposal</td>
+                    <td class="score-cell critical-item">5</td>
+                    <td class="score-cell critical-item">{{ inspection.scores.get('11', 0) }}</td>
                     <td>29 Emergency exit</td>
                     <td class="score-cell">2</td>
                     <td class="score-cell">{{ inspection.scores.get('29', 0) }}</td>
                 </tr>
-                <tr class="critical-item">
-                    <td>12 Adequacy</td>
-                    <td class="score-cell">5</td>
-                    <td class="score-cell">{{ inspection.scores.get('12', 0) }}</td>
+                <tr>
+                    <td class="critical-item">12 Adequacy</td>
+                    <td class="score-cell critical-item">5</td>
+                    <td class="score-cell critical-item">{{ inspection.scores.get('12', 0) }}</td>
                     <td>30 Veterinary certification of pets</td>
                     <td class="score-cell">1</td>
                     <td class="score-cell">{{ inspection.scores.get('30', 0) }}</td>
@@ -442,10 +450,10 @@
                     <td colspan="3" class="section-header">FOOD HANDLING FACILITIES²</td>
                     <td colspan="3" class="section-header">REFRIGERATION FOR NON-FOOD³</td>
                 </tr>
-                <tr class="critical-item">
-                    <td>13 Food Storage</td>
-                    <td class="score-cell">5</td>
-                    <td class="score-cell">{{ inspection.scores.get('13', 0) }}</td>
+                <tr>
+                    <td class="critical-item">13 Food Storage</td>
+                    <td class="score-cell critical-item">5</td>
+                    <td class="score-cell critical-item">{{ inspection.scores.get('13', 0) }}</td>
                     <td>31 Adequacy</td>
                     <td class="score-cell">2</td>
                     <td class="score-cell">{{ inspection.scores.get('31', 0) }}</td>
