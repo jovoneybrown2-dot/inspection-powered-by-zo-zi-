@@ -487,26 +487,46 @@ def admin():
 def admin_form_scores():
     form_type = request.args.get('form_type', 'all')
 
-    # Query to get actual scores from inspection forms
-    # This should return an array of numerical scores (0-100)
-    # Example query might look like:
+    # Establish database connection
+    import sqlite3
+    conn = sqlite3.connect('inspection.db')  # Replace with your actual database file name
+    cursor = conn.cursor()
 
-    if form_type == 'all':
-        # Get scores from all form types
-        scores = db.execute("""
-            SELECT score FROM food_establishment_forms WHERE score IS NOT NULL
-            UNION ALL
-            SELECT score FROM residential_forms WHERE score IS NOT NULL
-            UNION ALL
-            SELECT score FROM burial_forms WHERE score IS NOT NULL
-            -- Add other form types...
-        """).fetchall()
-    else:
-        # Get scores for specific form type
-        table_name = get_table_name_for_form_type(form_type)
-        scores = db.execute(f"SELECT score FROM {table_name} WHERE score IS NOT NULL").fetchall()
+    try:
+        if form_type == 'all':
+            # Get scores from all form types
+            cursor.execute("""
+                SELECT score FROM food_establishment_forms WHERE score IS NOT NULL
+                UNION ALL
+                SELECT score FROM residential_forms WHERE score IS NOT NULL
+                UNION ALL
+                SELECT score FROM burial_forms WHERE score IS NOT NULL
+                UNION ALL
+                SELECT score FROM spirit_licence_forms WHERE score IS NOT NULL
+                UNION ALL
+                SELECT score FROM swimming_pool_forms WHERE score IS NOT NULL
+                UNION ALL
+                SELECT score FROM small_hotels_forms WHERE score IS NOT NULL
+                UNION ALL
+                SELECT score FROM barbershop_forms WHERE score IS NOT NULL
+                UNION ALL
+                SELECT score FROM institutional_forms WHERE score IS NOT NULL
+            """)
+            scores = cursor.fetchall()
+        else:
+            # Get scores for specific form type
+            table_name = get_table_name_for_form_type(form_type)
+            cursor.execute(f"SELECT score FROM {table_name} WHERE score IS NOT NULL")
+            scores = cursor.fetchall()
 
-    return jsonify([score[0] for score in scores])
+        return jsonify([score[0] for score in scores])
+
+    except Exception as e:
+        print(f"Database error: {e}")
+        return jsonify([]), 500
+
+    finally:
+        conn.close()
 
 
 @app.route('/admin_metrics', methods=['GET'])

@@ -1890,7 +1890,7 @@
         }
 
         // ========================================
-        // SEARCH FUNCTIONALITY
+        // SEARCH FUNCTIONALITY - FIXED VERSION
         // ========================================
         function initializeSearch() {
             const searchInput = document.getElementById('globalSearchInput');
@@ -1942,129 +1942,168 @@
         }
 
         function performClientSideSearch(query) {
-    const results = [];
-    const lowerQuery = query.toLowerCase();
+            const results = [];
+            const lowerQuery = query.toLowerCase();
 
-    // Search through all visible forms in the current table
-    const currentTab = document.querySelector('.tab-content.active');
-    const rows = currentTab.querySelectorAll('tbody tr');
+            // Search through all visible forms in the current table
+            const currentTab = document.querySelector('.tab-content.active');
+            const rows = currentTab.querySelectorAll('tbody tr');
 
-    rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        if (cells.length > 0) {
-            const formId = cells[0].textContent.trim();
-            const establishmentCell = cells[1];
-            const name = establishmentCell ? establishmentCell.textContent.trim() : '';
-            const owner = cells[2] ? cells[2].textContent.trim() : '';
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length > 0) {
+                    const formId = cells[0].textContent.trim();
+                    const establishmentCell = cells[1];
 
-            // Extract just the establishment name (first line of the cell)
-            const establishmentName = name.split('\n')[0].trim();
+                    // Get establishment name and form type from the cell structure
+                    const establishmentDiv = establishmentCell.querySelector('.truncate-text');
+                    const typeDiv = establishmentCell.querySelector('.text-xs.text-gray-500');
 
-            // Extract form type from the second line
-            const lines = name.split('\n');
-            let formType = 'Food Establishment'; // default
-            if (lines.length > 1) {
-                const typeText = lines[1].trim();
-                const typeMap = {
-                    'Small Hotel': 'Small Hotel',
-                    'Swimming Pool': 'Swimming Pool',
-                    'Residential': 'Residential',
-                    'Barbershop': 'Barbershop',
-                    'Spirit Licence Premises': 'Spirit Licence Premises',
-                    'Food Establishment': 'Food Establishment',
-                    'Burial': 'Burial',
-                    'Institutional': 'Institutional Health'
-                };
-                formType = typeMap[typeText] || 'Food Establishment';
-            }
+                    const establishmentName = establishmentDiv ? establishmentDiv.textContent.trim() : '';
+                    const formType = typeDiv ? typeDiv.textContent.trim() : 'Food Establishment';
 
-            // Search primarily by establishment name, then owner
-            if (establishmentName.toLowerCase().includes(lowerQuery) || owner.toLowerCase().includes(lowerQuery)) {
-                results.push({
-                    id: formId,
-                    name: establishmentName || 'Unknown',
-                    owner: owner || 'N/A',
-                    formType: formType,
-                    match: `${establishmentName} ${owner}`.toLowerCase()
-                });
-            }
-        }
-    });
+                    const owner = cells[2] ? cells[2].textContent.trim() : '';
 
-    displaySearchResults(results);
-}
+                    // Search primarily by establishment name, then owner
+                    if (establishmentName.toLowerCase().includes(lowerQuery) || owner.toLowerCase().includes(lowerQuery)) {
+                        // Map form types correctly for navigation
+                        let mappedFormType = formType;
+                        switch (formType) {
+                            case 'Institutional':
+                                mappedFormType = 'Institutional Health';
+                                break;
+                            case 'Spirit Licence Premises':
+                                mappedFormType = 'Spirit Licence Premises';
+                                break;
+                            case 'Small Hotel':
+                                mappedFormType = 'Small Hotel';
+                                break;
+                            case 'Swimming Pool':
+                                mappedFormType = 'Swimming Pool';
+                                break;
+                            case 'Food Establishment':
+                                mappedFormType = 'Food Establishment';
+                                break;
+                            case 'Residential':
+                                mappedFormType = 'Residential';
+                                break;
+                            case 'Burial':
+                                mappedFormType = 'Burial';
+                                break;
+                            case 'Barbershop':
+                                mappedFormType = 'Barbershop';
+                                break;
+                            default:
+                                mappedFormType = formType;
+                        }
 
-     function displaySearchResults(results) {
-    const suggestions = document.getElementById('searchSuggestions');
-
-    if (!results || results.length === 0) {
-        suggestions.innerHTML = '<div class="suggestion-item">No results found</div>';
-        suggestions.classList.add('active');
-        return;
-    }
-
-    suggestions.innerHTML = '';
-
-    results.slice(0, 10).forEach(result => {
-        const item = document.createElement('div');
-        item.className = 'suggestion-item';
-        item.innerHTML = `
-            <strong>${result.name}</strong>
-            <span class="suggestion-type">Form #${result.id}</span>
-            <br>
-            <small>Owner: ${result.owner}</small>
-        `;
-
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            console.log('Search result clicked:', result);
-
-            try {
-                // Extract just the numeric part of the form ID
-                const numericId = result.id.replace(/\D/g, '');
-                console.log('Form ID:', numericId, 'Form Type:', result.formType);
-
-                // Check if viewForm function exists
-                if (typeof viewForm === 'function') {
-                    console.log('Calling viewForm...');
-                    viewForm(numericId, result.formType);
-                } else {
-                    console.error('viewForm function not found!');
-                    // Fallback: construct URL manually
-                    let endpoint;
-                    switch (result.formType) {
-                        case 'Food Establishment': endpoint = `/inspection/${numericId}`; break;
-                        case 'Residential': endpoint = `/residential/inspection/${numericId}`; break;
-                        case 'Burial': endpoint = `/burial/inspection/${numericId}`; break;
-                        case 'Spirit Licence Premises': endpoint = `/spirit_licence/inspection/${numericId}`; break;
-                        case 'Swimming Pool': endpoint = `/swimming_pool/inspection/${numericId}`; break;
-                        case 'Small Hotel': endpoint = `/small_hotels/inspection/${numericId}`; break;
-                        case 'Barbershop': endpoint = `/barbershop/inspection/${numericId}`; break;
-                        case 'Institutional Health': endpoint = `/institutional/inspection/${numericId}`; break;
-                        default: endpoint = `/inspection/${numericId}`;
+                        results.push({
+                            id: formId,
+                            name: establishmentName || 'Unknown',
+                            owner: owner || 'N/A',
+                            formType: mappedFormType,
+                            match: `${establishmentName} ${owner}`.toLowerCase()
+                        });
                     }
-                    console.log('Navigating to:', endpoint);
-                    window.location.href = endpoint;
                 }
+            });
 
-            } catch (error) {
-                console.error('Error in search result click:', error);
+            displaySearchResults(results);
+        }
+
+        function displaySearchResults(results) {
+            const suggestions = document.getElementById('searchSuggestions');
+
+            if (!results || results.length === 0) {
+                suggestions.innerHTML = '<div class="suggestion-item">No results found</div>';
+                suggestions.classList.add('active');
+                return;
             }
 
-            // Close suggestions
-            suggestions.classList.remove('active');
+            suggestions.innerHTML = '';
 
-            // Clear search input
-            document.getElementById('globalSearchInput').value = '';
-        });
+            results.slice(0, 10).forEach(result => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.style.cursor = 'pointer'; // Make it clear it's clickable
 
-        suggestions.appendChild(item);
-    });
+                item.innerHTML = `
+                    <strong>${result.name}</strong>
+                    <span class="suggestion-type">Form #${result.id}</span>
+                    <br>
+                    <small>Owner: ${result.owner}</small>
+                `;
 
-    suggestions.classList.add('active');
-}
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    console.log('Search result clicked:', result);
+
+                    try {
+                        // Extract just the numeric part of the form ID
+                        const numericId = String(result.id).replace(/\D/g, '');
+                        console.log('Navigating to Form ID:', numericId, 'Form Type:', result.formType);
+
+                        // Construct the correct URL based on form type
+                        let endpoint;
+                        switch (result.formType) {
+                            case 'Food Establishment':
+                                endpoint = `/inspection/${numericId}`;
+                                break;
+                            case 'Residential':
+                                endpoint = `/residential/inspection/${numericId}`;
+                                break;
+                            case 'Burial':
+                                endpoint = `/burial/inspection/${numericId}`;
+                                break;
+                            case 'Spirit Licence Premises':
+                                endpoint = `/spirit_licence/inspection/${numericId}`;
+                                break;
+                            case 'Swimming Pool':
+                                endpoint = `/swimming_pool/inspection/${numericId}`;
+                                break;
+                            case 'Small Hotel':
+                                endpoint = `/small_hotels/inspection/${numericId}`;
+                                break;
+                            case 'Barbershop':
+                                endpoint = `/barbershop/inspection/${numericId}`;
+                                break;
+                            case 'Institutional Health':
+                            case 'Institutional':
+                                endpoint = `/institutional/inspection/${numericId}`;
+                                break;
+                            default:
+                                endpoint = `/inspection/${numericId}`;
+                        }
+
+                        console.log('Navigating to URL:', endpoint);
+
+                        // Show user feedback before navigation
+                        showNotification(`Opening ${result.formType} inspection for ${result.name}...`, 'success');
+
+                        // Navigate after a brief delay to show the notification
+                        setTimeout(() => {
+                            window.location.href = endpoint;
+                        }, 500);
+
+                    } catch (error) {
+                        console.error('Error in search result click:', error);
+                        showNotification('Error opening inspection form. Please try again.', 'error');
+                    }
+
+                    // Close suggestions
+                    suggestions.classList.remove('active');
+
+                    // Clear search input
+                    document.getElementById('globalSearchInput').value = '';
+                });
+
+                suggestions.appendChild(item);
+            });
+
+            suggestions.classList.add('active');
+        }
 
         function setupTabs() {
             const tabs = document.querySelectorAll('.tab');
@@ -2655,20 +2694,21 @@
         }
 
         function viewForm(formId, formType) {
-    let endpoint;
-    switch (formType) {
-        case 'Food Establishment': endpoint = `/inspection/${formId}`; break;
-        case 'Residential': endpoint = `/residential/inspection/${formId}`; break;
-        case 'Burial': endpoint = `/burial/inspection/${formId}`; break;
-        case 'Spirit Licence Premises': endpoint = `/spirit_licence/inspection/${formId}`; break;
-        case 'Swimming Pool': endpoint = `/swimming_pool/inspection/${formId}`; break;
-        case 'Small Hotel': endpoint = `/small_hotels/inspection/${formId}`; break;
-        case 'Barbershop': endpoint = `/barbershop/inspection/${formId}`; break;
-        case 'Institutional Health': endpoint = `/institutional/inspection/${formId}`; break;
-        default: endpoint = `/inspection/${formId}`;
-    }
-    window.location.href = endpoint;
-}
+            let endpoint;
+            switch (formType) {
+                case 'Food Establishment': endpoint = `/inspection/${formId}`; break;
+                case 'Residential': endpoint = `/residential/inspection/${formId}`; break;
+                case 'Burial': endpoint = `/burial/inspection/${formId}`; break;
+                case 'Spirit Licence Premises': endpoint = `/spirit_licence/inspection/${formId}`; break;
+                case 'Swimming Pool': endpoint = `/swimming_pool/inspection/${formId}`; break;
+                case 'Small Hotel': endpoint = `/small_hotels/inspection/${formId}`; break;
+                case 'Barbershop': endpoint = `/barbershop/inspection/${formId}`; break;
+                case 'Institutional Health': endpoint = `/institutional/inspection/${formId}`; break;
+                case 'Institutional': endpoint = `/institutional/inspection/${formId}`; break;
+                default: endpoint = `/inspection/${formId}`;
+            }
+            window.location.href = endpoint;
+        }
 
         function downloadForm(formId, formType) {
             console.log(`Download form ${formId} of type ${formType}`);
