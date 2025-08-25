@@ -658,9 +658,10 @@
         </table>
 
         <div class="buttons">
-            <button id="print-btn" class="btn" type="button" onclick="window.print()">Print</button>
-            <a href="{{ url_for('dashboard') }}" id="back-btn" class="btn">Back to Dashboard</a>
-        </div>
+    <button id="print-btn" class="btn" type="button" onclick="window.print()">Print</button>
+    <a href="{{ url_for('download_swimming_pool_pdf', form_id=inspection.id) }}" class="btn">Download PDF</a>
+    <a href="{{ url_for('dashboard') }}" id="back-btn" class="btn">Back to Dashboard</a>
+</div>
     </div>
 </body>
 </html>

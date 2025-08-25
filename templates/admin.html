@@ -2012,98 +2012,103 @@
         }
 
         function displaySearchResults(results) {
-            const suggestions = document.getElementById('searchSuggestions');
+    const suggestions = document.getElementById('searchSuggestions');
 
-            if (!results || results.length === 0) {
-                suggestions.innerHTML = '<div class="suggestion-item">No results found</div>';
-                suggestions.classList.add('active');
-                return;
+    if (!results || results.length === 0) {
+        suggestions.innerHTML = '<div class="suggestion-item">No results found</div>';
+        suggestions.classList.add('active');
+        return;
+    }
+
+    suggestions.innerHTML = '';
+
+    results.slice(0, 10).forEach(result => {
+        const item = document.createElement('div');
+        item.className = 'suggestion-item';
+        item.style.cursor = 'pointer';
+
+        item.innerHTML = `
+            <strong>${result.name}</strong>
+            <span class="suggestion-type">Form #${result.id}</span>
+            <br>
+            <small>Owner: ${result.owner}</small>
+        `;
+
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            console.log('Search result clicked:', result);
+
+            try {
+                // Extract just the numeric part of the form ID
+                const numericId = String(result.id).replace(/\D/g, '');
+
+                // FIX: Use 'type' instead of 'formType' to match backend API
+                const formType = result.type || result.formType || 'Food Establishment';
+
+                console.log('Navigating to Form ID:', numericId, 'Form Type:', formType);
+
+                // Construct the correct URL based on form type
+                let endpoint;
+                switch (formType) {
+                    case 'Food Establishment':
+                        endpoint = `/inspection/${numericId}`;
+                        break;
+                    case 'Residential':
+                        endpoint = `/residential/inspection/${numericId}`;
+                        break;
+                    case 'Burial':
+                        endpoint = `/burial/inspection/${numericId}`;
+                        break;
+                    case 'Spirit Licence Premises':
+                        endpoint = `/spirit_licence/inspection/${numericId}`;
+                        break;
+                    case 'Swimming Pool':
+                        endpoint = `/swimming_pool/inspection/${numericId}`;
+                        break;
+                    case 'Small Hotel':
+                        endpoint = `/small_hotels/inspection/${numericId}`;
+                        break;
+                    case 'Barbershop':
+                        endpoint = `/barbershop/inspection/${numericId}`;
+                        break;
+                    case 'Institutional Health':
+                    case 'Institutional':
+                        endpoint = `/institutional/inspection/${numericId}`;
+                        break;
+                    default:
+                        console.warn(`Unknown form type: ${formType}, defaulting to food inspection`);
+                        endpoint = `/inspection/${numericId}`;
+                }
+
+                console.log('Navigating to URL:', endpoint);
+
+                // Show user feedback before navigation
+                showNotification(`Opening ${formType} inspection for ${result.name}...`, 'success');
+
+                // Navigate after a brief delay to show the notification
+                setTimeout(() => {
+                    window.location.href = endpoint;
+                }, 500);
+
+            } catch (error) {
+                console.error('Error in search result click:', error);
+                showNotification('Error opening inspection form. Please try again.', 'error');
             }
 
-            suggestions.innerHTML = '';
+            // Close suggestions
+            suggestions.classList.remove('active');
 
-            results.slice(0, 10).forEach(result => {
-                const item = document.createElement('div');
-                item.className = 'suggestion-item';
-                item.style.cursor = 'pointer'; // Make it clear it's clickable
+            // Clear search input
+            document.getElementById('globalSearchInput').value = '';
+        });
 
-                item.innerHTML = `
-                    <strong>${result.name}</strong>
-                    <span class="suggestion-type">Form #${result.id}</span>
-                    <br>
-                    <small>Owner: ${result.owner}</small>
-                `;
+        suggestions.appendChild(item);
+    });
 
-                item.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    console.log('Search result clicked:', result);
-
-                    try {
-                        // Extract just the numeric part of the form ID
-                        const numericId = String(result.id).replace(/\D/g, '');
-                        console.log('Navigating to Form ID:', numericId, 'Form Type:', result.formType);
-
-                        // Construct the correct URL based on form type
-                        let endpoint;
-                        switch (result.formType) {
-                            case 'Food Establishment':
-                                endpoint = `/inspection/${numericId}`;
-                                break;
-                            case 'Residential':
-                                endpoint = `/residential/inspection/${numericId}`;
-                                break;
-                            case 'Burial':
-                                endpoint = `/burial/inspection/${numericId}`;
-                                break;
-                            case 'Spirit Licence Premises':
-                                endpoint = `/spirit_licence/inspection/${numericId}`;
-                                break;
-                            case 'Swimming Pool':
-                                endpoint = `/swimming_pool/inspection/${numericId}`;
-                                break;
-                            case 'Small Hotel':
-                                endpoint = `/small_hotels/inspection/${numericId}`;
-                                break;
-                            case 'Barbershop':
-                                endpoint = `/barbershop/inspection/${numericId}`;
-                                break;
-                            case 'Institutional Health':
-                            case 'Institutional':
-                                endpoint = `/institutional/inspection/${numericId}`;
-                                break;
-                            default:
-                                endpoint = `/inspection/${numericId}`;
-                        }
-
-                        console.log('Navigating to URL:', endpoint);
-
-                        // Show user feedback before navigation
-                        showNotification(`Opening ${result.formType} inspection for ${result.name}...`, 'success');
-
-                        // Navigate after a brief delay to show the notification
-                        setTimeout(() => {
-                            window.location.href = endpoint;
-                        }, 500);
-
-                    } catch (error) {
-                        console.error('Error in search result click:', error);
-                        showNotification('Error opening inspection form. Please try again.', 'error');
-                    }
-
-                    // Close suggestions
-                    suggestions.classList.remove('active');
-
-                    // Clear search input
-                    document.getElementById('globalSearchInput').value = '';
-                });
-
-                suggestions.appendChild(item);
-            });
-
-            suggestions.classList.add('active');
-        }
+    suggestions.classList.add('active');
+}
 
         function setupTabs() {
             const tabs = document.querySelectorAll('.tab');

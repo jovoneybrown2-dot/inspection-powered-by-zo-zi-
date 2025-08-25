@@ -105,7 +105,7 @@
             background-color: #f0f0f0;
         }
         tr.important-weight {
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 0, 0.3);
         }
         .category-header {
             font-weight: bold;
@@ -137,61 +137,6 @@
             color: #28a745;
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelector('.buttons button:nth-child(1)')?.addEventListener('click', () => window.print());
-            document.querySelector('.buttons button:nth-child(2)')?.addEventListener('click', () => {
-                window.location.href = `mailto:?subject=Inspection Report&body=Inspection ID: ${inspection.id}\nEstablishment: ${inspection.establishment_name}\nDate: ${inspection.inspection_date}`;
-            });
-            document.querySelector('.buttons button:nth-child(3)')?.addEventListener('click', () => {
-                const { jsPDF } = jspdf;
-                const doc = new jsPDF();
-                let y = 10;
-                doc.text(`Inspection Report - ID: ${inspection.id}`, 10, y);
-                y += 10;
-                doc.text(`Establishment: ${inspection.establishment_name}`, 10, y);
-                y += 10;
-                doc.text(`Date: ${inspection.inspection_date}`, 10, y);
-                doc.text(`Owner: ${inspection.owner}`, 10, y += 10);
-                doc.text(`Address: ${inspection.address}`, 10, y += 10);
-                doc.text(`Inspector: ${inspection.inspector_name}`, 10, y += 10);
-                doc.text(`Critical Score: ${inspection.critical_score}`, 10, y += 10);
-                doc.text(`Overall Score: ${inspection.overall_score}`, 10, y += 10);
-                doc.text(`Result: ${inspection.result}`, 10, y += 10);
-                doc.text(`Comments: ${inspection.comments}`, 10, y += 10);
-                doc.save(`inspection_${inspection.id}.pdf`);
-            });
-            document.querySelector('.buttons button:nth-child(4)')?.addEventListener('click', () => {
-                window.location.href = '/dashboard';
-            });
-        });
-
-        const inspection = {
-            id: {{ inspection.id }},
-            establishment_name: "{{ inspection.establishment_name }}",
-            owner: "{{ inspection.owner }}",
-            address: "{{ inspection.address }}",
-            inspector_name: "{{ inspection.inspector_name }}",
-            inspection_date: "{{ inspection.inspection_date }}",
-            inspection_time: "{{ inspection.inspection_time }}",
-            critical_score: {{ inspection.critical_score }},
-            overall_score: {{ inspection.overall_score }},
-            result: "{{ inspection.result }}",
-            comments: "{{ inspection.comments }}",
-            inspector_signature: "{{ inspection.inspector_signature }}",
-            received_by: "{{ inspection.received_by }}",
-            license_no: "{{ inspection.license_no }}",
-            type_of_establishment: "{{ inspection.type_of_establishment }}",
-            no_of_employees: "{{ inspection.no_of_employees }}",
-            purpose_of_visit: "{{ inspection.purpose_of_visit }}",
-            action: "{{ inspection.action }}",
-            food_inspected: "{{ inspection.food_inspected }}",
-            food_condemned: "{{ inspection.food_condemned }}",
-            inspector_code: "{{ inspection.inspector_code }}",
-            scores: {{ inspection.scores|tojson|safe }}
-        };
-    </script>
 </head>
 <body>
     <div class="form-container">
@@ -243,8 +188,10 @@
                     <th>Weight</th>
                     <th>Score</th>
                 </tr>
-                <tr class="category-header"><td colspan="4">FOOD PROTECTION (1-10)</td></tr>
-                {% for item in checklist if 1 <= item.id <= 10 %}
+
+                <!-- FOOD (1-2) -->
+                <tr class="category-header"><td colspan="4">FOOD (1-2)</td></tr>
+                {% for item in checklist if 1 <= item.id <= 2 %}
                 <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
                     <td>{{ item.id }}</td>
                     <td>{{ item.desc }}</td>
@@ -252,6 +199,19 @@
                     <td><div class="form-value">{{ inspection.scores[item.id]|default('0') }}</div></td>
                 </tr>
                 {% endfor %}
+
+                <!-- FOOD PROTECTION (3-10) -->
+                <tr class="category-header"><td colspan="4">FOOD PROTECTION (3-10)</td></tr>
+                {% for item in checklist if 3 <= item.id <= 10 %}
+                <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.desc }}</td>
+                    <td>{{ item.wt }}</td>
+                    <td><div class="form-value">{{ inspection.scores[item.id]|default('0') }}</div></td>
+                </tr>
+                {% endfor %}
+
+                <!-- FOOD EQUIPMENT AND UTENSILS (11-23) -->
                 <tr class="category-header"><td colspan="4">FOOD EQUIPMENT AND UTENSILS (11-23)</td></tr>
                 {% for item in checklist if 11 <= item.id <= 23 %}
                 <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
@@ -261,6 +221,8 @@
                     <td><div class="form-value">{{ inspection.scores[item.id]|default('0') }}</div></td>
                 </tr>
                 {% endfor %}
+
+                <!-- TOILET AND HANDWASHING FACILITIES (24-25) -->
                 <tr class="category-header"><td colspan="4">TOILET AND HANDWASHING FACILITIES (24-25)</td></tr>
                 {% for item in checklist if 24 <= item.id <= 25 %}
                 <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
@@ -270,6 +232,8 @@
                     <td><div class="form-value">{{ inspection.scores[item.id]|default('0') }}</div></td>
                 </tr>
                 {% endfor %}
+
+                <!-- SOLID WASTE MANAGEMENT (26-27) -->
                 <tr class="category-header"><td colspan="4">SOLID WASTE MANAGEMENT (26-27)</td></tr>
                 {% for item in checklist if 26 <= item.id <= 27 %}
                 <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
@@ -279,6 +243,8 @@
                     <td><div class="form-value">{{ inspection.scores[item.id]|default('0') }}</div></td>
                 </tr>
                 {% endfor %}
+
+                <!-- RODENTS, INSECT, ANIMAL CONTROL (28) -->
                 <tr class="category-header"><td colspan="4">RODENTS, INSECT, ANIMAL CONTROL (28)</td></tr>
                 {% for item in checklist if item.id == 28 %}
                 <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
@@ -288,6 +254,8 @@
                     <td><div class="form-value">{{ inspection.scores[item.id]|default('0') }}</div></td>
                 </tr>
                 {% endfor %}
+
+                <!-- PERSONNEL (29-35) -->
                 <tr class="category-header"><td colspan="4">PERSONNEL (29-35)</td></tr>
                 {% for item in checklist if 29 <= item.id <= 35 %}
                 <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
@@ -297,6 +265,8 @@
                     <td><div class="form-value">{{ inspection.scores[item.id]|default('0') }}</div></td>
                 </tr>
                 {% endfor %}
+
+                <!-- WATER (36) -->
                 <tr class="category-header"><td colspan="4">WATER (36)</td></tr>
                 {% for item in checklist if item.id == 36 %}
                 <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
@@ -306,6 +276,8 @@
                     <td><div class="form-value">{{ inspection.scores[item.id]|default('0') }}</div></td>
                 </tr>
                 {% endfor %}
+
+                <!-- SEWAGE (37) -->
                 <tr class="category-header"><td colspan="4">SEWAGE (37)</td></tr>
                 {% for item in checklist if item.id == 37 %}
                 <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
@@ -315,6 +287,8 @@
                     <td><div class="form-value">{{ inspection.scores[item.id]|default('0') }}</div></td>
                 </tr>
                 {% endfor %}
+
+                <!-- PLUMBING (38-39) -->
                 <tr class="category-header"><td colspan="4">PLUMBING (38-39)</td></tr>
                 {% for item in checklist if 38 <= item.id <= 39 %}
                 <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
@@ -324,6 +298,8 @@
                     <td><div class="form-value">{{ inspection.scores[item.id]|default('0') }}</div></td>
                 </tr>
                 {% endfor %}
+
+                <!-- FLOORS, WALLS AND CEILING (40-41) -->
                 <tr class="category-header"><td colspan="4">FLOORS, WALLS AND CEILING (40-41)</td></tr>
                 {% for item in checklist if 40 <= item.id <= 41 %}
                 <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
@@ -333,6 +309,8 @@
                     <td><div class="form-value">{{ inspection.scores[item.id]|default('0') }}</div></td>
                 </tr>
                 {% endfor %}
+
+                <!-- OTHER OPERATIONS (42-45) -->
                 <tr class="category-header"><td colspan="4">OTHER OPERATIONS (42-45)</td></tr>
                 {% for item in checklist if 42 <= item.id <= 45 %}
                 <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
@@ -357,11 +335,51 @@
             </div>
         </div>
         <div class="buttons">
-            <button>Print</button>
-            <button>Email</button>
-            <button>Download</button>
-            <button>Back to Dashboard</button>
+            <button onclick="window.print()">Print</button>
+            <button onclick="emailInspection()">Email</button>
+            <button onclick="downloadDetailedPDF()">Download PDF</button>
+            <button onclick="window.location.href='/dashboard'">Back to Dashboard</button>
         </div>
     </div>
+
+    <script>
+        // Use the proper Flask route for detailed PDF instead of basic jsPDF
+        function downloadDetailedPDF() {
+            // This calls your Flask route that generates the detailed PDF
+            window.location.href = `/download_inspection_pdf/{{ inspection.id }}`;
+        }
+
+        function emailInspection() {
+            const subject = `Inspection Report - ${inspection.establishment_name}`;
+            const body = `Inspection ID: {{ inspection.id }}\nEstablishment: {{ inspection.establishment_name }}\nDate: {{ inspection.inspection_date }}\nResult: {{ inspection.result }}`;
+            window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        }
+
+        // Remove the old jsPDF code - we're using the Flask route instead
+        const inspection = {
+            id: {{ inspection.id }},
+            establishment_name: "{{ inspection.establishment_name }}",
+            owner: "{{ inspection.owner }}",
+            address: "{{ inspection.address }}",
+            inspector_name: "{{ inspection.inspector_name }}",
+            inspection_date: "{{ inspection.inspection_date }}",
+            inspection_time: "{{ inspection.inspection_time }}",
+            critical_score: {{ inspection.critical_score }},
+            overall_score: {{ inspection.overall_score }},
+            result: "{{ inspection.result }}",
+            comments: "{{ inspection.comments }}",
+            inspector_signature: "{{ inspection.inspector_signature }}",
+            received_by: "{{ inspection.received_by }}",
+            license_no: "{{ inspection.license_no }}",
+            type_of_establishment: "{{ inspection.type_of_establishment }}",
+            no_of_employees: "{{ inspection.no_of_employees }}",
+            purpose_of_visit: "{{ inspection.purpose_of_visit }}",
+            action: "{{ inspection.action }}",
+            food_inspected: "{{ inspection.food_inspected }}",
+            food_condemned: "{{ inspection.food_condemned }}",
+            inspector_code: "{{ inspection.inspector_code }}",
+            scores: {{ inspection.scores|tojson|safe }}
+        };
+    </script>
 </body>
 </html>

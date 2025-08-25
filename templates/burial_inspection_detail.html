@@ -67,6 +67,8 @@
         }
         #edit-btn { background-color: #28a745; }
         #edit-btn:hover { background-color: #218838; }
+        #download-btn { background-color: #dc3545; }
+        #download-btn:hover { background-color: #c82333; }
     </style>
 </head>
 <body>
@@ -104,6 +106,7 @@
         <p><strong>Created At:</strong> {{ inspection.created_at }}</p>
         <div class="buttons">
             <a href="{{ url_for('new_burial_form', id=inspection.id) }}" id="edit-btn" class="btn">Edit</a>
+            <a href="{{ url_for('download_burial_pdf', form_id=inspection.id) }}" id="download-btn" class="btn">Download PDF</a>
             <a href="{{ url_for('login') }}" class="btn">Back to Dashboard</a>
         </div>
     </div>

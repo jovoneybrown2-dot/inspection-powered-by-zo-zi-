@@ -7,6 +7,7 @@ from datetime import datetime
 # Flask Imports
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, make_response, Response
 
+
 #ReportLab Imports
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.units import inch
@@ -1936,6 +1937,7 @@ def burial_inspection_detail(id):
 # Replace ALL your PDF download functions with these exact form replicas
 
 
+# Replace your existing download_burial_pdf function with this exact replica
 @app.route('/download_burial_pdf/<int:form_id>')
 def download_burial_pdf(form_id):
     if 'inspector' not in session and 'admin' not in session:
@@ -1949,97 +1951,235 @@ def download_burial_pdf(form_id):
     p = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
-    # Form Header
-    y = create_form_header(p, "BURIAL SITE INSPECTION FORM", form_id, width, height)
+    # === EXACT TITLE MATCHING YOUR DETAILS PAGE ===
+    y = height - 60
+    p.setFont("Times-Bold", 18)
+    p.drawCentredString(width / 2, y, "Burial Site Inspection Report")
+    y -= 50
 
-    # Section 1: Basic Information
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y, "BASIC INFORMATION")
-    y -= 25
+    # === ALL DETAILS EXACTLY LIKE YOUR HTML ===
+    p.setFont("Times-Bold", 14)
+    label_x = 50
+    value_x = 200
+    line_spacing = 25
 
-    p.setFont("Helvetica", 10)
-    fields = [
-        ("Inspection Date:", inspection.get('inspection_date', '')),
-        ("Applicant Name:", inspection.get('applicant_name', '')),
-        ("Deceased Name:", inspection.get('deceased_name', '')),
-        ("Burial Location:", inspection.get('burial_location', ''))
-    ]
+    # Date of Inspection
+    p.drawString(label_x, y, "Date of Inspection:")
+    p.setFont("Times-Roman", 14)
+    p.drawString(value_x, y, str(inspection.get('inspection_date', '')))
+    y -= line_spacing
 
-    for label, value in fields:
-        p.drawString(50, y, label)
-        p.line(150, y - 2, 500, y - 2)
-        p.drawString(155, y, str(value))
-        y -= 20
+    # Name of Applicant
+    p.setFont("Times-Bold", 14)
+    p.drawString(label_x, y, "Name of Applicant:")
+    p.setFont("Times-Roman", 14)
+    p.drawString(value_x, y, str(inspection.get('applicant_name', '')))
+    y -= line_spacing
 
-    y -= 15
+    # Name of Deceased
+    p.setFont("Times-Bold", 14)
+    p.drawString(label_x, y, "Name of Deceased:")
+    p.setFont("Times-Roman", 14)
+    p.drawString(value_x, y, str(inspection.get('deceased_name', '')))
+    y -= line_spacing
 
-    # Section 2: Site Assessment
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y, "SITE ASSESSMENT")
-    y -= 25
+    # Location of Burial Spot
+    p.setFont("Times-Bold", 14)
+    p.drawString(label_x, y, "Location of Burial Spot:")
+    p.setFont("Times-Roman", 14)
+    p.drawString(value_x, y, str(inspection.get('burial_location', '')))
+    y -= line_spacing
 
-    p.setFont("Helvetica", 10)
-    assessment_fields = [
-        ("Site Description:", inspection.get('site_description', '')),
-        ("Proximity to Water Source:", inspection.get('proximity_water_source', '')),
-        ("Proximity to Perimeter Boundaries:", inspection.get('proximity_perimeter_boundaries', '')),
-        ("Proximity to Road/Pathway:", inspection.get('proximity_road_pathway', '')),
-        ("Proximity to Trees:", inspection.get('proximity_trees', '')),
-        ("Proximity to Houses/Buildings:", inspection.get('proximity_houses_buildings', '')),
-        ("Proposed Grave Type:", inspection.get('proposed_grave_type', ''))
-    ]
+    # Brief description of site
+    p.setFont("Times-Bold", 14)
+    p.drawString(label_x, y, "Brief description of site (e.g. topography etc.):")
+    y -= 20
+    p.setFont("Times-Roman", 14)
 
-    for label, value in assessment_fields:
-        if y < 100:
-            p.showPage()
-            y = height - 50
-        p.drawString(50, y, label)
-        p.line(200, y - 2, 500, y - 2)
-        p.drawString(205, y, str(value))
-        y -= 25
-
-    y -= 15
-
-    # Section 3: Remarks
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y, "GENERAL REMARKS")
-    y -= 25
-
-    p.setFont("Helvetica", 10)
-    remarks = inspection.get('general_remarks', '')
-    p.rect(50, y - 40, 500, 40)
-
-    # Handle multi-line remarks
-    if remarks:
+    # Handle multi-line site description
+    site_desc = str(inspection.get('site_description', ''))
+    if site_desc:
+        # Word wrap the description
+        words = site_desc.split()
         lines = []
-        words = remarks.split()
         current_line = ""
+        max_width = 65  # characters per line
+
         for word in words:
-            if len(current_line + word) < 70:
+            if len(current_line + word) < max_width:
                 current_line += word + " "
             else:
                 lines.append(current_line.strip())
                 current_line = word + " "
-        lines.append(current_line.strip())
+        if current_line:
+            lines.append(current_line.strip())
 
-        for i, line in enumerate(lines[:3]):  # Max 3 lines
-            p.drawString(55, y - 15 - (i * 12), line)
+        for line in lines[:3]:  # Max 3 lines
+            p.drawString(label_x, y, line)
+            y -= 18
+    else:
+        p.drawString(label_x, y, "")
+        y -= 18
 
-    y -= 60
+    y -= 10
 
-    # Section 4: Signatures
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y, "SIGNATURES")
+    # === PROXIMITY SECTION EXACTLY LIKE YOUR HTML ===
+    p.setFont("Times-Bold", 14)
+    p.drawString(label_x, y, "Proximity to:")
     y -= 25
 
-    p.setFont("Helvetica", 10)
-    p.drawString(50, y, "Inspector Signature:")
-    p.line(150, y - 2, 300, y - 2)
-    p.drawString(155, y, inspection.get('inspector_signature', ''))
+    # Bullet points exactly like your HTML
+    p.setFont("Times-Roman", 14)
+    bullet_x = 80
+    proximity_items = [
+        f"Water Source/or water ways (≥30m): {inspection.get('proximity_water_source', '')} metres",
+        f"Perimeter Boundaries (≥3m): {inspection.get('proximity_perimeter_boundaries', '')} metres",
+        f"Road or pathway (≥6m): {inspection.get('proximity_road_pathway', '')} metres",
+        f"Trees (≥3m): {inspection.get('proximity_trees', '')} metres",
+        f"Houses/Buildings (≥3m): {inspection.get('proximity_houses_buildings', '')} metres"
+    ]
 
-    p.drawString(350, y, "Received By:")
-    p.line(420, y - 2, 550, y - 2)
-    p.drawString(425, y, inspection.get('received_by', ''))
+    for item in proximity_items:
+        # Draw bullet point
+        p.drawString(bullet_x - 10, y, "•")
+        p.drawString(bullet_x, y, item)
+        y -= 20
+
+    y -= 10
+
+    # Proposed type of grave
+    p.setFont("Times-Bold", 14)
+    p.drawString(label_x, y, "Proposed type of grave to be built:")
+    p.setFont("Times-Roman", 14)
+    p.drawString(label_x + 280, y, str(inspection.get('proposed_grave_type', '')))
+    y -= line_spacing
+
+    # General Remarks
+    p.setFont("Times-Bold", 14)
+    p.drawString(label_x, y, "General Remarks:")
+    y -= 20
+    p.setFont("Times-Roman", 14)
+
+    remarks = str(inspection.get('general_remarks', '') or 'None')
+    if remarks and len(remarks) > 60:
+        # Word wrap remarks
+        words = remarks.split()
+        lines = []
+        current_line = ""
+        for word in words:
+            if len(current_line + word) < 65:
+                current_line += word + " "
+            else:
+                lines.append(current_line.strip())
+                current_line = word + " "
+        if current_line:
+            lines.append(current_line.strip())
+
+        for line in lines[:3]:
+            p.drawString(label_x, y, line)
+            y -= 18
+    else:
+        p.drawString(label_x, y, remarks)
+        y -= 18
+
+    y -= 15
+
+    # === INSTRUCTIONS SECTION EXACTLY LIKE YOUR HTML ===
+    p.setFont("Times-Italic", 14)
+    p.drawString(label_x, y, "Please be guided by the following instructions:")
+    y -= 25
+
+    # Instructions bullet points
+    p.setFont("Times-Roman", 14)
+    instructions = [
+        "No Sepulchre should be constructed,",
+        "The depth of the grave should be at least 42 inches or (1.1 meters) from the top of the coffin to the top of the grave,",
+        "Any change(s) to the recommended site should be communicated to the Public Health Inspector for approval before construction of grave,",
+        "Any other instructions given by the Public Health Inspector."
+    ]
+
+    for instruction in instructions:
+        # Draw bullet
+        p.drawString(bullet_x - 10, y, "•")
+
+        # Handle long instructions with word wrapping
+        if len(instruction) > 65:
+            words = instruction.split()
+            lines = []
+            current_line = ""
+            for word in words:
+                if len(current_line + word) < 55:  # Shorter for indented text
+                    current_line += word + " "
+                else:
+                    lines.append(current_line.strip())
+                    current_line = word + " "
+            if current_line:
+                lines.append(current_line.strip())
+
+            # First line with bullet
+            p.drawString(bullet_x, y, lines[0] if lines else "")
+            y -= 18
+
+            # Continuation lines indented
+            for line in lines[1:]:
+                p.drawString(bullet_x + 10, y, line)
+                y -= 18
+        else:
+            p.drawString(bullet_x, y, instruction)
+            y -= 18
+
+        y -= 5  # Extra space between instructions
+
+    # === FAILURE NOTICE EXACTLY LIKE YOUR HTML ===
+    y -= 10
+    p.setFont("Times-Bold", 14)
+
+    failure_text = "Failure to comply with the above or any other instructions given by the Public Health Inspector constitute a breach and is therefore liable for prosecution."
+
+    # Word wrap the failure notice
+    words = failure_text.split()
+    lines = []
+    current_line = ""
+    for word in words:
+        if len(current_line + word) < 65:
+            current_line += word + " "
+        else:
+            lines.append(current_line.strip())
+            current_line = word + " "
+    if current_line:
+        lines.append(current_line.strip())
+
+    for line in lines:
+        p.drawString(label_x, y, line)
+        y -= 18
+
+    y -= 20
+
+    # === SIGNATURES SECTION EXACTLY LIKE YOUR HTML ===
+    if y < 100:  # New page if needed
+        p.showPage()
+        y = height - 50
+
+    p.setFont("Times-Bold", 14)
+
+    # Inspector's Signature (left side)
+    p.drawString(label_x, y, "Inspector's Signature:")
+    p.setFont("Times-Roman", 14)
+    p.drawString(label_x + 150, y, str(inspection.get('inspector_signature', '')))
+
+    # Received by (right side)
+    p.setFont("Times-Bold", 14)
+    p.drawString(350, y, "Received by:")
+    p.setFont("Times-Roman", 14)
+    p.drawString(450, y, str(inspection.get('received_by', '')))
+
+    y -= 30
+
+    # Created At
+    p.setFont("Times-Bold", 14)
+    p.drawString(label_x, y, "Created At:")
+    p.setFont("Times-Roman", 14)
+    p.drawString(label_x + 80, y, str(inspection.get('created_at', '')))
 
     p.save()
     buffer.seek(0)
@@ -2048,188 +2188,259 @@ def download_burial_pdf(form_id):
 
     response = make_response(pdf_data)
     response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = f'attachment; filename=burial_form_{form_id}.pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename=burial_site_inspection_{form_id}.pdf'
     return response
 
 
-@app.route('/download_inspection_pdf/<int:form_id>')
-def download_inspection_pdf(form_id):
+@app.route('/download_swimming_pool_pdf/<int:form_id>')
+def download_swimming_pool_pdf(form_id):
     if 'inspector' not in session and 'admin' not in session:
         return redirect(url_for('login'))
 
     conn = sqlite3.connect('inspections.db')
-    c = conn.cursor()
-    c.execute("""SELECT id, establishment_name, owner, address, license_no, inspector_name, 
-                 inspection_date, inspection_time, type_of_establishment, purpose_of_visit, 
-                 action, result, scores, comments, inspector_signature, received_by, 
-                 created_at, inspector_code, no_of_employees, food_inspected, food_condemned, 
-                 form_type, overall_score, critical_score FROM inspections WHERE id = ?""", (form_id,))
-    form_data = c.fetchone()
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
 
-    if not form_data:
+    # Get the swimming pool inspection record
+    cursor.execute("SELECT * FROM inspections WHERE id = ? AND form_type = 'Swimming Pool'", (form_id,))
+    inspection = cursor.fetchone()
+
+    if not inspection:
         conn.close()
         return jsonify({'error': 'Inspection not found'}), 404
 
-    # Get checklist scores
-    c.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = ?", (form_id,))
-    checklist_scores = {str(row[0]): float(row[1]) if row[1] and row[1].replace('.', '', 1).isdigit() else 0.0 for row
-                        in c.fetchall()}
+    # Convert to dictionary for easier access
+    inspection_dict = dict(inspection)
+
+    # Get individual scores from inspection_items table as backup
+    cursor.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = ?", (form_id,))
+    item_scores = {row[0]: float(row[1]) if row[1] and str(row[1]).replace('.', '', 1).isdigit() else 0.0
+                   for row in cursor.fetchall()}
     conn.close()
 
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
-    form_type = form_data[21]  # form_type
-
-    # Form Header
-    y = create_form_header(p, f"{form_type.upper()} INSPECTION FORM", form_id, width, height)
-
-    # Basic Information Section
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y, "ESTABLISHMENT INFORMATION")
-    y -= 25
-
-    p.setFont("Helvetica", 10)
-    basic_info = [
-        ("Establishment Name:", form_data[1] or ''),
-        ("Owner:", form_data[2] or ''),
-        ("Address:", form_data[3] or ''),
-        ("License No:", form_data[4] or ''),
-        ("Inspector Name:", form_data[5] or ''),
-        ("Inspector Code:", form_data[17] or ''),
-        ("Inspection Date:", form_data[6] or ''),
-        ("Inspection Time:", form_data[7] or ''),
-        ("Type of Establishment:", form_data[8] or ''),
-        ("No. of Employees:", form_data[18] or ''),
-        ("Purpose of Visit:", form_data[9] or ''),
-        ("Action:", form_data[10] or '')
-    ]
-
-    col1_x, col2_x = 50, 320
-    col_y = y
-
-    for i, (label, value) in enumerate(basic_info):
-        if i % 2 == 0:  # Left column
-            x = col1_x
-            y = col_y
-        else:  # Right column
-            x = col2_x
-            y = col_y
-            col_y -= 20
-
-        p.drawString(x, y, label)
-        p.line(x + 100, y - 2, x + 250, y - 2)
-        p.drawString(x + 105, y, str(value))
-
-    y = col_y - 30
-
-    # Food specific fields
-    if form_type == "Food Establishment":
-        p.setFont("Helvetica-Bold", 12)
-        p.drawString(50, y, "FOOD INSPECTION DETAILS")
-        y -= 25
-
-        p.setFont("Helvetica", 10)
-        p.drawString(50, y, f"Food Inspected (kg): {form_data[19] or 0}")
-        p.drawString(250, y, f"Food Condemned (kg): {form_data[20] or 0}")
-        y -= 30
-
-    # Checklist Section
-    if y < 300:
-        p.showPage()
-        y = height - 50
-
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y, "INSPECTION CHECKLIST")
-    y -= 25
-
-    # Determine which checklist to use
-    if form_type == "Food Establishment":
-        checklist = FOOD_CHECKLIST_ITEMS
-    elif form_type == "Spirit Licence Premises":
-        checklist = SPIRIT_LICENCE_CHECKLIST_ITEMS
-    elif form_type == "Swimming Pool":
-        checklist = SWIMMING_POOL_CHECKLIST_ITEMS
-    elif form_type == "Small Hotel":
-        checklist = SMALL_HOTELS_CHECKLIST_ITEMS
-    else:
-        checklist = []
-
-    # Checklist table header
-    p.setFont("Helvetica-Bold", 9)
-    p.drawString(50, y, "Item")
-    p.drawString(80, y, "Description")
-    p.drawString(400, y, "Weight")
-    p.drawString(450, y, "Score")
-    p.drawString(500, y, "✓")
-    y -= 5
-    p.line(50, y, 550, y)
-    y -= 15
-
-    p.setFont("Helvetica", 8)
-
-    for item in checklist:
-        if y < 50:
-            p.showPage()
-            y = height - 50
-            # Redraw header
-            p.setFont("Helvetica-Bold", 9)
-            p.drawString(50, y, "Item")
-            p.drawString(80, y, "Description")
-            p.drawString(400, y, "Weight")
-            p.drawString(450, y, "Score")
-            p.drawString(500, y, "✓")
-            y -= 5
-            p.line(50, y, 550, y)
-            y -= 15
-            p.setFont("Helvetica", 8)
-
-        item_id = str(item['id'])
-        score = checklist_scores.get(item_id, 0)
-
-        p.drawString(50, y, item_id)
-
-        # Handle long descriptions
-        desc = item.get('desc', item.get('description', ''))
-        if len(desc) > 45:
-            desc = desc[:42] + "..."
-        p.drawString(80, y, desc)
-
-        p.drawString(400, y, str(item.get('wt', item.get('weight', ''))))
-        p.drawString(450, y, str(score))
-
-        # Draw checkbox
-        draw_checkbox(p, 505, y - 2, checked=(score > 0))
-
-        y -= 12
-
-    # Scoring Section
-    y -= 20
-    if y < 150:
-        p.showPage()
-        y = height - 50
-
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y, "SCORING SUMMARY")
-    y -= 25
-
-    p.setFont("Helvetica", 10)
-    p.drawString(50, y, f"Overall Score: {form_data[22] or 0}")
-    p.drawString(200, y, f"Critical Score: {form_data[23] or 0}")
-    p.drawString(350, y, f"Result: {form_data[11] or ''}")
+    # === HEADER ===
+    y = height - 50
+    p.setFont("Helvetica-Bold", 18)
+    p.drawCentredString(width / 2, y, "SWIMMING POOL INSPECTION DETAILS")
     y -= 40
 
-    # Comments Section
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y, "COMMENTS")
+    # === MAIN INFORMATION SECTION ===
+    p.setLineWidth(1)
+    info_section_height = 140
+    p.rect(50, y - info_section_height, width - 100, info_section_height)
+
+    # Column positioning
+    left_x = 70
+    right_x = 350
+    row_height = 35
+
+    p.setFont("Helvetica", 11)
+
+    # Row 1: Operator | Date Inspection
+    current_y = y - 25
+    p.drawString(left_x, current_y, "Operator:")
+    p.rect(left_x, current_y - 20, 200, 15)
+    p.drawString(left_x + 5, current_y - 12,
+                 str(inspection_dict.get('establishment_name') or inspection_dict.get('operator') or ''))
+
+    p.drawString(right_x, current_y, "Date Inspection:")
+    p.rect(right_x, current_y - 20, 150, 15)
+    p.drawString(right_x + 5, current_y - 12, str(inspection_dict.get('inspection_date') or ''))
+
+    # Row 2: Inspector's ID | Pool Class
+    current_y -= row_height
+    p.drawString(left_x, current_y, "Inspector's ID:")
+    p.rect(left_x, current_y - 20, 200, 15)
+    p.drawString(left_x + 5, current_y - 12, str(inspection_dict.get('inspector_name') or ''))
+
+    p.drawString(right_x, current_y, "Pool Class:")
+    p.rect(right_x, current_y - 20, 150, 15)
+    p.drawString(right_x + 5, current_y - 12, str(inspection_dict.get('type_of_establishment') or ''))
+
+    # Row 3: Address | Physical Location
+    current_y -= row_height
+    p.drawString(left_x, current_y, "Address:")
+    p.rect(left_x, current_y - 20, 200, 15)
+    p.drawString(left_x + 5, current_y - 12, str(inspection_dict.get('address') or ''))
+
+    p.drawString(right_x, current_y, "Physical Location:")
+    p.rect(right_x, current_y - 20, 150, 15)
+    p.drawString(right_x + 5, current_y - 12, str(inspection_dict.get('physical_location') or ''))
+
+    y = y - info_section_height - 20
+
+    # === SCORE DISPLAY ===
+    p.setFont("Helvetica-Bold", 14)
+    overall_score = inspection_dict.get('overall_score', 0)
+    critical_score = inspection_dict.get('critical_score', 0)
+
+    # Score box
+    p.rect(width / 2 - 75, y - 40, 150, 30)
+    p.drawCentredString(width / 2, y - 20, f"Score: {overall_score}%")
+    y -= 60
+
+    # === INSPECTION CHECKLIST ===
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, y, "Inspection Checklist")
     y -= 25
 
-    p.rect(50, y - 60, 500, 60)
+    # Table setup
+    table_x = 50
+    table_width = width - 100
+    header_height = 20
+    row_height = 16
+
+    # Table header
+    p.setLineWidth(1)
+    p.rect(table_x, y - header_height, table_width, header_height)
+    p.setFillColor(colors.lightgrey)
+    p.rect(table_x, y - header_height, table_width, header_height, fill=1)
+
+    p.setFillColor(colors.black)
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(table_x + 10, y - 14, "Item")
+    p.drawString(table_x + 250, y - 14, "Description")
+    p.drawString(table_x + 450, y - 14, "Score")
+
+    y -= header_height
+
+    # Swimming pool checklist sections
+    swimming_pool_sections = [
+        ("1 - Documentation (15%)", [
+            ("1A", "Written procedures for microbiological monitoring", 5),
+            ("1B", "Microbiological results", 2.5),
+            ("1C", "Date of last testing within required frequency", 2.5),
+            ("1D", "Acceptable monitoring procedures", 5),
+            ("1E", "Daily log books and records up-to-date", 5),
+            ("1F", "Written emergency procedures established", 5),
+            ("1G", "Personal liability and accident insurance", 5),
+            ("1H", "Lifeguard/Lifesaver certification", 5)
+        ]),
+        ("2 - Physical condition of pool (10%)", [
+            ("2A", "Defects in pool construction", 2.5),
+            ("2B", "Evidence of flaking paint and/or mould growth", 2.5),
+            ("2C", "All surfaces free from obstruction", 5),
+            ("2D", "Exposed piping: identified/colour coded", 2.5),
+            ("2E", "In good repair", 2.5),
+            ("2F", "Suction fittings/inlets: in good repair", 2.5),
+            ("2G", "At least two suction orifices with anti-vortex plates", 5),
+            ("2H", "Perimeter drains free of debris", 2.5),
+            ("2I", "Pool walls and floor clean", 2.5),
+            ("2J", "Components of re-circulating system maintained", 2.5)
+        ]),
+        ("3 - Pool chemistry (20%)", [
+            ("3A", "Clarity", 5),
+            ("3B", "Chlorine residual > 0.5 mg/l", 5),
+            ("3C", "pH value within range of 7.5 and 7.8", 5),
+            ("3D", "Well supplied and equipped", 2.5)
+        ]),
+        ("4 - Pool chemicals (10%)", [
+            ("4A", "Pool chemicals - stored safely", 5),
+            ("4B", "Dispensed automatically or in safe manner", 2.5)
+        ]),
+        ("5 - Safety (10%)", [
+            ("5A", "Depth markings clearly visible", 5),
+            ("5B", "Working emergency phone", 5)
+        ]),
+        ("6 - Safety Aids (10%)", [
+            ("6A", "Reaching poles with hook", 2.5),
+            ("6B", "Two throwing aids", 2.5),
+            ("6C", "Spine board with cervical collar", 2.5),
+            ("6D", "Well equipped first aid kit", 2.5)
+        ]),
+        ("7 - Signs and notices (5%)", [
+            ("7A", "Caution notices: pool depth indications", 1),
+            ("7B", "Public health notices", 1),
+            ("7C", "Emergency procedures", 1),
+            ("7D", "Maximum bathing load", 1),
+            ("7E", "Lifeguard on duty/bathe at own risk signs", 1)
+        ]),
+        ("8 - Lifeguards/Lifesavers (10%)", [
+            ("8A", "Licensed Lifeguards on duty during hours", 2.5),
+            ("8B", "If N/A, trained lifesavers available", 5),
+            ("8C", "Number of lifeguard/lifesavers", 2.5)
+        ]),
+        ("9 - Sanitary facilities (10%)", [
+            ("9A", "Shower, toilet, dressing rooms clean", 5),
+            ("9B", "Vented", 2.5),
+            ("9C", "Well supplied and equipped", 2.5)
+        ])
+    ]
+
     p.setFont("Helvetica", 9)
 
-    comments = form_data[13] or ''
+    for section_name, items in swimming_pool_sections:
+        # Check for new page
+        if y < 100:
+            p.showPage()
+            y = height - 50
+
+        # Section header
+        p.setFillColor(colors.Color(0.9, 0.9, 0.9))
+        p.rect(table_x, y - row_height, table_width, row_height, fill=1)
+        p.setFillColor(colors.black)
+        p.setFont("Helvetica-Bold", 9)
+        p.drawString(table_x + 10, y - 10, section_name)
+        y -= row_height
+
+        # Section items
+        p.setFont("Helvetica", 8)
+        for item_id, description, weight in items:
+            if y < 30:
+                p.showPage()
+                y = height - 50
+
+            # Get score from database (try both individual columns and inspection_items)
+            score = inspection_dict.get(f'score_{item_id}', 0)
+            if not score:
+                score = item_scores.get(item_id, 0)
+
+            # Critical items get light background
+            if weight >= 5:
+                p.setFillColor(colors.Color(0.95, 0.95, 0.95))
+                p.rect(table_x, y - row_height, table_width, row_height, fill=1)
+
+            # Row border
+            p.setFillColor(colors.black)
+            p.setLineWidth(0.5)
+            p.rect(table_x, y - row_height, table_width, row_height)
+
+            # Item content
+            p.drawString(table_x + 10, y - 9, item_id)
+
+            # Truncate description if too long
+            if len(description) > 35:
+                description = description[:32] + "..."
+            p.drawString(table_x + 50, y - 9, description)
+            p.drawString(table_x + 455, y - 9, f"{score}")
+
+            y -= row_height
+
+        y -= 5
+
+    # === COMMENTS SECTION ===
+    if y < 120:
+        p.showPage()
+        y = height - 50
+
+    y -= 20
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y, "Inspector's Comments:")
+    y -= 20
+
+    # Comments box
+    comments_height = 60
+    p.setLineWidth(1)
+    p.rect(50, y - comments_height, width - 100, comments_height)
+
+    p.setFont("Helvetica", 9)
+    comments = inspection_dict.get('comments') or 'No comments provided.'
     if comments:
+        # Word wrap comments
         lines = []
         words = comments.split()
         current_line = ""
@@ -2239,29 +2450,37 @@ def download_inspection_pdf(form_id):
             else:
                 lines.append(current_line.strip())
                 current_line = word + " "
-        lines.append(current_line.strip())
+        if current_line:
+            lines.append(current_line.strip())
 
-        for i, line in enumerate(lines[:5]):  # Max 5 lines
-            p.drawString(55, y - 15 - (i * 10), line)
+        for i, line in enumerate(lines[:4]):  # Max 4 lines
+            p.drawString(55, y - 15 - (i * 12), line)
 
     y -= 80
 
-    # Signatures Section
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y, "SIGNATURES")
-    y -= 25
-
+    # === SIGNATURES SECTION ===
     p.setFont("Helvetica", 10)
-    p.drawString(50, y, "Inspector Signature:")
-    p.line(150, y - 2, 300, y - 2)
-    p.drawString(155, y, form_data[14] or '')
 
-    p.drawString(350, y, "Received By:")
-    p.line(420, y - 2, 550, y - 2)
-    p.drawString(425, y, form_data[15] or '')
+    # Inspector signature (left)
+    p.drawString(50, y, "Inspector's Signature:")
+    p.line(160, y - 2, 280, y - 2)
+    p.drawString(165, y, str(inspection_dict.get('inspector_signature') or ''))
 
-    y -= 30
-    p.drawString(50, y, f"Date Completed: {form_data[16] or ''}")
+    # Date
+    p.drawString(320, y, "Date:")
+    p.line(350, y - 2, 450, y - 2)
+    p.drawString(355, y, str(inspection_dict.get('inspector_date') or ''))
+
+    # Manager signature (next row)
+    y -= 25
+    p.drawString(50, y, "Manager's Signature:")
+    p.line(160, y - 2, 280, y - 2)
+    p.drawString(165, y, str(inspection_dict.get('manager_signature') or inspection_dict.get('received_by') or ''))
+
+    # Date
+    p.drawString(320, y, "Date:")
+    p.line(350, y - 2, 450, y - 2)
+    p.drawString(355, y, str(inspection_dict.get('manager_date') or ''))
 
     p.save()
     buffer.seek(0)
@@ -2271,9 +2490,1363 @@ def download_inspection_pdf(form_id):
     response = make_response(pdf_data)
     response.headers['Content-Type'] = 'application/pdf'
     response.headers[
-        'Content-Disposition'] = f'attachment; filename={form_type.lower().replace(" ", "_")}_inspection_{form_id}.pdf'
+        'Content-Disposition'] = f'attachment; filename=swimming_pool_inspection_{form_id}_{datetime.now().strftime("%Y%m%d")}.pdf'
+
     return response
 
+
+# Helper function to calculate swimming pool inspection score
+def calculate_swimming_pool_score(inspection):
+    """Calculate the overall inspection score based on all categories"""
+
+    # Define scoring weights for each category
+    category_weights = {
+        'documentation': 0.15,  # 15%
+        'physical_condition': 0.10,  # 10%
+        'pool_chemistry': 0.20,  # 20%
+        'pool_chemicals': 0.10,  # 10%
+        'safety': 0.10,  # 10%
+        'safety_aids': 0.10,  # 10%
+        'signs_notices': 0.05,  # 5%
+        'lifeguards': 0.10,  # 10%
+        'sanitary_facilities': 0.10  # 10%
+    }
+
+    # Calculate category scores
+    documentation_score = sum([
+        inspection.score_1A or 0,
+        inspection.score_1B or 0,
+        inspection.score_1C or 0,
+        inspection.score_1D or 0,
+        inspection.score_1E or 0,
+        inspection.score_1F or 0,
+        inspection.score_1G or 0,
+        inspection.score_1H or 0
+    ]) / 8 * 100
+
+    physical_condition_score = sum([
+        inspection.score_2A or 0,
+        inspection.score_2B or 0,
+        inspection.score_2C or 0,
+        inspection.score_2D or 0,
+        inspection.score_2E or 0,
+        inspection.score_2F or 0,
+        inspection.score_2G or 0,
+        inspection.score_2H or 0,
+        inspection.score_2I or 0,
+        inspection.score_2J or 0
+    ]) / 10 * 100
+
+    pool_chemistry_score = sum([
+        inspection.score_3A or 0,
+        inspection.score_3B or 0,
+        inspection.score_3C or 0,
+        inspection.score_3D or 0
+    ]) / 4 * 100
+
+    pool_chemicals_score = sum([
+        inspection.score_4A or 0,
+        inspection.score_4B or 0
+    ]) / 2 * 100
+
+    safety_score = sum([
+        inspection.score_5A or 0,
+        inspection.score_5B or 0
+    ]) / 2 * 100
+
+    safety_aids_score = sum([
+        inspection.score_6A or 0,
+        inspection.score_6B or 0,
+        inspection.score_6C or 0,
+        inspection.score_6D or 0
+    ]) / 4 * 100
+
+    signs_notices_score = sum([
+        inspection.score_7A or 0,
+        inspection.score_7B or 0,
+        inspection.score_7C or 0,
+        inspection.score_7D or 0,
+        inspection.score_7E or 0
+    ]) / 5 * 100
+
+    lifeguards_score = sum([
+        inspection.score_8A or 0,
+        inspection.score_8B or 0,
+        inspection.score_8C or 0
+    ]) / 3 * 100
+
+    sanitary_facilities_score = sum([
+        inspection.score_9A or 0,
+        inspection.score_9B or 0,
+        inspection.score_9C or 0
+    ]) / 3 * 100
+
+    # Calculate weighted overall score
+    overall_score = (
+            documentation_score * category_weights['documentation'] +
+            physical_condition_score * category_weights['physical_condition'] +
+            pool_chemistry_score * category_weights['pool_chemistry'] +
+            pool_chemicals_score * category_weights['pool_chemicals'] +
+            safety_score * category_weights['safety'] +
+            safety_aids_score * category_weights['safety_aids'] +
+            signs_notices_score * category_weights['signs_notices'] +
+            lifeguards_score * category_weights['lifeguards'] +
+            sanitary_facilities_score * category_weights['sanitary_facilities']
+    )
+
+    return round(overall_score, 1)
+# Add this route to your app.py - INSTITUTIONAL INSPECTION PDF DOWNLOAD
+
+@app.route('/download_institutional_pdf/<int:form_id>')
+def download_institutional_pdf(form_id):
+    if 'inspector' not in session and 'admin' not in session:
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('inspections.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute("""SELECT * FROM inspections WHERE id = ? AND form_type = 'Institutional Health'""", (form_id,))
+    form_data = c.fetchone()
+
+    if not form_data:
+        conn.close()
+        return jsonify({'error': 'Inspection not found'}), 404
+
+    # Get individual scores from inspection_items table
+    c.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = ?", (form_id,))
+    checklist_scores = {str(row[0]): float(row[1]) if row[1] and str(row[1]).replace('.', '', 1).isdigit() else 0.0
+                        for row in c.fetchall()}
+    conn.close()
+
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    # === EXACT TITLE MATCHING YOUR DETAILS PAGE ===
+    y = height - 50
+    p.setFont("Helvetica-Bold", 18)
+    p.drawCentredString(width / 2, y, "Ministry of Health")
+    y -= 25
+    p.setFont("Helvetica-Bold", 16)
+    p.drawCentredString(width / 2, y, "Institutional Health Inspection Form")
+    y -= 40
+
+    # === MAIN INFORMATION SECTION - PROPER 2-COLUMN LAYOUT ===
+    p.setLineWidth(1)
+
+    # Draw border around the entire information section
+    info_section_height = 120
+    p.rect(50, y - info_section_height, width - 100, info_section_height)
+
+    # Column positioning - wider separation
+    left_x = 70
+    right_x = 350
+    field_width = 200
+    row_height = 35
+
+    p.setFont("Helvetica", 11)
+
+    # Row 1: Name of Establishment | Owner/Operator
+    current_y = y - 25
+    p.drawString(left_x, current_y, "Name of Establishment:")
+    p.rect(left_x, current_y - 20, field_width, 15)
+    p.drawString(left_x + 5, current_y - 12, str(form_data['establishment_name'] or ''))
+
+    p.drawString(right_x, current_y, "Owner/Operator:")
+    p.rect(right_x, current_y - 20, field_width - 50, 15)
+    p.drawString(right_x + 5, current_y - 12, str(form_data['owner'] or ''))
+
+    # Row 2: Address and Parish | Inspector Name
+    current_y -= row_height
+    p.drawString(left_x, current_y, "Address and Parish:")
+    p.rect(left_x, current_y - 20, field_width, 15)
+    p.drawString(left_x + 5, current_y - 12, str(form_data['address'] or ''))
+
+    p.drawString(right_x, current_y, "Inspector Name:")
+    p.rect(right_x, current_y - 20, field_width - 50, 15)
+    p.drawString(right_x + 5, current_y - 12, str(form_data['inspector_name'] or ''))
+
+    # Row 3: Critical Score | Overall Score
+    current_y -= row_height
+    p.drawString(left_x, current_y, "Critical Sc.:")
+    p.rect(left_x + 80, current_y - 20, 60, 15)
+    p.drawString(left_x + 85, current_y - 12, str(form_data['critical_score'] or '0'))
+
+    p.drawString(right_x, current_y, "Overall Sc.:")
+    p.rect(right_x + 80, current_y - 20, 60, 15)
+    p.drawString(right_x + 85, current_y - 12, str(form_data['overall_score'] or '0'))
+
+    y = y - info_section_height - 10
+
+    # === INSTITUTIONAL DETAILS SECTION ===
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y, "INSTITUTIONAL DETAILS")
+    y -= 25
+
+    # 3-column layout for institutional details
+    col1_x, col2_x, col3_x = 50, 230, 410
+    detail_y = y
+
+    institutional_details = [
+        ("Staff Complement:", form_data['staff_complement'] or 'N/A'),
+        ("Building Size:",
+         f"{form_data['building_size_value'] or 'N/A'} {'ft²' if form_data['building_size_ft2'] else 'm²' if form_data['building_size_m2'] else ''}"),
+        ("No. of Occupants:", form_data['num_occupants'] or 'N/A'),
+        ("Telephone No.:", form_data['telephone_no'] or 'N/A'),
+        ("Type of Institution:", form_data['institution_type'] or 'N/A'),
+        ("No. of Building(s):", form_data['num_buildings'] or 'N/A')
+    ]
+
+    p.setFont("Helvetica", 10)
+    for i in range(0, len(institutional_details), 3):  # 3 items per row
+        row_details = institutional_details[i:i + 3]
+
+        for j, (label, value) in enumerate(row_details):
+            x_pos = [col1_x, col2_x, col3_x][j]
+            p.drawString(x_pos, detail_y, label)
+            p.drawString(x_pos, detail_y - 15, str(value))
+
+        detail_y -= 40
+
+    y = detail_y - 20
+
+    # === INSPECTION AND COMPLIANCE INFO ===
+    p.setFont("Helvetica", 11)
+
+    # Left side - Inspection details
+    p.drawString(50, y, f"Purpose of Visit: {form_data['purpose_of_visit'] or 'N/A'}")
+    p.drawString(50, y - 20, f"Inspection Date: {form_data['inspection_date'] or 'N/A'}")
+    p.drawString(50, y - 40, f"Inspector Code: {form_data['inspector_code'] or 'N/A'}")
+
+    # Right side - Compliance details
+    p.drawString(320, y, f"License No.: {form_data['license_no'] or 'N/A'}")
+    p.drawString(320, y - 20, f"Registration Status: {form_data['registration_status'] or 'N/A'}")
+    p.drawString(320, y - 40, f"Action: {form_data['action'] or 'NAI'}")
+
+    y -= 70
+
+    # === PASS/FAIL RESULT ===
+    overall_score = float(form_data['overall_score']) if form_data['overall_score'] else 0
+    critical_score = float(form_data['critical_score']) if form_data['critical_score'] else 0
+
+    if overall_score >= 70 and critical_score >= 50:
+        result_text = f"PASS: Overall Score = {overall_score}, Critical Score = {critical_score}"
+        p.setFillColor(colors.green)
+    else:
+        result_text = f"FAIL: Overall Score = {overall_score} (needs 70+), Critical Score = {critical_score} (needs 50+)"
+        p.setFillColor(colors.red)
+
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y, result_text)
+    p.setFillColor(colors.black)
+    y -= 40
+
+    # === INSPECTION CHECKLIST TABLE ===
+    if y < 500:  # Need room for table
+        p.showPage()
+        y = height - 50
+
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, y, "Inspection Checklist")
+    y -= 25
+
+    # Table setup
+    table_x = 50
+    table_width = width - 100
+    header_height = 20
+    row_height = 14
+
+    # Table header
+    p.setLineWidth(1)
+    p.rect(table_x, y - header_height, table_width, header_height)
+    p.setFillColor(colors.lightgrey)
+    p.rect(table_x, y - header_height, table_width, header_height, fill=1)
+
+    p.setFillColor(colors.black)
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(table_x + 10, y - 14, "Item")
+    p.drawString(table_x + 50, y - 14, "Description")
+    p.drawString(table_x + 400, y - 14, "Wt")
+    p.drawString(table_x + 450, y - 14, "Score")
+
+    y -= header_height
+
+    # Define institutional checklist sections exactly like your form
+    institutional_sections = [
+        ("BUILDING", [
+            {"id": "01", "desc": "Absence of overcrowding", "wt": 5, "critical": True},
+            {"id": "02", "desc": "Structural Integrity", "wt": 2, "critical": False},
+            {"id": "03", "desc": "Housekeeping", "wt": 2, "critical": False},
+            {"id": "04", "desc": "Clean Floor", "wt": 1, "critical": False},
+            {"id": "05", "desc": "Clean Walls", "wt": 1, "critical": False},
+            {"id": "06", "desc": "Clean Ceiling", "wt": 1, "critical": False},
+            {"id": "07", "desc": "Lighting", "wt": 1, "critical": False},
+            {"id": "08", "desc": "Ventilation", "wt": 3, "critical": False}
+        ]),
+        ("WATER SUPPLY", [
+            {"id": "09", "desc": "Adequacy", "wt": 5, "critical": True},
+            {"id": "10", "desc": "Potability", "wt": 5, "critical": True}
+        ]),
+        ("EXCRETA DISPOSAL FACILITIES", [
+            {"id": "11", "desc": "Sanitary excreta disposal", "wt": 5, "critical": True},
+            {"id": "12", "desc": "Adequacy", "wt": 5, "critical": True}
+        ]),
+        ("FOOD HANDLING FACILITIES", [
+            {"id": "13", "desc": "Food Storage", "wt": 5, "critical": True},
+            {"id": "14", "desc": "Kitchen", "wt": 5, "critical": True},
+            {"id": "15", "desc": "Dining Room", "wt": 5, "critical": True},
+            {"id": "16", "desc": "Food handling practices", "wt": 5, "critical": True}
+        ]),
+        ("SOLID WASTE MANAGEMENT", [
+            {"id": "17", "desc": "Storage", "wt": 5, "critical": True},
+            {"id": "18", "desc": "Disposal", "wt": 5, "critical": True}
+        ]),
+        ("PESTS", [
+            {"id": "19", "desc": "Absence", "wt": 5, "critical": True},
+            {"id": "20", "desc": "Control system in place", "wt": 5, "critical": True}
+        ]),
+        ("COMPOUND", [
+            {"id": "21", "desc": "General Cleanliness", "wt": 2, "critical": False},
+            {"id": "22", "desc": "Drainage", "wt": 2, "critical": False},
+            {"id": "23", "desc": "Protected from stray animals", "wt": 2, "critical": False},
+            {"id": "24", "desc": "Vegetation", "wt": 2, "critical": False}
+        ]),
+        ("SAFETY MEASURES", [
+            {"id": "25", "desc": "Provision for physically challenged", "wt": 2, "critical": False},
+            {"id": "26", "desc": "Fire extinguishers", "wt": 5, "critical": True},
+            {"id": "27", "desc": "Access to medical care", "wt": 2, "critical": False},
+            {"id": "28", "desc": "First Aid available", "wt": 2, "critical": False},
+            {"id": "29", "desc": "Emergency exit", "wt": 2, "critical": False},
+            {"id": "30", "desc": "Veterinary certification of pets", "wt": 1, "critical": False}
+        ]),
+        ("REFRIGERATION FOR NON-FOOD", [
+            {"id": "31", "desc": "Adequacy", "wt": 2, "critical": False}
+        ])
+    ]
+
+    p.setFont("Helvetica", 8)
+
+    for section_name, items in institutional_sections:
+        # Check for new page
+        if y < 80:
+            p.showPage()
+            y = height - 50
+            # Redraw header
+            p.setLineWidth(1)
+            p.rect(table_x, y - header_height, table_width, header_height)
+            p.setFillColor(colors.lightgrey)
+            p.rect(table_x, y - header_height, table_width, header_height, fill=1)
+            p.setFillColor(colors.black)
+            p.setFont("Helvetica-Bold", 10)
+            p.drawString(table_x + 10, y - 14, "Item")
+            p.drawString(table_x + 50, y - 14, "Description")
+            p.drawString(table_x + 400, y - 14, "Wt")
+            p.drawString(table_x + 450, y - 14, "Score")
+            y -= header_height
+            p.setFont("Helvetica", 8)
+
+        # Section header
+        p.setFillColor(colors.Color(0.9, 0.9, 0.9))
+        p.rect(table_x, y - row_height, table_width, row_height, fill=1)
+        p.setFillColor(colors.black)
+        p.setFont("Helvetica-Bold", 8)
+        p.drawString(table_x + 10, y - 10, section_name)
+        y -= row_height
+
+        # Section items
+        p.setFont("Helvetica", 8)
+        for item in items:
+            if y < 30:
+                p.showPage()
+                y = height - 50
+
+            # Critical items get light background
+            if item['critical']:
+                p.setFillColor(colors.Color(0.95, 0.95, 0.95))
+                p.rect(table_x, y - row_height, table_width, row_height, fill=1)
+
+            # Row border
+            p.setFillColor(colors.black)
+            p.setLineWidth(0.5)
+            p.rect(table_x, y - row_height, table_width, row_height)
+
+            # Get score for this item
+            score = checklist_scores.get(item['id'], 0)
+
+            # Item content
+            p.drawString(table_x + 10, y - 9, item['id'])
+
+            # Truncate description if too long
+            desc = item['desc']
+            if len(desc) > 45:
+                desc = desc[:42] + "..."
+            p.drawString(table_x + 50, y - 9, desc)
+
+            p.drawString(table_x + 405, y - 9, str(item['wt']))
+            p.drawString(table_x + 455, y - 9, f"{score:.1f}")
+
+            y -= row_height
+
+        y -= 5  # Extra space between sections
+
+    # === COMMENTS SECTION ===
+    if y < 120:
+        p.showPage()
+        y = height - 50
+
+    y -= 20
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y, "Inspector's Comments:")
+    y -= 20
+
+    # Comments box
+    comments_height = 60
+    p.setLineWidth(1)
+    p.rect(50, y - comments_height, width - 100, comments_height)
+
+    p.setFont("Helvetica", 9)
+    comments = form_data['comments'] or 'N/A'
+    if comments and comments != 'N/A':
+        # Word wrap comments
+        lines = []
+        words = comments.split()
+        current_line = ""
+        for word in words:
+            if len(current_line + word) < 70:
+                current_line += word + " "
+            else:
+                lines.append(current_line.strip())
+                current_line = word + " "
+        if current_line:
+            lines.append(current_line.strip())
+
+        for i, line in enumerate(lines[:4]):  # Max 4 lines
+            p.drawString(55, y - 15 - (i * 12), line)
+    else:
+        p.drawString(55, y - 25, "No comments provided.")
+
+    y -= 80
+
+    # === SIGNATURES SECTION ===
+    p.setFont("Helvetica", 10)
+
+    # Inspector signature (left)
+    p.drawString(50, y, "Inspector's Signature:")
+    p.line(160, y - 2, 280, y - 2)
+    p.drawString(165, y, str(form_data['inspector_signature'] or ''))
+
+    # Received by (right)
+    p.drawString(350, y, "Rec'd By:")
+    p.line(410, y - 2, 530, y - 2)
+    p.drawString(415, y, str(form_data['received_by'] or ''))
+
+    # Footer note
+    y -= 30
+    p.setFont("Helvetica", 8)
+    p.drawString(50, y, "EHU (Rev. May 2002)")
+
+    p.save()
+    buffer.seek(0)
+    pdf_data = buffer.getvalue()
+    buffer.close()
+
+    response = make_response(pdf_data)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename=institutional_health_inspection_{form_id}.pdf'
+    return response
+
+
+# Add this route to your app.py - SMALL HOTELS INSPECTION PDF DOWNLOAD
+
+# Add this route to your app.py - SMALL HOTELS INSPECTION PDF DOWNLOAD
+
+@app.route('/download_small_hotels_pdf/<int:form_id>')
+def download_small_hotels_pdf(form_id):
+    if 'inspector' not in session and 'admin' not in session:
+        return redirect(url_for('login'))
+
+    # Get the inspection details using your existing function
+    inspection = get_small_hotels_inspection_details(form_id)
+
+    if not inspection:
+        return jsonify({'error': 'Inspection not found'}), 404
+
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    # === EXACT HEADER MATCHING YOUR TEMPLATE ===
+    y = height - 40
+
+    # Page number (top right)
+    p.setFont("Helvetica", 10)
+    p.drawString(width - 100, y, "Page 1 of 1")
+
+    # Header border box
+    header_height = 60
+    p.setLineWidth(2)
+    p.rect(50, y - header_height, width - 100, header_height)
+
+    # Form number (top right in box)
+    p.setFont("Helvetica-Bold", 12)
+    p.setFillColor(colors.red)
+    p.drawString(width - 120, y - 15, "NO. 58402")
+    p.setFillColor(colors.black)
+
+    # Title (centered)
+    p.setFont("Helvetica-Bold", 16)
+    p.drawCentredString(width / 2, y - 25, "Ministry of Health")
+    p.drawCentredString(width / 2, y - 42, "Small Hotels Inspection Form - Jamaica")
+
+    y -= 80
+
+    # === INFORMATION SECTION - 3 COLUMN GRID ===
+    p.setLineWidth(1)
+
+    # Row 1: Hotel Name | Date | Inspector's ID
+    info_y = y
+    col1_x, col2_x, col3_x = 50, 250, 450
+
+    # Hotel Name (spans 2 columns in original)
+    p.drawString(50, info_y, "Hotel Name")
+    p.rect(50, info_y - 20, 180, 15)
+    p.setFont("Helvetica", 11)
+    p.drawString(55, info_y - 12, str(inspection.get('establishment_name') or ''))
+
+    # Date
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(col2_x, info_y, "Date")
+    p.rect(col2_x, info_y - 20, 120, 15)
+    p.setFont("Helvetica", 11)
+    p.drawString(col2_x + 5, info_y - 12, str(inspection.get('inspection_date') or ''))
+
+    # Inspector's ID
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(col3_x, info_y, "Inspector's ID")
+    p.rect(col3_x, info_y - 20, 100, 15)
+    p.setFont("Helvetica", 11)
+    p.drawString(col3_x + 5, info_y - 12, str(inspection.get('inspector_name') or ''))
+
+    # Row 2: Address (wide box) | Physical Location
+    info_y -= 35
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(50, info_y, "Address")
+    p.rect(50, info_y - 20, 280, 15)  # Wide box spanning 2 columns
+    p.setFont("Helvetica", 11)
+    p.drawString(55, info_y - 12, str(inspection.get('address') or ''))
+
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(col3_x, info_y, "Physical Location")
+    p.rect(col3_x, info_y - 20, 100, 15)
+    p.setFont("Helvetica", 11)
+    p.drawString(col3_x + 5, info_y - 12, str(inspection.get('physical_location') or 'N/A'))
+
+    y = info_y - 40
+
+    # === INSPECTION TABLE - EXACT MATCH TO YOUR HTML ===
+    if y < 600:
+        p.showPage()
+        y = height - 50
+
+    # Table setup
+    table_x = 50
+    table_width = width - 100
+    col_widths = [40, 350, 60, 60]  # Item, Details, Obser, Error
+    header_height = 20
+    row_height = 16
+
+    # Table header
+    p.setLineWidth(1)
+    p.rect(table_x, y - header_height, table_width, header_height)
+    p.setFillColor(colors.Color(0.94, 0.94, 0.94))  # Light gray
+    p.rect(table_x, y - header_height, table_width, header_height, fill=1)
+
+    p.setFillColor(colors.black)
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(table_x + 15, y - 14, "Item")
+    p.drawString(table_x + 200, y - 14, "Details")
+    p.drawString(table_x + 420, y - 14, "Obser")
+    p.drawString(table_x + 480, y - 14, "Error")
+
+    # Draw column lines
+    x_pos = table_x
+    for width_col in col_widths[:-1]:
+        x_pos += width_col
+        p.line(x_pos, y, x_pos, y - header_height)
+
+    y -= header_height
+
+    # Define all sections exactly matching your HTML
+    small_hotels_sections = [
+        ("1 - Documentation (8%)", [
+            {"id": "1a", "desc": "Action plan for foodborne illness occurrence", "critical": False},
+            {"id": "1b", "desc": "Food Handlers have valid food handlers permits", "critical": True},
+            {"id": "1c", "desc": "Relevant policy in place to restrict activities of sick employees",
+             "critical": False},
+            {"id": "1d", "desc": "Establishments have a written policy for the proper disposal of waste",
+             "critical": False},
+            {"id": "1e", "desc": "Cleaning schedule for equipment utensil etc available", "critical": False},
+            {"id": "1f", "desc": "Material safety data sheet available for record of hazardous chemicals used",
+             "critical": False},
+            {"id": "1g", "desc": "Record of hazardous chemicals used", "critical": False},
+            {"id": "1h", "desc": "Food suppliers list available", "critical": False}
+        ]),
+        ("2 - Food Handlers (5%)", [
+            {"id": "2a", "desc": "Clean appropriate protective garments", "critical": True},
+            {"id": "2b", "desc": "Hands free of jewellery", "critical": False},
+            {"id": "2c", "desc": "Suitable hair restraints", "critical": False},
+            {"id": "2d", "desc": "Nails clean, short and unpolished", "critical": False},
+            {"id": "2e", "desc": "Hands washed as required", "critical": True}
+        ]),
+        ("3 - Food Storage (13%)", [
+            {"id": "3a", "desc": "Approved source", "critical": True},
+            {"id": "3b", "desc": "Correct stocking procedures practiced", "critical": False},
+            {"id": "3c", "desc": "Food stored on pallets or shelves off the floor", "critical": False},
+            {"id": "3d", "desc": "No cats, rodents or other animals present in the store", "critical": True},
+            {"id": "3e", "desc": "Products free of infestation", "critical": False},
+            {"id": "3f", "desc": "No pesticides or other hazardous chemicals in food stores", "critical": True},
+            {"id": "3g", "desc": "Satisfactory condition of refrigeration units", "critical": False},
+            {"id": "3h", "desc": "Refrigerated foods < 4°C", "critical": True},
+            {"id": "3i", "desc": "Frozen foods -18°C", "critical": True}
+        ]),
+        ("4 - Food Holding and Preparation Practices (8%)", [
+            {"id": "4a", "desc": "Foods thawed according to recommended procedures", "critical": True},
+            {"id": "4b", "desc": "No evidence of cross-contamination during preparation", "critical": True},
+            {"id": "4c", "desc": "No evidence of cross-contamination during holding in refrigerators/coolers",
+             "critical": True},
+            {"id": "4d", "desc": "Foods cooled according to recommended procedures", "critical": True},
+            {"id": "4e", "desc": "Manual dishwashing wash, rinse, sanitize, rinse technique", "critical": True},
+            {"id": "4f", "desc": "Food contact surfaces washed-rinsed-sanitized before & after each use",
+             "critical": False},
+            {"id": "4g", "desc": "Wiping cloths handled properly (sanitizing solution used)", "critical": False}
+        ]),
+        ("5 - Post preparation (10%)", [
+            {"id": "5a", "desc": "Food protected during transportation", "critical": True},
+            {"id": "5b", "desc": "Dishes identified and labelled", "critical": True},
+            {"id": "5c", "desc": "Food covered or protected from contamination", "critical": True},
+            {"id": "5d", "desc": "Sufficient, appropriate utensils on service line", "critical": False},
+            {"id": "5e", "desc": "Hot holding temperatures > 63°C", "critical": False},
+            {"id": "5f", "desc": "Cold holding temperatures ≤ 5°C", "critical": False}
+        ]),
+        ("6 - Hand Washing Facilities (3%)", [
+            {"id": "6a",
+             "desc": "Hand washing facility installed and maintained for every 40 square meters of floor space or in each principal food area",
+             "critical": True},
+            {"id": "6b", "desc": "Equipped with hot and cold water, soap dispenser and hand drying facility",
+             "critical": True}
+        ]),
+        ("7 - Building (8.5%)", [
+            {"id": "7a", "desc": "Provides adequate space", "critical": False},
+            {"id": "7b", "desc": "Food areas kept clean, free from vermin and unpleasant odours", "critical": False},
+            {"id": "7c", "desc": "Floor, walls and ceiling clean, in good repair", "critical": False},
+            {"id": "7d", "desc": "Mechanical ventilation operable where required", "critical": False},
+            {"id": "7e", "desc": "Lighting adequate for food preparation and cleaning", "critical": False},
+            {"id": "7f", "desc": "General housekeeping satisfactory", "critical": False},
+            {"id": "7g", "desc": "Animals, insect and pest excluded", "critical": False}
+        ]),
+        ("8 - Food contact surfaces (3%)", [
+            {"id": "8a", "desc": "Made from material which is non-absorbent and non-toxic", "critical": False},
+            {"id": "8b", "desc": "Smooth, cleanable, corrosion resistant", "critical": True},
+            {"id": "8c", "desc": "Proper storage and use of clean utensils", "critical": True}
+        ]),
+        ("9 - Food flow (5.5%)", [
+            {"id": "9a", "desc": "Employee traffic pattern avoids food cross-contamination", "critical": True},
+            {"id": "9b", "desc": "Product flow not at risk for cross-contamination", "critical": True},
+            {"id": "9c",
+             "desc": "Living quarters, toilets, washrooms, locker separated from areas where food is handled",
+             "critical": False}
+        ]),
+        ("10 - Equipment and utensils sanitization (9.5%)", [
+            {"id": "10a", "desc": "Mechanical dishwashing: Wash-rinse water clean", "critical": False},
+            {"id": "10b", "desc": "Proper water temperature", "critical": False},
+            {"id": "10c", "desc": "Proper timing of cycles", "critical": False},
+            {"id": "10d", "desc": "Sanitizer for low temperature", "critical": False},
+            {"id": "10e", "desc": "Proper handling of hazardous materials", "critical": False}
+        ]),
+        ("11 - Waste Management: Waste Containers (3%)", [
+            {"id": "11a", "desc": "Appropriate design, convenient placement", "critical": True},
+            {"id": "11b", "desc": "Kept covered when not in continuous use", "critical": False},
+            {"id": "11c", "desc": "Emptied as often as necessary", "critical": True}
+        ]),
+        ("12 - Solid Waste Storage Area (4%)", [
+            {"id": "12a", "desc": "Insect and vermin-proof containers provided where required", "critical": True},
+            {"id": "12b", "desc": "The area around each waste container kept clean", "critical": False},
+            {"id": "12c", "desc": "Effluent from waste bins disposed of in a sanitary manner", "critical": False},
+            {"id": "12d", "desc": "Frequency of garbage removal adequate", "critical": False}
+        ]),
+        ("13 - Disposal of solid waste", [
+            {"id": "13a", "desc": "Garbage, refuse properly disposed of, facilities maintained", "critical": True},
+            {"id": "13b", "desc": "Stored away from living quarters and food areas", "critical": False}
+        ]),
+        ("14 - Hazardous Materials Storage, Handling and Disposal (4%)", [
+            {"id": "14a", "desc": "Hazardous materials stored in properly labelled containers", "critical": False},
+            {"id": "14b", "desc": "Stored away from living quarters and food areas", "critical": True}
+        ]),
+        ("15 - Sanitary Facilities (4%)", [
+            {"id": "15a", "desc": "Approved Sewage Disposal System", "critical": True},
+            {"id": "15b",
+             "desc": "Sanitary maintenance of facilities and protection against the entrance of vermin, rodents, dust, and fumes",
+             "critical": True}
+        ]),
+        ("16 - Pest Control (2%)", [
+            {"id": "16a", "desc": "Adequate provision against the entrance of insects, vermin, rodents, dust and fumes",
+             "critical": False}
+        ]),
+        ("17 - Water supply (3%)", [
+            {"id": "17a", "desc": "Approved source(s) sufficient pressure and capacity", "critical": False},
+            {"id": "17b", "desc": "Water quality satisfactory", "critical": False}
+        ]),
+        ("18 - Ice (1.5%)", [
+            {"id": "18a", "desc": "Satisfactory ice storage conditions", "critical": False}
+        ]),
+        ("19 - Grey Water Facilities (1%)", [
+            {"id": "19a", "desc": "Traps and vent in good condition", "critical": True},
+            {"id": "19b", "desc": "Floor drains clear and drain freely", "critical": True}
+        ]),
+        ("20 - Manholes (0.5%)", [
+            {"id": "20a", "desc": "Properly constructed with vents and traps where necessary", "critical": False}
+        ])
+    ]
+
+    p.setFont("Helvetica", 8)
+
+    for section_name, items in small_hotels_sections:
+        # Check for new page
+        if y < 100:
+            p.showPage()
+            y = height - 50
+            # Redraw header
+            p.setLineWidth(1)
+            p.rect(table_x, y - header_height, table_width, header_height)
+            p.setFillColor(colors.Color(0.94, 0.94, 0.94))
+            p.rect(table_x, y - header_height, table_width, header_height, fill=1)
+            p.setFillColor(colors.black)
+            p.setFont("Helvetica-Bold", 10)
+            p.drawString(table_x + 15, y - 14, "Item")
+            p.drawString(table_x + 200, y - 14, "Details")
+            p.drawString(table_x + 420, y - 14, "Obser")
+            p.drawString(table_x + 480, y - 14, "Error")
+
+            # Draw column lines
+            x_pos = table_x
+            for width_col in col_widths[:-1]:
+                x_pos += width_col
+                p.line(x_pos, y, x_pos, y - header_height)
+
+            y -= header_height
+            p.setFont("Helvetica", 8)
+
+        # Section header row
+        p.setFillColor(colors.white)
+        p.rect(table_x, y - row_height, table_width, row_height, fill=1)
+        p.setLineWidth(1)
+        p.rect(table_x, y - row_height, table_width, row_height)
+        p.setFillColor(colors.black)
+        p.setFont("Helvetica-Bold", 8)
+        p.drawString(table_x + 10, y - 11, section_name)
+        y -= row_height
+
+        # Section items
+        p.setFont("Helvetica", 7)
+        for item in items:
+            if y < 30:
+                p.showPage()
+                y = height - 50
+
+            # Critical items get gray background
+            if item['critical']:
+                p.setFillColor(colors.Color(0.9, 0.9, 0.9))
+                p.rect(table_x, y - row_height, table_width, row_height, fill=1)
+
+            # Row border
+            p.setFillColor(colors.black)
+            p.setLineWidth(0.5)
+            p.rect(table_x, y - row_height, table_width, row_height)
+
+            # Draw column lines
+            x_pos = table_x
+            for width_col in col_widths[:-1]:
+                x_pos += width_col
+                p.line(x_pos, y, x_pos, y - row_height)
+
+            # Get observation and error values - ensure they're strings
+            obser_value = str(inspection.get('obser', {}).get(item['id'], '0'))
+            error_value = str(inspection.get('error', {}).get(item['id'], '0'))
+
+            # Item content
+            item_letter = item['id'][1:].upper()  # Get letter part (A, B, C, etc.)
+            p.drawString(table_x + 15, y - 10, item_letter)
+
+            # Description (truncated if too long)
+            desc = item['desc']
+            if len(desc) > 55:
+                desc = desc[:52] + "..."
+            p.drawString(table_x + 50, y - 10, desc)
+
+            # Obser and Error values - properly centered in their columns
+            # Obser column center is at table_x + 430 (column starts around 410, width ~40)
+            p.drawCentredString(table_x + 430, y - 10, obser_value)
+            # Error column center is at table_x + 480 (column starts around 460, width ~40)
+            p.drawCentredString(table_x + 480, y - 10, error_value)
+
+            y -= row_height
+
+        y -= 5  # Extra space between sections
+
+    # === SCORES SECTION - PROPERLY ORGANIZED ===
+    if y < 200:  # Make sure we have enough space
+        p.showPage()
+        y = height - 50
+
+    y -= 30
+
+    # Draw scores section exactly like your template
+    p.setFont("Helvetica-Bold", 12)
+
+    # Two side-by-side score boxes with borders
+    scores_box_y = y
+    box_height = 50
+    box_width = 150
+
+    # Critical Score box (left)
+    p.setLineWidth(2)
+    p.rect(100, scores_box_y - box_height, box_width, box_height)
+    p.setFillColor(colors.Color(0.97, 0.97, 0.97))
+    p.rect(100, scores_box_y - box_height, box_width, box_height, fill=1)
+    p.setFillColor(colors.black)
+
+    p.setFont("Helvetica-Bold", 11)
+    p.drawCentredString(175, scores_box_y - 15, "Critical Score:")
+    p.setFont("Helvetica-Bold", 14)
+    critical_score = f"{inspection.get('critical_score') or 0}%"
+    p.drawCentredString(175, scores_box_y - 35, critical_score)
+
+    # Overall Score box (right)
+    p.rect(280, scores_box_y - box_height, box_width, box_height)
+    p.setFillColor(colors.Color(0.97, 0.97, 0.97))
+    p.rect(280, scores_box_y - box_height, box_width, box_height, fill=1)
+    p.setFillColor(colors.black)
+
+    p.setFont("Helvetica-Bold", 11)
+    p.drawCentredString(355, scores_box_y - 15, "Overall Score:")
+    p.setFont("Helvetica-Bold", 14)
+    overall_score_text = f"{inspection.get('overall_score') or 0}%"
+    p.drawCentredString(355, scores_box_y - 35, overall_score_text)
+
+    y = scores_box_y - box_height - 20
+
+    # === RESULT SECTION ===
+    result_box_y = y
+    result_height = 40
+    result_width = 120
+
+    # Result box (centered)
+    result_x = (width - result_width) / 2
+    p.rect(result_x, result_box_y - result_height, result_width, result_height)
+    p.setFillColor(colors.Color(0.97, 0.97, 0.97))
+    p.rect(result_x, result_box_y - result_height, result_width, result_height, fill=1)
+
+    # Result badge styling
+    result = inspection.get('result') or 'Unknown'
+    result = str(result)
+
+    if result == 'Pass':
+        badge_color = colors.Color(0.83, 0.93, 0.85)  # Light green
+        text_color = colors.Color(0.08, 0.34, 0.14)  # Dark green
+    else:
+        badge_color = colors.Color(0.97, 0.84, 0.85)  # Light red
+        text_color = colors.Color(0.45, 0.11, 0.14)  # Dark red
+
+    # Result badge
+    badge_width = 80
+    badge_x = result_x + (result_width - badge_width) / 2
+    p.setFillColor(badge_color)
+    p.rect(badge_x, result_box_y - 30, badge_width, 20, fill=1)
+
+    p.setFillColor(colors.black)
+    p.setFont("Helvetica-Bold", 10)
+    p.drawCentredString(result_x + result_width / 2, result_box_y - 15, "Result:")
+
+    p.setFillColor(text_color)
+    p.setFont("Helvetica-Bold", 10)
+    p.drawCentredString(result_x + result_width / 2, result_box_y - 25, result)
+    p.setFillColor(colors.black)
+
+    y = result_box_y - result_height - 30
+
+    # === COMMENTS SECTION ===
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y, "Inspector's Comments:")
+    y -= 20
+
+    # Comments box with border and background
+    comments_height = 60
+    p.setLineWidth(1)
+    p.rect(50, y - comments_height, width - 100, comments_height)
+    p.setFillColor(colors.Color(0.98, 0.98, 0.98))
+    p.rect(50, y - comments_height, width - 100, comments_height, fill=1)
+    p.setFillColor(colors.black)
+
+    # Comments content
+    p.setFont("Helvetica", 9)
+    comments = inspection.get('comments') or 'No comments provided.'
+    comments = str(comments)
+
+    if comments and comments.strip():
+        # Word wrap comments
+        lines = []
+        words = comments.split()
+        current_line = ""
+        max_chars_per_line = 85
+
+        for word in words:
+            if len(current_line + word) < max_chars_per_line:
+                current_line += word + " "
+            else:
+                if current_line:
+                    lines.append(current_line.strip())
+                current_line = word + " "
+
+        if current_line:
+            lines.append(current_line.strip())
+
+        # Draw up to 4 lines of comments
+        for i, line in enumerate(lines[:4]):
+            p.drawString(55, y - 15 - (i * 12), line)
+    else:
+        p.drawString(55, y - 25, "No comments provided.")
+
+    y -= comments_height + 30
+
+    # === SIGNATURES SECTION ===
+    if y < 100:
+        p.showPage()
+        y = height - 50
+
+    # Top border line
+    p.setLineWidth(1)
+    p.line(50, y, width - 50, y)
+    y -= 20
+
+    # Three-column signature layout
+    col_width = (width - 100) / 3
+
+    # Inspector Signature (Column 1)
+    col1_x = 50
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(col1_x, y, "Inspector Signature")
+    p.line(col1_x, y - 25, col1_x + col_width - 20, y - 25)
+    p.setFont("Helvetica", 9)
+    inspector_sig = str(inspection.get('inspector_signature') or 'N/A')
+    p.drawString(col1_x + 5, y - 18, inspector_sig)
+
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(col1_x, y - 40, "Date")
+    p.line(col1_x, y - 65, col1_x + col_width - 20, y - 65)
+    p.setFont("Helvetica", 9)
+    inspector_date = str(inspection.get('inspector_signature_date') or 'N/A')
+    p.drawString(col1_x + 5, y - 58, inspector_date)
+
+    # Manager Signature (Column 2)
+    col2_x = 50 + col_width
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(col2_x, y, "Manager Signature")
+    p.line(col2_x, y - 25, col2_x + col_width - 20, y - 25)
+    p.setFont("Helvetica", 9)
+    manager_sig = str(inspection.get('manager_signature') or 'N/A')
+    p.drawString(col2_x + 5, y - 18, manager_sig)
+
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(col2_x, y - 40, "Date")
+    p.line(col2_x, y - 65, col2_x + col_width - 20, y - 65)
+    p.setFont("Helvetica", 9)
+    manager_date = str(inspection.get('manager_signature_date') or 'N/A')
+    p.drawString(col2_x + 5, y - 58, manager_date)
+
+    # Received By (Column 3)
+    col3_x = 50 + 2 * col_width
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(col3_x, y, "Received By")
+    p.line(col3_x, y - 25, col3_x + col_width - 20, y - 25)
+    p.setFont("Helvetica", 9)
+    received_by = str(inspection.get('received_by') or 'N/A')
+    p.drawString(col3_x + 5, y - 18, received_by)
+
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(col3_x, y - 40, "Date")
+    p.line(col3_x, y - 65, col3_x + col_width - 20, y - 65)
+    p.setFont("Helvetica", 9)
+    received_date = str(inspection.get('received_by_date') or 'N/A')
+    p.drawString(col3_x + 5, y - 58, received_date)
+
+    p.save()
+    buffer.seek(0)
+    pdf_data = buffer.getvalue()
+    buffer.close()
+
+    response = make_response(pdf_data)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename=small_hotels_inspection_{form_id}.pdf'
+    return response
+
+# Replace your existing download_inspection_pdf function with this EXACT replica
+# Replace your existing download_inspection_pdf function with this EXACT replica
+@app.route('/download_inspection_pdf/<int:form_id>')
+def download_inspection_pdf(form_id):
+    if 'inspector' not in session and 'admin' not in session:
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('inspections.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute("""SELECT * FROM inspections WHERE id = ?""", (form_id,))
+    form_data = c.fetchone()
+
+    if not form_data:
+        conn.close()
+        return jsonify({'error': 'Inspection not found'}), 404
+
+    # Get checklist scores
+    c.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = ?", (form_id,))
+    checklist_scores = {str(row[0]): float(row[1]) if row[1] and str(row[1]).replace('.', '', 1).isdigit() else 0.0
+                        for row in c.fetchall()}
+    conn.close()
+
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    # === EXACT HEADER MATCHING YOUR DETAILS PAGE ===
+    y = height - 40
+    p.setFont("Helvetica-Bold", 20)
+    p.drawCentredString(width / 2, y, "Food Establishment Inspection - Completed")
+    y -= 30
+
+    # === ESTABLISHMENT DETAILS SECTION - EXACT REPLICA ===
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, y, "Establishment Details")
+    y -= 25
+
+    # Draw the exact bordered table like your details page
+    table_start_y = y
+    table_height = 160
+    p.setLineWidth(1)
+    p.rect(50, y - table_height, width - 100, table_height)
+
+    # 3-column layout exactly like your HTML
+    col1_x = 70
+    col2_x = 250
+    col3_x = 420
+
+    p.setFont("Helvetica", 10)
+    current_y = y - 25
+
+    # Row 1: Name of Establishment | Owner/Operator | Critical Score
+    p.setFont("Helvetica-Bold", 9)
+    p.drawString(col1_x, current_y, "Name of Establishment:")
+    p.drawString(col2_x, current_y, "Owner/Operator:")
+    p.drawString(col3_x, current_y, "Critical Score:")
+
+    p.setFont("Helvetica", 9)
+    # Draw the form-value boxes like your HTML with proper padding
+    p.rect(col1_x - 2, current_y - 20, 165, 15)
+    p.rect(col2_x - 2, current_y - 20, 165, 15)
+    p.rect(col3_x - 2, current_y - 20, 95, 15)
+
+    # Center text vertically and add left padding
+    p.drawString(col1_x + 3, current_y - 13, str(form_data['establishment_name'] or ''))
+    p.drawString(col2_x + 3, current_y - 13, str(form_data['owner'] or ''))
+    p.drawString(col3_x + 3, current_y - 13, str(form_data['critical_score'] or '0'))
+
+    # Row 2: Address | License # | Overall Score
+    current_y -= 30
+    p.setFont("Helvetica-Bold", 9)
+    p.drawString(col1_x, current_y, "Address:")
+    p.drawString(col2_x, current_y, "License #:")
+    p.drawString(col3_x, current_y, "Overall Score:")
+
+    p.setFont("Helvetica", 9)
+    p.rect(col1_x - 2, current_y - 20, 165, 15)
+    p.rect(col2_x - 2, current_y - 20, 165, 15)
+    p.rect(col3_x - 2, current_y - 20, 95, 15)
+
+    p.drawString(col1_x + 3, current_y - 13, str(form_data['address'] or ''))
+    p.drawString(col2_x + 3, current_y - 13, str(form_data['license_no'] or ''))
+    p.drawString(col3_x + 3, current_y - 13, str(form_data['overall_score'] or '0'))
+
+    # Row 3: Inspector Name | Inspector Code | Inspection Date
+    current_y -= 30
+    p.setFont("Helvetica-Bold", 9)
+    p.drawString(col1_x, current_y, "Inspector Name:")
+    p.drawString(col2_x, current_y, "Inspector Code:")
+    p.drawString(col3_x, current_y, "Inspection Date:")
+
+    p.setFont("Helvetica", 9)
+    p.rect(col1_x - 2, current_y - 20, 165, 15)
+    p.rect(col2_x - 2, current_y - 20, 165, 15)
+    p.rect(col3_x - 2, current_y - 20, 95, 15)
+
+    p.drawString(col1_x + 3, current_y - 13, str(form_data['inspector_name'] or ''))
+    p.drawString(col2_x + 3, current_y - 13, str(form_data['inspector_code'] or ''))
+    p.drawString(col3_x + 3, current_y - 13, str(form_data['inspection_date'] or ''))
+
+    # Row 4: Inspection Time | Type of Establishment | No. of Employees
+    current_y -= 30
+    p.setFont("Helvetica-Bold", 9)
+    p.drawString(col1_x, current_y, "Inspection Time:")
+    p.drawString(col2_x, current_y, "Type of Establishment:")
+    p.drawString(col3_x, current_y, "No. of Employees:")
+
+    p.setFont("Helvetica", 9)
+    p.rect(col1_x - 2, current_y - 20, 165, 15)
+    p.rect(col2_x - 2, current_y - 20, 165, 15)
+    p.rect(col3_x - 2, current_y - 20, 95, 15)
+
+    p.drawString(col1_x + 3, current_y - 13, str(form_data['inspection_time'] or ''))
+    p.drawString(col2_x + 3, current_y - 13, str(form_data['type_of_establishment'] or ''))
+    p.drawString(col3_x + 3, current_y - 13, str(form_data['no_of_employees'] or ''))
+
+    # Row 5: Purpose of Visit | Action | Result
+    current_y -= 30
+    p.setFont("Helvetica-Bold", 9)
+    p.drawString(col1_x, current_y, "Purpose of Visit:")
+    p.drawString(col2_x, current_y, "Action:")
+    p.drawString(col3_x, current_y, "Result:")
+
+    p.setFont("Helvetica", 9)
+    p.rect(col1_x - 2, current_y - 20, 165, 15)
+    p.rect(col2_x - 2, current_y - 20, 165, 15)
+    p.rect(col3_x - 2, current_y - 20, 95, 15)
+
+    p.drawString(col1_x + 3, current_y - 13, str(form_data['purpose_of_visit'] or ''))
+    p.drawString(col2_x + 3, current_y - 13, str(form_data['action'] or ''))
+    p.drawString(col3_x + 3, current_y - 13, str(form_data['result'] or ''))
+
+    # Row 6: Barcode | Food Inspected | Food Condemned
+    current_y -= 30
+    p.setFont("Helvetica-Bold", 9)
+    p.drawString(col1_x, current_y, "Barcode:")
+    p.drawString(col2_x, current_y, "Food Inspected (in kg):")
+    p.drawString(col3_x, current_y, "Food Condemned (in kg):")
+
+    # Draw barcode representation exactly like your HTML
+    p.rect(col1_x - 2, current_y - 20, 165, 15)
+    barcode_x = col1_x + 8  # More padding for barcode
+    barcode_y = current_y - 15
+    for i in range(0, 60, 4):
+        if i % 8 == 0:
+            p.setFillColor(colors.black)
+            p.rect(barcode_x + i, barcode_y, 2, 8, fill=1)
+    p.setFillColor(colors.black)
+
+    p.setFont("Helvetica", 9)
+    p.rect(col2_x - 2, current_y - 20, 165, 15)
+    p.rect(col3_x - 2, current_y - 20, 95, 15)
+
+    p.drawString(col2_x + 3, current_y - 13, str(form_data['food_inspected'] or '0'))
+    p.drawString(col3_x + 3, current_y - 13, str(form_data['food_condemned'] or '0'))
+
+    y = current_y - 40
+
+    # === PASS/FAIL MESSAGE EXACTLY LIKE YOUR HTML ===
+    overall_score = float(form_data['overall_score']) if form_data['overall_score'] else 0
+    critical_score = float(form_data['critical_score']) if form_data['critical_score'] else 0
+    pass_status = critical_score >= 59 and overall_score >= 70
+
+    p.setFont("Helvetica-Bold", 12)
+    if pass_status:
+        p.setFillColor(colors.green)
+        message = f"Pass: Critical Score = {critical_score}, Total Score = {overall_score}"
+    else:
+        p.setFillColor(colors.red)
+        message = f"Fail: Critical Score = {critical_score} (needs 59+), Total Score = {overall_score} (needs 70+)"
+
+    p.drawString(50, y, message)
+    p.setFillColor(colors.black)
+    y -= 40
+
+    # === INSPECTION CHECKLIST - EXACT REPLICA ===
+    if y < 400:
+        p.showPage()
+        y = height - 50
+
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y, "Inspection Checklist")
+    y -= 25
+
+    # Table header - more compact sizing
+    table_x = 50
+    table_width = width - 100
+    header_height = 20
+    row_height = 14  # Reduced from 18 to make it more compact
+
+    p.setLineWidth(1)
+    p.rect(table_x, y - header_height, table_width, header_height)
+    p.setFillColor(colors.lightgrey)
+    p.rect(table_x, y - header_height, table_width, header_height, fill=1)
+
+    p.setFillColor(colors.black)
+    p.setFont("Helvetica-Bold", 9)  # Reduced font size
+    p.drawString(table_x + 10, y - 14, "Item #")
+    p.drawString(table_x + 60, y - 14, "Label")
+    p.drawString(table_x + 420, y - 14, "Weight")
+    p.drawString(table_x + 470, y - 14, "Score")
+
+    y -= header_height
+
+    # All categories exactly matching your HTML structure
+    categories_with_ranges = [
+        ("FOOD (1-2)", range(1, 3)),
+        ("FOOD PROTECTION (3-10)", range(3, 11)),
+        ("FOOD EQUIPMENT AND UTENSILS (11-23)", range(11, 24)),
+        ("TOILET AND HANDWASHING FACILITIES (24-25)", range(24, 26)),
+        ("SOLID WASTE MANAGEMENT (26-27)", range(26, 28)),
+        ("RODENTS, INSECT, ANIMAL CONTROL (28)", [28]),
+        ("PERSONNEL (29-35)", range(29, 36)),
+        ("WATER (36)", [36]),
+        ("SEWAGE (37)", [37]),
+        ("PLUMBING (38-39)", range(38, 40)),
+        ("FLOORS, WALLS AND CEILING (40-41)", range(40, 42)),
+        ("OTHER OPERATIONS (42-45)", range(42, 46))
+    ]
+
+    p.setFont("Helvetica", 8)  # Reduced font size for compactness
+
+    for category_name, item_range in categories_with_ranges:
+        # Check for new page
+        if y < 80:  # Reduced threshold
+            p.showPage()
+            y = height - 50
+            # Redraw header
+            p.setLineWidth(1)
+            p.rect(table_x, y - header_height, table_width, header_height)
+            p.setFillColor(colors.lightgrey)
+            p.rect(table_x, y - header_height, table_width, header_height, fill=1)
+            p.setFillColor(colors.black)
+            p.setFont("Helvetica-Bold", 9)
+            p.drawString(table_x + 10, y - 14, "Item #")
+            p.drawString(table_x + 60, y - 14, "Label")
+            p.drawString(table_x + 420, y - 14, "Weight")
+            p.drawString(table_x + 470, y - 14, "Score")
+            y -= header_height
+            p.setFont("Helvetica", 8)
+
+        # Category header row
+        p.setFillColor(colors.white)  # White background instead of gray
+        p.rect(table_x, y - row_height, table_width, row_height, fill=1)
+        p.setLineWidth(1)
+        p.rect(table_x, y - row_height, table_width, row_height)  # Add border
+        p.setFillColor(colors.black)
+        p.setFont("Helvetica-Bold", 8)  # Reduced font size
+        p.drawString(table_x + 10, y - 10, category_name)
+        y -= row_height
+
+        # Items in category
+        p.setFont("Helvetica", 7)  # Smaller font for items
+        for item_id in item_range:
+            if y < 30:  # Reduced threshold
+                p.showPage()
+                y = height - 50
+
+            # Find item in checklist
+            item_data = next((item for item in FOOD_CHECKLIST_ITEMS if item['id'] == item_id), None)
+            if not item_data:
+                continue
+
+            score = checklist_scores.get(str(item_id), 0)
+
+            # Gray background for important weights (4-5) instead of yellow
+            if item_data['wt'] in [4, 5]:
+                p.setFillColor(colors.Color(0.9, 0.9, 0.9))  # Light gray shading
+                p.rect(table_x, y - row_height, table_width, row_height, fill=1)
+
+            # Row border
+            p.setFillColor(colors.black)
+            p.setLineWidth(0.5)
+            p.rect(table_x, y - row_height, table_width, row_height)
+
+            # Item content
+            p.drawString(table_x + 10, y - 9, str(item_id))
+
+            # Description (truncated if too long)
+            desc = item_data['desc']
+            if len(desc) > 65:  # Increased character limit due to smaller font
+                desc = desc[:62] + "..."
+            p.drawString(table_x + 40, y - 9, desc)
+
+            p.drawString(table_x + 425, y - 9, str(item_data['wt']))
+            p.drawString(table_x + 475, y - 9, f"{score:.1f}" if score > 0 else "0")
+
+            y -= row_height
+
+    # === ADD PROPER SPACING AFTER CHECKLIST ===
+    y -= 20  # Add 20px space after the checklist
+
+    # === RECORDS SECTION EXACTLY LIKE YOUR HTML ===
+    if y < 140:  # Increased threshold to ensure proper spacing
+        p.showPage()
+        y = height - 50
+
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y, "Records:")
+    y -= 25
+
+    # Comments and signatures layout exactly like your HTML
+    comments_width = 350
+    signatures_x = 420
+
+    # Comments section
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(50, y, "Comments:")
+    y -= 20
+
+    # Comments box
+    comments_height = 80
+    p.setLineWidth(1)
+    p.rect(50, y - comments_height, comments_width, comments_height)
+
+    # Comments content
+    p.setFont("Helvetica", 9)
+    comments = form_data['comments'] or 'No comments provided.'
+    if comments:
+        # Word wrap comments
+        lines = []
+        words = comments.split()
+        current_line = ""
+        for word in words:
+            if len(current_line + word) < 45:
+                current_line += word + " "
+            else:
+                lines.append(current_line.strip())
+                current_line = word + " "
+        if current_line:
+            lines.append(current_line.strip())
+
+        for i, line in enumerate(lines[:5]):  # Max 5 lines
+            p.drawString(55, y - 15 - (i * 12), line)
+
+    # Signatures section (right side, exactly like your HTML)
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(signatures_x, y, "Inspector's Signature:")
+    p.rect(signatures_x - 5, y - 25, 130, 15)
+    p.setFont("Helvetica", 8)
+    p.drawString(signatures_x, y - 17, str(form_data['inspector_signature'] or ''))
+
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(signatures_x, y - 35, "Received By:")
+    p.rect(signatures_x - 5, y - 60, 130, 15)
+    p.setFont("Helvetica", 8)
+    p.drawString(signatures_x, y - 52, str(form_data['received_by'] or ''))
+
+    p.save()
+    buffer.seek(0)
+    pdf_data = buffer.getvalue()
+    buffer.close()
+
+    response = make_response(pdf_data)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename=food_establishment_inspection_{form_id}.pdf'
+    return response
 
 @app.route('/download_residential_pdf/<int:form_id>')
 def download_residential_pdf(form_id):
@@ -2564,6 +4137,297 @@ def spirit_licence_inspection_detail(id):
 
     return "Not Found", 404
 
+
+# Add this route to your app.py - Spirit Licence PDF Download
+@app.route('/download_spirit_licence_pdf/<int:form_id>')
+def download_spirit_licence_pdf(form_id):
+    if 'inspector' not in session and 'admin' not in session:
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('inspections.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute("""SELECT * FROM inspections WHERE id = ? AND form_type = 'Spirit Licence Premises'""", (form_id,))
+    form_data = c.fetchone()
+
+    if not form_data:
+        conn.close()
+        return jsonify({'error': 'Inspection not found'}), 404
+
+    # Get individual scores from inspection_items table
+    c.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = ?", (form_id,))
+    item_scores = {str(row[0]): int(row[1]) if row[1] and str(row[1]).isdigit() else 0 for row in c.fetchall()}
+    conn.close()
+
+    # Parse scores from the scores field as backup
+    scores_str = form_data['scores'] if form_data['scores'] else ''
+    if scores_str:
+        try:
+            scores_list = [int(x) for x in scores_str.split(',')]
+            # Map scores to items 1-25
+            for i in range(1, min(26, len(scores_list) + 1)):
+                if str(i) not in item_scores:
+                    item_scores[str(i)] = scores_list[i - 1] if i - 1 < len(scores_list) else 0
+        except ValueError:
+            pass
+
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    # === EXACT TITLE MATCHING YOUR DETAILS PAGE ===
+    y = height - 50
+    p.setFont("Helvetica-Bold", 22)
+    p.drawCentredString(width / 2, y, "Spirit Licence Premises Inspection Details")
+    y -= 40
+
+    # === TWO-COLUMN ESTABLISHMENT INFO TABLE EXACTLY LIKE YOUR HTML ===
+    p.setLineWidth(1)
+
+    # Main table border
+    table_start_y = y
+    table_height = 200
+    p.rect(50, y - table_height, width - 100, table_height)
+
+    # Left column (50% width)
+    left_col_width = (width - 100) / 2
+    p.line(50 + left_col_width, y, 50 + left_col_width, y - table_height)
+
+    # Left column fields
+    p.setFont("Helvetica", 14)
+    left_x = 60
+    right_x = 200
+    current_y = y - 25
+
+    left_fields = [
+        ("Name of Establishment:", form_data['establishment_name'] or ''),
+        ("Owner/Operator:", form_data['owner'] or ''),
+        ("Address of Establishment:", form_data['address'] or ''),
+        ("Purpose of Visit:", form_data['purpose_of_visit'] or '')
+    ]
+
+    for label, value in left_fields:
+        p.setFont("Helvetica", 12)
+        p.drawString(left_x, current_y, label)
+        # Draw input box
+        p.rect(left_x, current_y - 20, left_col_width - 20, 15)
+        p.setFont("Helvetica", 11)
+        p.drawString(left_x + 3, current_y - 12, str(value))
+        current_y -= 45
+
+    # Right column fields
+    right_col_x = 50 + left_col_width + 10
+    current_y = y - 25
+
+    right_fields = [
+        ("Type of Establishment:", form_data['type_of_establishment'] or ''),
+        ("Inspector Name:", form_data['inspector_name'] or ''),
+        ("Inspection Date:", form_data['inspection_date'] or ''),
+        ("Critical Score:", str(form_data['critical_score'] or '0')),
+        ("Overall Score:", str(form_data['overall_score'] or '0')),
+        ("Status:", form_data['status'] or ''),
+        ("No. of Employees:", str(form_data['no_of_employees'] or '')),
+        ("No. with FHC:", str(form_data['no_with_fhc'] or '')),
+        ("No. W/O FHC:", str(form_data['no_wo_fhc'] or ''))
+    ]
+
+    for label, value in right_fields:
+        p.setFont("Helvetica", 12)
+        p.drawString(right_col_x, current_y, label)
+        # Draw input box
+        p.rect(right_col_x, current_y - 20, left_col_width - 20, 15)
+        p.setFont("Helvetica", 11)
+        p.drawString(right_col_x + 3, current_y - 12, str(value))
+        current_y -= 22
+
+    y -= table_height + 30
+
+    # === INSPECTION CHECKLIST SECTION ===
+    if y < 400:
+        p.showPage()
+        y = height - 50
+
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(50, y, "Inspection Checklist")
+    y -= 30
+
+    # Table header
+    table_x = 50
+    table_width = width - 100
+    header_height = 25
+    row_height = 16
+
+    p.setLineWidth(1)
+    p.rect(table_x, y - header_height, table_width, header_height)
+    p.setFillColor(colors.Color(0.96, 0.96, 0.96))  # Light gray like your HTML
+    p.rect(table_x, y - header_height, table_width, header_height, fill=1)
+
+    p.setFillColor(colors.black)
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(table_x + 10, y - 18, "Item")
+    p.drawString(table_x + 300, y - 18, "Wt.")
+    p.drawString(table_x + 350, y - 18, "Score")
+    p.drawString(table_x + 410, y - 18, "Inspector's Comments")
+
+    y -= header_height
+
+    # All checklist items with categories exactly like your HTML
+    checklist_items = [
+        # Building
+        ("Building", "header", None, None, None),
+        ("Sound, clean and in good repair", "item", 3, "1", ""),
+        ("No smoking sign displayed at entrance to premises", "item", 3, "2", ""),
+
+        # Walls
+        ("Walls", "header", None, None, None),
+        ("Sound, clean and in good repair", "item", 3, "3", ""),
+
+        # Floors
+        ("Floors", "header", None, None, None),
+        ("Constructed of impervious, non-slip material", "item", 3, "4", ""),
+        ("Clean, drained and in good repair", "item", 3, "5", ""),
+
+        # Service Counter
+        ("Service Counter", "header", None, None, None),
+        ("Constructed of impervious material", "item", 3, "6", ""),
+        ("Designed, clean and in good repair", "item", 3, "7", ""),
+
+        # Lighting
+        ("Lighting", "header", None, None, None),
+        ("Lighting provided as required", "item", 3, "8", ""),
+
+        # Washing and Sanitization Facilities
+        ("Washing and Sanitization Facilities", "header", None, None, None),
+        ("Fitted with at least double compartment sink", "critical", 5, "9", ""),
+        ("Soap and sanitizer provided", "critical", 5, "10", ""),
+        ("Equipped handwashing facility provided", "critical", 5, "11", ""),
+
+        # Water Supply
+        ("Water Supply", "header", None, None, None),
+        ("Potable", "critical", 5, "12", ""),
+        ("Piped", "critical", 5, "13", ""),
+
+        # Storage Facilities
+        ("Storage Facilities", "header", None, None, None),
+        ("Clean and adequate storage of glasses & utensils", "critical", 5, "14", ""),
+        ("Free of insects and other vermins", "critical", 5, "15", ""),
+        ("Being used for its intended purpose", "critical", 5, "16", ""),
+
+        # Sanitary Facilities
+        ("Sanitary Facilities", "header", None, None, None),
+        ("Toilet facility provided", "critical", 5, "17", ""),
+        ("Adequate, accessible with lavatory basin and soap", "critical", 5, "18", ""),
+        ("Satisfactory", "critical", 5, "19", ""),
+        ("Urinal(s) provided", "item", 3, "20", ""),
+        ("Satisfactory", "item", 3, "21", ""),
+
+        # Solid Waste Management
+        ("Solid Waste Management", "header", None, None, None),
+        ("Covered, adequate, pest proof and clean receptacles", "item", 4, "22", ""),
+        ("Provision made for satisfactory disposal of waste", "item", 3, "23", ""),
+        ("Premises free of litter and unnecessary articles", "item", 3, "24", ""),
+
+        # Pest Control
+        ("Pest Control", "header", None, None, None),
+        ("Premises free of rodents, insects and vermins", "critical", 5, "25", "")
+    ]
+
+    p.setFont("Helvetica", 10)
+
+    for item_desc, item_type, weight, item_id, comment in checklist_items:
+        # Check for new page
+        if y < 50:
+            p.showPage()
+            y = height - 50
+            # Redraw header
+            p.setLineWidth(1)
+            p.rect(table_x, y - header_height, table_width, header_height)
+            p.setFillColor(colors.Color(0.96, 0.96, 0.96))
+            p.rect(table_x, y - header_height, table_width, header_height, fill=1)
+            p.setFillColor(colors.black)
+            p.setFont("Helvetica-Bold", 12)
+            p.drawString(table_x + 10, y - 18, "Item")
+            p.drawString(table_x + 300, y - 18, "Wt.")
+            p.drawString(table_x + 350, y - 18, "Score")
+            p.drawString(table_x + 410, y - 18, "Inspector's Comments")
+            y -= header_height
+            p.setFont("Helvetica", 10)
+
+        if item_type == "header":
+            # Category header row - light gray background like your HTML
+            p.setFillColor(colors.Color(0.94, 0.94, 0.94))  # header-row color
+            p.rect(table_x, y - row_height, table_width, row_height, fill=1)
+            p.setLineWidth(1)
+            p.rect(table_x, y - row_height, table_width, row_height)
+            p.setFillColor(colors.black)
+            p.setFont("Helvetica-Bold", 10)
+            p.drawString(table_x + 10, y - 11, item_desc)
+            y -= row_height
+            p.setFont("Helvetica", 10)
+        else:
+            # Regular item row
+            if item_type == "critical":
+                # Critical items get gray background
+                p.setFillColor(colors.Color(0.9, 0.9, 0.9))
+                p.rect(table_x, y - row_height, table_width, row_height, fill=1)
+
+            # Row border
+            p.setFillColor(colors.black)
+            p.setLineWidth(0.5)
+            p.rect(table_x, y - row_height, table_width, row_height)
+
+            # Item content
+            p.drawString(table_x + 10, y - 11, item_desc)
+            p.drawString(table_x + 305, y - 11, str(weight))
+
+            # Get score for this item
+            score = item_scores.get(item_id, 0)
+            p.drawString(table_x + 355, y - 11, str(score))
+
+            # Comments (would come from form data if available)
+            p.drawString(table_x + 420, y - 11, "")  # Comments placeholder
+
+            y -= row_height
+
+    # === SIGNATURES SECTION ===
+    y -= 20
+    if y < 60:
+        p.showPage()
+        y = height - 50
+
+    # Signatures table exactly like your HTML
+    p.setLineWidth(1)
+    sig_table_height = 60
+    p.rect(table_x, y - sig_table_height, table_width, sig_table_height)
+
+    # Two rows for signatures
+    row_height = 30
+
+    # Inspector's Signature row
+    p.line(table_x, y - row_height, table_x + table_width, y - row_height)
+    p.setFont("Helvetica", 12)
+    p.drawString(table_x + 10, y - 20, "Inspector's Signature:")
+    p.rect(table_x + 150, y - 25, 200, 15)
+    p.setFont("Helvetica", 11)
+    p.drawString(table_x + 153, y - 17, str(form_data['inspector_signature'] or ''))
+
+    # Rec'd By row
+    y -= row_height
+    p.setFont("Helvetica", 12)
+    p.drawString(table_x + 10, y - 20, "Rec'd By:")
+    p.rect(table_x + 150, y - 25, 200, 15)
+    p.setFont("Helvetica", 11)
+    p.drawString(table_x + 153, y - 17, str(form_data['received_by'] or ''))
+
+    p.save()
+    buffer.seek(0)
+    pdf_data = buffer.getvalue()
+    buffer.close()
+
+    response = make_response(pdf_data)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename=spirit_licence_inspection_{form_id}.pdf'
+    return response
 
 @app.route('/swimming_pool/inspection/<int:id>')
 def swimming_pool_inspection_detail(id):
@@ -3107,7 +4971,8 @@ def barbershop_inspection_detail(id):
 
     conn.close()
     return render_template('barbershop_inspection_detail.html', inspection=inspection_dict, checklist=BARBERSHOP_CHECKLIST_ITEMS)
-# Route to download barbershop inspection PDF
+
+# Replace your download_barbershop_pdf function with this corrected version
 @app.route('/download_barbershop_pdf/<int:form_id>')
 def download_barbershop_pdf(form_id):
     if 'inspector' not in session and 'admin' not in session:
@@ -3124,124 +4989,267 @@ def download_barbershop_pdf(form_id):
         return jsonify({'error': 'Inspection not found'}), 404
 
     c.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = ?", (form_id,))
-    checklist_scores = {str(row[0]): float(row[1]) if row[1] and row[1].replace('.', '', 1).isdigit() else 0.0 for row in c.fetchall()}
+    checklist_scores = {str(row[0]): float(row[1]) if row[1] and row[1].replace('.', '', 1).isdigit() else 0.0 for row
+                        in c.fetchall()}
     conn.close()
+
+    # Debug: Print what we have in the database
+    print("=== BARBERSHOP PDF DEBUG ===")
+    for key in form_data.keys():
+        print(f"{key}: {form_data[key]}")
+    print("=============================")
 
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
-    # Form Header
-    y = create_form_header(p, "BARBERSHOP & BEAUTY SALON INSPECTION FORM", form_id, width, height)
+    # === EXACT FORM HEADER - Bordered Box ===
+    y = height - 50
 
-    # Basic Information
+    # Draw main header border (2px thick)
+    p.setLineWidth(2)
+    header_height = 60
+    p.rect(50, y - header_height, width - 100, header_height)
+
+    # Form ID in top right corner (red text)
     p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y, "ESTABLISHMENT INFORMATION")
-    y -= 25
+    p.setFillColor(colors.red)
+    p.drawString(width - 120, y - 15, f"Form ID: {form_id}")
+
+    # Date in top right corner (below Form ID)
+    p.setFont("Helvetica", 10)
+    p.setFillColor(colors.black)
+    p.drawString(width - 120, y - 30, f"Date: {form_data['inspection_date'] or '2025-08-22'}")
+
+    # Centered title
+    p.setFont("Helvetica-Bold", 16)
+    p.drawCentredString(width / 2, y - 30, "BARBERSHOP & BEAUTY SALON INSPECTION FORM")
+
+    y -= 80
+
+    # === ESTABLISHMENT INFORMATION SECTION - Bordered Box ===
+    p.setLineWidth(1)
+    info_start_y = y
+    info_height = 140
+
+    # Draw border around entire info section
+    p.rect(50, y - info_height, width - 100, info_height)
+
+    # Section title
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(60, y - 20, "ESTABLISHMENT INFORMATION")
 
     p.setFont("Helvetica", 10)
-    basic_info = [
+    y -= 35
+
+    # Left column information - using your original working syntax
+    left_x = 70
+    right_x = 320
+
+    info_items = [
         ("Establishment Name:", form_data['establishment_name'] or ''),
-        ("Owner/Operator:", form_data['owner'] or ''),
         ("Address and Parish:", form_data['address'] or ''),
-        ("License No:", form_data['license_no'] or ''),
-        ("Inspector Name:", form_data['inspector_name'] or ''),
-        ("Inspection Date:", form_data['inspection_date'] or ''),
-        ("Inspection Time:", form_data['inspection_time'] or ''),
-        ("Telephone No:", form_data['telephone_no'] or ''),
-        ("No. of Employees:", form_data['no_of_employees'] or ''),
-        ("Inspector Code:", form_data['inspector_code'] or ''),
+        ("Inspector Name:", form_data['inspector_name'] or ''),  # This might be empty
+        ("Inspection Time:", form_data['inspection_time'] or ''),  # This might be empty
+        ("No. of Employees:", str(form_data['no_of_employees'] or '')),
         ("Purpose of Visit:", form_data['purpose_of_visit'] or ''),
-        ("Action:", form_data['action'] or ''),
         ("Registration Status:", form_data['registration_status'] or '')
     ]
 
-    col1_x, col2_x = 50, 320
-    col_y = y
+    right_items = [
+        ("Owner/Operator:", form_data['owner'] or ''),
+        ("License No:", form_data['license_no'] or ''),
+        ("Inspection Date:", form_data['inspection_date'] or ''),
+        ("Telephone No:", form_data['telephone_no'] or ''),
+        ("Inspector Code:", form_data['inspector_code'] or ''),
+        ("Action:", form_data['action'] or ''),
+        ("", "")  # Empty for alignment
+    ]
 
-    for i, (label, value) in enumerate(basic_info):
-        if i % 2 == 0:
-            x = col1_x
-            y = col_y
-        else:
-            x = col2_x
-            y = col_y
-            col_y -= 20
-        p.drawString(x, y, label)
-        p.line(x + 100, y - 2, x + 250, y - 2)
-        p.drawString(x + 105, y, str(value))
+    for i, ((left_label, left_value), (right_label, right_value)) in enumerate(zip(info_items, right_items)):
+        current_y = y - (i * 15)
 
-    y = col_y - 30
+        # Left column
+        p.drawString(left_x, current_y, left_label)
+        p.line(left_x + 90, current_y - 2, left_x + 220, current_y - 2)
+        p.drawString(left_x + 95, current_y, left_value)
 
-    # Checklist Section
-    if y < 300:
-        p.showPage()
-        y = height - 50
+        # Right column
+        if right_label:  # Skip empty rows
+            p.drawString(right_x, current_y, right_label)
+            p.line(right_x + 90, current_y - 2, right_x + 220, current_y - 2)
+            p.drawString(right_x + 95, current_y, right_value)
 
+    y -= 160
+
+    # === INSPECTION CHECKLIST SECTION ===
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "INSPECTION CHECKLIST")
     y -= 25
 
-    p.setFont("Helvetica-Bold", 9)
-    p.drawString(50, y, "Item")
-    p.drawString(80, y, "Description")
-    p.drawString(400, y, "Weight")
-    p.drawString(450, y, "Score")
-    p.drawString(500, y, "✓")
-    y -= 5
-    p.line(50, y, 550, y)
-    y -= 15
+    # === PERFECT TABLE STRUCTURE ===
+    # Table dimensions to match your visual exactly
+    table_x = 50
+    table_width = width - 100
+    col_widths = [40, 350, 50, 50, 30]  # Item, Description, Weight, Score, Checkbox
 
-    p.setFont("Helvetica", 8)
-    for item in BARBERSHOP_CHECKLIST_ITEMS:
-        if y < 50:
+    # Table header with thick border
+    p.setLineWidth(2)
+    header_height = 20
+    p.rect(table_x, y - header_height, table_width, header_height)
+
+    # Header background (light gray)
+    p.setFillColor(colors.lightgrey)
+    p.rect(table_x, y - header_height, table_width, header_height, fill=1)
+
+    # Header text
+    p.setFillColor(colors.black)
+    p.setFont("Helvetica-Bold", 10)
+
+    # Draw column headers with exact positioning
+    p.drawCentredString(table_x + 20, y - 15, "Item")
+    p.drawCentredString(table_x + 215, y - 15, "Description")
+    p.drawCentredString(table_x + 415, y - 15, "Weight")
+    p.drawCentredString(table_x + 465, y - 15, "Score")
+    p.drawCentredString(table_x + 495, y - 15, "✓")
+
+    # Draw vertical lines for column separators
+    p.setLineWidth(1)
+    x_pos = table_x
+    for width_col in col_widths[:-1]:
+        x_pos += width_col
+        p.line(x_pos, y, x_pos, y - header_height)
+
+    y -= header_height
+
+    # === ALL 32 CHECKLIST ITEMS ===
+    barbershop_items = [
+        {'id': '01', 'desc': 'Overall Condition', 'wt': 2, 'critical': False},
+        {'id': '02', 'desc': 'Floors, walls, ceiling', 'wt': 2, 'critical': False},
+        {'id': '03', 'desc': 'Lighting', 'wt': 2, 'critical': False},
+        {'id': '04', 'desc': 'Ventilation', 'wt': 2, 'critical': False},
+        {'id': '05', 'desc': 'Health Certification', 'wt': 2, 'critical': False},
+        {'id': '06', 'desc': 'Tables, counters, chairs', 'wt': 2, 'critical': True},
+        {'id': '07', 'desc': 'Shampoo basin', 'wt': 4, 'critical': True},
+        {'id': '08', 'desc': 'Hair dryers, steamers, hand dryers, hand held tools', 'wt': 4, 'critical': True},
+        {'id': '09', 'desc': 'Wash basin', 'wt': 2, 'critical': True},
+        {'id': '10', 'desc': 'Towels and linen', 'wt': 4, 'critical': True},
+        {'id': '11', 'desc': 'Soap & hand towels', 'wt': 2, 'critical': True},
+        {'id': '12', 'desc': 'Sterile cotton swabs', 'wt': 2, 'critical': True},
+        {'id': '13', 'desc': 'Tools', 'wt': 5, 'critical': True},
+        {'id': '14', 'desc': 'Equipment', 'wt': 5, 'critical': True},
+        {'id': '15', 'desc': 'Linen', 'wt': 5, 'critical': True},
+        {'id': '16', 'desc': 'Hot water', 'wt': 5, 'critical': True},
+        {'id': '17', 'desc': 'Chemicals', 'wt': 5, 'critical': True},
+        {'id': '18', 'desc': 'Health certification', 'wt': 3, 'critical': False},
+        {'id': '19', 'desc': 'Personal cleanliness', 'wt': 2, 'critical': False},
+        {'id': '20', 'desc': 'Hand washing', 'wt': 2, 'critical': False},
+        {'id': '21', 'desc': 'First aid kit provided and stocked', 'wt': 5, 'critical': False},
+        {'id': '22', 'desc': 'Potable & adequate water supply', 'wt': 5, 'critical': True},
+        {'id': '23', 'desc': 'Lavatories', 'wt': 5, 'critical': True},
+        {'id': '24', 'desc': 'Sanitary waste water disposal', 'wt': 5, 'critical': True},
+        {'id': '25', 'desc': 'Plumbing maintained', 'wt': 2, 'critical': False},
+        {'id': '26', 'desc': 'Drains maintained', 'wt': 2, 'critical': False},
+        {'id': '27', 'desc': 'Hair, Towels, Swabs Disposed', 'wt': 2, 'critical': False},
+        {'id': '28', 'desc': 'Separation of aerosols', 'wt': 2, 'critical': False},
+        {'id': '29', 'desc': 'Garbage receptacles', 'wt': 3, 'critical': False},
+        {'id': '30', 'desc': 'Absence of pests', 'wt': 3, 'critical': False},
+        {'id': '31', 'desc': 'Approved Insecticides', 'wt': 2, 'critical': False},
+        {'id': '32', 'desc': 'General cleanliness', 'wt': 2, 'critical': False}
+    ]
+
+    p.setFont("Helvetica", 9)
+    row_height = 15
+
+    for i, item in enumerate(barbershop_items):
+        current_y = y - (i * row_height)
+
+        # Check if we need a new page
+        if current_y < 100:
             p.showPage()
-            y = height - 50
-            p.setFont("Helvetica-Bold", 9)
-            p.drawString(50, y, "Item")
-            p.drawString(80, y, "Description")
-            p.drawString(400, y, "Weight")
-            p.drawString(450, y, "Score")
-            p.drawString(500, y, "✓")
-            y -= 5
-            p.line(50, y, 550, y)
-            y -= 15
-            p.setFont("Helvetica", 8)
+            current_y = height - 50
+            y = current_y
 
-        item_id = str(item['id'])
-        score = checklist_scores.get(item_id, 0)
-        p.drawString(50, y, item_id)
-        desc = item.get('desc', '')
-        if len(desc) > 45:
-            desc = desc[:42] + "..."
-        p.drawString(80, y, desc)
-        p.drawString(400, y, str(item.get('wt', '')))
-        p.drawString(450, y, str(score))
-        draw_checkbox(p, 505, y - 2, checked=(score > 0))
-        y -= 12
+            # Redraw table header on new page
+            p.setLineWidth(2)
+            p.rect(table_x, y - header_height, table_width, header_height)
+            p.setFillColor(colors.lightgrey)
+            p.rect(table_x, y - header_height, table_width, header_height, fill=1)
+            p.setFillColor(colors.black)
+            p.setFont("Helvetica-Bold", 10)
+            p.drawCentredString(table_x + 20, y - 15, "Item")
+            p.drawCentredString(table_x + 215, y - 15, "Description")
+            p.drawCentredString(table_x + 415, y - 15, "Weight")
+            p.drawCentredString(table_x + 465, y - 15, "Score")
+            p.drawCentredString(table_x + 495, y - 15, "✓")
+            y -= header_height
+            current_y = y - (i * row_height)
+            p.setFont("Helvetica", 9)
 
-    # Scoring Summary
-    y -= 20
+        # Row background for critical items (light yellow)
+        if item['critical']:
+            p.setFillColor(colors.Color(1, 1, 0.8))  # Light yellow
+            p.rect(table_x, current_y - row_height, table_width, row_height, fill=1)
+
+        # Row border
+        p.setFillColor(colors.black)
+        p.setLineWidth(1)
+        p.rect(table_x, current_y - row_height, table_width, row_height)
+
+        # Draw vertical column lines
+        x_pos = table_x
+        for width_col in col_widths[:-1]:
+            x_pos += width_col
+            p.line(x_pos, current_y, x_pos, current_y - row_height)
+
+        # Get score for this item
+        score = checklist_scores.get(item['id'], 0)
+
+        # Draw cell content with exact positioning
+        p.setFillColor(colors.black)
+
+        # Item number (centered)
+        p.drawCentredString(table_x + 20, current_y - 10, item['id'])
+
+        # Description (left aligned with padding)
+        desc = item['desc']
+        if len(desc) > 50:
+            desc = desc[:47] + "..."
+        p.drawString(table_x + 45, current_y - 10, desc)
+
+        # Weight (centered)
+        p.drawCentredString(table_x + 415, current_y - 10, str(item['wt']))
+
+        # Score (centered)
+        p.drawCentredString(table_x + 465, current_y - 10, f"{score:.1f}")
+
+        # Checkbox (centered)
+        checkbox_x = table_x + 490
+        checkbox_y = current_y - 12
+        p.rect(checkbox_x, checkbox_y, 10, 10)
+        if score > 0:
+            # Draw X in checkbox
+            p.line(checkbox_x + 1, checkbox_y + 1, checkbox_x + 9, checkbox_y + 9)
+            p.line(checkbox_x + 9, checkbox_y + 1, checkbox_x + 1, checkbox_y + 9)
+
+    # Move to bottom of table
+    y = current_y - row_height - 30
+
+    # === COMMENTS SECTION ===
     if y < 150:
         p.showPage()
         y = height - 50
 
     p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y, "SCORING SUMMARY")
-    y -= 25
+    p.drawString(50, y, "Inspector's Comments:")
+    y -= 20
 
-    p.setFont("Helvetica", 10)
-    p.drawString(50, y, f"Overall Score: {form_data['overall_score'] or 0}")
-    p.drawString(200, y, f"Critical Score: {form_data['critical_score'] or 0}")
-    p.drawString(350, y, f"Result: {form_data['result'] or ''}")
-    y -= 40
+    # Comments box with border
+    comments_height = 60
+    p.setLineWidth(1)
+    p.rect(50, y - comments_height, width - 100, comments_height)
 
-    # Comments Section
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y, "COMMENTS")
-    y -= 25
-
-    p.rect(50, y - 60, 500, 60)
+    # Comments content
     p.setFont("Helvetica", 9)
     comments = form_data['comments'] or ''
     if comments:
@@ -3249,29 +5257,40 @@ def download_barbershop_pdf(form_id):
         words = comments.split()
         current_line = ""
         for word in words:
-            if len(current_line + word) < 70:
+            if len(current_line + word) < 80:
                 current_line += word + " "
             else:
                 lines.append(current_line.strip())
                 current_line = word + " "
         lines.append(current_line.strip())
-        for i, line in enumerate(lines[:5]):
-            p.drawString(55, y - 15 - (i * 10), line)
+
+        for i, line in enumerate(lines[:4]):  # Max 4 lines
+            p.drawString(55, y - 15 - (i * 12), line)
+    else:
+        p.drawString(55, y - 25, "No comments provided.")
 
     y -= 80
 
-    # Signatures Section
+    # === SIGNATURES SECTION ===
     p.setFont("Helvetica-Bold", 12)
     p.drawString(50, y, "SIGNATURES")
     y -= 25
 
+    # Draw signature section border
+    p.setLineWidth(1)
+    p.line(50, y + 10, width - 50, y + 10)
+
     p.setFont("Helvetica", 10)
-    p.drawString(50, y, "Inspector Signature:")
-    p.line(150, y - 2, 300, y - 2)
-    p.drawString(155, y, form_data['inspector_signature'] or '')
-    p.drawString(350, y, "Received By:")
-    p.line(420, y - 2, 550, y - 2)
-    p.drawString(425, y, form_data['received_by'] or '')
+
+    # Inspector signature
+    p.drawString(50, y, "Inspector's Signature:")
+    p.line(160, y - 2, 300, y - 2)
+    p.drawString(165, y, form_data['inspector_signature'] or '')
+
+    # Received by signature
+    p.drawString(350, y, "Rec'd By:")
+    p.line(410, y - 2, 550, y - 2)
+    p.drawString(415, y, form_data['received_by'] or '')
 
     p.save()
     buffer.seek(0)
@@ -3282,7 +5301,6 @@ def download_barbershop_pdf(form_id):
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = f'attachment; filename=barbershop_inspection_{form_id}.pdf'
     return response
-
 
 @app.route('/fix_all_forms_to_pass_fail')
 def fix_all_forms_to_pass_fail():
@@ -3761,7 +5779,6 @@ def update_schema():
 
 
 # Add this route to your app.py file after the other admin routes
-
 @app.route('/api/admin/search_inspections', methods=['GET'])
 def search_inspections():
     if 'admin' not in session:
@@ -3792,7 +5809,7 @@ def search_inspections():
         for row in cursor.fetchall():
             results.append({
                 'id': row[0],
-                'type': row[4] or 'Unknown',
+                'formType': row[4] or 'Food Establishment',  # Changed from 'type' to 'formType'
                 'name': row[1] or 'N/A',
                 'owner': row[2] or 'N/A',
                 'license': row[3] or 'N/A',
@@ -3812,7 +5829,7 @@ def search_inspections():
         for row in cursor.fetchall():
             results.append({
                 'id': row[0],
-                'type': 'Residential',
+                'formType': 'Residential',  # Changed from 'type' to 'formType'
                 'name': row[1] or 'N/A',
                 'owner': row[2] or 'N/A',
                 'address': row[3] or 'N/A',
@@ -3832,11 +5849,13 @@ def search_inspections():
         for row in cursor.fetchall():
             results.append({
                 'id': row[0],
-                'type': 'Burial',
+                'formType': 'Burial',  # Changed from 'type' to 'formType'
                 'applicant': row[1] or 'N/A',
                 'deceased': row[2] or 'N/A',
                 'location': row[3] or 'N/A',
-                'inspector': 'N/A'
+                'inspector': 'N/A',
+                'name': row[1] or 'N/A',  # Add name field for consistency
+                'owner': row[2] or 'N/A'   # Add owner field for consistency
             })
 
         conn.close()
@@ -3845,8 +5864,6 @@ def search_inspections():
     except Exception as e:
         print(f"Search error: {str(e)}")
         return jsonify({'error': 'Search failed'}), 500
-
-# Add these routes to your app.py file
 
 # Replace the existing backend routes in app.py with these fixed versions
 

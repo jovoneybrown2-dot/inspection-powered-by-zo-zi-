@@ -105,14 +105,14 @@
         }
 
         .section-header {
-            background-color: #d0d0d0;
+            background-color: white;
             font-weight: bold;
             text-transform: uppercase;
             font-size: 14px;
         }
 
         .critical-item {
-            background-color: rgba(0, 0, 255, 0.1);
+            background-color: #e6e6e6;
         }
 
         .score-cell {
@@ -903,7 +903,7 @@
 
         <div class="buttons-section">
             <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
-            <a href="{{ url_for('download_inspection_pdf', form_id=inspection.id) }}" class="btn btn-primary">Download PDF</a>
+            <a href="{{ url_for('download_small_hotels_pdf', form_id=inspection.id) }}" class="btn btn-primary">Download PDF</a>
             <button type="button" class="btn btn-secondary" onclick="window.print()">Print</button>
         </div>
     </div>
