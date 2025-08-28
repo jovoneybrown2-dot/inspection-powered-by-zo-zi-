@@ -416,6 +416,65 @@ def get_residential_inspection_details(inspection_id):
     return None
 
 
+def get_small_hotels_inspection_details(form_id):
+    conn = sqlite3.connect('inspections.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM inspections WHERE id = ? AND form_type = 'Small Hotel'", (form_id,))
+    inspection = cursor.fetchone()
+
+    if not inspection:
+        conn.close()
+        return None
+
+    inspection_dict = dict(inspection)
+
+    # Get individual scores
+    cursor.execute("SELECT item_id, obser, error FROM inspection_items WHERE inspection_id = ?", (form_id,))
+    items = cursor.fetchall()
+
+    obser_scores = {}
+    error_scores = {}
+    for item in items:
+        obser_scores[item[0]] = item[1] or '0'
+        error_scores[item[0]] = item[2] or '0'
+
+    inspection_dict['obser'] = obser_scores
+    inspection_dict['error'] = error_scores
+
+    conn.close()
+    return inspection_dict
+
+
+def get_spirit_licence_inspection_details(form_id):
+    conn = sqlite3.connect('inspections.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM inspections WHERE id = ? AND form_type = 'Spirit Licence Premises'", (form_id,))
+    inspection = cursor.fetchone()
+
+    if not inspection:
+        conn.close()
+        return None
+
+    inspection_dict = dict(inspection)
+
+    # Parse scores from the scores string
+    scores_str = inspection_dict.get('scores', '')
+    if scores_str:
+        score_list = scores_str.split(',')
+        scores = {}
+        for i, score in enumerate(score_list, 1):
+            scores[str(i)] = score
+        inspection_dict['scores'] = scores
+    else:
+        inspection_dict['scores'] = {}
+
+    conn.close()
+    return inspection_dict
+
 def update_database_schema():
     """Update database schema to handle all form types properly"""
     conn = sqlite3.connect('inspections.db')

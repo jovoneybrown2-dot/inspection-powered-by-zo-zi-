@@ -2921,7 +2921,7 @@ def download_small_hotels_pdf(form_id):
     if 'inspector' not in session and 'admin' not in session:
         return redirect(url_for('login'))
 
-    inspection = get_small_hotels_inspection_details(form_id)
+    inspection = small_hotels_inspection_detail(form_id)
     if not inspection:
         return jsonify({'error': 'Inspection not found'}), 404
 
@@ -6170,6 +6170,44 @@ def get_security_metrics():
             print(f"Error sending message: {e}")
             return jsonify({'success': False, 'error': 'Failed to send message'}), 500
 
+    @app.route('/small_hotels/inspection/<int:id>')
+    def small_hotels_inspection_detail(id):
+        if 'inspector' not in session and 'admin' not in session:
+            return redirect(url_for('login'))
+
+        conn = sqlite3.connect('inspections.db')
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM inspections WHERE id = ? AND form_type = 'Small Hotel'", (id,))
+        inspection = cursor.fetchone()
+
+        if not inspection:
+            conn.close()
+            return "Small Hotels inspection not found", 404
+
+        inspection_dict = dict(inspection)
+
+        # Get individual scores from inspection_items table
+        cursor.execute("SELECT item_id, obser, error FROM inspection_items WHERE inspection_id = ?", (id,))
+        items = cursor.fetchall()
+
+        obser_scores = {}
+        error_scores = {}
+        for item in items:
+            obser_scores[item[0]] = item[1] or '0'
+            error_scores[item[0]] = item[2] or '0'
+
+        inspection_dict['obser'] = obser_scores
+        inspection_dict['error'] = error_scores
+
+        conn.close()
+
+        return render_template('small_hotels_inspection_detail.html',
+                               inspection=inspection_dict,
+                               checklist=SMALL_HOTELS_CHECKLIST_ITEMS)
+
+
     # 3. Route to get all users for contact list
     @app.route('/api/users')
     def get_all_users():
@@ -7907,6 +7945,41 @@ def migrate_remaining_fixed():
     return "<h1>Migration Results:</h1><ul>" + "".join(
         [f"<li>{r}</li>" for r in results]) + "</ul><br><a href='/admin/forms'>Check Form Management</a>"
 
+@app.route('/small_hotels/inspection/<int:id>')
+def small_hotels_inspection_detail(id):
+    if 'inspector' not in session and 'admin' not in session:
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('inspections.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM inspections WHERE id = ? AND form_type = 'Small Hotel'", (id,))
+    inspection = cursor.fetchone()
+
+    if not inspection:
+        conn.close()
+        return "Small Hotels inspection not found", 404
+
+    inspection_dict = dict(inspection)
+
+    # Get individual scores from inspection_items table
+    cursor.execute("SELECT item_id, obser, error FROM inspection_items WHERE inspection_id = ?", (id,))
+    items = cursor.fetchall()
+
+    obser_scores = {}
+    error_scores = {}
+    for item in items:
+        obser_scores[item[0]] = item[1] or '0'
+        error_scores[item[0]] = item[2] or '0'
+
+    inspection_dict['obser'] = obser_scores
+    inspection_dict['error'] = error_scores
+
+    conn.close()
+
+    return render_template('small_hotels_inspection_detail.html',
+                         inspection=inspection_dict)
 
 if __name__ == '__main__':
     init_db()
