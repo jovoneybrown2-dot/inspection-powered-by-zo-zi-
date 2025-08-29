@@ -1564,16 +1564,26 @@ def medical_officer():
         return redirect(url_for('login'))
     return render_template('medical_officer.html')
 
+
 @app.route('/dashboard')
 def dashboard():
+    # If admin is logged in, redirect to admin dashboard
     if 'admin' in session:
-        return redirect(url_for('admin'))  # Send admin users back to admin dashboard
+        return redirect(url_for('admin'))
+
+    # If inspector not logged in, redirect to login
     if 'inspector' not in session:
         return redirect(url_for('login'))
 
+    # Get inspector username from session
+    username = session.get('inspector')
+
     # Get inspections with proper Pass/Fail calculation
     inspections = get_inspections_with_status()
-    return render_template('dashboard.html', inspections=inspections)
+
+    # Pass BOTH username and inspections to template
+    return render_template('dashboard.html', username=username, inspections=inspections)
+
 
 def get_inspections_with_status():
     """Get inspections with calculated Pass/Fail status"""
@@ -1624,43 +1634,36 @@ def get_inspections_with_status():
 
             # Different criteria for different form types
             if inspection_data['form_type'] == 'Food Establishment':
-                # Food establishment: Pass if overall >= 70 and critical >= 70% of critical items
                 if overall_score >= 70 and critical_score >= 70:
                     inspection_data['result'] = 'Pass'
                 else:
                     inspection_data['result'] = 'Fail'
             elif inspection_data['form_type'] == 'Spirit Licence Premises':
-                # Spirit licence: Pass if overall >= 70 and critical >= 59
                 if overall_score >= 70 and critical_score >= 59:
                     inspection_data['result'] = 'Pass'
                 else:
                     inspection_data['result'] = 'Fail'
             elif inspection_data['form_type'] == 'Swimming Pool':
-                # Swimming pool: Pass if overall >= 70
                 if overall_score >= 70:
                     inspection_data['result'] = 'Pass'
                 else:
                     inspection_data['result'] = 'Fail'
             elif inspection_data['form_type'] == 'Small Hotel':
-                # Small hotel: Pass if overall >= 70
                 if overall_score >= 70:
                     inspection_data['result'] = 'Pass'
                 else:
                     inspection_data['result'] = 'Fail'
             elif inspection_data['form_type'] == 'Barbershop':
-                # Barbershop: Pass if overall >= 70 and meets critical threshold
                 if overall_score >= 70:
                     inspection_data['result'] = 'Satisfactory'
                 else:
                     inspection_data['result'] = 'Unsatisfactory'
             elif inspection_data['form_type'] == 'Institutional Health':
-                # Institutional: Pass if overall >= 70 and critical >= 50
                 if overall_score >= 70 and critical_score >= 50:
                     inspection_data['result'] = 'Pass'
                 else:
                     inspection_data['result'] = 'Fail'
             else:
-                # Default: Pass if overall >= 70
                 if overall_score >= 70:
                     inspection_data['result'] = 'Pass'
                 else:
@@ -5266,8 +5269,9 @@ def login_post():
             (login_type == 'inspector' and user['role'] == 'inspector') or
             (login_type == 'admin' and user['role'] == 'admin') or
             (login_type == 'medical_officer' and user['role'] == 'medical_officer')):
+
         session['user_id'] = user['id']
-        session[login_type] = True
+        session[login_type] = user['username']  # ✅ FIXED HERE
 
         # Record login attempt
         c.execute(
@@ -7157,6 +7161,18 @@ def edit_form(form_id):
                            items=items,
                            categories=categories,
                            is_edit=True)
+
+
+@app.route('/api/inspector/my_inspections')
+def get_my_inspections():
+    if 'inspector' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    inspector_name = session.get('inspector')  # or however you store the username
+    inspection_type = request.args.get('type', 'all')
+
+    # Query your database for inspections by this inspector
+    # Return JSON with inspections list
 
 
 @app.route('/admin/forms/create')

@@ -91,6 +91,12 @@
             flex: 2;
             margin-right: 20px;
         }
+        .score-box {
+            display: block;
+            width: 80px;
+            padding: 5px;
+            margin-top: 5px;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -113,21 +119,21 @@
             padding: 5px 10px;
             margin-top: 10px;
         }
-        .buttons {
+        .action-buttons {
             margin-top: 20px;
             text-align: center;
         }
-        .buttons button {
+        .action-buttons button {
             padding: 10px 20px;
             margin: 0 10px;
-            border: none;
-            border-radius: 5px;
-            background-color: #007bff;
+            background: #007BFF;
             color: white;
+            border: none;
             cursor: pointer;
+            border-radius: 5px;
         }
-        .buttons button:hover {
-            background-color: #0056b3;
+        .action-buttons button.email {
+            background: #28a745;
         }
         .score-message {
             margin-top: 10px;
@@ -148,12 +154,12 @@
                 <tr>
                     <td><label>Name of Premises:</label><div class="form-value">{{ premises_name }}</div></td>
                     <td><label>Owner/Agent/Occupier:</label><div class="form-value">{{ owner }}</div></td>
-                    <td><label>Critical Score:</label><div class="form-value">{{ critical_score }}</div></td>
+                    <td><label>Critical Score:</label><div class="form-value score-box">{{ critical_score }}</div></td>
                 </tr>
                 <tr>
                     <td><label>Address and Parish:</label><div class="form-value">{{ address }}</div></td>
                     <td><label>Inspector Name:</label><div class="form-value">{{ inspector_name }}</div></td>
-                    <td><label>Overall Score:</label><div class="form-value">{{ overall_score }}</div></td>
+                    <td><label>Overall Score:</label><div class="form-value score-box">{{ overall_score }}</div></td>
                 </tr>
                 <tr>
                     <td><label>Inspection Date:</label><div class="form-value">{{ inspection_date }}</div></td>
@@ -167,17 +173,21 @@
                 </tr>
                 <tr>
                     <td><label>Building Construction Type:</label><div class="form-value">{{ building_construction_type }}</div></td>
+                    <td><label>Purpose of Building:</label><div class="form-value">{{ purpose_of_building }}</div></td>
                     <td><label>Purpose of Visit:</label><div class="form-value">{{ purpose_of_visit }}</div></td>
-                    <td><label>Action:</label><div class="form-value">{{ action }}</div></td>
                 </tr>
                 <tr>
-                    <td><label>Barcode:</label><div class="barcode-container"><div class="barcode"></div><div class="barcode-line"></div></div></td>
+                    <td><label>Action:</label><div class="form-value">{{ action }}</div></td>
                     <td><label>No. of Bedrooms:</label><div class="form-value">{{ no_of_bedrooms }}</div></td>
                     <td><label>Total Population (Males/Females/Boys/Girls):</label><div class="form-value">{{ total_population }}</div></td>
                 </tr>
+                <tr>
+                    <td><label>Barcode:</label><div class="barcode-container"><div class="barcode"></div><div class="barcode-line"></div></div></td>
+                    <td colspan="2"></td>
+                </tr>
             </table>
-            <div id="scoreMessage" class="score-message {{ 'pass' if critical_score >= 59 and overall_score >= 70 else '' }}">
-                {{ 'Pass: Critical Score = ' + critical_score|string + ', Total Score = ' + overall_score|string if critical_score >= 59 and overall_score >= 70 else 'Fail: Critical Score = ' + critical_score|string + ' (needs 59+), Total Score = ' + overall_score|string + ' (needs 70+)' }}
+            <div id="scoreMessage" class="score-message {{ 'pass' if critical_score >= 50 and overall_score >= 70 else '' }}">
+                {{ 'Pass: Critical Score = ' + critical_score|string + ', Total Score = ' + overall_score|string if critical_score >= 50 and overall_score >= 70 else 'Fail: Critical Score = ' + critical_score|string + ' (needs 50+), Total Score = ' + overall_score|string + ' (needs 70+)' }}
             </div>
         </div>
 
@@ -210,6 +220,15 @@
                 {% endfor %}
                 <tr class="category-header"><td colspan="4">DRAINAGE (11-12)</td></tr>
                 {% for item in checklist if 11 <= item.id <= 12 %}
+                <tr class="{% if item.id == 12 %}important-weight{% endif %}">
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.desc }}</td>
+                    <td>{{ item.wt }}</td>
+                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
+                </tr>
+                {% endfor %}
+                <tr class="category-header"><td colspan="4">MOSQUITO CONTROL (13-14)</td></tr>
+                {% for item in checklist if 13 <= item.id <= 14 %}
                 <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
                     <td>{{ item.id }}</td>
                     <td>{{ item.desc }}</td>
@@ -217,9 +236,9 @@
                     <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
                 </tr>
                 {% endfor %}
-                <tr class="category-header"><td colspan="4">MOSQUITO CONTROL (13-16)</td></tr>
-                {% for item in checklist if 13 <= item.id <= 16 %}
-                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
+                <tr class="category-header"><td colspan="4">RODENT CONTROL (15-16)</td></tr>
+                {% for item in checklist if 15 <= item.id <= 16 %}
+                <tr class="{% if item.wt|float >= 4 or item.id == 15 or item.id == 16 %}important-weight{% endif %}">
                     <td>{{ item.id }}</td>
                     <td>{{ item.desc }}</td>
                     <td>{{ item.wt }}</td>
@@ -246,6 +265,15 @@
                 {% endfor %}
                 <tr class="category-header"><td colspan="4">OTHER OPERATIONS (22)</td></tr>
                 {% for item in checklist if item.id == 22 %}
+                <tr>
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.desc }}</td>
+                    <td>{{ item.wt }}</td>
+                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
+                </tr>
+                {% endfor %}
+                <tr class="category-header"><td colspan="4">SOLID WASTE MANAGEMENT (23-24)</td></tr>
+                {% for item in checklist if 23 <= item.id <= 24 %}
                 <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
                     <td>{{ item.id }}</td>
                     <td>{{ item.desc }}</td>
@@ -253,20 +281,10 @@
                     <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
                 </tr>
                 {% endfor %}
-            </table>
-        </div>
-
-        <div class="form-section">
-            <h2>Solid Waste Management</h2>
-            <table>
-                <tr>
-                    <th>Description</th>
-                    <th>Weight</th>
-                    <th>Score</th>
-                </tr>
-                <tr class="category-header"><td colspan="3">SOLID WASTE MANAGEMENT</td></tr>
-                {% for item in checklist if 23 <= item.id <= 25 %}
-                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
+                <tr class="category-header"><td colspan="4">COMPOUND (25-26)</td></tr>
+                {% for item in checklist if 25 <= item.id <= 26 %}
+                <tr class="{% if item.id == 26 %}important-weight{% endif %}">
+                    <td>{{ item.id }}</td>
                     <td>{{ item.desc }}</td>
                     <td>{{ item.wt }}</td>
                     <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
@@ -288,7 +306,7 @@
             </div>
         </div>
 
-        <div class="buttons">
+        <div class="action-buttons">
             <button onclick="window.print()">Print</button>
             <button onclick="downloadPDF()">Download</button>
             <button onclick="shareForm()">Share</button>

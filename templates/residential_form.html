@@ -474,7 +474,7 @@
                         {% endfor %}
                         <tr class="category-header"><td colspan="4">RODENT CONTROL (15-16)</td></tr>
                         {% for item in checklist if 15 <= item.id <= 16 %}
-                        <tr class="{% if item.wt|float >= 4 or item.id == 16 %}important-weight{% endif %}">
+                        <tr class="{% if item.wt|float >= 4 or item.id == 15 or item.id == 16 %}important-weight{% endif %}">
                             <td>{{ item.id }}</td>
                             <td>{{ item.desc }}</td>
                             <td>{{ item.wt }}</td>

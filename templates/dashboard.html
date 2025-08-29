@@ -42,6 +42,8 @@
             border-radius: 8px;
         }
 
+
+
         .logout-button, .task-button {
             padding: 8px 16px;
             color: white;
@@ -54,6 +56,167 @@
             text-decoration: none;
             display: inline-block;
         }
+
+
+        /* My Inspections Button */
+.my-inspections-button {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    position: relative;
+    padding: 10px 18px;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    box-shadow: 0 3px 8px rgba(0, 123, 255, 0.3);
+}
+
+.my-inspections-button:hover {
+    background: linear-gradient(135deg, #0069d9, #004a99);
+    box-shadow: 0 5px 12px rgba(0, 123, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+/* Welcome Message */
+.welcome-message {
+    text-align: center;
+    margin-top: 80px;
+    margin-bottom: 20px;
+    background: rgba(0, 123, 255, 0.05);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+    border-left: 6px solid #007bff;
+}
+
+.welcome-text {
+    font-size: 28px;
+    font-weight: bold;
+    color: #0034DE; /* Change to desired color, e.g., blue */
+    margin: 0;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    transition: color 0.3s ease;
+}
+.welcome-message:hover .welcome-text {
+    color: #64DE00
+; /* Hover color effect */
+}
+
+/* My Inspections Modal Styles */
+.my-inspections-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+.my-inspections-table th,
+.my-inspections-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e0e6ed;
+}
+
+.my-inspections-table th {
+    background-color: #007bff;
+    font-weight: bold;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.my-inspections-table tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+    cursor: pointer;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* Pass / Fail and others in blue tones */
+.status-pass {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+.status-fail {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.status-completed {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-satisfactory {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+.status-unsatisfactory {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Loading Spinner */
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 2s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* No Inspections */
+.no-inspections {
+    text-align: center;
+    padding: 40px;
+    color: #555;
+    font-style: italic;
+}
+
+/* Modal Filter */
+.modal-filter {
+    margin-bottom: 20px;
+    padding: 12px;
+    background: rgba(0, 123, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid #e0e6ed;
+}
+
+.modal-filter select {
+    padding: 6px 12px;
+    margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    outline: none;
+    transition: border 0.3s;
+}
+
+.modal-filter select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+}
 
         .logout-button {
             background: #dc3545;
@@ -917,20 +1080,23 @@
 <body>
     <div class="container">
         <div class="header-buttons">
-            <form method="POST" action="/logout" style="display: inline;">
-                <button type="submit" class="logout-button">Logout</button>
-            </form>
-            <button class="task-button" onclick="openTaskModal()">
-                Tasks
-                <span id="task-notification-badge" class="task-notification-badge"></span>
-            </button>
-        </div>
+    <form method="POST" action="/logout" style="display: inline;">
+        <button type="submit" class="logout-button">Logout</button>
+    </form>
+    <button class="task-button" onclick="openTaskModal()">
+        Tasks
+        <span id="task-notification-badge" class="task-notification-badge"></span>
+    </button>
+    <button class="task-button" onclick="openMyInspectionsModal()">
+        My Inspections
+    </button>
+</div>
 
         <div class="header-logo">
             <img src="{{ url_for('static', filename='wrha.PNG') }}" alt="WRHA Logo">
         </div>
 
-        <h1>Inspector Dashboard</h1>
+        <div class="welcome-message"><h1 class="welcome-text" id="welcomeTitle">Inspector Dashboard</h1></div>
         <div class="form-select">
             <select id="form-type">
                 <option value="" selected>Select a Form</option>
@@ -1181,6 +1347,32 @@
             </div>
         </div>
     </div>
+
+
+    <!-- My Inspections Modal -->
+<div class="task-modal" id="myInspectionsModal">
+    <div class="task-modal-content">
+        <span class="close-modal" onclick="closeMyInspectionsModal()">&times;</span>
+        <h2>My Inspections</h2>
+        <div id="my-inspections-loading" style="display: none;">
+            <p>Loading your inspections...</p>
+        </div>
+        <div class="tab-container" style="margin-bottom: 20px;">
+            <div class="tab active" data-inspection-tab="all">All</div>
+            <div class="tab" data-inspection-tab="food">Food</div>
+            <div class="tab" data-inspection-tab="residential">Residential</div>
+            <div class="tab" data-inspection-tab="burial">Burial</div>
+            <div class="tab" data-inspection-tab="spirit_licence">Spirit Licence</div>
+            <div class="tab" data-inspection-tab="swimming_pool">Swimming Pool</div>
+            <div class="tab" data-inspection-tab="small_hotels">Small Hotels</div>
+            <div class="tab" data-inspection-tab="barbershop">Barbershop</div>
+            <div class="tab" data-inspection-tab="institutional">Institutional</div>
+        </div>
+        <div id="my-inspections-container">
+            <!-- My inspections will be loaded here -->
+        </div>
+    </div>
+</div>
 
     <div class="modal" id="inspectionModal">
         <div class="modal-content">
@@ -2431,13 +2623,17 @@
             }
         }
 
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('taskModal');
-            if (event.target === modal) {
-                closeTaskModal();
-            }
-        }
+        // Update the existing window.onclick function
+window.onclick = function(event) {
+    const taskModal = document.getElementById('taskModal');
+    const inspectionsModal = document.getElementById('myInspectionsModal');
+    if (event.target === taskModal) {
+        closeTaskModal();
+    }
+    if (event.target === inspectionsModal) {
+        closeMyInspectionsModal();
+    }
+}
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
@@ -2455,6 +2651,155 @@
             startTaskPolling();
             console.log('Inspector Dashboard initialized successfully!');
         });
+
+        // Welcome message variations
+const welcomeMessages = [
+    "Welcome back",
+    "Hey, welcome back Inspector",
+    "Waa gwaan Inspector",
+    "Good to see you back Inspector",
+    "Welcome Inspector",
+    "Hey there Inspector",
+    "Nice to have you back Inspector",
+    "Welcome back to work Inspector",
+    "Ready for another day Inspector"
+];
+
+// Set personalized welcome message
+function setWelcomeMessage() {
+    const randomMessage = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
+    // You'll need to pass the username from your backend - for now using placeholder
+    const username = "{{ username }}"; // This should be replaced with actual template variable
+    document.getElementById('welcomeTitle').textContent = `${randomMessage} ${username}!`;
+}
+
+// My Inspections functions
+function openMyInspectionsModal() {
+    document.getElementById('myInspectionsModal').classList.add('open');
+    loadMyInspections('all');
+
+    // Add event listeners for inspection tabs
+    document.querySelectorAll('[data-inspection-tab]').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('[data-inspection-tab]').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            loadMyInspections(tab.dataset.inspectionTab);
+        });
+    });
+}
+
+function closeMyInspectionsModal() {
+    document.getElementById('myInspectionsModal').classList.remove('open');
+}
+
+async function loadMyInspections(type = 'all') {
+    const container = document.getElementById('my-inspections-container');
+    const loadingDiv = document.getElementById('my-inspections-loading');
+
+    loadingDiv.style.display = 'block';
+    container.innerHTML = '';
+
+    try {
+        const response = await fetch(`/api/inspector/my_inspections?type=${type}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const data = await response.json();
+        loadingDiv.style.display = 'none';
+
+        if (data.inspections && data.inspections.length > 0) {
+            const table = document.createElement('table');
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Establishment/Premises</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            `;
+
+            const tbody = table.querySelector('tbody');
+
+            data.inspections.forEach(inspection => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${inspection.id}</td>
+                    <td>${inspection.type}</td>
+                    <td>${inspection.establishment_name || inspection.premises_name || 'N/A'}</td>
+                    <td>${new Date(inspection.created_at).toLocaleDateString()}</td>
+                    <td><span class="status-${inspection.result ? inspection.result.toLowerCase() : 'unknown'}">${inspection.result || 'N/A'}</span></td>
+                    <td><button onclick="viewInspection('${inspection.type}', ${inspection.id})" class="task-btn" style="background: #007bff;">View</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            container.appendChild(table);
+        } else {
+            container.innerHTML = `
+                <div class="empty-tasks">
+                    <i>📋</i>
+                    <p>No inspections found.</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading my inspections:', error);
+        loadingDiv.style.display = 'none';
+        container.innerHTML = `
+            <div class="empty-tasks">
+                <i>❌</i>
+                <p>Error loading inspections. Please try again.</p>
+            </div>
+        `;
+    }
+}
+
+function viewInspection(type, id) {
+    let url;
+    switch(type) {
+        case 'food':
+            url = `/inspection/${id}`;
+            break;
+        case 'residential':
+            url = `/residential/inspection/${id}`;
+            break;
+        case 'burial':
+            url = `/burial/inspection/${id}`;
+            break;
+        case 'spirit_licence':
+            url = `/spirit_licence/inspection/${id}`;
+            break;
+        case 'swimming_pool':
+            url = `/swimming_pool/inspection/${id}`;
+            break;
+        case 'small_hotels':
+            url = `/small_hotels/inspection/${id}`;
+            break;
+        case 'barbershop':
+            url = `/barbershop/inspection/${id}`;
+            break;
+        case 'institutional':
+            url = `/institutional/inspection/${id}`;
+            break;
+        default:
+            url = `/inspection/${id}`;
+    }
+    window.open(url, '_blank');
+}
+
+// Update the DOMContentLoaded event listener to include welcome message
+document.addEventListener('DOMContentLoaded', () => {
+    setWelcomeMessage(); // Add this line
+    loadStats();
+    loadForms('overview');
+    updateTaskNotificationBadge();
+    startTaskPolling();
+    console.log('Inspector Dashboard initialized successfully!');
+});
     </script>
 </body>
 </html>
