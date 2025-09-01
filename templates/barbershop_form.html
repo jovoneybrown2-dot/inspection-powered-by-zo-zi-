@@ -127,14 +127,17 @@
             font-size: 12px;
         }
 
+        /* Header styling */
         .section-header {
-            background-color: #d0d0d0;
+            background-color: white;
             font-weight: bold;
-            text-transform: uppercase;
+            padding: 8px;
+            border: 1px solid #ccc;
         }
 
+        /* Critical items styling */
         .critical-item {
-            background-color: rgba(255, 255, 0, 0.2);
+            background-color: #d6d8db;
         }
 
         .signature-section {
@@ -215,7 +218,7 @@
             <div class="page-number">Page 1 of 1</div>
 
             <div class="form-header">
-                <div class="form-number">NO. 10301</div>
+                <div class="form-number"></div>
                 <div class="form-title">Ministry of Health<br>Barbershop & Beauty Salon Inspection Form</div>
             </div>
 
@@ -710,9 +713,9 @@
             document.getElementById('overall_score').value = overallScore.toFixed(1);
             document.getElementById('critical_score').value = criticalScore.toFixed(1);
 
-            // Auto-update compliance result based on scores (example thresholds)
+            // Updated compliance result thresholds: ≥70 overall, ≥64 critical = Satisfactory
             const resultRadios = document.querySelectorAll('input[name="result"]');
-            if (overallScore >= 70 && criticalScore >= 50) {
+            if (overallScore >= 70 && criticalScore >= 64) {
                 resultRadios[0].checked = true; // Satisfactory
             } else {
                 resultRadios[1].checked = true; // Unsatisfactory
