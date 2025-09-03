@@ -38,17 +38,19 @@
         }
         .score-box {
             text-align: center;
-            font-size: 18px;
+            font-size: 24px;
             font-weight: bold;
             color: #009b3a;
             margin-bottom: 20px;
-            padding: 10px;
-            border: 2px solid #ffd200;
-            border-radius: 5px;
-            background: rgba(255, 255, 255, 0.9);
-            width: 150px;
+            padding: 15px;
+            border: 3px solid #ffd200;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            width: 200px;
             margin-left: auto;
             margin-right: auto;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
         }
         table {
             width: 100%;
@@ -458,36 +460,124 @@
     </div>
 
     <script>
-        const form = document.getElementById('inspectionForm');
-        const radios = document.querySelectorAll('input[type="radio"]');
-        const percentageScore = document.getElementById('percentageScore');
+        function initializeScoring() {
+            console.log('Initializing scoring system...');
 
-        // Maximum possible score from your checklist
-        const actualMaxScore = 100; // Total of all possible points
+            // Corrected maximum score - should be 100, not 102.5
+            const MAX_SCORE = 100;
 
-        function updateScore() {
-            let totalScore = 0;
+            function calculateScore() {
+                let total = 0;
+                let checkedItems = 0;
 
-            // Calculate total score from all radio buttons
-            radios.forEach(radio => {
-                if (radio.checked) {
-                    totalScore += parseFloat(radio.value);
+                // All radio button groups - REMOVED score_3D as it doesn't exist
+                const radioGroups = [
+                    'score_1A', 'score_1B', 'score_1C', 'score_1D', 'score_1E', 'score_1F', 'score_1G', 'score_1H',
+                    'score_2A', 'score_2B', 'score_2C', 'score_2D', 'score_2E', 'score_2F', 'score_2G', 'score_2H', 'score_2I', 'score_2J',
+                    'score_3A', 'score_3B', 'score_3C',
+                    'score_4A', 'score_4B',
+                    'score_5A', 'score_5B',
+                    'score_6A', 'score_6B', 'score_6C', 'score_6D',
+                    'score_7A', 'score_7B', 'score_7C', 'score_7D', 'score_7E',
+                    'score_8A', 'score_8B', 'score_8C',
+                    'score_9A', 'score_9B', 'score_9C'
+                ];
+
+                radioGroups.forEach(groupName => {
+                    const selectedRadio = document.querySelector(`input[name="${groupName}"]:checked`);
+                    if (selectedRadio) {
+                        const points = parseFloat(selectedRadio.value) || 0;
+                        total += points;
+                        checkedItems++;
+                        console.log(`${groupName}: ${points} points`);
+                    }
+                });
+
+                // Calculate percentage
+                const percentage = Math.min(100, Math.round((total / MAX_SCORE) * 100));
+                console.log(`Total: ${total}/${MAX_SCORE} = ${percentage}% (${checkedItems} items checked)`);
+
+                return { percentage, total, checkedItems };
+            }
+
+            function updateDisplay() {
+                const { percentage, total } = calculateScore();
+
+                // Update score display
+                const scoreElement = document.getElementById('percentageScore');
+                if (scoreElement) {
+                    scoreElement.textContent = percentage + '%';
+                    console.log('Display updated to:', percentage + '%');
+                } else {
+                    console.error('Score element not found!');
                 }
-            });
 
-            // Update display
-            const percentage = Math.round((totalScore / actualMaxScore) * 100);
-            percentageScore.textContent = percentage + '%';
+                // Update colors
+                const scoreBox = document.querySelector('.score-box');
+                if (scoreBox && scoreElement) {
+                    if (percentage >= 90) {
+                        scoreBox.style.borderColor = '#28a745';
+                        scoreBox.style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
+                        scoreElement.style.color = '#28a745';
+                    } else if (percentage >= 80) {
+                        scoreBox.style.borderColor = '#009b3a';
+                        scoreBox.style.backgroundColor = 'rgba(0, 155, 58, 0.1)';
+                        scoreElement.style.color = '#009b3a';
+                    } else if (percentage >= 60) {
+                        scoreBox.style.borderColor = '#ffc107';
+                        scoreBox.style.backgroundColor = 'rgba(255, 193, 7, 0.1)';
+                        scoreElement.style.color = '#e6b800';
+                    } else {
+                        scoreBox.style.borderColor = '#dc3545';
+                        scoreBox.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
+                        scoreElement.style.color = '#dc3545';
+                    }
+
+                    // Animation
+                    scoreBox.style.transform = 'scale(1.02)';
+                    setTimeout(() => {
+                        scoreBox.style.transform = 'scale(1)';
+                    }, 150);
+                }
+            }
+
+            // Attach event listeners to all radio buttons
+            function attachListeners() {
+                const radios = document.querySelectorAll('input[type="radio"]');
+                console.log('Found', radios.length, 'radio buttons');
+
+                radios.forEach((radio, index) => {
+                    radio.addEventListener('change', function() {
+                        console.log(`Radio ${index} changed: ${this.name} = ${this.value}`);
+                        setTimeout(updateDisplay, 10);
+                    });
+
+                    radio.addEventListener('click', function() {
+                        console.log(`Radio ${index} clicked: ${this.name} = ${this.value}`);
+                        setTimeout(updateDisplay, 10);
+                    });
+                });
+            }
+
+            // Initialize everything
+            attachListeners();
+            updateDisplay();
         }
 
-        // Add event listeners to all radio buttons
-        radios.forEach(radio => {
-            radio.addEventListener('change', updateScore);
-        });
+        // Try multiple initialization methods
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeScoring);
+        } else {
+            initializeScoring();
+        }
 
-        // Enhanced Form submission handler (same as Small Hotels)
+        // Backup initialization
+        setTimeout(initializeScoring, 100);
+        setTimeout(initializeScoring, 500);
+
+        // Form submission handler
         document.getElementById('inspectionForm').addEventListener('submit', function(e) {
-            e.preventDefault(); // Prevent default form submission
+            e.preventDefault();
 
             const submitBtn = document.getElementById('submit-btn');
             const originalText = submitBtn.textContent;
@@ -518,19 +608,15 @@
             });
         });
 
-        // Enhanced success popup function
         function showEnhancedSuccessPopup(data) {
-            // Remove any existing popup
             const existingPopup = document.getElementById('successPopupOverlay');
             if (existingPopup) {
                 existingPopup.remove();
             }
 
-            // Get inspection details from response
             const details = data.inspection_details || {};
             const scores = details.scores || {};
 
-            // Create popup overlay
             const popup = document.createElement('div');
             popup.id = 'successPopupOverlay';
             popup.style.cssText = `
@@ -547,7 +633,6 @@
                 animation: fadeIn 0.3s ease-out;
             `;
 
-            // Create popup content
             const popupContent = document.createElement('div');
             popupContent.style.cssText = `
                 background: white;
@@ -563,18 +648,14 @@
 
             popupContent.innerHTML = `
                 <div style="padding: 30px;">
-                    <!-- Success Header -->
                     <div style="text-align: center; margin-bottom: 25px;">
                         <div style="font-size: 60px; color: #009b3a; margin-bottom: 15px;">🏊‍♂️</div>
                         <h2 style="color: #009b3a; margin: 0; font-size: 24px; font-weight: bold;">
                             Swimming Pool Inspection Successfully Submitted!
                         </h2>
                     </div>
-
-                    <!-- Inspection Summary -->
                     <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px; border-left: 4px solid #009b3a;">
                         <h3 style="color: #009b3a; margin: 0 0 15px 0; font-size: 18px;">Inspection Summary</h3>
-
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
                             <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
                                 <span style="font-weight: bold; color: #495057;">Inspection ID:</span>
@@ -585,17 +666,14 @@
                                 <span>${details.inspection_date || 'N/A'}</span>
                             </div>
                         </div>
-
                         <div style="margin-bottom: 15px; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
                             <span style="font-weight: bold; color: #495057;">Pool Operator:</span>
                             <span style="margin-left: 10px;">${details.establishment_name || 'N/A'}</span>
                         </div>
-
                         <div style="margin-bottom: 15px; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
                             <span style="font-weight: bold; color: #495057;">Inspector:</span>
                             <span style="margin-left: 10px;">${details.inspector_name || 'N/A'}</span>
                         </div>
-
                         <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
                             <span style="font-weight: bold; color: #495057;">Result:</span>
                             <span style="padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 14px;
@@ -605,8 +683,6 @@
                             </span>
                         </div>
                     </div>
-
-                    <!-- Scores Section -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
                         <div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px; border: 2px solid ${scores.overall >= 70 ? '#009b3a' : '#dc3545'};">
                             <div style="font-size: 32px; font-weight: bold; color: ${scores.overall >= 70 ? '#009b3a' : '#dc3545'}; margin-bottom: 5px;">
@@ -621,8 +697,6 @@
                             <div style="font-size: 14px; font-weight: bold; color: #495057;">Critical Items</div>
                         </div>
                     </div>
-
-                    <!-- Action Buttons -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
                         <button id="backToDashboard" style="padding: 12px 20px; background: #009b3a; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s;">
                             Back to Dashboard
@@ -631,8 +705,6 @@
                             Stay on Page
                         </button>
                     </div>
-
-                    <!-- Auto-redirect Notice -->
                     <div id="autoRedirectNotice" style="text-align: center; padding: 15px; background: #e7f3ff; border-radius: 6px; border-left: 4px solid #0066cc;">
                         <p style="margin: 0; color: #0066cc; font-weight: bold;">
                             🕒 Redirecting to dashboard in <span id="redirectCounter">5</span> seconds...
@@ -644,7 +716,6 @@
                 </div>
             `;
 
-            // Add CSS animations
             const style = document.createElement('style');
             style.textContent = `
                 @keyframes fadeIn {
@@ -661,28 +732,22 @@
             popup.appendChild(popupContent);
             document.body.appendChild(popup);
 
-            // Add button hover effects
             const backBtn = document.getElementById('backToDashboard');
             const stayBtn = document.getElementById('stayOnPage');
 
             backBtn.addEventListener('mouseenter', () => backBtn.style.background = '#007b2f');
             backBtn.addEventListener('mouseleave', () => backBtn.style.background = '#009b3a');
-
             stayBtn.addEventListener('mouseenter', () => stayBtn.style.background = '#5a6268');
             stayBtn.addEventListener('mouseleave', () => stayBtn.style.background = '#6c757d');
 
-            // Add event listeners
             backBtn.addEventListener('click', redirectToDashboard);
             stayBtn.addEventListener('click', closeSuccessPopup);
 
-            // Start auto-redirect countdown
-            startRedirectCountdown(5); // 5 seconds countdown
+            startRedirectCountdown(5);
         }
 
-        // Countdown and auto-redirect function
         function startRedirectCountdown(seconds) {
             const counter = document.getElementById('redirectCounter');
-            const notice = document.getElementById('autoRedirectNotice');
             let timeLeft = seconds;
 
             const countdown = setInterval(() => {
@@ -697,18 +762,15 @@
                 }
             }, 1000);
 
-            // Store the interval ID so we can cancel it if user chooses to stay
             window.redirectCountdownInterval = countdown;
         }
 
-        // Redirect to dashboard function
         function redirectToDashboard() {
             if (window.redirectCountdownInterval) {
                 clearInterval(window.redirectCountdownInterval);
             }
             closeSuccessPopup();
 
-            // Reset the submit button before redirecting
             const submitBtn = document.getElementById('submit-btn');
             if (submitBtn) {
                 submitBtn.textContent = 'Submit';
@@ -718,7 +780,6 @@
             window.location.href = '/dashboard';
         }
 
-        // Close popup function
         function closeSuccessPopup() {
             if (window.redirectCountdownInterval) {
                 clearInterval(window.redirectCountdownInterval);
@@ -728,16 +789,12 @@
                 popup.remove();
             }
 
-            // Reset the submit button
             const submitBtn = document.getElementById('submit-btn');
             if (submitBtn) {
                 submitBtn.textContent = 'Submit';
                 submitBtn.disabled = false;
             }
         }
-
-        // Initialize score calculation
-        updateScore();
     </script>
 </body>
 </html>

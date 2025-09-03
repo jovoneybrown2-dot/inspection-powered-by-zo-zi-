@@ -108,7 +108,7 @@
         }
 
         .inspection-table th {
-            background-color: #f0f0f0;
+            background-color: #d0d0d0;
             font-weight: bold;
         }
 
@@ -120,7 +120,7 @@
         }
 
         .critical-item {
-            background-color: #e6e6e6;
+            background-color: #d0d0d0;
         }
 
         .score-cell {
@@ -333,7 +333,7 @@
                         <td class="score-cell"><input type="number" class="score-input" name="obser_1a" min="0" value="{{ inspection.obser.get('1a', '') if inspection else '' }}"></td>
                         <td class="score-cell"><input type="number" class="score-input" name="error_1a" min="0" value="{{ inspection.error.get('1a', '') if inspection else '' }}"></td>
                     </tr>
-                    <tr class="critical-item">
+                    <tr>
                         <td>B</td>
                         <td>Food Handlers have valid food handlers permits</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_1b" min="0" value="{{ inspection.obser.get('1b', '') if inspection else '' }}"></td>
@@ -527,7 +527,7 @@
                         <td class="score-cell"><input type="number" class="score-input" name="obser_5a" min="0" value="{{ inspection.obser.get('5a', '') if inspection else '' }}"></td>
                         <td class="score-cell"><input type="number" class="score-input" name="error_5a" min="0" value="{{ inspection.error.get('5a', '') if inspection else '' }}"></td>
                     </tr>
-                    <tr class="critical-item">
+                    <tr>
                         <td>B</td>
                         <td>Dishes identified and labelled</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_5b" min="0" value="{{ inspection.obser.get('5b', '') if inspection else '' }}"></td>
@@ -539,19 +539,19 @@
                         <td class="score-cell"><input type="number" class="score-input" name="obser_5c" min="0" value="{{ inspection.obser.get('5c', '') if inspection else '' }}"></td>
                         <td class="score-cell"><input type="number" class="score-input" name="error_5c" min="0" value="{{ inspection.error.get('5c', '') if inspection else '' }}"></td>
                     </tr>
-                    <tr>
+                    <tr class="critical-item">
                         <td>D</td>
                         <td>Sufficient, appropriate utensils on service line</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_5d" min="0" value="{{ inspection.obser.get('5d', '') if inspection else '' }}"></td>
                         <td class="score-cell"><input type="number" class="score-input" name="error_5d" min="0" value="{{ inspection.error.get('5d', '') if inspection else '' }}"></td>
                     </tr>
-                    <tr>
+                    <tr class="critical-item">
                         <td>E</td>
                         <td>Hot holding temperatures > 63°C</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_5e" min="0" value="{{ inspection.obser.get('5e', '') if inspection else '' }}"></td>
                         <td class="score-cell"><input type="number" class="score-input" name="error_5e" min="0" value="{{ inspection.error.get('5e', '') if inspection else '' }}"></td>
                     </tr>
-                    <tr>
+                    <tr class="critical-item">
                         <td>F</td>
                         <td>Cold holding temperatures ≤ 5°C</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_5f" min="0" value="{{ inspection.obser.get('5f', '') if inspection else '' }}"></td>
@@ -568,7 +568,7 @@
                         <td class="score-cell"><input type="number" class="score-input" name="obser_6a" min="0" value="{{ inspection.obser.get('6a', '') if inspection else '' }}"></td>
                         <td class="score-cell"><input type="number" class="score-input" name="error_6a" min="0" value="{{ inspection.error.get('6a', '') if inspection else '' }}"></td>
                     </tr>
-                    <tr class="critical-item">
+                    <tr>
                         <td>B</td>
                         <td>Equipped with hot and cold water, soap dispenser and hand drying facility</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_6b" min="0" value="{{ inspection.obser.get('6b', '') if inspection else '' }}"></td>
@@ -585,7 +585,7 @@
                         <td class="score-cell"><input type="number" class="score-input" name="obser_7a" min="0" value="{{ inspection.obser.get('7a', '') if inspection else '' }}"></td>
                         <td class="score-cell"><input type="number" class="score-input" name="error_7a" min="0" value="{{ inspection.error.get('7a', '') if inspection else '' }}"></td>
                     </tr>
-                    <tr>
+                    <tr class="critical-item">
                         <td>B</td>
                         <td>Food areas kept clean, free from vermin and unpleasant odours</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_7b" min="0" value="{{ inspection.obser.get('7b', '') if inspection else '' }}"></td>
@@ -632,13 +632,13 @@
                         <td class="score-cell"><input type="number" class="score-input" name="obser_8a" min="0" value="{{ inspection.obser.get('8a', '') if inspection else '' }}"></td>
                         <td class="score-cell"><input type="number" class="score-input" name="error_8a" min="0" value="{{ inspection.error.get('8a', '') if inspection else '' }}"></td>
                     </tr>
-                    <tr class="critical-item">
+                    <tr>
                         <td>B</td>
                         <td>Smooth, cleanable, corrosion resistant</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_8b" min="0" value="{{ inspection.obser.get('8b', '') if inspection else '' }}"></td>
                         <td class="score-cell"><input type="number" class="score-input" name="error_8b" min="0" value="{{ inspection.error.get('8b', '') if inspection else '' }}"></td>
                     </tr>
-                    <tr class="critical-item">
+                    <tr>
                         <td>C</td>
                         <td>Proper storage and use of clean utensils</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_8c" min="0" value="{{ inspection.obser.get('8c', '') if inspection else '' }}"></td>
@@ -661,7 +661,7 @@
                         <td class="score-cell"><input type="number" class="score-input" name="obser_9b" min="0" value="{{ inspection.obser.get('9b', '') if inspection else '' }}"></td>
                         <td class="score-cell"><input type="number" class="score-input" name="error_9b" min="0" value="{{ inspection.error.get('9b', '') if inspection else '' }}"></td>
                     </tr>
-                    <tr>
+                    <tr class="critical-item">
                         <td>C</td>
                         <td>Living quarters, toilets, washrooms, locker separated from areas where food is handled</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_9c" min="0" value="{{ inspection.obser.get('9c', '') if inspection else '' }}"></td>
@@ -678,7 +678,7 @@
                         <td class="score-cell"><input type="number" class="score-input" name="obser_10a" min="0" value="{{ inspection.obser.get('10a', '') if inspection else '' }}"></td>
                         <td class="score-cell"><input type="number" class="score-input" name="error_10a" min="0" value="{{ inspection.error.get('10a', '') if inspection else '' }}"></td>
                     </tr>
-                    <tr>
+                    <tr class="critical-item">
                         <td>B</td>
                         <td>Proper water temperature</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_10b" min="0" value="{{ inspection.obser.get('10b', '') if inspection else '' }}"></td>
@@ -707,7 +707,7 @@
                     <tr>
                         <td colspan="4" class="section-header">11 - Waste Management: Waste Containers (3%)</td>
                     </tr>
-                    <tr class="critical-item">
+                    <tr>
                         <td>A</td>
                         <td>Appropriate design, convenient placement</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_11a" min="0" value="{{ inspection.obser.get('11a', '') if inspection else '' }}"></td>
@@ -719,7 +719,7 @@
                         <td class="score-cell"><input type="number" class="score-input" name="obser_11b" min="0" value="{{ inspection.obser.get('11b', '') if inspection else '' }}"></td>
                         <td class="score-cell"><input type="number" class="score-input" name="error_11b" min="0" value="{{ inspection.error.get('11b', '') if inspection else '' }}"></td>
                     </tr>
-                    <tr class="critical-item">
+                    <tr>
                         <td>C</td>
                         <td>Emptied as often as necessary</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_11c" min="0" value="{{ inspection.obser.get('11c', '') if inspection else '' }}"></td>
@@ -730,7 +730,7 @@
                     <tr>
                         <td colspan="4" class="section-header">12 - Solid Waste Storage Area (4%)</td>
                     </tr>
-                    <tr class="critical-item">
+                    <tr>
                         <td>A</td>
                         <td>Insect and vermin-proof containers provided where required</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_12a" min="0" value="{{ inspection.obser.get('12a', '') if inspection else '' }}"></td>
@@ -828,13 +828,13 @@
                     <tr>
                         <td colspan="4" class="section-header">18 - Grey Water Facilities (1%)</td>
                     </tr>
-                    <tr class="critical-item">
+                    <tr>
                         <td>A</td>
                         <td>Traps and vent in good condition</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_19a" min="0" value="{{ inspection.obser.get('19a', '') if inspection else '' }}"></td>
                         <td class="score-cell"><input type="number" class="score-input" name="error_19a" min="0" value="{{ inspection.error.get('19a', '') if inspection else '' }}"></td>
                     </tr>
-                    <tr class="critical-item">
+                    <tr>
                         <td>B</td>
                         <td>Floor drains clear and drain freely</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_19b" min="0" value="{{ inspection.obser.get('19b', '') if inspection else '' }}"></td>

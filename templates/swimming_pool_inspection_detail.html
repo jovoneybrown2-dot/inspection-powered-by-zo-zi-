@@ -212,7 +212,7 @@
             </tr>
             <tr>
                 <td>C</td>
-                <td>Date of last testing <input type="text" class="date-input-field" placeholder="DD/MM/YYYY"> within required frequency</td>
+                <td>Date of last testing within required frequency</td>
                 <td><div class="checkbox-group">
                     <span class="{{ 'score-yes' if inspection.score_1C|default(0)|float > 0 else 'score-no' }}">
                         {{ 'Yes' if inspection.score_1C|default(0)|float > 0 else 'No' }}
@@ -296,7 +296,7 @@
             </tr>
             <tr class="critical">
                 <td>C</td>
-                <td>All surfaces of the deck and pool free from</td>
+                <td>All surfaces of the deck and pool free from obstruction that can cause accident/injury</td>
                 <td><div class="checkbox-group">
                     <span class="{{ 'score-yes' if inspection.score_2C|default(0)|float > 0 else 'score-no' }}">
                         {{ 'Yes' if inspection.score_2C|default(0)|float > 0 else 'No' }}
@@ -336,7 +336,7 @@
             </tr>
             <tr class="critical">
                 <td>G</td>
-                <td>At least two suction orifices equipped with anti-</td>
+                <td>At least two suction orifices equipped with anti-vortex plates</td>
                 <td><div class="checkbox-group">
                     <span class="{{ 'score-yes' if inspection.score_2G|default(0)|float > 0 else 'score-no' }}">
                         {{ 'Yes' if inspection.score_2G|default(0)|float > 0 else 'No' }}
@@ -390,7 +390,7 @@
             </tr>
             <tr class="critical">
                 <td>B</td>
-                <td>Chlorine residual > 0.5 mg/l. Level</td>
+                <td>Chlorine residual > 0.5 mg/l- Level</td>
                 <td><div class="checkbox-group">
                     <span class="{{ 'score-yes' if inspection.score_3B|default(0)|float > 0 else 'score-no' }}">
                         {{ 'Yes' if inspection.score_3B|default(0)|float > 0 else 'No' }}
@@ -406,16 +406,6 @@
                         {{ 'Yes' if inspection.score_3C|default(0)|float > 0 else 'No' }}
                     </span>
                     <span class="score-display">({{ inspection.score_3C|default(0) }} pts)</span>
-                </div></td>
-            </tr>
-            <tr>
-                <td>D</td>
-                <td>Well supplied and equipped</td>
-                <td><div class="checkbox-group">
-                    <span class="{{ 'score-yes' if inspection.score_3D|default(0)|float > 0 else 'score-no' }}">
-                        {{ 'Yes' if inspection.score_3D|default(0)|float > 0 else 'No' }}
-                    </span>
-                    <span class="score-display">({{ inspection.score_3D|default(0) }} pts)</span>
                 </div></td>
             </tr>
         </table>
@@ -556,7 +546,7 @@
             </tr>
             <tr>
                 <td>E</td>
-                <td>Lifeguard on duty"/bathe at your own risk" signs</td>
+                <td>Lifeguard on duty/bathe at your own risk signs</td>
                 <td><div class="checkbox-group">
                     <span class="{{ 'score-yes' if inspection.score_7E|default(0)|float > 0 else 'score-no' }}">
                         {{ 'Yes' if inspection.score_7E|default(0)|float > 0 else 'No' }}
@@ -658,10 +648,92 @@
         </table>
 
         <div class="buttons">
-    <button id="print-btn" class="btn" type="button" onclick="window.print()">Print</button>
-    <a href="{{ url_for('download_swimming_pool_pdf', form_id=inspection.id) }}" class="btn">Download PDF</a>
-    <a href="{{ url_for('dashboard') }}" id="back-btn" class="btn">Back to Dashboard</a>
-</div>
+            <button id="print-btn" class="btn" type="button" onclick="window.print()">Print</button>
+            <a href="{{ url_for('download_swimming_pool_pdf', form_id=inspection.id) }}" class="btn">Download PDF</a>
+            <a href="{{ url_for('dashboard') }}" id="back-btn" class="btn">Back to Dashboard</a>
+        </div>
     </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Calculating score...');
+        const MAX_SCORE = 132.5;  // Corrected to actual maximum
+        let total = 0;
+
+        // Debug: Log what we're getting from the template
+        const scoreValues = {
+            '1A': {{ inspection.score_1A|default(0) }},
+            '1B': {{ inspection.score_1B|default(0) }},
+            '1C': {{ inspection.score_1C|default(0) }},
+            '1D': {{ inspection.score_1D|default(0) }},
+            '1E': {{ inspection.score_1E|default(0) }},
+            '1F': {{ inspection.score_1F|default(0) }},
+            '1G': {{ inspection.score_1G|default(0) }},
+            '1H': {{ inspection.score_1H|default(0) }},
+            '2A': {{ inspection.score_2A|default(0) }},
+            '2B': {{ inspection.score_2B|default(0) }},
+            '2C': {{ inspection.score_2C|default(0) }},
+            '2D': {{ inspection.score_2D|default(0) }},
+            '2E': {{ inspection.score_2E|default(0) }},
+            '2F': {{ inspection.score_2F|default(0) }},
+            '2G': {{ inspection.score_2G|default(0) }},
+            '2H': {{ inspection.score_2H|default(0) }},
+            '2I': {{ inspection.score_2I|default(0) }},
+            '2J': {{ inspection.score_2J|default(0) }},
+            '3A': {{ inspection.score_3A|default(0) }},
+            '3B': {{ inspection.score_3B|default(0) }},
+            '3C': {{ inspection.score_3C|default(0) }},
+            '4A': {{ inspection.score_4A|default(0) }},
+            '4B': {{ inspection.score_4B|default(0) }},
+            '5A': {{ inspection.score_5A|default(0) }},
+            '5B': {{ inspection.score_5B|default(0) }},
+            '6A': {{ inspection.score_6A|default(0) }},
+            '6B': {{ inspection.score_6B|default(0) }},
+            '6C': {{ inspection.score_6C|default(0) }},
+            '6D': {{ inspection.score_6D|default(0) }},
+            '7A': {{ inspection.score_7A|default(0) }},
+            '7B': {{ inspection.score_7B|default(0) }},
+            '7C': {{ inspection.score_7C|default(0) }},
+            '7D': {{ inspection.score_7D|default(0) }},
+            '7E': {{ inspection.score_7E|default(0) }},
+            '8A': {{ inspection.score_8A|default(0) }},
+            '8B': {{ inspection.score_8B|default(0) }},
+            '8C': {{ inspection.score_8C|default(0) }},
+            '9A': {{ inspection.score_9A|default(0) }},
+            '9B': {{ inspection.score_9B|default(0) }},
+            '9C': {{ inspection.score_9C|default(0) }}
+        };
+
+        console.log('Score values:', scoreValues);
+
+        // Sum all scores
+        for (let key in scoreValues) {
+            const value = parseFloat(scoreValues[key]) || 0;
+            total += value;
+            console.log(`${key}: ${value} (running total: ${total})`);
+        }
+
+        console.log(`Final total: ${total} out of ${MAX_SCORE}`);
+
+        // Calculate percentage
+        const percentage = Math.min(100, Math.round((total / MAX_SCORE) * 100));
+        console.log(`Percentage: ${percentage}%`);
+
+        // Update the display - now using the correct ID
+        const scoreElement = document.getElementById('calculatedScore');
+        if (scoreElement) {
+            scoreElement.textContent = percentage + '%';
+            console.log('Score display updated to:', percentage + '%');
+        } else {
+            console.error('Could not find calculatedScore element');
+            // Try alternative method
+            const scoreBox = document.querySelector('.score-box span');
+            if (scoreBox) {
+                scoreBox.textContent = percentage + '%';
+                console.log('Score updated via alternative method');
+            }
+        }
+    });
+    </script>
 </body>
 </html>
