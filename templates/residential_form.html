@@ -255,7 +255,12 @@
                         const points = score > 0 ? weight : 0;
                         totalScore += points;
                         const itemId = row.querySelector('td:nth-child(1)').textContent;
-                        if ((weight >= 4 || itemId === '16') && itemId !== '11' && itemId !== '12') {
+
+                        // Critical items that should total 65 points: 8,9,10,12,13,14,15,16,19,20,21,23,24,26
+                        if (itemId === '8' || itemId === '9' || itemId === '10' || itemId === '12' ||
+                            itemId === '13' || itemId === '14' || itemId === '15' || itemId === '16' ||
+                            itemId === '19' || itemId === '20' || itemId === '21' || itemId === '23' ||
+                            itemId === '24' || itemId === '26') {
                             criticalScore += points;
                         }
                     }

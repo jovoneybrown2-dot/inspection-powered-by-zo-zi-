@@ -175,7 +175,7 @@ SPIRIT_LICENCE_CHECKLIST_ITEMS = [
     {'id': 29, 'description': 'Solid Waste Management', 'wt': 4},
     {'id': 30, 'description': 'Covered, adequate, pest proof and clean receptacles', 'wt': 4},
     {'id': 31, 'description': 'Provision made for satisfactory disposal of waste', 'wt': 3},
-    {'id': 32, 'description': 'Premises free of litter and unnecessary articles', 'wt': 3},
+    {'id': 32, 'description': 'Premises free of litter and unnecessary articles', 'wt': 2},
     {'id': 33, 'description': 'Pest Control', 'wt': 5},
     {'id': 34, 'description': 'Premises free of rodents, insects and vermins', 'wt': 5}
 ]
