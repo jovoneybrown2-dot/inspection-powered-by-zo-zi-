@@ -382,7 +382,7 @@
                     </tr>
                     <tr class="critical-item">
                         <td>A</td>
-                        <td>Clean appropriate protective garments</td>
+                        <td>Clean appropriate protective garments worn</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_2a" min="0" value="{{ inspection.obser.get('2a', '') if inspection else '' }}"></td>
                         <td class="score-cell"><input type="number" class="score-input" name="error_2a" min="0" value="{{ inspection.error.get('2a', '') if inspection else '' }}"></td>
                     </tr>
@@ -581,7 +581,7 @@
                     </tr>
                     <tr>
                         <td>A</td>
-                        <td>Provides adequate space</td>
+                        <td>Provides adequate space for satisfactory performance of all operations</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_7a" min="0" value="{{ inspection.obser.get('7a', '') if inspection else '' }}"></td>
                         <td class="score-cell"><input type="number" class="score-input" name="error_7a" min="0" value="{{ inspection.error.get('7a', '') if inspection else '' }}"></td>
                     </tr>
@@ -728,7 +728,7 @@
 
                     <!-- Solid Waste Storage Area Section -->
                     <tr>
-                        <td colspan="4" class="section-header">12 - Solid Waste Storage Area (4%)</td>
+                        <td colspan="4" class="section-header">     Solid Waste Storage Area (4%)</td>
                     </tr>
                     <tr>
                         <td>A</td>
@@ -757,15 +757,27 @@
 
                     <!-- Disposal of solid waste Section -->
                     <tr>
-                        <td colspan="4" class="section-header">13 - Disposal of solid waste</td>
+                        <td colspan="4" class="section-header">     Disposal of solid waste</td>
                     </tr>
                     <tr class="critical-item">
-                        <td>A</td>
+                        <td>H</td>
                         <td>Garbage, refuse properly disposed of, facilities maintained</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_13a" min="0" value="{{ inspection.obser.get('13a', '') if inspection else '' }}"></td>
                         <td class="score-cell"><input type="number" class="score-input" name="error_13a" min="0" value="{{ inspection.error.get('13a', '') if inspection else '' }}"></td>
                     </tr>
                     <tr>
+                        <!-- Solid Waste Storage Area Section -->
+                    <tr>
+                        <td colspan="4" class="section-header">12- HAZARDOUS MATERIALS STORAGE, HANDLING AND DISPOSAL (5.5%)</td>
+                    </tr>
+                    <tr>
+                        <td>A</td>
+                        <td>Hazardous materials stored in properly labelled containers</td>
+                        <td class="score-cell"><input type="number" class="score-input" name="obser_12a" min="0" value="{{ inspection.obser.get('12a', '') if inspection else '' }}"></td>
+                        <td class="score-cell"><input type="number" class="score-input" name="error_12a" min="0" value="{{ inspection.error.get('12a', '') if inspection else '' }}"></td>
+                    </tr>
+                    <tr>
+                        <tr class="critical-item">
                         <td>B</td>
                         <td>Stored away from living quarters and food areas</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_13b" min="0" value="{{ inspection.obser.get('13b', '') if inspection else '' }}"></td>
@@ -774,7 +786,7 @@
 
                     <!-- Additional sections continue with same pattern... -->
                     <tr>
-                        <td colspan="4" class="section-header">14 - Sanitary Facilities (4%)</td>
+                        <td colspan="4" class="section-header">13 - Sanitary Facilities (4%)</td>
                     </tr>
                     <tr class="critical-item">
                         <td>A</td>
@@ -790,7 +802,7 @@
                     </tr>
 
                     <tr>
-                        <td colspan="4" class="section-header">15 - Pest Control (2%)</td>
+                        <td colspan="4" class="section-header">14 - PEST CONTROL (2%)</td>
                     </tr>
                     <tr>
                         <td>A</td>
@@ -798,11 +810,18 @@
                         <td class="score-cell"><input type="number" class="score-input" name="obser_16a" min="0" value="{{ inspection.obser.get('16a', '') if inspection else '' }}"></td>
                         <td class="score-cell"><input type="number" class="score-input" name="error_16a" min="0" value="{{ inspection.error.get('16a', '') if inspection else '' }}"></td>
                     </tr>
+                    <tr>
+                        <td>B</td>
+                        <td>Suitable post control programme</td>
+                        <td class="score-cell"><input type="number" class="score-input" name="obser_16a" min="0" value="{{ inspection.obser.get('16a', '') if inspection else '' }}"></td>
+                        <td class="score-cell"><input type="number" class="score-input" name="error_16a" min="0" value="{{ inspection.error.get('16a', '') if inspection else '' }}"></td>
+                    </tr>
 
                     <tr>
-                        <td colspan="4" class="section-header">16 - Water supply (3%)</td>
+                        <td colspan="4" class="section-header">15 - SANITARY ENGINEERING: WATER SUPPLY (3%)</td>
                     </tr>
                     <tr>
+                        <tr class="critical-item">
                         <td>A</td>
                         <td>Approved source(s) sufficient pressure and capacity</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_17a" min="0" value="{{ inspection.obser.get('17a', '') if inspection else '' }}"></td>
@@ -816,7 +835,7 @@
                     </tr>
 
                     <tr>
-                        <td colspan="4" class="section-header">17 - Ice (1.5%)</td>
+                        <td colspan="4" class="section-header">16 - SANITARY ENGINEERING ICE (1.5%)</td>
                     </tr>
                     <tr>
                         <td>A</td>
@@ -826,7 +845,7 @@
                     </tr>
 
                     <tr>
-                        <td colspan="4" class="section-header">18 - Grey Water Facilities (1%)</td>
+                        <td colspan="4" class="section-header">17 - SANITARY ENGINEERING: Grey Water Facilities (1%)</td>
                     </tr>
                     <tr>
                         <td>A</td>
@@ -842,7 +861,7 @@
                     </tr>
 
                     <tr>
-                        <td colspan="4" class="section-header">19 - Manholes (0.5%)</td>
+                        <td colspan="4" class="section-header">18 - SANITARY ENGINEERING MANHOLES (0.5%)</td>
                     </tr>
                     <tr>
                         <td>A</td>

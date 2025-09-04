@@ -7961,6 +7961,7 @@ def migrate_remaining_fixed():
     return "<h1>Migration Results:</h1><ul>" + "".join(
         [f"<li>{r}</li>" for r in results]) + "</ul><br><a href='/admin/forms'>Check Form Management</a>"
 
+
 @app.route('/small_hotels/inspection/<int:id>')
 def small_hotels_inspection_detail(id):
     if 'inspector' not in session and 'admin' not in session:
@@ -7989,13 +7990,39 @@ def small_hotels_inspection_detail(id):
         obser_scores[item[0]] = item[1] or '0'
         error_scores[item[0]] = item[2] or '0'
 
-    inspection_dict['obser'] = obser_scores
-    inspection_dict['error'] = error_scores
-
     conn.close()
 
+    # Extract and calculate the scores your template expects
+    critical_score = int(inspection_dict.get('critical_score', 0))
+    overall_score = int(inspection_dict.get('overall_score', 0))
+
+    # Determine result based on scores
+    result = 'Pass' if critical_score >= 70 and overall_score >= 70 else 'Fail'
+
+    # Create inspection object that your template expects
+    inspection_obj = {
+        'id': id,
+        'establishment_name': inspection_dict.get('establishment_name', ''),
+        'inspector_name': inspection_dict.get('inspector_name', ''),
+        'address': inspection_dict.get('address', ''),
+        'physical_location': inspection_dict.get('physical_location', ''),
+        'inspection_date': inspection_dict.get('inspection_date', ''),
+        'critical_score': critical_score,
+        'overall_score': overall_score,
+        'result': result,
+        'comments': inspection_dict.get('comments', ''),
+        'inspector_signature': inspection_dict.get('inspector_signature', ''),
+        'inspector_signature_date': inspection_dict.get('inspector_signature_date', ''),
+        'manager_signature': inspection_dict.get('manager_signature', ''),
+        'manager_signature_date': inspection_dict.get('manager_signature_date', ''),
+        'received_by': inspection_dict.get('received_by', ''),
+        'received_by_date': inspection_dict.get('received_by_date', ''),
+        'obser': obser_scores,
+        'error': error_scores
+    }
+
     return render_template('small_hotels_inspection_detail.html',
-                         inspection=inspection_dict)
+                           inspection=inspection_obj)
 
 if __name__ == '__main__':
     init_db()
