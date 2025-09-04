@@ -696,7 +696,7 @@
                         <td class="score-cell"><input type="number" class="score-input" name="obser_10d" min="0" value="{{ inspection.obser.get('10d', '') if inspection else '' }}"></td>
                         <td class="score-cell"><input type="number" class="score-input" name="error_10d" min="0" value="{{ inspection.error.get('10d', '') if inspection else '' }}"></td>
                     </tr>
-                    <tr>
+                    <tr class="critical-item">
                         <td>E</td>
                         <td>Proper handling of hazardous materials</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_10e" min="0" value="{{ inspection.obser.get('10e', '') if inspection else '' }}"></td>
