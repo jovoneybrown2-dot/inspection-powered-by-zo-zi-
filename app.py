@@ -1946,6 +1946,192 @@ def burial_inspection_detail(id):
 # Replace ALL your PDF download functions with these exact form replicas
 
 
+@app.route('/download_residential_pdf/<int:form_id>')
+def download_residential_pdf(form_id):
+    if 'inspector' not in session and 'admin' not in session:
+        return redirect(url_for('login'))
+
+    details = get_residential_inspection_details(form_id)
+    if not details:
+        return jsonify({'error': 'Inspection not found'}), 404
+
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    # === EXACT TITLE MATCHING YOUR DETAILS PAGE ===
+    y = height - 60
+    p.setFont("Times-Bold", 18)
+    p.drawCentredString(width / 2, y, "Residential & Non-Residential Inspection Report")
+    y -= 50
+
+    # === ALL DETAILS EXACTLY LIKE YOUR HTML ===
+    p.setFont("Times-Bold", 14)
+    label_x = 50
+    value_x = 200
+    line_spacing = 25
+
+    # Premises Details
+    p.drawString(label_x, y, "Name of Premises:")
+    p.setFont("Times-Roman", 14)
+    p.drawString(value_x, y, str(details.get('premises_name', '')))
+    y -= line_spacing
+
+    p.setFont("Times-Bold", 14)
+    p.drawString(label_x, y, "Owner/Agent/Occupier:")
+    p.setFont("Times-Roman", 14)
+    p.drawString(value_x, y, str(details.get('owner', '')))
+    y -= line_spacing
+
+    p.setFont("Times-Bold", 14)
+    p.drawString(label_x, y, "Address and Parish:")
+    p.setFont("Times-Roman", 14)
+    p.drawString(value_x, y, str(details.get('address', '')))
+    y -= line_spacing
+
+    p.setFont("Times-Bold", 14)
+    p.drawString(label_x, y, "Inspector Name:")
+    p.setFont("Times-Roman", 14)
+    p.drawString(value_x, y, str(details.get('inspector_name', '')))
+    y -= line_spacing
+
+    p.setFont("Times-Bold", 14)
+    p.drawString(label_x, y, "Inspection Date:")
+    p.setFont("Times-Roman", 14)
+    p.drawString(value_x, y, str(details.get('inspection_date', '')))
+    y -= line_spacing
+
+    # Scores section
+    y -= 20
+    p.setFont("Times-Bold", 16)
+    p.drawString(label_x, y, "Inspection Results:")
+    y -= 30
+
+    p.setFont("Times-Bold", 14)
+    p.drawString(label_x, y, f"Critical Score: {details.get('critical_score', 0)}")
+    y -= line_spacing
+
+    p.drawString(label_x, y, f"Overall Score: {details.get('overall_score', 0)}")
+    y -= line_spacing
+
+    # Result
+    result = details.get('result', 'N/A')
+    result_color = colors.green if result == 'Pass' else colors.red
+    p.setFillColor(result_color)
+    p.drawString(label_x, y, f"Result: {result}")
+    p.setFillColor(colors.black)
+    y -= 40
+
+    # Checklist Table
+    if y < 400:  # Need room for table
+        p.showPage()
+        y = height - 50
+
+    p.setFont("Times-Bold", 16)
+    p.drawString(label_x, y, "Inspection Checklist")
+    y -= 30
+
+    # Table setup
+    table_x = 50
+    table_width = width - 100
+    header_height = 20
+    row_height = 15
+
+    # Table header
+    p.setLineWidth(1)
+    p.rect(table_x, y - header_height, table_width, header_height)
+    p.setFillColor(colors.lightgrey)
+    p.rect(table_x, y - header_height, table_width, header_height, fill=1)
+
+    p.setFillColor(colors.black)
+    p.setFont("Times-Bold", 12)
+    p.drawString(table_x + 10, y - 14, "Item")
+    p.drawString(table_x + 60, y - 14, "Description")
+    p.drawString(table_x + 400, y - 14, "Weight")
+    p.drawString(table_x + 460, y - 14, "Score")
+
+    y -= header_height
+
+    # Checklist items
+    checklist_scores = details.get('checklist_scores', {})
+
+    for item in RESIDENTIAL_CHECKLIST_ITEMS:
+        if y < 100:  # New page if needed
+            p.showPage()
+            y = height - 50
+
+        score = checklist_scores.get(item['id'], 0)
+
+        p.setFont("Times-Roman", 10)
+        p.rect(table_x, y - row_height, table_width, row_height)
+
+        p.drawString(table_x + 10, y - 10, str(item['id']))
+
+        # Truncate long descriptions
+        desc = item['desc'][:45] + "..." if len(item['desc']) > 45 else item['desc']
+        p.drawString(table_x + 60, y - 10, desc)
+
+        p.drawString(table_x + 405, y - 10, str(item['wt']))
+        p.drawString(table_x + 465, y - 10, str(score))
+
+        y -= row_height
+
+    # Comments section
+    if y < 120:
+        p.showPage()
+        y = height - 50
+
+    y -= 30
+    p.setFont("Times-Bold", 14)
+    p.drawString(label_x, y, "Inspector's Comments:")
+    y -= 20
+
+    comments = details.get('comments', 'No comments provided.')
+    p.setFont("Times-Roman", 12)
+    if len(comments) > 80:
+        # Word wrap comments
+        words = comments.split()
+        lines = []
+        current_line = ""
+        for word in words:
+            if len(current_line + word) < 65:
+                current_line += word + " "
+            else:
+                lines.append(current_line.strip())
+                current_line = word + " "
+        if current_line:
+            lines.append(current_line.strip())
+
+        for line in lines[:4]:  # Max 4 lines
+            p.drawString(label_x, y, line)
+            y -= 15
+    else:
+        p.drawString(label_x, y, comments)
+        y -= 15
+
+    # Signatures
+    y -= 30
+    p.setFont("Times-Bold", 14)
+    p.drawString(label_x, y, "Inspector's Signature:")
+    p.setFont("Times-Roman", 14)
+    p.drawString(label_x + 150, y, str(details.get('inspector_signature', '')))
+
+    p.setFont("Times-Bold", 14)
+    p.drawString(350, y, "Received by:")
+    p.setFont("Times-Roman", 14)
+    p.drawString(450, y, str(details.get('received_by', '')))
+
+    p.save()
+    buffer.seek(0)
+    pdf_data = buffer.getvalue()
+    buffer.close()
+
+    response = make_response(pdf_data)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename=residential_inspection_{form_id}.pdf'
+    return response
+
+
 # Replace your existing download_burial_pdf function with this exact replica
 @app.route('/download_burial_pdf/<int:form_id>')
 def download_burial_pdf(form_id):
@@ -2511,21 +2697,53 @@ def download_swimming_pool_pdf(form_id):
 
     current_y -= 60
 
-    # === COMMENTS SECTION - EXACT HTML LAYOUT ===
+    # === COMMENTS SECTION - EXPANDED FOR FULL VISIBILITY ===
     p.setFont("Helvetica-Bold", 12)
     p.setFillColor(colors.black)
     p.drawString(50, current_y, "Inspector's Comments:")
     current_y -= 20
 
-    # Comments box exactly like HTML
-    comments_height = 60
+    # Larger comments box with proper word wrapping
+    comments_height = 100
     p.setLineWidth(1)
     p.setStrokeColor(colors.black)
     p.rect(50, current_y - comments_height, width - 100, comments_height)
 
-    comments = inspection_dict.get('comments') or inspection_dict.get('inspector_comments') or ''
+    # Get comments from multiple possible fields
+    comments = (inspection_dict.get('inspector_comments') or
+                inspection_dict.get('comments') or
+                'No comments provided.')
+
     p.setFont("Helvetica", 10)
-    p.drawString(55, current_y - 20, str(comments))
+
+    if comments and comments.strip() and comments != 'No comments provided.':
+        # Proper word wrapping for longer comments
+        words = str(comments).split()
+        lines = []
+        current_line = ""
+        max_chars_per_line = 85
+
+        for word in words:
+            if len(current_line + " " + word) <= max_chars_per_line:
+                current_line += " " + word if current_line else word
+            else:
+                if current_line:
+                    lines.append(current_line)
+                current_line = word
+
+        if current_line:
+            lines.append(current_line)
+
+        # Draw each line with proper spacing
+        line_y = current_y - 15
+        for i, line in enumerate(lines[:6]):  # Show up to 6 lines
+            if line_y > current_y - comments_height + 10:  # Stay within box
+                p.drawString(55, line_y, line)
+                line_y -= 12
+            else:
+                break
+    else:
+        p.drawString(55, current_y - 25, "No comments provided.")
 
     current_y -= comments_height + 20
 
@@ -2930,7 +3148,53 @@ def download_small_hotels_pdf(form_id):
     if 'inspector' not in session and 'admin' not in session:
         return redirect(url_for('login'))
 
-    inspection = small_hotels_inspection_detail(form_id)
+    # Get the inspection data directly from database instead of calling the detail function
+    conn = sqlite3.connect('inspections.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM inspections WHERE id = ? AND form_type = 'Small Hotel'", (form_id,))
+    inspection_row = cursor.fetchone()
+
+    if not inspection_row:
+        conn.close()
+        return jsonify({'error': 'Inspection not found'}), 404
+
+    inspection_dict = dict(inspection_row)
+
+    # Get individual scores from inspection_items table
+    cursor.execute("SELECT item_id, obser, error FROM inspection_items WHERE inspection_id = ?", (form_id,))
+    items = cursor.fetchall()
+
+    obser_scores = {}
+    error_scores = {}
+    for item in items:
+        obser_scores[item[0]] = item[1] or '0'
+        error_scores[item[0]] = item[2] or '0'
+
+    conn.close()
+
+    # Create the inspection object with all the data your PDF needs
+    inspection = {
+        'id': form_id,
+        'establishment_name': inspection_dict.get('establishment_name', ''),
+        'inspector_name': inspection_dict.get('inspector_name', ''),
+        'address': inspection_dict.get('address', ''),
+        'physical_location': inspection_dict.get('physical_location', ''),
+        'inspection_date': inspection_dict.get('inspection_date', ''),
+        'critical_score': int(inspection_dict.get('critical_score', 0)),
+        'overall_score': int(inspection_dict.get('overall_score', 0)),
+        'result': inspection_dict.get('result', 'Unknown'),
+        'comments': inspection_dict.get('comments', ''),
+        'inspector_signature': inspection_dict.get('inspector_signature', ''),
+        'inspector_signature_date': inspection_dict.get('inspector_signature_date', ''),
+        'manager_signature': inspection_dict.get('manager_signature', ''),
+        'manager_signature_date': inspection_dict.get('manager_signature_date', ''),
+        'received_by': inspection_dict.get('received_by', ''),
+        'received_by_date': inspection_dict.get('received_by_date', ''),
+        'obser': obser_scores,
+        'error': error_scores
+    }
     if not inspection:
         return jsonify({'error': 'Inspection not found'}), 404
 
