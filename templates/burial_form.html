@@ -80,79 +80,145 @@
         .btn:hover {
             background-color: #218838;
         }
-        #print-btn { background-color: #007bff; }
-        #print-btn:hover { background-color: #0056b3; }
-        #share-btn { background-color: #17a2b8; }
-        #share-btn:hover { background-color: #138496; }
-        #submit-btn { background-color: #ff9900; }
-        #submit-btn:hover { background-color: #e68a00; }
-        .modal {
+        .btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        /* Success Popup Styles */
+        .popup-overlay {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            animation: fadeIn 0.3s ease-out;
         }
-        .modal.show {
+
+        .popup-overlay.show {
             display: flex;
         }
-        .modal-content {
+
+        .popup-content {
             background: white;
-            padding: 20px;
-            border-radius: 5px;
+            border-radius: 15px;
+            padding: 40px;
             text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
             width: 90%;
+            animation: slideIn 0.4s ease-out;
         }
-        .modal-content .submission-complete {
-            font-size: 24px;
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #28a745;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+            animation: bounceIn 0.6s ease-out;
+        }
+
+        .popup-title {
+            font-size: 28px;
             color: #28a745;
             font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
-        .modal-content .back-button {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #dc3545;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
+
+        .popup-message {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .popup-thank-you {
+            font-size: 16px;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 30px;
+        }
+
+        .popup-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .popup-btn {
+            padding: 12px 25px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
             cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            font-weight: bold;
         }
-        .success {
-            display: none;
-            position: relative;
-            width: 100px;
-            height: 100px;
-            margin: 20px auto;
-            background-color: #28a745;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 100px;
-            animation: fadeIn 1s;
-        }
-        .success::before {
-            content: '✔';
-            font-size: 50px;
+
+        .popup-btn.primary {
+            background: #007bff;
             color: white;
         }
-        .success.show {
-            display: block;
+
+        .popup-btn.primary:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
         }
+
+        .popup-btn.secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .popup-btn.secondary:hover {
+            background: #545b62;
+            transform: translateY(-2px);
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
         }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
     </style>
-    <script>
-        // Form submission is now handled by the offline system
-    </script>
 </head>
 <body>
     <form id="burialForm" method="POST" action="{{ url_for('submit_burial') }}" data-offline-form="true">
@@ -193,12 +259,88 @@
             </div>
         </div>
     </form>
-    <div class="modal">
-        <div class="modal-content">
-            <div class="success"></div>
-            <div class="submission-complete"></div>
-            <a href="{{ url_for('dashboard') }}" class="back-button">Back to Dashboard</a>
+
+    <!-- Success Popup -->
+    <div id="successPopup" class="popup-overlay">
+        <div class="popup-content">
+            <div class="success-icon">✓</div>
+            <div class="popup-title">Submission Successful!</div>
+            <div class="popup-message">Your burial site inspection report has been submitted successfully.</div>
+            <div class="popup-thank-you">Thank you, Inspector!</div>
+            <div class="popup-buttons">
+                <a href="{{ url_for('dashboard') }}" class="popup-btn primary">Back to Dashboard</a>
+                <button onclick="closePopup()" class="popup-btn secondary">Stay on Page</button>
+            </div>
         </div>
     </div>
+
+    <script>
+        document.getElementById('burialForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent default form submission
+
+            const submitBtn = document.getElementById('submit-btn');
+            const originalText = submitBtn.textContent;
+
+            // Show loading state
+            submitBtn.textContent = 'Submitting...';
+            submitBtn.disabled = true;
+
+            // Get form data
+            const formData = new FormData(this);
+
+            // Submit form via fetch
+            fetch(this.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message === 'Submit successfully') {
+                    // Show success popup
+                    showSuccessPopup();
+                } else {
+                    alert('Error: ' + (data.message || 'Unknown error occurred'));
+                    // Reset button
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while submitting the form');
+                // Reset button
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+
+        function showSuccessPopup() {
+            const popup = document.getElementById('successPopup');
+            popup.classList.add('show');
+
+            // Auto-redirect after 5 seconds (optional)
+            setTimeout(() => {
+                window.location.href = "{{ url_for('dashboard') }}";
+            }, 5000);
+        }
+
+        function closePopup() {
+            const popup = document.getElementById('successPopup');
+            popup.classList.remove('show');
+
+            // Reset form and button
+            document.getElementById('burialForm').reset();
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.textContent = 'Submit';
+            submitBtn.disabled = false;
+        }
+
+        // Close popup when clicking outside
+        document.getElementById('successPopup').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePopup();
+            }
+        });
+    </script>
 </body>
 </html>

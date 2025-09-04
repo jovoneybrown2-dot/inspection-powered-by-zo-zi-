@@ -1177,10 +1177,12 @@ def submit_residential():
                            establishment_data=get_establishment_data(),
                            success=True)
 
+
 @app.route('/submit_burial', methods=['POST'])
 def submit_burial():
     if 'inspector' not in session:
         return jsonify({'message': 'Unauthorized: Please log in'}), 401
+
     data = {
         'id': request.form.get('id', ''),
         'inspection_date': request.form.get('inspection_date', ''),
@@ -1198,8 +1200,12 @@ def submit_burial():
         'inspector_signature': request.form.get('inspector_signature', ''),
         'received_by': request.form.get('received_by', '')
     }
-    inspection_id = save_burial_inspection(data)
-    return jsonify({'message': 'Submit successfully'})
+
+    try:
+        inspection_id = save_burial_inspection(data)
+        return jsonify({'message': 'Submit successfully', 'inspection_id': inspection_id})
+    except Exception as e:
+        return jsonify({'message': f'Error: {str(e)}'}), 500
 
 
 @app.route('/submit_swimming_pools', methods=['POST'])
