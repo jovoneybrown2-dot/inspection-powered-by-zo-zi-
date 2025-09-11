@@ -2816,15 +2816,26 @@
         // ========================================
 
         function initializeAdminTools() {
-            // Admin Tools Toggle
-            document.getElementById('adminToolsButton').addEventListener('click', function() {
-                const container = document.getElementById('adminToolsContainer');
-                container.classList.toggle('open');
-            });
+    // Admin Tools Toggle
+    document.getElementById('adminToolsButton').addEventListener('click', function(e) {
+        e.stopPropagation(); // Prevent event bubbling
+        const container = document.getElementById('adminToolsContainer');
+        container.classList.toggle('open');
+    });
 
-            // Load initial alerts
-            loadAlerts();
+    // Close admin tools when clicking outside
+    document.addEventListener('click', function(e) {
+        const adminToolsButton = document.getElementById('adminToolsButton');
+        const adminToolsContainer = document.getElementById('adminToolsContainer');
+
+        if (!adminToolsButton.contains(e.target) && !adminToolsContainer.contains(e.target)) {
+            adminToolsContainer.classList.remove('open');
         }
+    });
+
+    // Load initial alerts
+    loadAlerts();
+}
 
         // ========================================
         // FORM CREATION FUNCTIONALITY
@@ -2843,15 +2854,22 @@
             window.location.href = formUrl;
         }
 
-        // Close form dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            const formSelector = document.querySelector('.form-selector');
-            const dropdown = document.getElementById('formDropdown');
+        // Close modals when clicking outside
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal')) {
+        e.target.classList.remove('open');
+    }
 
-            if (!formSelector.contains(e.target)) {
-                dropdown.classList.remove('open');
-            }
-        });
+    // Close admin tools container when clicking outside
+    const adminToolsButton = document.getElementById('adminToolsButton');
+    const adminToolsContainer = document.getElementById('adminToolsContainer');
+
+    if (adminToolsContainer && adminToolsContainer.classList.contains('open') &&
+        !adminToolsButton.contains(e.target) &&
+        !adminToolsContainer.contains(e.target)) {
+        adminToolsContainer.classList.remove('open');
+    }
+});
 
         // Modal Functions
         function openModal(modalId) {

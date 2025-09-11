@@ -176,6 +176,11 @@
                     <td><label>Food Inspected (in kg):</label><div class="form-value">{{ inspection.food_inspected }}</div></td>
                     <td><label>Food Condemned (in kg):</label><div class="form-value">{{ inspection.food_condemned }}</div></td>
                 </tr>
+                <tr>
+                    <td><label>Number of Permits:</label><div class="form-value">{{ inspection.number_of_permits }}</div></td>
+                    <td></td>
+                    <td></td>
+                </tr>
             </table>
             <div class="score-message {{ 'pass' if inspection.critical_score >= 59 and inspection.overall_score >= 70 else '' }}">
                 {{ 'Pass: Critical Score = ' + inspection.critical_score|string + ', Total Score = ' + inspection.overall_score|string if inspection.critical_score >= 59 and inspection.overall_score >= 70 else 'Fail: Critical Score = ' + inspection.critical_score|string + ' (needs 59+), Total Score = ' + inspection.overall_score|string + ' (needs 70+)' }}
