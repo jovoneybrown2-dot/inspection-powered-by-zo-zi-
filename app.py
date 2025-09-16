@@ -7662,6 +7662,71 @@ def preview_form(form_id):
                            grouped_items=grouped_items)
 
 
+@app.route('/api/inspection_counts')
+def get_inspection_counts():
+    """Get inspection counts by type for admin dashboard"""
+    if 'admin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    try:
+        conn = sqlite3.connect('inspections.db')
+        c = conn.cursor()
+
+        # Get counts from main inspections table
+        c.execute('''
+            SELECT form_type, COUNT(*) as count
+            FROM inspections
+            WHERE form_type IS NOT NULL
+            GROUP BY form_type
+        ''')
+        main_counts = dict(c.fetchall())
+
+        # Get residential inspection counts
+        c.execute('SELECT COUNT(*) FROM residential_inspections')
+        residential_count = c.fetchone()[0]
+
+        # Get burial inspection counts
+        c.execute('SELECT COUNT(*) FROM burial_site_inspections')
+        burial_count = c.fetchone()[0]
+
+        # Combine all counts
+        counts = {
+            'food_establishment': main_counts.get('Food Establishment', 0),
+            'small_hotel': main_counts.get('Small Hotel', 0),
+            'swimming_pool': main_counts.get('Swimming Pool', 0),
+            'institutional_health': main_counts.get('Institutional Health', 0),
+            'spirit_licence': main_counts.get('Spirit Licence Premises', 0),
+            'barbershop': main_counts.get('Barbershop', 0),
+            'residential': residential_count,
+            'burial': burial_count
+        }
+
+        # Add any custom form types from form_templates
+        existing_form_types = [
+            'Food Establishment', 'Small Hotel', 'Swimming Pool',
+            'Institutional Health', 'Spirit Licence Premises', 'Barbershop'
+        ]
+        placeholders = ','.join(['?' for _ in existing_form_types])
+        c.execute(f'''
+            SELECT ft.form_type, COUNT(i.id) as count
+            FROM form_templates ft
+            LEFT JOIN inspections i ON ft.form_type = i.form_type
+            WHERE ft.active = 1 AND ft.form_type NOT IN ({placeholders})
+            GROUP BY ft.form_type
+        ''', existing_form_types)
+
+        custom_forms = c.fetchall()
+        for form_type, count in custom_forms:
+            # Convert form type to key format
+            key = form_type.lower().replace(' ', '_').replace('-', '_')
+            counts[key] = count
+
+        conn.close()
+        return jsonify(counts)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/forms/active')
 def get_active_forms():
     """Get active forms for inspector dashboard"""

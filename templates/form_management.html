@@ -1,261 +1,586 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Form Management - Admin Dashboard</title>
+    <title>Form Templates - Document Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
         body {
             font-family: 'Inter', sans-serif;
-            background: url('{{ url_for("static", filename="heart2.jpg") }}') no-repeat center center fixed;
-            background-size: cover;
-            letter-spacing: -0.025em;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
         }
 
-        h1, h2, h3 {
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 600;
-            letter-spacing: -0.02em;
+        .document-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
 
-        .form-card {
-            background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95));
-            border-radius: 20px;
-            padding: 24px;
-            margin: 12px;
+        .document-container:hover {
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-color: #3b82f6;
+            transform: translateY(-2px);
         }
 
-        .form-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            border-color: rgba(59, 130, 246, 0.3);
+        .document-preview {
+            background: white;
+            padding: 40px;
+            font-family: 'Times New Roman', serif;
+            color: #1f2937;
+            line-height: 1.6;
+            border-bottom: 1px solid #e5e7eb;
+            height: 600px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .document-preview::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(to bottom, transparent, white);
+        }
+
+        .form-header {
+            text-align: center;
+            border-bottom: 2px solid #374151;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .form-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #111827;
+        }
+
+        .form-subtitle {
+            font-size: 16px;
+            color: #6b7280;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #d1d5db;
+            padding-bottom: 5px;
+        }
+
+        .form-field {
+            display: flex;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .field-label {
+            min-width: 200px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .field-input {
+            flex: 1;
+            border-bottom: 1px solid #9ca3af;
+            padding: 4px 8px;
+            margin-left: 10px;
+        }
+
+        .checklist-item {
+            display: flex;
+            margin-bottom: 8px;
+            align-items: flex-start;
+        }
+
+        .checkbox {
+            width: 12px;
+            height: 12px;
+            border: 1px solid #6b7280;
+            margin-right: 8px;
+            margin-top: 4px;
+        }
+
+        .document-toolbar {
+            background: #f8fafc;
+            padding: 16px 24px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: between;
+            align-items: center;
         }
 
         .btn {
-            padding: 12px 20px;
-            border-radius: 12px;
+            padding: 8px 16px;
+            border-radius: 6px;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 500;
             font-size: 14px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
             border: none;
-            margin: 4px;
+            margin: 0 4px;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-            letter-spacing: -0.01em;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 7px 14px rgba(0, 0, 0, 0.18), 0 5px 5px rgba(0, 0, 0, 0.12);
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            background: #3b82f6;
             color: white;
+            border: 1px solid #3b82f6;
         }
+
         .btn-primary:hover {
-            background: linear-gradient(135deg, #2563eb, #1e40af);
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-        }
-        .btn-success:hover {
-            background: linear-gradient(135deg, #059669, #047857);
-        }
-
-        .btn-warning {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
-        }
-        .btn-warning:hover {
-            background: linear-gradient(135deg, #d97706, #b45309);
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
-        }
-        .btn-danger:hover {
-            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            background: #2563eb;
+            border-color: #2563eb;
         }
 
         .btn-secondary {
-            background: linear-gradient(135deg, #6b7280, #4b5563);
+            background: #6b7280;
             color: white;
+            border: 1px solid #6b7280;
         }
+
         .btn-secondary:hover {
-            background: linear-gradient(135deg, #4b5563, #374151);
+            background: #4b5563;
+            border-color: #4b5563;
         }
 
-        .bg-white {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        .btn-outline {
+            background: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
         }
 
-        .rounded-lg {
-            border-radius: 16px;
+        .btn-outline:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
         }
 
-        .shadow {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        .btn-success {
+            background: #10b981;
+            color: white;
+            border: 1px solid #10b981;
         }
 
-        .text-3xl {
-            font-size: 2.5rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            border: 1px solid #ef4444;
+        }
+
+        .header-bar {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 20px 24px;
+            margin-bottom: 24px;
         }
 
         .status-badge {
-            padding: 6px 12px;
+            padding: 4px 12px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 600;
-            letter-spacing: 0.5px;
             text-transform: uppercase;
         }
 
         .status-active {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
+            background: #dcfce7;
+            color: #166534;
         }
 
         .status-inactive {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 24px;
+            padding: 24px;
+        }
+
+        .document-meta {
+            background: #f8fafc;
+            padding: 12px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .meta-info {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 400px;
+            background: white;
+            border-left: 1px solid #e5e7eb;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            box-shadow: -4px 0 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f8fafc;
+        }
+
+        .sidebar-content {
+            padding: 24px;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        @media (max-width: 768px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+                padding: 16px;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+        }
+
+        .floating-toolbar {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            padding: 12px;
+            display: flex;
+            gap: 8px;
         }
     </style>
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto p-6">
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-white">Form Management</h1>
-            <div class="space-x-4">
-                <a href="/admin" class="btn btn-secondary">← Back to Admin</a>
-                <a href="/admin/forms/create" class="btn btn-success">+ Create New Form</a>
+<body>
+    <!-- Header -->
+    <div class="header-bar">
+        <div class="flex justify-between items-center max-w-7xl mx-auto">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                    <i class="fas fa-file-alt text-blue-600 mr-3"></i>Form Templates
+                </h1>
+                <p class="text-gray-600">Manage inspection form templates and documents</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="window.location.href='/admin'" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Dashboard
+                </button>
+                <button onclick="createNewForm()" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    New Template
+                </button>
             </div>
         </div>
+    </div>
 
-        <!-- Quick Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white rounded-lg p-4 shadow">
-                <h3 class="text-lg font-semibold text-gray-700">Total Forms</h3>
-                <p class="text-2xl font-bold text-blue-600">{{ forms|length }}</p>
-            </div>
-            <div class="bg-white rounded-lg p-4 shadow">
-                <h3 class="text-lg font-semibold text-gray-700">Active Forms</h3>
-                <p class="text-2xl font-bold text-green-600">{{ forms|selectattr('4', 'equalto', 1)|list|length }}</p>
-            </div>
-            <div class="bg-white rounded-lg p-4 shadow">
-                <h3 class="text-lg font-semibold text-gray-700">Total Items</h3>
-                <p class="text-2xl font-bold text-purple-600">{{ forms|sum(attribute='6') }}</p>
-            </div>
-            <div class="bg-white rounded-lg p-4 shadow">
-                <h3 class="text-lg font-semibold text-gray-700">Form Types</h3>
-                <p class="text-2xl font-bold text-orange-600">{{ forms|map(attribute='3')|unique|list|length }}</p>
-            </div>
-        </div>
+    <!-- Document Grid -->
+    <div class="max-w-7xl mx-auto">
+        {% if forms %}
+            <div class="grid-layout">
+                {% for form in forms %}
+                <div class="document-container" onclick="selectForm({{ form[0] }})">
+                    <!-- Document Meta -->
+                    <div class="document-meta">
+                        <div class="flex items-center gap-3">
+                            <span class="status-badge {{ 'status-active' if form[4] else 'status-inactive' }}">
+                                {{ 'Active' if form[4] else 'Inactive' }}
+                            </span>
+                            <span class="meta-info">{{ form[6] }} checklist items</span>
+                            <span class="meta-info">Version {{ form[5] }}</span>
+                        </div>
+                        <div class="meta-info">{{ form[3] }}</div>
+                    </div>
 
-        <!-- Forms Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {% for form in forms %}
-            <div class="form-card">
-                <div class="flex justify-between items-start mb-3">
-                    <h3 class="text-xl font-bold text-gray-800">{{ form[1] }}</h3>
-                    <span class="status-badge {{ 'status-active' if form[4] else 'status-inactive' }}">
-                        {{ 'Active' if form[4] else 'Inactive' }}
-                    </span>
+                    <!-- Document Preview -->
+                    <div class="document-preview">
+                        <div class="form-header">
+                            <div class="form-title">{{ form[1] }}</div>
+                            <div class="form-subtitle">{{ form[2] or 'Official Inspection Document' }}</div>
+                            <div style="margin-top: 15px; font-size: 14px; color: #6b7280;">
+                                Department of Health - Environmental Health Division
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <div class="section-title">ESTABLISHMENT INFORMATION</div>
+                            <div class="form-field">
+                                <div class="field-label">Name of Establishment:</div>
+                                <div class="field-input"></div>
+                            </div>
+                            <div class="form-field">
+                                <div class="field-label">Owner/Manager:</div>
+                                <div class="field-input"></div>
+                            </div>
+                            <div class="form-field">
+                                <div class="field-label">Address:</div>
+                                <div class="field-input"></div>
+                            </div>
+                            <div class="form-field">
+                                <div class="field-label">License Number:</div>
+                                <div class="field-input"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <div class="section-title">INSPECTION DETAILS</div>
+                            <div class="form-field">
+                                <div class="field-label">Inspector Name:</div>
+                                <div class="field-input"></div>
+                            </div>
+                            <div class="form-field">
+                                <div class="field-label">Inspection Date:</div>
+                                <div class="field-input"></div>
+                            </div>
+                            <div class="form-field">
+                                <div class="field-label">Purpose of Visit:</div>
+                                <div class="field-input"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <div class="section-title">INSPECTION CHECKLIST</div>
+                            {% for i in range(8) %}
+                            <div class="checklist-item">
+                                <div class="checkbox"></div>
+                                <div>Sample checklist item {{ i + 1 }} for {{ form[3] }} inspection requirements</div>
+                            </div>
+                            {% endfor %}
+                            <div style="margin-top: 15px; font-style: italic; color: #6b7280;">
+                                ... and {{ form[6] - 8 if form[6] > 8 else 0 }} more checklist items
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <div class="section-title">OVERALL ASSESSMENT</div>
+                            <div class="form-field">
+                                <div class="field-label">Overall Score:</div>
+                                <div class="field-input"></div>
+                            </div>
+                            <div class="form-field">
+                                <div class="field-label">Result:</div>
+                                <div class="field-input"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Document Toolbar -->
+                    <div class="document-toolbar">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-gray-600 font-medium">{{ form[1] }}</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="event.stopPropagation(); editForm({{ form[0] }})" class="btn btn-primary">
+                                <i class="fas fa-edit"></i>
+                                Edit
+                            </button>
+                            <button onclick="event.stopPropagation(); cloneForm({{ form[0] }})" class="btn btn-outline">
+                                <i class="fas fa-copy"></i>
+                                Clone
+                            </button>
+                            <button onclick="event.stopPropagation(); previewForm({{ form[0] }})" class="btn btn-success">
+                                <i class="fas fa-eye"></i>
+                                Preview
+                            </button>
+                        </div>
+                    </div>
                 </div>
-
-                <p class="text-gray-600 mb-3">{{ form[2] or 'No description' }}</p>
-
-                <div class="mb-4">
-                    <span class="text-sm text-gray-500">Type:</span>
-                    <span class="text-sm font-medium">{{ form[3] }}</span>
-                </div>
-
-                <div class="mb-4">
-                    <span class="text-sm text-gray-500">Items:</span>
-                    <span class="text-sm font-medium">{{ form[6] }} items</span>
-                </div>
-
-                <div class="mb-4">
-                    <span class="text-sm text-gray-500">Version:</span>
-                    <span class="text-sm font-medium">{{ form[5] }}</span>
-                </div>
-
-                <div class="flex flex-wrap gap-2">
-                    <a href="/admin/forms/edit/{{ form[0] }}" class="btn btn-primary">Edit</a>
-                    <a href="/admin/forms/preview/{{ form[0] }}" class="btn btn-secondary">Preview</a>
-                    <button onclick="cloneForm({{ form[0] }})" class="btn btn-warning">Clone</button>
-                    {% if form[4] %}
-                    <button onclick="deleteForm({{ form[0] }})" class="btn btn-danger">Delete</button>
-                    {% endif %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-16">
+                <div class="max-w-md mx-auto">
+                    <i class="fas fa-file-alt text-6xl text-gray-300 mb-6"></i>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">No Form Templates</h3>
+                    <p class="text-gray-600 mb-8">Create your first inspection form template to get started.</p>
+                    <button onclick="createNewForm()" class="btn btn-primary">
+                        <i class="fas fa-plus mr-2"></i>
+                        Create First Template
+                    </button>
                 </div>
             </div>
-            {% endfor %}
-        </div>
-
-        {% if not forms %}
-        <div class="text-center py-12">
-            <h3 class="text-xl text-gray-600 mb-4">No forms found</h3>
-            <a href="/admin/forms/create" class="btn btn-success">Create Your First Form</a>
-        </div>
         {% endif %}
     </div>
 
+    <!-- Floating Toolbar -->
+    <div class="floating-toolbar">
+        <button onclick="createNewForm()" class="btn btn-primary" title="Create New Template">
+            <i class="fas fa-plus"></i>
+        </button>
+        <button onclick="refreshView()" class="btn btn-outline" title="Refresh">
+            <i class="fas fa-sync"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar for Form Details -->
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-900">Form Details</h3>
+                <button onclick="closeSidebar()" class="btn btn-outline">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="sidebar-content">
+            <div id="sidebar-content">
+                <!-- Dynamic content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div id="overlay" class="overlay" onclick="closeSidebar()"></div>
+
+    <!-- Notifications -->
+    <div id="notification" class="fixed top-6 right-6 z-50 hidden">
+        <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-sm">
+            <div id="notification-content"></div>
+        </div>
+    </div>
+
     <script>
-        async function cloneForm(formId) {
-            if (!confirm('Create a copy of this form?')) return;
+        function selectForm(formId) {
+            // You can expand this to show more details in sidebar
+            console.log('Selected form:', formId);
+        }
 
-            try {
-                const response = await fetch(`/admin/forms/clone/${formId}`, {
+        function editForm(formId) {
+            window.location.href = `/admin/forms/edit/${formId}`;
+        }
+
+        function cloneForm(formId) {
+            if (confirm('Create a copy of this form template?')) {
+                fetch(`/admin/forms/clone/${formId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Form template cloned successfully!', 'success');
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        showNotification('Error cloning form: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    showNotification('Error cloning form template', 'error');
                 });
-
-                const result = await response.json();
-                if (result.success) {
-                    location.reload();
-                } else {
-                    alert('Error cloning form: ' + result.error);
-                }
-            } catch (error) {
-                alert('Error cloning form: ' + error.message);
             }
         }
 
-        async function deleteForm(formId) {
-            if (!confirm('Are you sure you want to delete this form? This action cannot be undone.')) return;
-
-            try {
-                const response = await fetch(`/admin/forms/delete/${formId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    location.reload();
-                } else {
-                    alert('Error deleting form: ' + result.error);
-                }
-            } catch (error) {
-                alert('Error deleting form: ' + error.message);
-            }
+        function previewForm(formId) {
+            window.location.href = `/admin/forms/preview/${formId}`;
         }
+
+        function createNewForm() {
+            window.location.href = '/admin/forms/create';
+        }
+
+        function refreshView() {
+            window.location.reload();
+        }
+
+        function openSidebar() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('overlay').classList.add('open');
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('overlay').classList.remove('open');
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const content = document.getElementById('notification-content');
+
+            const iconClass = type === 'success' ? 'fa-check-circle text-green-600' :
+                            type === 'error' ? 'fa-exclamation-circle text-red-600' :
+                            'fa-info-circle text-blue-600';
+
+            content.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${iconClass} mr-3"></i>
+                    <span class="text-gray-900">${message}</span>
+                </div>
+            `;
+
+            notification.classList.remove('hidden');
+            setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Add smooth scroll and animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate document containers on load
+            const containers = document.querySelectorAll('.document-container');
+            containers.forEach((container, index) => {
+                container.style.opacity = '0';
+                container.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    container.style.transition = 'all 0.4s ease';
+                    container.style.opacity = '1';
+                    container.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
     </script>
 </body>
 </html>

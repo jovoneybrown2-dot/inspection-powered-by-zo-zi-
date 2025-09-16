@@ -1257,15 +1257,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Inspection Type</label>
                         <select id="reportInspectionType" class="px-3 py-2 border border-gray-300 rounded-md w-full text-sm">
-                            <option value="all">All Types (134 total)</option>
-                            <option value="Food Establishment">Food Establishment (18)</option>
-                            <option value="Small Hotel">Small Hotel (30)</option>
-                            <option value="Swimming Pool">Swimming Pool (13)</option>
-                            <option value="Institutional Health">Institutional Health (9)</option>
-                            <option value="Spirit Licence Premises">Spirit Licence Premises (6)</option>
-                            <option value="Barbershop">Barbershop (5)</option>
-                            <option value="Residential">Residential (23)</option>
-                            <option value="Burial">Burial Site (30)</option>
+                            <option value="all">Loading form types...</option>
                         </select>
                     </div>
 
@@ -1649,6 +1641,9 @@
 
             // Initialize all charts
             initializeCharts();
+
+            // Load dynamic form types for dropdown
+            loadFormTypes();
 
             // Handle custom date range toggle for reports
             const timeframeSelect = document.getElementById('reportTimeframe');
@@ -4384,20 +4379,17 @@ function showFormSuccess(formType, message) {
 
         // Window resize handler for charts
         window.addEventListener('resize', function() {
-            Object.values(charts).forEach(chartObj => {
-                if (chartObj && chartObj.chart && typeof chartObj.chart.container === 'function') {
-                    try {
-                        const container = chartObj.chart.container();
-                        if (container) {
-                            chartObj.chart.applyOptions({
-                                width: container.offsetWidth,
-                            });
+            if (typeof charts !== 'undefined' && charts) {
+                Object.values(charts).forEach(chartObj => {
+                    if (chartObj && chartObj.chart && chartObj.chart.resize && typeof chartObj.chart.resize === 'function') {
+                        try {
+                            chartObj.chart.resize();
+                        } catch (error) {
+                            console.log('Chart resize error:', error);
                         }
-                    } catch (e) {
-                        console.log('Chart resize error:', e);
                     }
-                }
-            });
+                });
+            }
         });
 
         // Debug functions
@@ -4416,6 +4408,91 @@ function showFormSuccess(formType, message) {
                 console.error('Could not fetch real counts:', error);
             }
         };
+
+        // Legacy function compatibility - prevent errors from old buttons
+        function generateReport() {
+            console.log('generateReport called - redirecting to dashboard');
+            generateDashboard();
+        }
+
+        function generateComprehensiveReport() {
+            console.log('generateComprehensiveReport called - redirecting to dashboard');
+            generateDashboard();
+        }
+
+        // Make functions globally available
+        window.generateReport = generateReport;
+        window.generateComprehensiveReport = generateComprehensiveReport;
+
+        // Load dynamic form types for dropdown
+        async function loadFormTypes() {
+            try {
+                // Get form types from API with counts from existing database
+                const response = await fetch('/api/inspection_counts');
+                const counts = await response.json();
+
+                const dropdown = document.getElementById('reportInspectionType');
+                if (!dropdown) return;
+
+                // Clear existing options
+                dropdown.innerHTML = '';
+
+                // Add "All Types" option with total count
+                const totalCount = Object.values(counts).reduce((sum, count) => sum + count, 0);
+                dropdown.innerHTML += `<option value="all">All Types (${totalCount} total)</option>`;
+
+                // Add standard form types with counts
+                const standardFormTypes = {
+                    'Food Establishment': counts.food_establishment || 0,
+                    'Small Hotel': counts.small_hotel || 0,
+                    'Swimming Pool': counts.swimming_pool || 0,
+                    'Institutional Health': counts.institutional_health || 0,
+                    'Spirit Licence Premises': counts.spirit_licence || 0,
+                    'Barbershop': counts.barbershop || 0,
+                    'Residential': counts.residential || 0,
+                    'Burial': counts.burial || 0
+                };
+
+                // Add standard form types that have data
+                Object.entries(standardFormTypes).forEach(([formType, count]) => {
+                    if (count > 0) {
+                        const displayName = formType === 'Burial' ? 'Burial Site' : formType;
+                        dropdown.innerHTML += `<option value="${formType}">${displayName} (${count})</option>`;
+                    }
+                });
+
+                // Add any custom form types from the API
+                const standardKeys = Object.keys(standardFormTypes).map(k => k.toLowerCase().replace(' ', '_'));
+                Object.entries(counts).forEach(([key, count]) => {
+                    if (!standardKeys.includes(key) && count > 0) {
+                        // Convert key back to display format
+                        const displayName = key.split('_').map(word =>
+                            word.charAt(0).toUpperCase() + word.slice(1)
+                        ).join(' ');
+                        dropdown.innerHTML += `<option value="${displayName}">${displayName} (${count})</option>`;
+                    }
+                });
+
+                console.log('Form types loaded successfully');
+            } catch (error) {
+                console.error('Error loading form types:', error);
+                // Fallback to static options if API fails
+                const dropdown = document.getElementById('reportInspectionType');
+                if (dropdown) {
+                    dropdown.innerHTML = `
+                        <option value="all">All Types</option>
+                        <option value="Food Establishment">Food Establishment</option>
+                        <option value="Small Hotel">Small Hotel</option>
+                        <option value="Swimming Pool">Swimming Pool</option>
+                        <option value="Institutional Health">Institutional Health</option>
+                        <option value="Spirit Licence Premises">Spirit Licence Premises</option>
+                        <option value="Barbershop">Barbershop</option>
+                        <option value="Residential">Residential</option>
+                        <option value="Burial">Burial Site</option>
+                    `;
+                }
+            }
+        }
 
         // Close messaging panel when clicking outside
         document.addEventListener('click', function(e) {
