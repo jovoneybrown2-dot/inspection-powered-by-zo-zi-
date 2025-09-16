@@ -259,6 +259,24 @@ def get_inspections():
     conn.close()
     return inspections
 
+def get_inspections_by_inspector(inspector_name, inspection_type='all'):
+    conn = sqlite3.connect('inspections.db')
+    c = conn.cursor()
+
+    if inspection_type == 'all':
+        c.execute("""SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment,
+                     created_at, result, form_type FROM inspections
+                     WHERE inspector_name = ? ORDER BY inspection_date DESC""", (inspector_name,))
+    else:
+        c.execute("""SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment,
+                     created_at, result, form_type FROM inspections
+                     WHERE inspector_name = ? AND (form_type = ? OR type_of_establishment = ?)
+                     ORDER BY inspection_date DESC""", (inspector_name, inspection_type, inspection_type))
+
+    inspections = c.fetchall()
+    conn.close()
+    return inspections
+
 def get_burial_inspections():
     conn = sqlite3.connect('inspections.db')
     c = conn.cursor()

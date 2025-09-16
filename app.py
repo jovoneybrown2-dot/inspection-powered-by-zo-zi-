@@ -26,6 +26,7 @@ from database import (
     save_inspection,
     save_burial_inspection,
     get_inspections,
+    get_inspections_by_inspector,
     get_burial_inspections,
     get_inspection_details,
     get_burial_inspection_details
@@ -488,36 +489,24 @@ def admin():
 def admin_form_scores():
     form_type = request.args.get('form_type', 'all')
 
-    # Establish database connection
-    import sqlite3
-    conn = sqlite3.connect('inspection.db')  # Replace with your actual database file name
+    conn = sqlite3.connect('inspections.db')
     cursor = conn.cursor()
 
     try:
         if form_type == 'all':
-            # Get scores from all form types
             cursor.execute("""
-                SELECT score FROM food_establishment_forms WHERE score IS NOT NULL
+                SELECT overall_score FROM inspections 
+                WHERE overall_score IS NOT NULL AND overall_score > 0
                 UNION ALL
-                SELECT score FROM residential_forms WHERE score IS NOT NULL
-                UNION ALL
-                SELECT score FROM burial_forms WHERE score IS NOT NULL
-                UNION ALL
-                SELECT score FROM spirit_licence_forms WHERE score IS NOT NULL
-                UNION ALL
-                SELECT score FROM swimming_pool_forms WHERE score IS NOT NULL
-                UNION ALL
-                SELECT score FROM small_hotels_forms WHERE score IS NOT NULL
-                UNION ALL
-                SELECT score FROM barbershop_forms WHERE score IS NOT NULL
-                UNION ALL
-                SELECT score FROM institutional_forms WHERE score IS NOT NULL
+                SELECT overall_score FROM residential_inspections 
+                WHERE overall_score IS NOT NULL AND overall_score > 0
             """)
             scores = cursor.fetchall()
         else:
-            # Get scores for specific form type
-            table_name = get_table_name_for_form_type(form_type)
-            cursor.execute(f"SELECT score FROM {table_name} WHERE score IS NOT NULL")
+            cursor.execute("""
+                SELECT overall_score FROM inspections 
+                WHERE form_type = ? AND overall_score IS NOT NULL AND overall_score > 0
+            """, (form_type,))
             scores = cursor.fetchall()
 
         return jsonify([score[0] for score in scores])
@@ -528,6 +517,10 @@ def admin_form_scores():
 
     finally:
         conn.close()
+
+
+def get_table_name_for_form_type(form_type):
+    return 'inspections'
 
 
 @app.route('/admin_metrics', methods=['GET'])
@@ -6269,15 +6262,29 @@ def handle_tasks():
         elif request.method == 'POST':
             data = request.get_json()
 
-            # Get assignee name from users table
-            cursor.execute('SELECT username FROM users WHERE id = ?', (data['assignee'],))
-            user = cursor.fetchone()
-            assignee_name = user[0] if user else 'Unknown'
+            # Handle assignee - can be username or ID
+            assignee = data.get('assignee')
+            assignee_id = None
+            assignee_name = assignee
+
+            # Check if assignee is a username/string or ID
+            if assignee and not assignee.isdigit():
+                # It's a username, look up the ID
+                cursor.execute('SELECT id FROM users WHERE username = ?', (assignee,))
+                user = cursor.fetchone()
+                assignee_id = user[0] if user else None
+                assignee_name = assignee
+            elif assignee and assignee.isdigit():
+                # It's a user ID
+                cursor.execute('SELECT username FROM users WHERE id = ?', (int(assignee),))
+                user = cursor.fetchone()
+                assignee_name = user[0] if user else 'Unknown'
+                assignee_id = int(assignee)
 
             cursor.execute('''
                 INSERT INTO tasks (title, assignee_id, assignee_name, due_date, details, status)
                 VALUES (?, ?, ?, ?, ?, 'Pending')
-            ''', (data['title'], data['assignee'], assignee_name, data['due_date'], data['details']))
+            ''', (data['title'], assignee_id, assignee_name, data['due_date'], data.get('description', '')))
 
             conn.commit()
             conn.close()
@@ -7438,11 +7445,39 @@ def get_my_inspections():
     if 'inspector' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
-    inspector_name = session.get('inspector')  # or however you store the username
+    inspector_name = session.get('inspector')
     inspection_type = request.args.get('type', 'all')
 
-    # Query your database for inspections by this inspector
-    # Return JSON with inspections list
+    try:
+        inspections = get_inspections_by_inspector(inspector_name, inspection_type)
+
+        # Convert to list of dictionaries for JSON response
+        inspections_list = []
+        for inspection in inspections:
+            form_type = inspection[7] if len(inspection) > 7 else ''
+            type_of_establishment = inspection[4]
+
+            # Determine the inspection type for the frontend
+            inspection_type = form_type if form_type else type_of_establishment
+            if not inspection_type:
+                inspection_type = 'food'  # default
+
+            inspections_list.append({
+                'id': inspection[0],
+                'establishment_name': inspection[1],
+                'inspector_name': inspection[2],
+                'inspection_date': inspection[3],
+                'type_of_establishment': type_of_establishment,
+                'type': inspection_type,  # Add this for frontend compatibility
+                'created_at': inspection[5],
+                'result': inspection[6],
+                'form_type': form_type
+            })
+
+        return jsonify({'inspections': inspections_list})
+
+    except Exception as e:
+        return jsonify({'error': f'Database error: {str(e)}'}), 500
 
 
 @app.route('/admin/forms/create')
@@ -8293,6 +8328,1483 @@ def small_hotels_inspection_detail(id):
 
     return render_template('small_hotels_inspection_detail.html',
                            inspection=inspection_obj)
+
+# SIMPLIFIED INSPECTION REPORTS
+@app.route('/api/admin/generate_report', methods=['POST'])
+def generate_admin_report():
+    if 'admin' not in session and 'inspector' not in session:
+        return jsonify({'error': 'Unauthorized - Please log in'}), 401
+
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data received'}), 400
+
+        report_type = data.get('reportType', 'basic_summary')
+        inspection_type = data.get('inspectionType', 'all')
+        start_date = data.get('startDate')
+        end_date = data.get('endDate')
+
+        print(f"DEBUG: Received data: {data}")
+        print(f"DEBUG: Report type: {report_type}, Inspection type: {inspection_type}")
+        print(f"DEBUG: Date range: {start_date} to {end_date}")
+
+        if not start_date or not end_date:
+            return jsonify({'error': 'Start date and end date are required'}), 400
+
+        # Generate basic report based on type
+        report_generators = {
+            'basic_summary': generate_basic_summary_report,
+            'trend_analysis': generate_trend_analysis_report,
+            'failure_breakdown': generate_failure_breakdown_report,
+            'inspector_performance': generate_inspector_performance_report,
+            'scores_by_type': generate_scores_by_type_report,
+            'monthly_trends': generate_monthly_trends_report,
+            'establishment_ranking': generate_establishment_ranking_report
+        }
+
+        generator_func = report_generators.get(report_type, generate_basic_summary_report)
+        print(f"DEBUG: Using generator function: {generator_func.__name__}")
+
+        report = generator_func(inspection_type, start_date, end_date)
+        print(f"DEBUG: Generated report: {report}")
+
+        return jsonify({
+            'success': True,
+            'report': report,
+            'metadata': {
+                'generated_at': datetime.now().isoformat(),
+                'report_type': report_type,
+                'inspection_type': inspection_type,
+                'date_range': f"{start_date} to {end_date}"
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Basic Report Generator Functions
+def generate_basic_summary_report(inspection_type, start_date, end_date):
+    try:
+        print(f"DEBUG: Generating basic summary for {inspection_type} from {start_date} to {end_date}")
+
+        conn = sqlite3.connect('inspections.db')
+        c = conn.cursor()
+
+        # Build query based on inspection type
+        if inspection_type == 'all':
+            query = """
+                SELECT
+                    COUNT(*) as total,
+                    SUM(CASE WHEN overall_score >= 70 THEN 1 ELSE 0 END) as passed,
+                    SUM(CASE WHEN overall_score < 70 THEN 1 ELSE 0 END) as failed
+                FROM inspections
+                WHERE inspection_date BETWEEN ? AND ?
+                AND inspection_date IS NOT NULL
+            """
+            params = (start_date, end_date)
+        else:
+            query = """
+                SELECT
+                    COUNT(*) as total,
+                    SUM(CASE WHEN overall_score >= 70 THEN 1 ELSE 0 END) as passed,
+                    SUM(CASE WHEN overall_score < 70 THEN 1 ELSE 0 END) as failed
+                FROM inspections
+                WHERE inspection_date BETWEEN ? AND ?
+                AND form_type = ?
+                AND inspection_date IS NOT NULL
+            """
+            params = (start_date, end_date, inspection_type)
+
+        c.execute(query, params)
+        result = c.fetchone()
+
+        total_inspections = result[0] or 0
+        passed_inspections = result[1] or 0
+        failed_inspections = result[2] or 0
+
+        pass_percentage = (passed_inspections / total_inspections * 100) if total_inspections > 0 else 0
+        fail_percentage = (failed_inspections / total_inspections * 100) if total_inspections > 0 else 0
+
+        # Calculate daily averages
+        if inspection_type == 'all':
+            daily_query = """
+                SELECT DATE(inspection_date) as date, COUNT(*) as count
+                FROM inspections
+                WHERE inspection_date BETWEEN ? AND ?
+                AND inspection_date IS NOT NULL
+                GROUP BY DATE(inspection_date)
+            """
+            daily_params = (start_date, end_date)
+        else:
+            daily_query = """
+                SELECT DATE(inspection_date) as date, COUNT(*) as count
+                FROM inspections
+                WHERE inspection_date BETWEEN ? AND ?
+                AND form_type = ?
+                AND inspection_date IS NOT NULL
+                GROUP BY DATE(inspection_date)
+            """
+            daily_params = (start_date, end_date, inspection_type)
+
+        c.execute(daily_query, daily_params)
+        daily_results = c.fetchall()
+
+        avg_daily = sum([count for date, count in daily_results]) / len(daily_results) if daily_results else 0
+
+        conn.close()
+
+        print(f"DEBUG: Found {total_inspections} inspections, {passed_inspections} passed, {failed_inspections} failed")
+
+        return {
+            'title': f'Basic Summary Report - {inspection_type}',
+            'summary': {
+                'total_inspections': total_inspections,
+                'passed_inspections': passed_inspections,
+                'failed_inspections': failed_inspections,
+                'pass_percentage': round(pass_percentage, 1),
+                'fail_percentage': round(fail_percentage, 1),
+                'average_daily_inspections': round(avg_daily, 1)
+            },
+            'date_range': f"{start_date} to {end_date}",
+            'charts': {
+                'pass_fail_chart': {
+                    'passed': passed_inspections,
+                    'failed': failed_inspections
+                }
+            }
+        }
+    except Exception as e:
+        print(f"DEBUG: Error in generate_basic_summary_report: {str(e)}")
+        return {'error': f'Error generating basic summary: {str(e)}'}
+
+def generate_trend_analysis_report(inspection_type, start_date, end_date):
+    try:
+        conn = sqlite3.connect('inspections.db')
+        c = conn.cursor()
+
+        # Get weekly trend data
+        if inspection_type == 'all':
+            query = """
+                SELECT
+                    strftime('%Y-W%W', inspection_date) as week,
+                    COUNT(*) as total,
+                    SUM(CASE WHEN overall_score < 70 THEN 1 ELSE 0 END) as failed
+                FROM inspections
+                WHERE inspection_date BETWEEN ? AND ?
+                AND inspection_date IS NOT NULL
+                GROUP BY strftime('%Y-W%W', inspection_date)
+                ORDER BY week
+            """
+            params = (start_date, end_date)
+        else:
+            query = """
+                SELECT
+                    strftime('%Y-W%W', inspection_date) as week,
+                    COUNT(*) as total,
+                    SUM(CASE WHEN overall_score < 70 THEN 1 ELSE 0 END) as failed
+                FROM inspections
+                WHERE inspection_date BETWEEN ? AND ?
+                AND form_type = ?
+                AND inspection_date IS NOT NULL
+                GROUP BY strftime('%Y-W%W', inspection_date)
+                ORDER BY week
+            """
+            params = (start_date, end_date, inspection_type)
+
+        c.execute(query, params)
+        results = c.fetchall()
+        conn.close()
+
+        # Process results
+        trend_data = []
+        for week, total, failed in results:
+            failure_rate = (failed / total * 100) if total > 0 else 0
+            trend_data.append({
+                'week': week,
+                'total': total,
+                'failed': failed or 0,
+                'failure_rate': round(failure_rate, 1)
+            })
+
+        # Determine if failures are increasing or decreasing
+        if len(trend_data) >= 2:
+            recent_avg = sum([d['failure_rate'] for d in trend_data[-3:]]) / min(3, len(trend_data))
+            older_avg = sum([d['failure_rate'] for d in trend_data[:3]]) / min(3, len(trend_data))
+            trend_direction = "Increasing" if recent_avg > older_avg else "Decreasing"
+        else:
+            trend_direction = "Insufficient data"
+
+        return {
+            'title': f'Trend Analysis Report - {inspection_type}',
+            'trend_direction': trend_direction,
+            'weekly_data': trend_data,
+            'summary': {
+                'total_weeks': len(trend_data),
+                'avg_weekly_inspections': round(sum([d['total'] for d in trend_data]) / len(trend_data), 1) if trend_data else 0,
+                'avg_failure_rate': round(sum([d['failure_rate'] for d in trend_data]) / len(trend_data), 1) if trend_data else 0
+            }
+        }
+    except Exception as e:
+        return {'error': f'Error generating trend analysis: {str(e)}'}
+
+def generate_failure_breakdown_report(inspection_type, start_date, end_date):
+    try:
+        conn = sqlite3.connect('inspections.db')
+        c = conn.cursor()
+
+        # Get total failed inspections count
+        if inspection_type == 'all':
+            failed_query = """
+                SELECT COUNT(*)
+                FROM inspections
+                WHERE inspection_date BETWEEN ? AND ?
+                AND overall_score < 70
+                AND inspection_date IS NOT NULL
+            """
+            failed_params = (start_date, end_date)
+        else:
+            failed_query = """
+                SELECT COUNT(*)
+                FROM inspections
+                WHERE inspection_date BETWEEN ? AND ?
+                AND form_type = ?
+                AND overall_score < 70
+                AND inspection_date IS NOT NULL
+            """
+            failed_params = (start_date, end_date, inspection_type)
+
+        c.execute(failed_query, failed_params)
+        total_failed = c.fetchone()[0] or 0
+
+        # Get failed checklist items (this might need adjustment based on your actual schema)
+        # For now, let's get some basic failure analysis from the inspections table
+        if inspection_type == 'all':
+            items_query = """
+                SELECT form_type, COUNT(*) as failure_count
+                FROM inspections
+                WHERE inspection_date BETWEEN ? AND ?
+                AND overall_score < 70
+                AND inspection_date IS NOT NULL
+                GROUP BY form_type
+                ORDER BY failure_count DESC
+                LIMIT 10
+            """
+            items_params = (start_date, end_date)
+        else:
+            # For specific inspection type, we'll create mock categories for demonstration
+            items_query = """
+                SELECT
+                    CASE
+                        WHEN overall_score < 30 THEN 'Critical Violations'
+                        WHEN overall_score < 50 THEN 'Major Violations'
+                        ELSE 'Minor Violations'
+                    END as category,
+                    COUNT(*) as failure_count
+                FROM inspections
+                WHERE inspection_date BETWEEN ? AND ?
+                AND form_type = ?
+                AND overall_score < 70
+                AND inspection_date IS NOT NULL
+                GROUP BY category
+                ORDER BY failure_count DESC
+            """
+            items_params = (start_date, end_date, inspection_type)
+
+        c.execute(items_query, items_params)
+        items_results = c.fetchall()
+
+        conn.close()
+
+        # Format results
+        top_failed_items = [{'item': item, 'count': count} for item, count in items_results]
+
+        return {
+            'title': f'Failure Breakdown Report - {inspection_type}',
+            'total_failed_inspections': total_failed,
+            'top_failed_items': top_failed_items,
+            'top_failed_categories': top_failed_items[:5],  # Use same data for categories
+            'summary': {
+                'most_common_failure': top_failed_items[0]['item'] if top_failed_items else 'No failures found',
+                'failure_frequency': top_failed_items[0]['count'] if top_failed_items else 0
+            }
+        }
+    except Exception as e:
+        return {'error': f'Error generating failure breakdown: {str(e)}'}
+
+def generate_inspector_performance_report(inspection_type, start_date, end_date):
+    try:
+        conn = sqlite3.connect('inspections.db')
+        c = conn.cursor()
+
+        # Get inspector performance data
+        if inspection_type == 'all':
+            query = """
+                SELECT
+                    inspector_name,
+                    COUNT(*) as total_inspections,
+                    SUM(CASE WHEN overall_score >= 70 THEN 1 ELSE 0 END) as passed_inspections,
+                    AVG(CASE WHEN overall_score IS NOT NULL THEN overall_score ELSE 0 END) as avg_score
+                FROM inspections
+                WHERE inspection_date BETWEEN ? AND ?
+                AND inspection_date IS NOT NULL
+                AND inspector_name IS NOT NULL
+                GROUP BY inspector_name
+                ORDER BY total_inspections DESC
+            """
+            params = (start_date, end_date)
+        else:
+            query = """
+                SELECT
+                    inspector_name,
+                    COUNT(*) as total_inspections,
+                    SUM(CASE WHEN overall_score >= 70 THEN 1 ELSE 0 END) as passed_inspections,
+                    AVG(CASE WHEN overall_score IS NOT NULL THEN overall_score ELSE 0 END) as avg_score
+                FROM inspections
+                WHERE inspection_date BETWEEN ? AND ?
+                AND form_type = ?
+                AND inspection_date IS NOT NULL
+                AND inspector_name IS NOT NULL
+                GROUP BY inspector_name
+                ORDER BY total_inspections DESC
+            """
+            params = (start_date, end_date, inspection_type)
+
+        c.execute(query, params)
+        results = c.fetchall()
+        conn.close()
+
+        # Process results
+        performance_data = []
+        for inspector, total, passed, avg_score in results:
+            pass_rate = (passed / total * 100) if total > 0 else 0
+            performance_data.append({
+                'inspector': inspector or 'Unknown',
+                'total_inspections': total,
+                'passed_inspections': passed or 0,
+                'pass_rate': round(pass_rate, 1),
+                'avg_time_days': 1  # Simplified - actual calculation would need more data
+            })
+
+        return {
+            'title': f'Inspector Performance Report - {inspection_type}',
+            'inspector_performance': performance_data,
+            'summary': {
+                'total_inspectors': len(performance_data),
+                'most_active_inspector': performance_data[0]['inspector'] if performance_data else 'None',
+                'highest_pass_rate': max([p['pass_rate'] for p in performance_data]) if performance_data else 0
+            }
+        }
+    except Exception as e:
+        return {'error': f'Error generating inspector performance: {str(e)}'}
+
+def generate_scores_by_type_report(inspection_type, start_date, end_date):
+    try:
+        conn = sqlite3.connect('inspections.db')
+        c = conn.cursor()
+
+        # Get scores by form type from all tables
+        scores_data = []
+
+        # Regular inspections
+        query = """
+            SELECT form_type, AVG(overall_score) as avg_score, COUNT(*) as count
+            FROM inspections
+            WHERE inspection_date BETWEEN ? AND ?
+            AND inspection_date IS NOT NULL
+            AND overall_score IS NOT NULL
+            GROUP BY form_type
+        """
+        c.execute(query, (start_date, end_date))
+        regular_results = c.fetchall()
+
+        for form_type, avg_score, count in regular_results:
+            scores_data.append({
+                'type': form_type or 'Unknown',
+                'avg_score': round(avg_score, 1),
+                'count': count,
+                'source': 'inspections'
+            })
+
+        # Residential inspections
+        res_query = """
+            SELECT 'Residential' as form_type, AVG(overall_score) as avg_score, COUNT(*) as count
+            FROM residential_inspections
+            WHERE inspection_date BETWEEN ? AND ?
+            AND inspection_date IS NOT NULL
+            AND overall_score IS NOT NULL
+        """
+        c.execute(res_query, (start_date, end_date))
+        res_result = c.fetchone()
+
+        if res_result and res_result[2] > 0:
+            scores_data.append({
+                'type': 'Residential',
+                'avg_score': round(res_result[1], 1),
+                'count': res_result[2],
+                'source': 'residential_inspections'
+            })
+
+        # Burial inspections don't have scores, so we'll show count only
+        burial_query = """
+            SELECT COUNT(*) as count
+            FROM burial_site_inspections
+            WHERE inspection_date BETWEEN ? AND ?
+            AND inspection_date IS NOT NULL
+        """
+        c.execute(burial_query, (start_date, end_date))
+        burial_result = c.fetchone()
+
+        if burial_result and burial_result[0] > 0:
+            scores_data.append({
+                'type': 'Burial Site',
+                'avg_score': 'N/A (No scoring)',
+                'count': burial_result[0],
+                'source': 'burial_site_inspections'
+            })
+
+        conn.close()
+
+        return {
+            'title': 'Inspection Scores by Type',
+            'scores_by_type': scores_data,
+            'summary': {
+                'total_types': len(scores_data),
+                'highest_avg_type': max(scores_data, key=lambda x: x['avg_score'] if isinstance(x['avg_score'], (int, float)) else 0)['type'] if scores_data else 'None'
+            }
+        }
+    except Exception as e:
+        return {'error': f'Error generating scores by type: {str(e)}'}
+
+def generate_monthly_trends_report(inspection_type, start_date, end_date):
+    try:
+        conn = sqlite3.connect('inspections.db')
+        c = conn.cursor()
+
+        # Get monthly trends from all tables
+        monthly_data = []
+
+        # Regular inspections
+        if inspection_type == 'all':
+            query = """
+                SELECT
+                    strftime('%Y-%m', inspection_date) as month,
+                    COUNT(*) as total,
+                    SUM(CASE WHEN overall_score >= 70 THEN 1 ELSE 0 END) as passed
+                FROM inspections
+                WHERE inspection_date BETWEEN ? AND ?
+                AND inspection_date IS NOT NULL
+                GROUP BY strftime('%Y-%m', inspection_date)
+                ORDER BY month
+            """
+            params = (start_date, end_date)
+        else:
+            query = """
+                SELECT
+                    strftime('%Y-%m', inspection_date) as month,
+                    COUNT(*) as total,
+                    SUM(CASE WHEN overall_score >= 70 THEN 1 ELSE 0 END) as passed
+                FROM inspections
+                WHERE inspection_date BETWEEN ? AND ?
+                AND form_type = ?
+                AND inspection_date IS NOT NULL
+                GROUP BY strftime('%Y-%m', inspection_date)
+                ORDER BY month
+            """
+            params = (start_date, end_date, inspection_type)
+
+        c.execute(query, params)
+        results = c.fetchall()
+
+        for month, total, passed in results:
+            pass_rate = (passed / total * 100) if total > 0 else 0
+            monthly_data.append({
+                'month': month,
+                'total': total,
+                'passed': passed or 0,
+                'failed': total - (passed or 0),
+                'pass_rate': round(pass_rate, 1)
+            })
+
+        # Add residential data if inspection_type is 'all' or 'Residential'
+        if inspection_type == 'all' or inspection_type == 'Residential':
+            res_query = """
+                SELECT
+                    strftime('%Y-%m', inspection_date) as month,
+                    COUNT(*) as total,
+                    SUM(CASE WHEN overall_score >= 70 THEN 1 ELSE 0 END) as passed
+                FROM residential_inspections
+                WHERE inspection_date BETWEEN ? AND ?
+                AND inspection_date IS NOT NULL
+                GROUP BY strftime('%Y-%m', inspection_date)
+                ORDER BY month
+            """
+            c.execute(res_query, (start_date, end_date))
+            res_results = c.fetchall()
+
+            # Merge residential data with existing monthly data
+            for month, total, passed in res_results:
+                existing_month = next((item for item in monthly_data if item['month'] == month), None)
+                if existing_month:
+                    existing_month['total'] += total
+                    existing_month['passed'] += passed or 0
+                    existing_month['failed'] = existing_month['total'] - existing_month['passed']
+                    existing_month['pass_rate'] = round((existing_month['passed'] / existing_month['total'] * 100), 1)
+                else:
+                    pass_rate = (passed / total * 100) if total > 0 else 0
+                    monthly_data.append({
+                        'month': month,
+                        'total': total,
+                        'passed': passed or 0,
+                        'failed': total - (passed or 0),
+                        'pass_rate': round(pass_rate, 1)
+                    })
+
+        conn.close()
+
+        # Sort by month
+        monthly_data.sort(key=lambda x: x['month'])
+
+        return {
+            'title': 'Monthly Trends Analysis',
+            'monthly_trends': monthly_data,
+            'summary': {
+                'total_months': len(monthly_data),
+                'avg_monthly_inspections': round(sum([m['total'] for m in monthly_data]) / len(monthly_data), 1) if monthly_data else 0,
+                'avg_pass_rate': round(sum([m['pass_rate'] for m in monthly_data]) / len(monthly_data), 1) if monthly_data else 0
+            }
+        }
+    except Exception as e:
+        return {'error': f'Error generating monthly trends: {str(e)}'}
+
+def generate_establishment_ranking_report(inspection_type, start_date, end_date):
+    try:
+        conn = sqlite3.connect('inspections.db')
+        c = conn.cursor()
+
+        # Get top performing establishments
+        if inspection_type == 'all':
+            top_query = """
+                SELECT
+                    establishment_name,
+                    owner,
+                    AVG(overall_score) as avg_score,
+                    COUNT(*) as inspection_count,
+                    form_type
+                FROM inspections
+                WHERE inspection_date BETWEEN ? AND ?
+                AND inspection_date IS NOT NULL
+                AND overall_score IS NOT NULL
+                AND establishment_name IS NOT NULL
+                GROUP BY establishment_name, owner
+                HAVING COUNT(*) >= 1
+                ORDER BY avg_score DESC
+                LIMIT 10
+            """
+            params = (start_date, end_date)
+        else:
+            top_query = """
+                SELECT
+                    establishment_name,
+                    owner,
+                    AVG(overall_score) as avg_score,
+                    COUNT(*) as inspection_count,
+                    form_type
+                FROM inspections
+                WHERE inspection_date BETWEEN ? AND ?
+                AND form_type = ?
+                AND inspection_date IS NOT NULL
+                AND overall_score IS NOT NULL
+                AND establishment_name IS NOT NULL
+                GROUP BY establishment_name, owner
+                HAVING COUNT(*) >= 1
+                ORDER BY avg_score DESC
+                LIMIT 10
+            """
+            params = (start_date, end_date, inspection_type)
+
+        c.execute(top_query, params)
+        top_results = c.fetchall()
+
+        # Get worst performing establishments
+        if inspection_type == 'all':
+            worst_query = """
+                SELECT
+                    establishment_name,
+                    owner,
+                    AVG(overall_score) as avg_score,
+                    COUNT(*) as inspection_count,
+                    form_type
+                FROM inspections
+                WHERE inspection_date BETWEEN ? AND ?
+                AND inspection_date IS NOT NULL
+                AND overall_score IS NOT NULL
+                AND establishment_name IS NOT NULL
+                GROUP BY establishment_name, owner
+                HAVING COUNT(*) >= 1
+                ORDER BY avg_score ASC
+                LIMIT 10
+            """
+            params = (start_date, end_date)
+        else:
+            worst_query = """
+                SELECT
+                    establishment_name,
+                    owner,
+                    AVG(overall_score) as avg_score,
+                    COUNT(*) as inspection_count,
+                    form_type
+                FROM inspections
+                WHERE inspection_date BETWEEN ? AND ?
+                AND form_type = ?
+                AND inspection_date IS NOT NULL
+                AND overall_score IS NOT NULL
+                AND establishment_name IS NOT NULL
+                GROUP BY establishment_name, owner
+                HAVING COUNT(*) >= 1
+                ORDER BY avg_score ASC
+                LIMIT 10
+            """
+            params = (start_date, end_date, inspection_type)
+
+        c.execute(worst_query, params)
+        worst_results = c.fetchall()
+
+        conn.close()
+
+        # Process results
+        top_performers = []
+        for name, owner, avg_score, count, form_type in top_results:
+            top_performers.append({
+                'establishment': name or 'Unknown',
+                'owner': owner or 'Unknown',
+                'avg_score': round(avg_score, 1),
+                'inspection_count': count,
+                'type': form_type or 'Unknown'
+            })
+
+        worst_performers = []
+        for name, owner, avg_score, count, form_type in worst_results:
+            worst_performers.append({
+                'establishment': name or 'Unknown',
+                'owner': owner or 'Unknown',
+                'avg_score': round(avg_score, 1),
+                'inspection_count': count,
+                'type': form_type or 'Unknown'
+            })
+
+        return {
+            'title': 'Establishment Performance Ranking',
+            'top_performers': top_performers,
+            'worst_performers': worst_performers,
+            'summary': {
+                'highest_score': top_performers[0]['avg_score'] if top_performers else 0,
+                'lowest_score': worst_performers[0]['avg_score'] if worst_performers else 0,
+                'total_establishments_analyzed': len(set([e['establishment'] for e in top_performers + worst_performers]))
+            }
+        }
+    except Exception as e:
+        return {'error': f'Error generating establishment ranking: {str(e)}'}
+
+# ================== ADVANCED ANALYTICS ENGINE ==================
+
+def generate_comprehensive_multi_dimensional_analysis(inspection_type, start_date, end_date, depth, options):
+    """Generate comprehensive multi-dimensional analysis with deep insights"""
+
+    # Core data aggregation
+    core_stats = get_advanced_statistical_overview(inspection_type, start_date, end_date)
+
+    analysis = {
+        'executiveSummary': core_stats,
+        'total_analyzed_records': core_stats['totalInspections'],
+        'dataQualityMetrics': assess_data_quality(inspection_type, start_date, end_date),
+        'statisticalInsights': generate_statistical_insights(inspection_type, start_date, end_date),
+    }
+
+    if options.get('includeChecklistCorrelations'):
+        analysis['checklistCorrelations'] = analyze_checklist_item_correlations(inspection_type, start_date, end_date)
+
+    if options.get('includeInspectorBehavioral'):
+        analysis['inspectorBehavioralPatterns'] = analyze_inspector_behavioral_patterns(inspection_type, start_date, end_date)
+
+    if options.get('includeTimeSeriesAnalysis'):
+        analysis['timeSeriesDecomposition'] = perform_time_series_decomposition(inspection_type, start_date, end_date)
+
+    if options.get('includeRiskScoring'):
+        analysis['riskScoringModel'] = generate_risk_scoring_model(inspection_type, start_date, end_date)
+
+    if options.get('includeCompliancePatterns'):
+        analysis['compliancePatterns'] = mine_compliance_patterns(inspection_type, start_date, end_date)
+
+    if options.get('includeOutlierDetection'):
+        analysis['outlierAnalysis'] = detect_and_analyze_outliers(inspection_type, start_date, end_date)
+
+    if options.get('includeClusterAnalysis'):
+        analysis['establishmentClusters'] = perform_establishment_clustering(inspection_type, start_date, end_date)
+
+    if options.get('includeSeasonalityAnalysis'):
+        analysis['seasonalityImpact'] = analyze_seasonal_impact_patterns(inspection_type, start_date, end_date)
+
+    if options.get('includeResourceOptimization'):
+        analysis['resourceOptimization'] = generate_resource_optimization_insights(inspection_type, start_date, end_date)
+
+    # Generate advanced recommendations based on all analysis
+    analysis['strategicRecommendations'] = generate_strategic_recommendations(analysis)
+    analysis['actionableTasks'] = generate_actionable_task_recommendations(analysis)
+
+    return analysis
+
+def get_advanced_statistical_overview(inspection_type, start_date, end_date):
+    """Enhanced statistical overview with advanced metrics"""
+    conn = sqlite3.connect('inspections.db')
+    c = conn.cursor()
+
+    # Multi-source data aggregation
+    total_inspections = 0
+    all_scores = []
+    pass_fail_data = []
+    critical_violations = 0
+    inspection_durations = []
+
+    # Query main inspections
+    query = "SELECT result, overall_score, critical_score, created_at, inspection_time FROM inspections WHERE created_at BETWEEN ? AND ?"
+    params = [start_date, end_date]
+
+    if inspection_type != 'all':
+        query += " AND form_type = ?"
+        params.append(inspection_type)
+
+    c.execute(query, params)
+    for row in c.fetchall():
+        result, overall_score, critical_score, created_at, inspection_time = row
+        total_inspections += 1
+
+        if overall_score:
+            all_scores.append(overall_score)
+
+        pass_fail_data.append(1 if result in ['Pass', 'Satisfactory'] else 0)
+
+        if critical_score and critical_score < 50:
+            critical_violations += 1
+
+    # Calculate advanced statistical metrics
+    import statistics
+
+    if all_scores:
+        score_mean = statistics.mean(all_scores)
+        score_median = statistics.median(all_scores)
+        score_std = statistics.stdev(all_scores) if len(all_scores) > 1 else 0
+        score_variance = statistics.variance(all_scores) if len(all_scores) > 1 else 0
+
+        # Quartile analysis
+        all_scores.sort()
+        q1 = all_scores[len(all_scores)//4] if all_scores else 0
+        q3 = all_scores[3*len(all_scores)//4] if all_scores else 0
+        iqr = q3 - q1
+    else:
+        score_mean = score_median = score_std = score_variance = q1 = q3 = iqr = 0
+
+    pass_rate = (sum(pass_fail_data) / len(pass_fail_data) * 100) if pass_fail_data else 0
+
+    # Quality indicators
+    data_completeness = (len(all_scores) / total_inspections * 100) if total_inspections > 0 else 0
+
+    conn.close()
+
+    return {
+        'totalInspections': total_inspections,
+        'passRate': round(pass_rate, 2),
+        'averageScore': round(score_mean, 2),
+        'medianScore': round(score_median, 2),
+        'scoreStandardDeviation': round(score_std, 2),
+        'scoreVariance': round(score_variance, 2),
+        'firstQuartile': round(q1, 2),
+        'thirdQuartile': round(q3, 2),
+        'interQuartileRange': round(iqr, 2),
+        'criticalViolations': critical_violations,
+        'dataCompleteness': round(data_completeness, 2),
+        'riskLevel': 'High' if pass_rate < 70 else 'Medium' if pass_rate < 85 else 'Low',
+        'performanceGrade': calculate_performance_grade(pass_rate, score_mean),
+        'trendIndicator': calculate_trend_indicator(inspection_type, start_date, end_date)
+    }
+
+def calculate_performance_grade(pass_rate, avg_score):
+    """Calculate overall performance grade"""
+    combined_score = (pass_rate + avg_score) / 2
+    if combined_score >= 90:
+        return 'A+'
+    elif combined_score >= 85:
+        return 'A'
+    elif combined_score >= 80:
+        return 'B+'
+    elif combined_score >= 75:
+        return 'B'
+    elif combined_score >= 70:
+        return 'C+'
+    elif combined_score >= 65:
+        return 'C'
+    elif combined_score >= 60:
+        return 'D'
+    else:
+        return 'F'
+
+def calculate_trend_indicator(inspection_type, start_date, end_date):
+    """Calculate performance trend over time"""
+    conn = sqlite3.connect('inspections.db')
+    c = conn.cursor()
+
+    # Get scores by week for trend analysis
+    query = """
+        SELECT strftime('%W', created_at) as week, AVG(overall_score) as avg_score
+        FROM inspections
+        WHERE created_at BETWEEN ? AND ? AND overall_score IS NOT NULL
+    """
+    params = [start_date, end_date]
+
+    if inspection_type != 'all':
+        query += " AND form_type = ?"
+        params.append(inspection_type)
+
+    query += " GROUP BY week ORDER BY week"
+
+    c.execute(query, params)
+    weekly_scores = [row[1] for row in c.fetchall()]
+
+    conn.close()
+
+    if len(weekly_scores) < 2:
+        return '➡️ Stable'
+
+    # Simple trend calculation
+    first_half = weekly_scores[:len(weekly_scores)//2]
+    second_half = weekly_scores[len(weekly_scores)//2:]
+
+    if not first_half or not second_half:
+        return '➡️ Stable'
+
+    first_avg = sum(first_half) / len(first_half)
+    second_avg = sum(second_half) / len(second_half)
+
+    improvement = second_avg - first_avg
+
+    if improvement > 5:
+        return '📈 Improving'
+    elif improvement < -5:
+        return '📉 Declining'
+    else:
+        return '➡️ Stable'
+
+def assess_data_quality(inspection_type, start_date, end_date):
+    """Assess the quality and completeness of inspection data"""
+    conn = sqlite3.connect('inspections.db')
+    c = conn.cursor()
+
+    # Count total records and missing data
+    query = """
+        SELECT
+            COUNT(*) as total,
+            SUM(CASE WHEN overall_score IS NULL THEN 1 ELSE 0 END) as missing_scores,
+            SUM(CASE WHEN inspector_name IS NULL OR inspector_name = '' THEN 1 ELSE 0 END) as missing_inspector,
+            SUM(CASE WHEN establishment_name IS NULL OR establishment_name = '' THEN 1 ELSE 0 END) as missing_establishment
+        FROM inspections
+        WHERE created_at BETWEEN ? AND ?
+    """
+    params = [start_date, end_date]
+
+    if inspection_type != 'all':
+        query += " AND form_type = ?"
+        params.append(inspection_type)
+
+    c.execute(query, params)
+    row = c.fetchone()
+
+    total, missing_scores, missing_inspector, missing_establishment = row
+
+    if total == 0:
+        return {'quality': 'No Data', 'completeness': 0}
+
+    completeness = ((total - missing_scores - missing_inspector - missing_establishment) / (total * 3)) * 100
+
+    quality_grade = 'Excellent' if completeness > 95 else 'Good' if completeness > 85 else 'Fair' if completeness > 70 else 'Poor'
+
+    conn.close()
+
+    return {
+        'quality': quality_grade,
+        'completeness': round(completeness, 2),
+        'totalRecords': total,
+        'missingScores': missing_scores,
+        'missingInspectors': missing_inspector,
+        'missingEstablishments': missing_establishment,
+        'recommendations': generate_data_quality_recommendations(completeness, missing_scores, missing_inspector)
+    }
+
+def generate_data_quality_recommendations(completeness, missing_scores, missing_inspector):
+    """Generate recommendations for improving data quality"""
+    recommendations = []
+
+    if completeness < 85:
+        recommendations.append("🔧 Implement mandatory field validation in inspection forms")
+
+    if missing_scores > 0:
+        recommendations.append("📊 Ensure all inspections include proper scoring")
+
+    if missing_inspector > 0:
+        recommendations.append("👤 Improve inspector identification tracking")
+
+    if completeness > 95:
+        recommendations.append("✅ Data quality is excellent - maintain current standards")
+
+    return recommendations
+
+def generate_checklist_failure_analysis(inspection_type, start_date, end_date):
+    """Analyze which checklist items fail most frequently"""
+    conn = sqlite3.connect('inspections.db')
+    c = conn.cursor()
+
+    # Get inspection items with failures
+    query = """
+        SELECT ii.item_id, ii.details, COUNT(*) as failure_count,
+               AVG(CASE WHEN ii.error = 'fail' OR ii.obser = 'fail' THEN 1 ELSE 0 END) as failure_rate
+        FROM inspection_items ii
+        JOIN inspections i ON ii.inspection_id = i.id
+        WHERE i.created_at BETWEEN ? AND ?
+    """
+    params = [start_date, end_date]
+
+    if inspection_type != 'all':
+        query += " AND i.form_type = ?"
+        params.append(inspection_type)
+
+    query += """
+        GROUP BY ii.item_id, ii.details
+        HAVING failure_count > 0
+        ORDER BY failure_rate DESC, failure_count DESC
+        LIMIT 15
+    """
+
+    c.execute(query, params)
+    items = []
+
+    for row in c.fetchall():
+        item_id, details, failure_count, failure_rate = row
+
+        # Determine impact based on failure rate and frequency
+        if failure_rate > 0.7:
+            impact = 'High'
+        elif failure_rate > 0.4:
+            impact = 'Medium'
+        else:
+            impact = 'Low'
+
+        items.append({
+            'itemId': item_id,
+            'description': details or f"Item {item_id}",
+            'failureRate': round(failure_rate * 100, 1),
+            'totalFailures': failure_count,
+            'impact': impact
+        })
+
+    conn.close()
+    return items
+
+def generate_inspector_performance(inspection_type, start_date, end_date):
+    """Generate inspector performance statistics"""
+    conn = sqlite3.connect('inspections.db')
+    c = conn.cursor()
+
+    query = """
+        SELECT inspector_name,
+               COUNT(*) as total_inspections,
+               AVG(overall_score) as avg_score,
+               SUM(CASE WHEN result IN ('Pass', 'Satisfactory') THEN 1 ELSE 0 END) as passed,
+               SUM(CASE WHEN result IN ('Fail', 'Unsatisfactory') THEN 1 ELSE 0 END) as failed
+        FROM inspections
+        WHERE created_at BETWEEN ? AND ?
+    """
+    params = [start_date, end_date]
+
+    if inspection_type != 'all':
+        query += " AND form_type = ?"
+        params.append(inspection_type)
+
+    query += " GROUP BY inspector_name ORDER BY total_inspections DESC"
+
+    c.execute(query, params)
+    inspectors = []
+
+    for row in c.fetchall():
+        inspector_name, total, avg_score, passed, failed = row
+        pass_rate = round((passed / total) * 100, 1) if total > 0 else 0
+
+        inspectors.append({
+            'name': inspector_name,
+            'totalInspections': total,
+            'averageScore': round(avg_score or 0, 1),
+            'passRate': pass_rate,
+            'efficiency': 'High' if pass_rate > 80 else 'Medium' if pass_rate > 60 else 'Low'
+        })
+
+    conn.close()
+    return inspectors
+
+def generate_score_analysis(inspection_type, start_date, end_date):
+    """Generate detailed score analysis and trends"""
+    conn = sqlite3.connect('inspections.db')
+    c = conn.cursor()
+
+    query = """
+        SELECT overall_score, critical_score, created_at
+        FROM inspections
+        WHERE created_at BETWEEN ? AND ? AND overall_score IS NOT NULL
+    """
+    params = [start_date, end_date]
+
+    if inspection_type != 'all':
+        query += " AND form_type = ?"
+        params.append(inspection_type)
+
+    query += " ORDER BY created_at"
+
+    c.execute(query, params)
+    scores = []
+    for row in c.fetchall():
+        overall_score, critical_score, created_at = row
+        scores.append({
+            'overall': overall_score,
+            'critical': critical_score or 0,
+            'date': created_at
+        })
+
+    conn.close()
+    return {
+        'scores': scores,
+        'trends': analyze_score_trends(scores)
+    }
+
+def analyze_score_trends(scores):
+    """Analyze score trends over time"""
+    if len(scores) < 2:
+        return {'trend': 'insufficient_data'}
+
+    # Simple trend analysis
+    recent_scores = [s['overall'] for s in scores[-10:]]  # Last 10 scores
+    older_scores = [s['overall'] for s in scores[:-10]] if len(scores) > 10 else []
+
+    if not older_scores:
+        return {'trend': 'stable', 'direction': 'no_change'}
+
+    recent_avg = sum(recent_scores) / len(recent_scores)
+    older_avg = sum(older_scores) / len(older_scores)
+
+    improvement = recent_avg - older_avg
+
+    if improvement > 5:
+        return {'trend': 'improving', 'direction': 'up', 'improvement': round(improvement, 1)}
+    elif improvement < -5:
+        return {'trend': 'declining', 'direction': 'down', 'decline': round(abs(improvement), 1)}
+    else:
+        return {'trend': 'stable', 'direction': 'stable'}
+
+def generate_recommendations(inspection_type, start_date, end_date):
+    """Generate actionable recommendations based on data"""
+    conn = sqlite3.connect('inspections.db')
+    c = conn.cursor()
+
+    recommendations = []
+
+    # Get failure rate
+    query = """
+        SELECT
+            SUM(CASE WHEN result IN ('Pass', 'Satisfactory') THEN 1 ELSE 0 END) as passed,
+            COUNT(*) as total
+        FROM inspections
+        WHERE created_at BETWEEN ? AND ?
+    """
+    params = [start_date, end_date]
+
+    if inspection_type != 'all':
+        query += " AND form_type = ?"
+        params.append(inspection_type)
+
+    c.execute(query, params)
+    row = c.fetchone()
+    passed, total = row if row else (0, 0)
+
+    if total > 0:
+        pass_rate = (passed / total) * 100
+
+        if pass_rate < 70:
+            recommendations.append("🚨 Critical: Pass rate is below 70%. Consider additional inspector training and stricter initial assessments.")
+        elif pass_rate < 85:
+            recommendations.append("⚠️ Pass rate could be improved. Review most common failure points and provide targeted guidance.")
+
+    # Get most common failures
+    checklist_failures = generate_checklist_failure_analysis(inspection_type, start_date, end_date)
+    if checklist_failures and len(checklist_failures) > 0:
+        top_failure = checklist_failures[0]
+        recommendations.append(f"🎯 Focus on '{top_failure['description']}' - it has a {top_failure['failureRate']}% failure rate.")
+
+    # Add general recommendations
+    recommendations.extend([
+        "📚 Implement regular inspector training sessions on most failed checklist items.",
+        "📊 Set up monthly performance reviews with individual inspectors.",
+        "🔄 Create feedback loops between inspectors and management for continuous improvement."
+    ])
+
+    conn.close()
+    return recommendations[:5]  # Return top 5 recommendations
+
+def generate_geographic_analysis(inspection_type, start_date, end_date):
+    """Generate geographic distribution analysis"""
+    # This would require location data - for now return basic structure
+    return {
+        'distribution': 'Geographic analysis requires location data implementation',
+        'note': 'Feature available when location tracking is enabled'
+    }
+
+@app.route('/api/admin/download_report', methods=['GET'])
+def download_report():
+    if 'admin' not in session and 'inspector' not in session:
+        return jsonify({'error': 'Unauthorized - Please log in'}), 401
+
+    try:
+        # Get parameters from query string
+        report_type = request.args.get('reportType', 'basic_summary')
+        inspection_type = request.args.get('inspectionType', 'all')
+        start_date = request.args.get('startDate')
+        end_date = request.args.get('endDate')
+        format_type = request.args.get('format', 'pdf')
+
+        # Generate report data using the simplified functions
+        report_generators = {
+            'basic_summary': generate_basic_summary_report,
+            'trend_analysis': generate_trend_analysis_report,
+            'failure_breakdown': generate_failure_breakdown_report,
+            'inspector_performance': generate_inspector_performance_report
+        }
+
+        generator_func = report_generators.get(report_type, generate_basic_summary_report)
+        report_data = generator_func(inspection_type, start_date, end_date)
+
+        if format_type == 'pdf':
+            return generate_professional_pdf_report(report_data, report_type, inspection_type, start_date, end_date)
+        else:
+            return jsonify({'error': 'Only PDF format is supported'}), 400
+
+    except Exception as e:
+        return jsonify({'error': f'Download failed: {str(e)}'}), 500
+
+def generate_professional_pdf_report(report_data, report_type, inspection_type, start_date, end_date):
+    """Generate professional PDF report with clean formatting"""
+    from io import BytesIO
+    from datetime import datetime
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
+
+    # Professional styles
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=20,
+        spaceAfter=20,
+        alignment=TA_CENTER,
+        textColor=colors.HexColor('#2C3E50')
+    )
+
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=14,
+        spaceAfter=12,
+        spaceBefore=20,
+        textColor=colors.HexColor('#34495E')
+    )
+
+    body_style = ParagraphStyle(
+        'CustomBody',
+        parent=styles['Normal'],
+        fontSize=11,
+        spaceAfter=8,
+        leading=14
+    )
+
+    story = []
+
+    # Header
+    story.append(Paragraph("Inspection Management System", title_style))
+    story.append(Paragraph(f"{report_data.get('title', 'Inspection Report')}", heading_style))
+    story.append(Paragraph(f"Generated on: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}", body_style))
+    story.append(Paragraph(f"Report Period: {start_date} to {end_date}", body_style))
+    story.append(Spacer(1, 20))
+
+    # Add content based on report type
+    if report_type == 'basic_summary':
+        add_basic_summary_content(story, report_data, styles)
+    elif report_type == 'trend_analysis':
+        add_trend_analysis_content(story, report_data, styles)
+    elif report_type == 'failure_breakdown':
+        add_failure_breakdown_content(story, report_data, styles)
+    elif report_type == 'inspector_performance':
+        add_inspector_performance_content(story, report_data, styles)
+
+    # Footer
+    story.append(Spacer(1, 20))
+    story.append(Paragraph("Report generated by Inspection Management System",
+                          ParagraphStyle('Footer', parent=styles['Normal'], fontSize=9,
+                                       alignment=TA_CENTER, textColor=colors.grey)))
+
+    doc.build(story)
+    buffer.seek(0)
+
+    return send_file(buffer, as_attachment=True,
+                     download_name=f'inspection_report_{report_type}_{start_date}_to_{end_date}.pdf',
+                     mimetype='application/pdf')
+
+def add_basic_summary_content(story, report_data, styles):
+    """Add basic summary report content to PDF"""
+    story.append(Paragraph("Executive Summary", styles['Heading2']))
+
+    summary = report_data.get('summary', {})
+
+    # Create summary table
+    summary_data = [
+        ['Metric', 'Value'],
+        ['Total Inspections', str(summary.get('total_inspections', 0))],
+        ['Passed Inspections', str(summary.get('passed_inspections', 0))],
+        ['Failed Inspections', str(summary.get('failed_inspections', 0))],
+        ['Pass Rate', f"{summary.get('pass_percentage', 0)}%"],
+        ['Fail Rate', f"{summary.get('fail_percentage', 0)}%"],
+        ['Average Daily Inspections', str(summary.get('average_daily_inspections', 0))]
+    ]
+
+    table = Table(summary_data, colWidths=[3*inch, 2*inch])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498DB')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+
+    story.append(table)
+
+def add_trend_analysis_content(story, report_data, styles):
+    """Add trend analysis content to PDF"""
+    story.append(Paragraph("Trend Analysis", styles['Heading2']))
+    story.append(Paragraph(f"Trend Direction: {report_data.get('trend_direction', 'Unknown')}", styles['Normal']))
+
+    summary = report_data.get('summary', {})
+    story.append(Paragraph(f"Average Weekly Inspections: {summary.get('avg_weekly_inspections', 0)}", styles['Normal']))
+    story.append(Paragraph(f"Average Failure Rate: {summary.get('avg_failure_rate', 0)}%", styles['Normal']))
+
+    # Weekly data table
+    weekly_data = report_data.get('weekly_data', [])
+    if weekly_data:
+        story.append(Paragraph("Weekly Breakdown", styles['Heading3']))
+        table_data = [['Week', 'Total', 'Failed', 'Failure Rate']]
+        for week_info in weekly_data[:10]:  # Show first 10 weeks
+            table_data.append([
+                week_info.get('week', ''),
+                str(week_info.get('total', 0)),
+                str(week_info.get('failed', 0)),
+                f"{week_info.get('failure_rate', 0)}%"
+            ])
+
+        table = Table(table_data, colWidths=[1.5*inch, 1*inch, 1*inch, 1.5*inch])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#E74C3C')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        story.append(table)
+
+def add_failure_breakdown_content(story, report_data, styles):
+    """Add failure breakdown content to PDF"""
+    story.append(Paragraph("Failure Analysis", styles['Heading2']))
+    story.append(Paragraph(f"Total Failed Inspections: {report_data.get('total_failed_inspections', 0)}", styles['Normal']))
+
+    # Top failed items
+    top_failed = report_data.get('top_failed_items', [])
+    if top_failed:
+        story.append(Paragraph("Most Common Failures", styles['Heading3']))
+        table_data = [['Failure Reason', 'Count']]
+        for item in top_failed[:8]:  # Show top 8
+            table_data.append([item.get('item', ''), str(item.get('count', 0))])
+
+        table = Table(table_data, colWidths=[4*inch, 1*inch])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#E67E22')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        story.append(table)
+
+def add_inspector_performance_content(story, report_data, styles):
+    """Add inspector performance content to PDF"""
+    story.append(Paragraph("Inspector Performance Analysis", styles['Heading2']))
+
+    summary = report_data.get('summary', {})
+    story.append(Paragraph(f"Total Inspectors: {summary.get('total_inspectors', 0)}", styles['Normal']))
+    story.append(Paragraph(f"Most Active Inspector: {summary.get('most_active_inspector', 'None')}", styles['Normal']))
+    story.append(Paragraph(f"Highest Pass Rate: {summary.get('highest_pass_rate', 0)}%", styles['Normal']))
+
+    # Inspector performance table
+    performance_data = report_data.get('inspector_performance', [])
+    if performance_data:
+        table_data = [['Inspector', 'Total', 'Passed', 'Pass Rate', 'Avg Time (Days)']]
+        for perf in performance_data[:10]:  # Show top 10
+            table_data.append([
+                perf.get('inspector', ''),
+                str(perf.get('total_inspections', 0)),
+                str(perf.get('passed_inspections', 0)),
+                f"{perf.get('pass_rate', 0)}%",
+                str(perf.get('avg_time_days', 0))
+            ])
+
+        table = Table(table_data, colWidths=[1.8*inch, 0.8*inch, 0.8*inch, 0.8*inch, 1*inch])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#9B59B6')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        story.append(table)
+
+    # Title
+    story.append(Paragraph("📊 Comprehensive Inspection Report", title_style))
+    story.append(Spacer(1, 20))
+
+    # Report Info
+    story.append(Paragraph(f"<b>Report Period:</b> {start_date} to {end_date}", styles['Normal']))
+    story.append(Paragraph(f"<b>Inspection Type:</b> {inspection_type}", styles['Normal']))
+    story.append(Paragraph(f"<b>Generated:</b> {datetime.now().strftime('%Y-%m-%d %H:%M')}", styles['Normal']))
+    story.append(Spacer(1, 20))
+
+    # Executive Summary
+    story.append(Paragraph("📈 Executive Summary", styles['Heading2']))
+    summary_data = [
+        ['Metric', 'Value'],
+        ['Total Inspections', str(summary['totalInspections'])],
+        ['Pass Rate', f"{summary['passRate']}%"],
+        ['Average Score', str(summary['averageScore'])],
+        ['Critical Violations', str(summary['criticalViolations'])]
+    ]
+
+    summary_table = Table(summary_data)
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 14),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+
+    story.append(summary_table)
+    story.append(Spacer(1, 20))
+
+    # Checklist Failures
+    if checklist_failures:
+        story.append(Paragraph("❌ Most Failed Checklist Items", styles['Heading2']))
+
+        failure_data = [['Item', 'Failure Rate', 'Total Failures', 'Impact']]
+        for item in checklist_failures[:10]:  # Top 10
+            failure_data.append([
+                item['description'][:50] + '...' if len(item['description']) > 50 else item['description'],
+                f"{item['failureRate']}%",
+                str(item['totalFailures']),
+                item['impact']
+            ])
+
+        failure_table = Table(failure_data, colWidths=[3*inch, 1*inch, 1*inch, 1*inch])
+        failure_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.red),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.lightgrey),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+
+        story.append(failure_table)
+        story.append(Spacer(1, 20))
+
+    # Recommendations
+    if recommendations:
+        story.append(Paragraph("💡 Key Recommendations", styles['Heading2']))
+        for i, rec in enumerate(recommendations, 1):
+            story.append(Paragraph(f"{i}. {rec}", styles['Normal']))
+        story.append(Spacer(1, 20))
+
+    # Build PDF
+    doc.build(story)
+    buffer.seek(0)
+
+    response = make_response(buffer.getvalue())
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename="comprehensive_inspection_report_{start_date}_to_{end_date}.pdf"'
+    return response
+
+def generate_csv_report(summary, checklist_failures, inspector_stats, inspection_type, start_date, end_date):
+    """Generate CSV report data"""
+    import csv
+    from io import StringIO
+
+    output = StringIO()
+    writer = csv.writer(output)
+
+    # Write summary data
+    writer.writerow(['Comprehensive Inspection Report'])
+    writer.writerow(['Report Period', f'{start_date} to {end_date}'])
+    writer.writerow(['Inspection Type', inspection_type])
+    writer.writerow([])
+
+    # Executive Summary
+    writer.writerow(['Executive Summary'])
+    writer.writerow(['Metric', 'Value'])
+    writer.writerow(['Total Inspections', summary['totalInspections']])
+    writer.writerow(['Pass Rate', f"{summary['passRate']}%"])
+    writer.writerow(['Average Score', summary['averageScore']])
+    writer.writerow(['Critical Violations', summary['criticalViolations']])
+    writer.writerow([])
+
+    # Checklist Failures
+    if checklist_failures:
+        writer.writerow(['Most Failed Checklist Items'])
+        writer.writerow(['Item Description', 'Failure Rate (%)', 'Total Failures', 'Impact'])
+        for item in checklist_failures:
+            writer.writerow([item['description'], item['failureRate'], item['totalFailures'], item['impact']])
+
+    output.seek(0)
+    response = make_response(output.getvalue())
+    response.headers['Content-Type'] = 'text/csv'
+    response.headers['Content-Disposition'] = f'attachment; filename="inspection_report_{start_date}_to_{end_date}.csv"'
+    return response
 
 if __name__ == '__main__':
     init_db()

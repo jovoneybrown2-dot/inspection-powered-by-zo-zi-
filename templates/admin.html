@@ -1069,7 +1069,7 @@
     or (tab == 'swimming_pool' and form[1] == 'Swimming Pool')
     or (tab == 'small_hotels' and form[1] == 'Small Hotel')
     or (tab == 'barbershop' and form[1] == 'Barbershop')
-    or (tab == 'institutional' and form[1] == 'Institutional')
+    or (tab == 'institutional' and form[1] == 'Institutional Health')
 %}
 
                         {% set counter.value = counter.value + 1 %}
@@ -1246,22 +1246,148 @@
 
     <!-- Custom Reports Modal -->
     <div id="custom_reports_modal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 1200px; width: 95%;">
             <span class="modal-close" onclick="closeModal('custom_reports')">×</span>
-            <h2 class="text-2xl font-bold mb-4 black-bold">Generate Custom Report</h2>
-            <div class="space-y-4 mb-4">
-                <select id="reportMetric" class="px-3 py-2 border border-gray-300 rounded-md w-full">
-                    <option value="inspections">Inspections</option>
-                    <option value="user_activity">User Activity</option>
-                </select>
-                <select id="reportTimeframe" class="px-3 py-2 border border-gray-300 rounded-md w-full">
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                </select>
-                <button onclick="generateReport()" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Generate Report</button>
+            <h2 class="text-3xl font-bold mb-6 text-center text-blue-800">📊 Inspection Analytics Dashboard</h2>
+
+            <!-- Controls Section -->
+            <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <!-- Inspection Type Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Inspection Type</label>
+                        <select id="reportInspectionType" class="px-3 py-2 border border-gray-300 rounded-md w-full text-sm">
+                            <option value="all">All Types (134 total)</option>
+                            <option value="Food Establishment">Food Establishment (18)</option>
+                            <option value="Small Hotel">Small Hotel (30)</option>
+                            <option value="Swimming Pool">Swimming Pool (13)</option>
+                            <option value="Institutional Health">Institutional Health (9)</option>
+                            <option value="Spirit Licence Premises">Spirit Licence Premises (6)</option>
+                            <option value="Barbershop">Barbershop (5)</option>
+                            <option value="Residential">Residential (23)</option>
+                            <option value="Burial">Burial Site (30)</option>
+                        </select>
+                    </div>
+
+                    <!-- Time Period -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Time Period</label>
+                        <select id="reportTimeframe" class="px-3 py-2 border border-gray-300 rounded-md w-full text-sm">
+                            <option value="30">Last 30 Days</option>
+                            <option value="90">Last 3 Months</option>
+                            <option value="180">Last 6 Months</option>
+                            <option value="365">Last Year</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-end">
+                        <button onclick="generateDashboard()" id="generateDashboardBtn"
+                                class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">
+                            📊 Generate Dashboard
+                        </button>
+                    </div>
+
+                    <div class="flex items-end">
+                        <button onclick="downloadDashboardPDF()" id="downloadDashboardBtn" disabled
+                                class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 text-sm font-medium">
+                            📥 Export PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Custom Date Range -->
+                <div id="customDateRange" class="grid grid-cols-2 gap-4 mt-4" style="display: none;">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                        <input type="date" id="startDate" class="px-3 py-2 border border-gray-300 rounded-md w-full text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                        <input type="date" id="endDate" class="px-3 py-2 border border-gray-300 rounded-md w-full text-sm">
+                    </div>
+                </div>
             </div>
-            <div id="reportResults" class="bg-white shadow-md rounded-lg overflow-hidden"></div>
+
+            <!-- Dashboard Content -->
+            <div id="dashboardContent" style="display: none;">
+                <!-- Summary Cards -->
+                <div id="summaryCards" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <!-- Cards will be generated here -->
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <!-- Pass/Fail Rate Over Time -->
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <h3 class="text-lg font-bold mb-3 text-gray-800">📈 Pass/Fail Rates Over Time</h3>
+                        <div id="trendChart" class="h-64"></div>
+                    </div>
+
+                    <!-- Inspector Performance -->
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <h3 class="text-lg font-bold mb-3 text-gray-800">👤 Inspector Performance</h3>
+                        <div id="inspectorChart" class="h-64"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <!-- Scores by Type -->
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <h3 class="text-lg font-bold mb-3 text-gray-800">📊 Average Scores by Type</h3>
+                        <div id="scoresChart" class="h-64"></div>
+                    </div>
+
+                    <!-- Monthly Trends -->
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <h3 class="text-lg font-bold mb-3 text-gray-800">📅 Monthly Inspection Trends</h3>
+                        <div id="monthlyChart" class="h-64"></div>
+                    </div>
+                </div>
+
+                <!-- Full Width Charts -->
+                <div class="grid grid-cols-1 gap-6">
+                    <!-- Top Performing vs Failing -->
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <h3 class="text-lg font-bold mb-3 text-gray-800">🏆 Top Performing vs Failing Establishments</h3>
+                        <div id="establishmentChart" class="h-80"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="dashboardLoading" class="text-center py-8" style="display: none;">
+                <div class="animate-spin inline-block w-8 h-8 border-4 border-current border-t-transparent text-blue-600 rounded-full" role="status" aria-label="loading">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <p class="mt-2 text-gray-600">Generating analytics dashboard...</p>
+            </div>
+
+            <!-- Initial State -->
+            <div id="dashboardInitial" class="text-center py-12">
+                <div class="text-6xl mb-4">📊</div>
+                <h3 class="text-xl font-bold text-gray-700 mb-2">Comprehensive Inspection Analytics</h3>
+                <p class="text-gray-600 mb-6">Select your parameters above and click "Generate Dashboard" to view detailed analytics including:</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left max-w-2xl mx-auto">
+                    <div class="bg-blue-50 p-3 rounded">
+                        <h4 class="font-semibold text-blue-800">📈 Pass/Fail Trends</h4>
+                        <p class="text-sm text-blue-600">Line charts showing performance over time</p>
+                    </div>
+                    <div class="bg-green-50 p-3 rounded">
+                        <h4 class="font-semibold text-green-800">👤 Inspector Analytics</h4>
+                        <p class="text-sm text-green-600">Performance comparison bar charts</p>
+                    </div>
+                    <div class="bg-purple-50 p-3 rounded">
+                        <h4 class="font-semibold text-purple-800">📊 Score Analysis</h4>
+                        <p class="text-sm text-purple-600">Grouped charts by inspection type</p>
+                    </div>
+                    <div class="bg-yellow-50 p-3 rounded">
+                        <h4 class="font-semibold text-yellow-800">🏆 Establishment Rankings</h4>
+                        <p class="text-sm text-yellow-600">Top performers vs failing establishments</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1399,6 +1525,65 @@
         </div>
     </div>
 
+    <!-- New Task Form Modal -->
+    <div id="newTaskModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeNewTaskForm()">×</span>
+            <h2 class="text-2xl font-bold mb-6 black-bold">Create New Task</h2>
+            <form id="newTaskForm" class="space-y-4">
+                <div>
+                    <label for="taskTitle" class="block text-sm font-medium text-gray-700 mb-2">Task Title</label>
+                    <input type="text" id="taskTitle" name="title" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label for="taskDescription" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <textarea id="taskDescription" name="description" rows="3" required
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+
+                <div>
+                    <label for="taskAssignee" class="block text-sm font-medium text-gray-700 mb-2">Assign To User</label>
+                    <select id="taskAssignee" name="assignee" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select User...</option>
+                        <!-- Fallback options - will be replaced by dynamic loading -->
+                        <option value="admin">admin</option>
+                        <option value="inspector1">inspector1</option>
+                        <option value="inspector2">inspector2</option>
+                        <option value="all">All Users</option>
+                        <!-- Options will be loaded dynamically -->
+                    </select>
+                </div>
+
+                <div>
+                    <label for="taskPriority" class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                    <select id="taskPriority" name="priority" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                        <option value="Urgent">Urgent</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="taskDueDate" class="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
+                    <input type="datetime-local" id="taskDueDate" name="due_date" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeNewTaskForm()"
+                            class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">Cancel</button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Create Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Security Metrics Modal -->
     <div id="security_metrics_modal" class="modal">
         <div class="modal-content">
@@ -1464,6 +1649,20 @@
 
             // Initialize all charts
             initializeCharts();
+
+            // Handle custom date range toggle for reports
+            const timeframeSelect = document.getElementById('reportTimeframe');
+            const customDateRange = document.getElementById('customDateRange');
+
+            if (timeframeSelect) {
+                timeframeSelect.addEventListener('change', function() {
+                    if (this.value === 'custom') {
+                        customDateRange.style.display = 'grid';
+                    } else {
+                        customDateRange.style.display = 'none';
+                    }
+                });
+            }
             setupTabs();
             setupChartControls();
             loadAllData();
@@ -2223,7 +2422,7 @@
                 'swimming_pool': 'Swimming Pool',
                 'small_hotels': 'Small Hotel',
                 'barbershop': 'Barbershop',
-                'institutional': 'Institutional'
+                'institutional': 'Institutional Health'
             };
             return formTypeMap[tab] || 'all';
         }
@@ -2921,6 +3120,100 @@ document.addEventListener('click', function(e) {
             }
         }
 
+        // New Task Functions
+        function openNewTaskForm() {
+            const modal = document.getElementById('newTaskModal');
+            if (modal) {
+                modal.classList.add('open');
+                // Set default due date to tomorrow
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const formattedDate = tomorrow.toISOString().slice(0, 16);
+                document.getElementById('taskDueDate').value = formattedDate;
+
+                // Load inspectors dynamically
+                loadInspectorsForTaskForm();
+            }
+        }
+
+        async function loadInspectorsForTaskForm() {
+            try {
+                console.log('Loading users for task form...');
+                const response = await fetch('/api/admin/users');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const users = await response.json();
+                console.log('Loaded users:', users);
+
+                const assigneeSelect = document.getElementById('taskAssignee');
+                // Clear existing options except first one
+                assigneeSelect.innerHTML = '<option value="">Select User...</option>';
+
+                if (!Array.isArray(users) || users.length === 0) {
+                    console.warn('No users returned from API');
+                    assigneeSelect.innerHTML += '<option value="">No users available</option>';
+                    return;
+                }
+
+                // Group users by role for better organization
+                const usersByRole = {};
+                users.forEach(user => {
+                    if (!usersByRole[user.role]) {
+                        usersByRole[user.role] = [];
+                    }
+                    usersByRole[user.role].push(user);
+                });
+
+                console.log('Users grouped by role:', usersByRole);
+
+                // Add users organized by role
+                Object.keys(usersByRole).sort().forEach(role => {
+                    // Add role header
+                    const roleHeader = document.createElement('optgroup');
+                    roleHeader.label = role.charAt(0).toUpperCase() + role.slice(1) + 's';
+                    assigneeSelect.appendChild(roleHeader);
+
+                    // Add users for this role
+                    usersByRole[role].forEach(user => {
+                        const option = document.createElement('option');
+                        option.value = user.username;
+                        option.textContent = `${user.username} (${user.email})`;
+                        roleHeader.appendChild(option);
+                    });
+                });
+
+                // Add "All Users" option at the end
+                const allOption = document.createElement('option');
+                allOption.value = 'all';
+                allOption.textContent = 'All Users';
+                allOption.style.fontWeight = 'bold';
+                assigneeSelect.appendChild(allOption);
+
+                console.log('Successfully populated dropdown with', users.length, 'users');
+
+            } catch (error) {
+                console.error('Error loading users:', error);
+                // Fallback to basic options if API fails
+                const assigneeSelect = document.getElementById('taskAssignee');
+                assigneeSelect.innerHTML = `
+                    <option value="">Select User...</option>
+                    <option value="all">All Users</option>
+                    <option value="">Error loading users - check console</option>
+                `;
+            }
+        }
+
+        function closeNewTaskForm() {
+            const modal = document.getElementById('newTaskModal');
+            if (modal) {
+                modal.classList.remove('open');
+                document.getElementById('newTaskForm').reset();
+            }
+        }
+
         // Close modals when clicking outside
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('modal')) {
@@ -3363,16 +3656,595 @@ document.addEventListener('click', function(e) {
             showNotification('Map updated with current filters', 'success');
         }
 
-        function generateReport() {
-            const reportType = document.getElementById('reportType') ? document.getElementById('reportType').value : 'general';
-            const timeframe = document.getElementById('reportTimeframe') ? document.getElementById('reportTimeframe').value : 'monthly';
+        // Comprehensive Dashboard Functions
+        function generateDashboard() {
+            const inspectionType = document.getElementById('reportInspectionType').value;
+            const timeframe = document.getElementById('reportTimeframe').value;
 
-            showNotification('Report generated successfully', 'success');
+            let startDate, endDate;
+            if (timeframe === 'custom') {
+                startDate = document.getElementById('startDate').value;
+                endDate = document.getElementById('endDate').value;
+                if (!startDate || !endDate) {
+                    showNotification('Please select both start and end dates for custom range', 'error');
+                    return;
+                }
+            } else {
+                const days = parseInt(timeframe);
+                endDate = new Date().toISOString().split('T')[0];
+                startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            }
+
+            // Show loading state
+            document.getElementById('dashboardInitial').style.display = 'none';
+            document.getElementById('dashboardContent').style.display = 'none';
+            document.getElementById('dashboardLoading').style.display = 'block';
+
+            // Generate all dashboard data
+            Promise.all([
+                generateSummaryData(inspectionType, startDate, endDate),
+                generateTrendData(inspectionType, startDate, endDate),
+                generateInspectorData(inspectionType, startDate, endDate),
+                generateScoresData(inspectionType, startDate, endDate),
+                generateMonthlyData(inspectionType, startDate, endDate),
+                generateEstablishmentData(inspectionType, startDate, endDate)
+            ])
+            .then(([summary, trend, inspector, scores, monthly, establishment]) => {
+                displayDashboard(summary, trend, inspector, scores, monthly, establishment);
+                document.getElementById('downloadDashboardBtn').disabled = false;
+                window.currentDashboardData = {summary, trend, inspector, scores, monthly, establishment, inspectionType, startDate, endDate};
+            })
+            .catch(error => {
+                console.error('Dashboard generation error:', error);
+                showNotification('Error generating dashboard: ' + error.message, 'error');
+                document.getElementById('dashboardLoading').style.display = 'none';
+                document.getElementById('dashboardInitial').style.display = 'block';
+            });
+        }
+
+        // Generate individual data sections
+        function generateSummaryData(inspectionType, startDate, endDate) {
+            return fetch('/api/admin/generate_report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    reportType: 'basic_summary',
+                    inspectionType,
+                    startDate,
+                    endDate
+                })
+            }).then(response => response.json());
+        }
+
+        function generateTrendData(inspectionType, startDate, endDate) {
+            return fetch('/api/admin/generate_report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    reportType: 'trend_analysis',
+                    inspectionType,
+                    startDate,
+                    endDate
+                })
+            }).then(response => response.json());
+        }
+
+        function generateInspectorData(inspectionType, startDate, endDate) {
+            return fetch('/api/admin/generate_report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    reportType: 'inspector_performance',
+                    inspectionType,
+                    startDate,
+                    endDate
+                })
+            }).then(response => response.json());
+        }
+
+        function generateScoresData(inspectionType, startDate, endDate) {
+            // This will use a new endpoint for scores by type
+            return fetch('/api/admin/generate_report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    reportType: 'scores_by_type',
+                    inspectionType,
+                    startDate,
+                    endDate
+                })
+            }).then(response => response.json());
+        }
+
+        function generateMonthlyData(inspectionType, startDate, endDate) {
+            return fetch('/api/admin/generate_report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    reportType: 'monthly_trends',
+                    inspectionType,
+                    startDate,
+                    endDate
+                })
+            }).then(response => response.json());
+        }
+
+        function generateEstablishmentData(inspectionType, startDate, endDate) {
+            return fetch('/api/admin/generate_report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    reportType: 'establishment_ranking',
+                    inspectionType,
+                    startDate,
+                    endDate
+                })
+            }).then(response => response.json());
+        }
+
+        // Dashboard Display Functions
+        function displayDashboard(summary, trend, inspector, scores, monthly, establishment) {
+            // Hide loading, show content
+            document.getElementById('dashboardLoading').style.display = 'none';
+            document.getElementById('dashboardContent').style.display = 'block';
+
+            // Display summary cards
+            displaySummaryCards(summary.report);
+
+            // Display charts
+            displayTrendChart(trend.report);
+            displayInspectorChart(inspector.report);
+            displayScoresChart(scores.report);
+            displayMonthlyChart(monthly.report);
+            displayEstablishmentChart(establishment.report);
+
+            showNotification('Analytics dashboard generated successfully!', 'success');
+        }
+
+        function displaySummaryCards(summaryData) {
+            const container = document.getElementById('summaryCards');
+            const summary = summaryData.summary || {};
+
+            container.innerHTML = `
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-lg shadow">
+                    <div class="text-3xl font-bold">${summary.total_inspections || 0}</div>
+                    <div class="text-sm opacity-90">Total Inspections</div>
+                </div>
+                <div class="bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-lg shadow">
+                    <div class="text-3xl font-bold">${summary.pass_percentage || 0}%</div>
+                    <div class="text-sm opacity-90">Pass Rate</div>
+                </div>
+                <div class="bg-gradient-to-r from-red-500 to-red-600 text-white p-4 rounded-lg shadow">
+                    <div class="text-3xl font-bold">${summary.failed_inspections || 0}</div>
+                    <div class="text-sm opacity-90">Failed</div>
+                </div>
+                <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 rounded-lg shadow">
+                    <div class="text-3xl font-bold">${summary.average_daily_inspections || 0}</div>
+                    <div class="text-sm opacity-90">Daily Average</div>
+                </div>
+            `;
+        }
+
+        function displayTrendChart(trendData) {
+            const container = document.getElementById('trendChart');
+            const weeklyData = trendData.weekly_data || [];
+
+            if (weeklyData.length === 0) {
+                container.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">No trend data available</div>';
+                return;
+            }
+
+            // Simple chart using CSS and HTML
+            const maxTotal = Math.max(...weeklyData.map(d => d.total));
+            let chartHTML = '<div class="space-y-2">';
+
+            weeklyData.slice(0, 8).forEach(week => {
+                const barWidth = maxTotal > 0 ? (week.total / maxTotal * 100) : 0;
+                const failureRate = week.failure_rate || 0;
+
+                chartHTML += `
+                    <div class="flex items-center space-x-2 text-xs">
+                        <div class="w-16 text-right">${week.week}</div>
+                        <div class="flex-1 bg-gray-200 rounded h-4 relative">
+                            <div class="bg-blue-500 h-full rounded" style="width: ${barWidth}%"></div>
+                            <div class="absolute right-1 top-0 text-white text-xs leading-4">${week.total}</div>
+                        </div>
+                        <div class="w-12 text-red-600">${failureRate}%</div>
+                    </div>
+                `;
+            });
+            chartHTML += '</div>';
+
+            container.innerHTML = chartHTML;
+        }
+
+        function displayInspectorChart(inspectorData) {
+            const container = document.getElementById('inspectorChart');
+            const performance = inspectorData.inspector_performance || [];
+
+            if (performance.length === 0) {
+                container.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">No inspector data available</div>';
+                return;
+            }
+
+            const maxInspections = Math.max(...performance.map(p => p.total_inspections));
+            let chartHTML = '<div class="space-y-2">';
+
+            performance.slice(0, 6).forEach(perf => {
+                const barWidth = maxInspections > 0 ? (perf.total_inspections / maxInspections * 100) : 0;
+                const passRateColor = perf.pass_rate >= 80 ? 'bg-green-500' : perf.pass_rate >= 60 ? 'bg-yellow-500' : 'bg-red-500';
+
+                chartHTML += `
+                    <div class="flex items-center space-x-2 text-xs">
+                        <div class="w-20 text-right truncate" title="${perf.inspector}">${perf.inspector}</div>
+                        <div class="flex-1 bg-gray-200 rounded h-5 relative">
+                            <div class="${passRateColor} h-full rounded" style="width: ${barWidth}%"></div>
+                            <div class="absolute right-1 top-0 text-white text-xs leading-5">${perf.total_inspections}</div>
+                        </div>
+                        <div class="w-12 font-semibold">${perf.pass_rate}%</div>
+                    </div>
+                `;
+            });
+            chartHTML += '</div>';
+
+            container.innerHTML = chartHTML;
+        }
+
+        function displayScoresChart(scoresData) {
+            const container = document.getElementById('scoresChart');
+
+            if (!scoresData || !scoresData.scores_by_type || scoresData.scores_by_type.length === 0) {
+                container.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">No scores data available</div>';
+                return;
+            }
+
+            let chartHTML = '<div class="space-y-3">';
+            scoresData.scores_by_type.forEach((item, index) => {
+                const barWidth = typeof item.avg_score === 'number' ? (item.avg_score / 100) * 100 : 0;
+                const color = typeof item.avg_score === 'number' && item.avg_score >= 70 ? 'bg-green-500' : 'bg-red-500';
+
+                chartHTML += `
+                    <div class="flex items-center justify-between">
+                        <div class="w-24 text-sm font-medium">${item.type}</div>
+                        <div class="flex-1 mx-4">
+                            <div class="w-full bg-gray-200 rounded-full h-6">
+                                <div class="${color} h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                                     style="width: ${barWidth}%">
+                                    ${typeof item.avg_score === 'number' ? item.avg_score.toFixed(1) : item.avg_score}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-16 text-sm text-gray-600">${item.count} inspections</div>
+                    </div>
+                `;
+            });
+            chartHTML += '</div>';
+
+            container.innerHTML = chartHTML;
+        }
+
+        function displayMonthlyChart(monthlyData) {
+            const container = document.getElementById('monthlyChart');
+
+            if (!monthlyData || !monthlyData.monthly_trends || monthlyData.monthly_trends.length === 0) {
+                container.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">No monthly data available</div>';
+                return;
+            }
+
+            const maxValue = Math.max(...monthlyData.monthly_trends.map(m => m.total));
+
+            let chartHTML = '<div class="space-y-2">';
+            monthlyData.monthly_trends.forEach((month, index) => {
+                const totalHeight = (month.total / maxValue) * 100;
+                const passedHeight = (month.passed / maxValue) * 100;
+                const failedHeight = (month.failed / maxValue) * 100;
+
+                chartHTML += `
+                    <div class="flex items-end justify-between">
+                        <div class="w-16 text-xs font-medium">${month.month}</div>
+                        <div class="flex-1 mx-2 flex items-end justify-center">
+                            <div class="relative w-8 bg-gray-200 rounded-t" style="height: ${Math.max(totalHeight, 20)}px;">
+                                <div class="absolute bottom-0 w-full bg-green-500 rounded-t"
+                                     style="height: ${passedHeight}px;"
+                                     title="Passed: ${month.passed}"></div>
+                                <div class="absolute bottom-0 w-full bg-red-500 rounded-t"
+                                     style="height: ${failedHeight}px; margin-left: ${passedHeight > 0 ? '0' : '0'}px"
+                                     title="Failed: ${month.failed}"></div>
+                            </div>
+                        </div>
+                        <div class="w-16 text-xs text-gray-600">
+                            <div>${month.total}</div>
+                            <div class="text-green-600">${month.pass_rate}%</div>
+                        </div>
+                    </div>
+                `;
+            });
+            chartHTML += '</div>';
+
+            container.innerHTML = chartHTML;
+        }
+
+        function displayEstablishmentChart(establishmentData) {
+            const container = document.getElementById('establishmentChart');
+
+            if (!establishmentData || (!establishmentData.top_performers && !establishmentData.worst_performers)) {
+                container.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500">No establishment data available</div>';
+                return;
+            }
+
+            let chartHTML = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+
+            // Top Performers
+            if (establishmentData.top_performers && establishmentData.top_performers.length > 0) {
+                chartHTML += `
+                    <div>
+                        <h4 class="text-sm font-bold text-green-700 mb-2">🏆 Top Performers</h4>
+                        <div class="space-y-1">
+                `;
+
+                establishmentData.top_performers.slice(0, 5).forEach((est, index) => {
+                    chartHTML += `
+                        <div class="flex items-center justify-between text-xs">
+                            <div class="flex-1 truncate">
+                                <div class="font-medium">${est.establishment}</div>
+                                <div class="text-gray-500">${est.type}</div>
+                            </div>
+                            <div class="w-12 text-right">
+                                <div class="text-green-600 font-bold">${est.avg_score}</div>
+                                <div class="text-gray-500">${est.inspection_count} insp.</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                chartHTML += '</div></div>';
+            }
+
+            // Worst Performers
+            if (establishmentData.worst_performers && establishmentData.worst_performers.length > 0) {
+                chartHTML += `
+                    <div>
+                        <h4 class="text-sm font-bold text-red-700 mb-2">⚠️ Needs Improvement</h4>
+                        <div class="space-y-1">
+                `;
+
+                establishmentData.worst_performers.slice(0, 5).forEach((est, index) => {
+                    chartHTML += `
+                        <div class="flex items-center justify-between text-xs">
+                            <div class="flex-1 truncate">
+                                <div class="font-medium">${est.establishment}</div>
+                                <div class="text-gray-500">${est.type}</div>
+                            </div>
+                            <div class="w-12 text-right">
+                                <div class="text-red-600 font-bold">${est.avg_score}</div>
+                                <div class="text-gray-500">${est.inspection_count} insp.</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                chartHTML += '</div></div>';
+            }
+
+            chartHTML += '</div>';
+
+            container.innerHTML = chartHTML;
+        }
+
+        function downloadDashboardPDF() {
+            if (!window.currentDashboardData) {
+                showNotification('Please generate dashboard first', 'error');
+                return;
+            }
+
+            const data = window.currentDashboardData;
+            const params = new URLSearchParams({
+                reportType: 'dashboard_pdf',
+                inspectionType: data.inspectionType,
+                startDate: data.startDate,
+                endDate: data.endDate,
+                format: 'pdf'
+            });
+
+            const url = `/api/admin/download_report?${params.toString()}`;
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `inspection_dashboard_${new Date().toISOString().split('T')[0]}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showNotification('📥 Dashboard PDF download started!', 'success');
+        }
+
+        // Show custom date range when selected
+        document.getElementById('reportTimeframe').addEventListener('change', function() {
+            const customRange = document.getElementById('customDateRange');
+            if (this.value === 'custom') {
+                customRange.style.display = 'grid';
+            } else {
+                customRange.style.display = 'none';
+            }
+        });
+
+        function displayReportPreview(report) {
+            const resultsDiv = document.getElementById('reportResults');
+            const contentDiv = document.getElementById('reportContent');
+
+            if (report.error) {
+                contentDiv.innerHTML = `<div class="text-red-600 p-4">Error: ${report.error}</div>`;
+                resultsDiv.style.display = 'block';
+                return;
+            }
+
+            let html = `<h3 class="text-xl font-bold mb-4">${report.title || 'Report Preview'}</h3>`;
+
+            // Basic Summary Report
+            if (report.summary) {
+                html += `
+                    <div class="report-summary mb-4">
+                        <h4 class="text-lg font-bold text-blue-600 mb-2">📊 Summary Statistics</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                            <div class="bg-blue-50 p-3 rounded">
+                                <div class="text-2xl font-bold text-blue-600">${report.summary.total_inspections || 0}</div>
+                                <div class="text-sm text-gray-600">Total Inspections</div>
+                            </div>
+                            <div class="bg-green-50 p-3 rounded">
+                                <div class="text-2xl font-bold text-green-600">${report.summary.passed_inspections || 0}</div>
+                                <div class="text-sm text-gray-600">Passed</div>
+                            </div>
+                            <div class="bg-red-50 p-3 rounded">
+                                <div class="text-2xl font-bold text-red-600">${report.summary.failed_inspections || 0}</div>
+                                <div class="text-sm text-gray-600">Failed</div>
+                            </div>
+                            <div class="bg-green-50 p-3 rounded">
+                                <div class="text-2xl font-bold text-green-600">${report.summary.pass_percentage || 0}%</div>
+                                <div class="text-sm text-gray-600">Pass Rate</div>
+                            </div>
+                            <div class="bg-red-50 p-3 rounded">
+                                <div class="text-2xl font-bold text-red-600">${report.summary.fail_percentage || 0}%</div>
+                                <div class="text-sm text-gray-600">Fail Rate</div>
+                            </div>
+                            <div class="bg-blue-50 p-3 rounded">
+                                <div class="text-2xl font-bold text-blue-600">${report.summary.average_daily_inspections || 0}</div>
+                                <div class="text-sm text-gray-600">Daily Average</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Trend Analysis specific content
+            if (report.trend_direction) {
+                html += `
+                    <div class="trend-analysis mb-4">
+                        <h4 class="text-lg font-bold text-orange-600 mb-2">📈 Trend Analysis</h4>
+                        <p class="mb-2"><strong>Trend Direction:</strong> ${report.trend_direction}</p>
+                        <p class="mb-2"><strong>Average Weekly Inspections:</strong> ${report.summary.avg_weekly_inspections || 0}</p>
+                        <p class="mb-2"><strong>Average Failure Rate:</strong> ${report.summary.avg_failure_rate || 0}%</p>
+                    </div>
+                `;
+            }
+
+            // Failure Breakdown specific content
+            if (report.top_failed_items) {
+                html += `
+                    <div class="failure-breakdown mb-4">
+                        <h4 class="text-lg font-bold text-red-600 mb-2">❌ Most Common Failures</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Failure Reason</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                `;
+
+                report.top_failed_items.slice(0, 5).forEach(item => {
+                    html += `
+                        <tr>
+                            <td class="px-4 py-2 text-sm">${item.item}</td>
+                            <td class="px-4 py-2 text-sm font-semibold">${item.count}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Inspector Performance specific content
+            if (report.inspector_performance) {
+                html += `
+                    <div class="inspector-performance mb-4">
+                        <h4 class="text-lg font-bold text-purple-600 mb-2">👤 Inspector Performance</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Inspector</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Pass Rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                `;
+
+                report.inspector_performance.slice(0, 5).forEach(perf => {
+                    html += `
+                        <tr>
+                            <td class="px-4 py-2 text-sm">${perf.inspector}</td>
+                            <td class="px-4 py-2 text-sm">${perf.total_inspections}</td>
+                            <td class="px-4 py-2 text-sm font-semibold">${perf.pass_rate}%</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            contentDiv.innerHTML = html;
+            resultsDiv.style.display = 'block';
         }
 
         function downloadReport() {
-            showNotification('Report download functionality coming soon', 'info');
+            if (!window.currentReportData) {
+                showNotification('Please generate a report first', 'error');
+                return;
+            }
+
+            const reportType = document.getElementById('reportType').value;
+            const inspectionType = document.getElementById('reportInspectionType').value;
+            const timeframe = document.getElementById('reportTimeframe').value;
+
+            let startDate, endDate;
+            if (timeframe === 'custom') {
+                startDate = document.getElementById('startDate').value;
+                endDate = document.getElementById('endDate').value;
+            } else {
+                const days = parseInt(timeframe);
+                endDate = new Date().toISOString().split('T')[0];
+                startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            }
+
+            // Create download URL
+            const params = new URLSearchParams({
+                reportType,
+                inspectionType,
+                startDate,
+                endDate,
+                format: 'pdf'
+            });
+
+            const url = `/api/admin/download_report?${params.toString()}`;
+
+            // Create hidden link and trigger download
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `inspection_report_${reportType}_${new Date().toISOString().split('T')[0]}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showNotification('📥 Report downloaded as PDF!', 'success');
         }
+
+        function scheduleReport() {
+            showNotification('📅 Report scheduling feature coming soon!', 'info');
+        }
+
+        // This function is now defined above for simplified reports
 
         // ADD THESE FUNCTIONS TO YOUR EXISTING <script> SECTION
 
@@ -3446,6 +4318,53 @@ document.getElementById('addUserForm').addEventListener('submit', async function
     }
 });
 
+// Handle New Task Form Submission
+document.getElementById('newTaskForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const taskData = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        assignee: formData.get('assignee'),
+        priority: formData.get('priority'),
+        due_date: formData.get('due_date')
+    };
+
+    // Validate required fields
+    if (!taskData.title || !taskData.description || !taskData.assignee || !taskData.due_date) {
+        alert('All fields are required');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/admin/tasks', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(taskData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            alert('Task created successfully!');
+            closeNewTaskForm();
+            // Reload tasks if there's a loadTasks function
+            if (typeof loadTasks === 'function') {
+                loadTasks();
+            }
+        } else {
+            alert(result.error || 'Failed to create task');
+        }
+
+    } catch (error) {
+        console.error('Error creating task:', error);
+        alert('Network error. Please try again.');
+    }
+});
+
 // Helper functions for form messages
 function showFormError(formType, message) {
     const errorEl = document.getElementById(`${formType}Error`);
@@ -3466,12 +4385,16 @@ function showFormSuccess(formType, message) {
         // Window resize handler for charts
         window.addEventListener('resize', function() {
             Object.values(charts).forEach(chartObj => {
-                if (chartObj && chartObj.chart) {
-                    const container = chartObj.chart.container();
-                    if (container) {
-                        chartObj.chart.applyOptions({
-                            width: container.offsetWidth,
-                        });
+                if (chartObj && chartObj.chart && typeof chartObj.chart.container === 'function') {
+                    try {
+                        const container = chartObj.chart.container();
+                        if (container) {
+                            chartObj.chart.applyOptions({
+                                width: container.offsetWidth,
+                            });
+                        }
+                    } catch (e) {
+                        console.log('Chart resize error:', e);
                     }
                 }
             });
