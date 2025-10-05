@@ -919,6 +919,8 @@
         </form>
     </div>
 
+    {% include 'modern_success_popup.html' %}
+
     <script>
         // Critical items based on form's blue highlighting
         const criticalItems = [
@@ -979,9 +981,9 @@
             input.addEventListener('change', updateScores);
         });
 
-        // Enhanced Form submission handler (Updated version)
+        // Modern popup form submission
         document.getElementById('inspection-form').addEventListener('submit', function(e) {
-            e.preventDefault(); // Prevent default form submission
+            e.preventDefault();
 
             const submitBtn = document.getElementById('submit-btn');
             const originalText = submitBtn.textContent;
@@ -990,16 +992,16 @@
 
             const formData = new FormData(this);
 
-            fetch(this.action, {
+            fetch(this.getAttribute('action'), {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
-                if (data.status === 'success') {
-                    showEnhancedSuccessPopup(data);
+                if (data.status === 'success' || data.message === 'Submit successfully') {
+                    showModernSuccessPopup(data);
                 } else {
-                    alert('Error: ' + data.message);
+                    alert('Error: ' + (data.message || 'Unknown error occurred'));
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;
                 }
@@ -1012,7 +1014,7 @@
             });
         });
 
-        // Enhanced success popup function
+        // Old popup function (replaced by modern popup)
         function showEnhancedSuccessPopup(data) {
             // Remove any existing popup
             const existingPopup = document.getElementById('successPopupOverlay');

@@ -260,19 +260,7 @@
         </div>
     </form>
 
-    <!-- Success Popup -->
-    <div id="successPopup" class="popup-overlay">
-        <div class="popup-content">
-            <div class="success-icon">✓</div>
-            <div class="popup-title">Submission Successful!</div>
-            <div class="popup-message">Your burial site inspection report has been submitted successfully.</div>
-            <div class="popup-thank-you">Thank you, Inspector!</div>
-            <div class="popup-buttons">
-                <a href="{{ url_for('dashboard') }}" class="popup-btn primary">Back to Dashboard</a>
-                <button onclick="closePopup()" class="popup-btn secondary">Stay on Page</button>
-            </div>
-        </div>
-    </div>
+    {% include 'modern_success_popup.html' %}
 
     <script>
         document.getElementById('burialForm').addEventListener('submit', function(e) {
@@ -289,18 +277,16 @@
             const formData = new FormData(this);
 
             // Submit form via fetch
-            fetch(this.action, {
+            fetch(this.getAttribute('action'), {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
-                if (data.message === 'Submit successfully') {
-                    // Show success popup
-                    showSuccessPopup();
+                if (data.status === 'success' || data.message === 'Submit successfully') {
+                    showModernSuccessPopup(data);
                 } else {
                     alert('Error: ' + (data.message || 'Unknown error occurred'));
-                    // Reset button
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;
                 }

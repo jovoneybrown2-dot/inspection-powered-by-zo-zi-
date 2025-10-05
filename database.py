@@ -490,6 +490,18 @@ def get_spirit_licence_inspection_details(form_id):
     else:
         inspection_dict['scores'] = {}
 
+    # Parse comments into a dictionary for easier access
+    comments_str = inspection_dict.get('comments', '')
+    parsed_comments = {}
+    if comments_str:
+        comment_lines = comments_str.split('\n')
+        for line in comment_lines:
+            if ':' in line:
+                parts = line.split(':', 1)
+                if len(parts) == 2 and parts[0].strip().isdigit():
+                    parsed_comments[parts[0].strip()] = parts[1].strip()
+    inspection_dict['parsed_comments'] = parsed_comments
+
     conn.close()
     return inspection_dict
 

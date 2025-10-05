@@ -386,9 +386,7 @@
         }
 
         .chart-title {
-            color: #d1d4dc;
-            font-size: 18px;
-            font-weight: 600;
+            display: none; /* Hide chart title to prevent blocking data */
         }
 
         .chart-controls {
@@ -439,19 +437,16 @@
         }
 
         .metrics-display {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(30, 34, 45, 0.9);
-            padding: 10px;
-            border-radius: 4px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
             color: #d1d4dc;
             font-size: 12px;
-            z-index: 10;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            min-width: 280px;
+            margin-left: 20px;
+        }
+
+        .metrics-display > div {
+            white-space: nowrap;
         }
 
         /* Search Bar Styles */
@@ -547,6 +542,342 @@
         .stat-toggle.active {
             background: #2962ff;
             color: white;
+        }
+
+        /* Threshold Controls */
+        .threshold-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 20px;
+            padding: 6px 12px;
+            background: #1e222d;
+            border-radius: 4px;
+            border: 1px solid #2a2e39;
+        }
+
+        .threshold-input {
+            width: 60px;
+            padding: 4px 8px;
+            background: #2a2e39;
+            border: 1px solid #363a45;
+            border-radius: 4px;
+            color: #d1d4dc;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .threshold-input:focus {
+            outline: none;
+            border-color: #2962ff;
+        }
+
+        .threshold-toggle {
+            padding: 4px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #2a2e39;
+            color: #787b86;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .threshold-toggle:hover {
+            background: #363a45;
+            color: #d1d4dc;
+        }
+
+        .threshold-toggle.active {
+            background: #ef5350;
+            color: white;
+        }
+
+        .threshold-label {
+            font-size: 12px;
+            color: #787b86;
+            white-space: nowrap;
+        }
+
+        /* Alert Sidebar Panel */
+        .alert-sidebar {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: #1e222d;
+            box-shadow: -4px 0 12px rgba(0, 0, 0, 0.3);
+            transition: right 0.3s ease;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .alert-sidebar.open {
+            right: 0;
+        }
+
+        .alert-sidebar-header {
+            background: #131722;
+            padding: 20px;
+            border-bottom: 1px solid #2a2e39;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .alert-sidebar-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #d1d4dc;
+        }
+
+        .alert-sidebar-close {
+            background: transparent;
+            border: none;
+            color: #787b86;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .alert-sidebar-close:hover {
+            background: #2a2e39;
+            color: #d1d4dc;
+        }
+
+        .alert-filters {
+            padding: 16px 20px;
+            border-bottom: 1px solid #2a2e39;
+            background: #131722;
+        }
+
+        .alert-filter-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .alert-filter-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #2a2e39;
+            color: #787b86;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .alert-filter-btn:hover {
+            background: #363a45;
+            color: #d1d4dc;
+        }
+
+        .alert-filter-btn.active {
+            background: #2962ff;
+            color: white;
+        }
+
+        .alert-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .alert-card {
+            background: #2a2e39;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 4px solid #ef5350;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .alert-card:hover {
+            background: #363a45;
+            transform: translateX(-4px);
+        }
+
+        .alert-card.acknowledged {
+            border-left-color: #4caf50;
+            opacity: 0.6;
+        }
+
+        .alert-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+
+        .alert-card-title {
+            font-weight: bold;
+            color: #ef5350;
+            font-size: 14px;
+        }
+
+        .alert-card.acknowledged .alert-card-title {
+            color: #4caf50;
+        }
+
+        .alert-card-time {
+            font-size: 11px;
+            color: #787b86;
+        }
+
+        .alert-card-body {
+            color: #d1d4dc;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .alert-card-details {
+            display: flex;
+            gap: 16px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #787b86;
+        }
+
+        .alert-card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #363a45;
+        }
+
+        .alert-action-btn {
+            flex: 1;
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .alert-action-btn.acknowledge {
+            background: #4caf50;
+            color: white;
+        }
+
+        .alert-action-btn.acknowledge:hover {
+            background: #45a049;
+        }
+
+        .alert-action-btn.view {
+            background: #2962ff;
+            color: white;
+        }
+
+        .alert-action-btn.view:hover {
+            background: #1e4fd6;
+        }
+
+        .alert-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef5350;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .alert-toggle-btn {
+            position: relative;
+            background: #2a2e39;
+            border: none;
+            color: #d1d4dc;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .alert-toggle-btn:hover {
+            background: #363a45;
+        }
+
+        .alert-toggle-btn.has-alerts {
+            animation: glowRed 2s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(239, 83, 80, 0.6);
+        }
+
+        @keyframes glowRed {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(239, 83, 80, 0.4),
+                            0 0 40px rgba(239, 83, 80, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(239, 83, 80, 0.8),
+                            0 0 60px rgba(239, 83, 80, 0.4),
+                            0 0 80px rgba(239, 83, 80, 0.2);
+            }
+        }
+
+        .alert-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #787b86;
+        }
+
+        .alert-empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .bulk-actions {
+            padding: 12px 20px;
+            border-top: 1px solid #2a2e39;
+            background: #131722;
+            display: flex;
+            gap: 8px;
+        }
+
+        .bulk-action-btn {
+            flex: 1;
+            padding: 8px 16px;
+            font-size: 13px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .bulk-action-btn.acknowledge-all {
+            background: #4caf50;
+            color: white;
+        }
+
+        .bulk-action-btn.acknowledge-all:hover {
+            background: #45a049;
+        }
+
+        .bulk-action-btn.clear-all {
+            background: #787b86;
+            color: white;
+        }
+
+        .bulk-action-btn.clear-all:hover {
+            background: #6a6d78;
         }
 
         /* Admin Tools & Modal Styles */
@@ -798,6 +1129,11 @@
     <div id="messageBadge" class="message-badge" style="display: none;">0</div>
 </button>
 
+        <button id="alertSidebarToggle" class="alert-toggle-btn" style="position: fixed; bottom: 120px; right: 20px; z-index: 1000;">
+            🚨 Alerts
+            <span id="alertSidebarBadge" class="alert-badge" style="display: none;">0</span>
+        </button>
+
 <!-- Messaging Panel -->
 <div id="messagingPanel" class="messaging-panel">
     <div class="messaging-header">
@@ -862,6 +1198,59 @@
             <button id="adminToolsButton" class="ml-auto px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-100">Admin Tools</button>
         </div>
 
+        <!-- Alert Sidebar Panel -->
+        <div id="alertSidebar" class="alert-sidebar">
+            <div class="alert-sidebar-header">
+                <div class="alert-sidebar-title">🚨 Threshold Alerts</div>
+                <button class="alert-sidebar-close" onclick="toggleAlertSidebar()">×</button>
+            </div>
+
+            <!-- Alert Threshold Settings -->
+            <div style="padding: 16px 20px; border-bottom: 1px solid #2a2e39; background: #1a1e2a;">
+                <div style="margin-bottom: 8px; color: #787b86; font-size: 12px;">Alert Threshold Setting</div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <label style="color: #d1d4dc; font-size: 14px;">Alert when score below:</label>
+                    <input type="number" id="globalThreshold" value="70" min="0" max="100" step="1"
+                           style="width: 70px; padding: 6px 10px; background: #2a2e39; border: 1px solid #363a45;
+                                  border-radius: 4px; color: #d1d4dc; font-size: 14px; text-align: center;"
+                           onchange="updateGlobalThreshold(this.value)">
+                    <span style="color: #d1d4dc; font-size: 14px;">%</span>
+                </div>
+                <div style="margin-top: 8px; color: #787b86; font-size: 11px; font-style: italic;">
+                    This sets the threshold for all inspection types
+                </div>
+            </div>
+
+            <div class="alert-filters">
+                <div class="alert-filter-row">
+                    <button class="alert-filter-btn active" data-filter="all" onclick="filterAlerts('all')">All</button>
+                    <button class="alert-filter-btn" data-filter="unacknowledged" onclick="filterAlerts('unacknowledged')">Unacknowledged</button>
+                    <button class="alert-filter-btn" data-filter="acknowledged" onclick="filterAlerts('acknowledged')">Acknowledged</button>
+                </div>
+                <div class="alert-filter-row">
+                    <button class="alert-filter-btn" data-filter="food" onclick="filterAlerts('food')">Food</button>
+                    <button class="alert-filter-btn" data-filter="residential" onclick="filterAlerts('residential')">Residential</button>
+                    <button class="alert-filter-btn" data-filter="burial" onclick="filterAlerts('burial')">Burial</button>
+                    <button class="alert-filter-btn" data-filter="spirit" onclick="filterAlerts('spirit')">Spirit</button>
+                </div>
+                <div class="alert-filter-row">
+                    <button class="alert-filter-btn" data-filter="swimming" onclick="filterAlerts('swimming')">Swimming Pool</button>
+                    <button class="alert-filter-btn" data-filter="small" onclick="filterAlerts('small')">Small Hotels</button>
+                    <button class="alert-filter-btn" data-filter="barbershop" onclick="filterAlerts('barbershop')">Barbershop</button>
+                    <button class="alert-filter-btn" data-filter="institutional" onclick="filterAlerts('institutional')">Institutional</button>
+                </div>
+            </div>
+
+            <div class="alert-list" id="sidebarAlertList">
+                <!-- Alert cards will be dynamically inserted here -->
+            </div>
+
+            <div class="bulk-actions">
+                <button class="bulk-action-btn acknowledge-all" onclick="acknowledgeAllAlerts()">✓ Acknowledge All</button>
+                <button class="bulk-action-btn clear-all" onclick="clearAcknowledgedAlerts()">🗑️ Clear Acknowledged</button>
+            </div>
+        </div>
+
         <!-- Admin Tools Container -->
         <div id="adminToolsContainer" class="admin-tools-container">
             <button class="sidebar-button" onclick="openModal('active_users')">👥 Active Users</button>
@@ -905,17 +1294,17 @@
                             <button class="stat-toggle" data-stat="median" data-tab="overview">Median</button>
                             <button class="stat-toggle" data-stat="mode" data-tab="overview">Mode</button>
                         </div>
+                        <div class="metrics-display" id="metricsDisplay">
+                            <div>Pass Rate: <span id="passRate">0%</span></div>
+                            <div>Total: <span id="totalInspections">0</span></div>
+                            <div>Failed: <span id="failedInspections">0</span></div>
+                            <div>Mean: <span id="meanScore">0%</span></div>
+                            <div>Median: <span id="medianScore">0%</span></div>
+                            <div>Mode: <span id="modeScore">0%</span></div>
+                        </div>
                     </div>
                 </div>
                 <div class="chart-area">
-                    <div class="metrics-display" id="metricsDisplay">
-                        <div>Pass Rate: <span id="passRate">0%</span></div>
-                        <div>Total Inspections: <span id="totalInspections">0</span></div>
-                        <div>Failed: <span id="failedInspections">0</span></div>
-                        <div>Mean Score: <span id="meanScore">0%</span></div>
-                        <div>Median Score: <span id="medianScore">0%</span></div>
-                        <div>Mode Score: <span id="modeScore">0%</span></div>
-                    </div>
                     <div id="overviewChart"></div>
                 </div>
             </div>
@@ -1012,17 +1401,17 @@
                             <button class="stat-toggle" data-stat="median" data-tab="{{ tab }}">Median</button>
                             <button class="stat-toggle" data-stat="mode" data-tab="{{ tab }}">Mode</button>
                         </div>
+                        <div class="metrics-display" id="metricsDisplay-{{ tab }}">
+                            <div>Pass Rate: <span id="passRate-{{ tab }}">0%</span></div>
+                            <div>Total: <span id="totalInspections-{{ tab }}">0</span></div>
+                            <div>Failed: <span id="failedInspections-{{ tab }}">0</span></div>
+                            <div>Mean: <span id="meanScore-{{ tab }}">0%</span></div>
+                            <div>Median: <span id="medianScore-{{ tab }}">0%</span></div>
+                            <div>Mode: <span id="modeScore-{{ tab }}">0%</span></div>
+                        </div>
                     </div>
                 </div>
                 <div class="chart-area">
-                    <div class="metrics-display" id="metricsDisplay-{{ tab }}">
-                        <div>Pass Rate: <span id="passRate-{{ tab }}">0%</span></div>
-                        <div>Total Inspections: <span id="totalInspections-{{ tab }}">0</span></div>
-                        <div>Failed: <span id="failedInspections-{{ tab }}">0</span></div>
-                        <div>Mean Score: <span id="meanScore-{{ tab }}">0%</span></div>
-                        <div>Median Score: <span id="medianScore-{{ tab }}">0%</span></div>
-                        <div>Mode Score: <span id="modeScore-{{ tab }}">0%</span></div>
-                    </div>
                     <div id="{{ tab }}Chart"></div>
                 </div>
             </div>
@@ -1252,12 +1641,36 @@
 
             <!-- Controls Section -->
             <div class="bg-gray-50 p-4 rounded-lg mb-6">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <!-- Report Type Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Report Type</label>
+                        <select id="reportType" class="px-3 py-2 border border-gray-300 rounded-md w-full text-sm">
+                            <option value="comprehensive">📊 Comprehensive Dashboard</option>
+                            <option value="basic_summary">📄 Executive Summary</option>
+                            <option value="trend_analysis">📈 Trend Analysis</option>
+                            <option value="failure_breakdown">❌ Failure Breakdown</option>
+                            <option value="inspector_performance">👤 Inspector Performance</option>
+                            <option value="scores_by_type">🎯 Scores by Type</option>
+                            <option value="monthly_trends">📅 Monthly Trends</option>
+                            <option value="establishment_ranking">🏆 Establishment Rankings</option>
+                            <option value="parish_analysis">🗺️ Parish Analysis</option>
+                        </select>
+                    </div>
+
                     <!-- Inspection Type Filter -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Inspection Type</label>
                         <select id="reportInspectionType" class="px-3 py-2 border border-gray-300 rounded-md w-full text-sm">
-                            <option value="all">Loading form types...</option>
+                            <option value="all">All Types</option>
+                            <option value="Food Establishment">Food Establishment</option>
+                            <option value="Spirit Licence Premises">Spirit Licence</option>
+                            <option value="Swimming Pool">Swimming Pool</option>
+                            <option value="Small Hotel">Small Hotel</option>
+                            <option value="Barbershop">Barbershop</option>
+                            <option value="Institutional Health">Institutional</option>
+                            <option value="Residential">Residential</option>
+                            <option value="Burial Site">Burial Site</option>
                         </select>
                     </div>
 
@@ -1265,26 +1678,33 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Time Period</label>
                         <select id="reportTimeframe" class="px-3 py-2 border border-gray-300 rounded-md w-full text-sm">
+                            <option value="7">Last 7 Days</option>
                             <option value="30">Last 30 Days</option>
                             <option value="90">Last 3 Months</option>
                             <option value="180">Last 6 Months</option>
                             <option value="365">Last Year</option>
+                            <option value="all">All Time</option>
                             <option value="custom">Custom Range</option>
                         </select>
                     </div>
 
-                    <!-- Action Buttons -->
+                    <!-- Generate Button -->
                     <div class="flex items-end">
-                        <button onclick="generateDashboard()" id="generateDashboardBtn"
-                                class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">
-                            📊 Generate Dashboard
+                        <button onclick="generateCustomReport()" id="generateReportBtn"
+                                class="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-md hover:from-blue-700 hover:to-blue-800 text-sm font-medium shadow-md">
+                            🔍 Generate Report
                         </button>
                     </div>
 
-                    <div class="flex items-end">
-                        <button onclick="downloadDashboardPDF()" id="downloadDashboardBtn" disabled
-                                class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 text-sm font-medium">
-                            📥 Export PDF
+                    <!-- Export Buttons -->
+                    <div class="flex items-end gap-2">
+                        <button onclick="exportReportPDF()" id="exportPDFBtn" disabled
+                                class="flex-1 px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-gray-400 text-sm font-medium">
+                            📄 PDF
+                        </button>
+                        <button onclick="exportReportCSV()" id="exportCSVBtn" disabled
+                                class="flex-1 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 text-sm font-medium">
+                            📊 CSV
                         </button>
                     </div>
                 </div>
@@ -1359,24 +1779,52 @@
             <!-- Initial State -->
             <div id="dashboardInitial" class="text-center py-12">
                 <div class="text-6xl mb-4">📊</div>
-                <h3 class="text-xl font-bold text-gray-700 mb-2">Comprehensive Inspection Analytics</h3>
-                <p class="text-gray-600 mb-6">Select your parameters above and click "Generate Dashboard" to view detailed analytics including:</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left max-w-2xl mx-auto">
-                    <div class="bg-blue-50 p-3 rounded">
-                        <h4 class="font-semibold text-blue-800">📈 Pass/Fail Trends</h4>
-                        <p class="text-sm text-blue-600">Line charts showing performance over time</p>
+                <h3 class="text-xl font-bold text-gray-700 mb-2">Advanced Inspection Analytics & Reporting</h3>
+                <p class="text-gray-600 mb-6">Select report type, inspection type, and time period above, then click "Generate Report"</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left max-w-4xl mx-auto">
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <h4 class="font-bold text-blue-900 mb-2">📄 Executive Reports</h4>
+                        <ul class="text-sm text-blue-700 space-y-1">
+                            <li>• Comprehensive Dashboard</li>
+                            <li>• Executive Summary</li>
+                            <li>• Monthly Trends</li>
+                        </ul>
                     </div>
-                    <div class="bg-green-50 p-3 rounded">
-                        <h4 class="font-semibold text-green-800">👤 Inspector Analytics</h4>
-                        <p class="text-sm text-green-600">Performance comparison bar charts</p>
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <h4 class="font-bold text-green-900 mb-2">📈 Performance Analysis</h4>
+                        <ul class="text-sm text-green-700 space-y-1">
+                            <li>• Trend Analysis</li>
+                            <li>• Inspector Performance</li>
+                            <li>• Establishment Rankings</li>
+                        </ul>
                     </div>
-                    <div class="bg-purple-50 p-3 rounded">
-                        <h4 class="font-semibold text-purple-800">📊 Score Analysis</h4>
-                        <p class="text-sm text-purple-600">Grouped charts by inspection type</p>
+                    <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                        <h4 class="font-bold text-purple-900 mb-2">🎯 Detailed Insights</h4>
+                        <ul class="text-sm text-purple-700 space-y-1">
+                            <li>• Failure Breakdown</li>
+                            <li>• Scores by Type</li>
+                            <li>• Parish Analysis</li>
+                        </ul>
                     </div>
-                    <div class="bg-yellow-50 p-3 rounded">
-                        <h4 class="font-semibold text-yellow-800">🏆 Establishment Rankings</h4>
-                        <p class="text-sm text-yellow-600">Top performers vs failing establishments</p>
+                </div>
+
+                <div class="mt-8 bg-yellow-50 p-4 rounded-lg max-w-2xl mx-auto border border-yellow-200">
+                    <p class="text-sm text-yellow-800">
+                        <strong>💡 Tip:</strong> After generating a report, use the PDF or CSV buttons to download professional formatted reports for presentations or further analysis.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Report Display Area -->
+            <div id="reportContent" style="display: none;">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div id="reportHeader" class="mb-6 pb-4 border-b">
+                        <h3 id="reportTitle" class="text-2xl font-bold text-gray-800"></h3>
+                        <p id="reportSubtitle" class="text-gray-600 mt-2"></p>
+                    </div>
+                    <div id="reportBody">
+                        <!-- Report content will be injected here -->
                     </div>
                 </div>
             </div>
@@ -3006,6 +3454,309 @@
         }
 
         // ========================================
+        // ALERT SIDEBAR FUNCTIONALITY (Option B)
+        // ========================================
+
+        // Initialize alert sidebar on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize alert sidebar
+            loadAlertSidebar();
+
+            // Setup alert sidebar toggle
+            document.getElementById('alertSidebarToggle').addEventListener('click', toggleAlertSidebar);
+
+            // Poll for new alerts every 30 seconds
+            setInterval(loadAlertSidebar, 30000);
+        });
+
+        let currentAlertFilter = 'all';
+        let allAlerts = [];
+
+        function toggleAlertSidebar() {
+            const sidebar = document.getElementById('alertSidebar');
+            sidebar.classList.toggle('open');
+
+            if (sidebar.classList.contains('open')) {
+                loadAlertSidebar();
+                loadGlobalThreshold();
+            }
+        }
+
+        function updateGlobalThreshold(value) {
+            fetch('/api/admin/save_threshold', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    chart_type: 'global',
+                    threshold_value: parseFloat(value),
+                    enabled: 1
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Global threshold updated to:', value);
+                    // Show confirmation
+                    const msg = document.createElement('div');
+                    msg.style.cssText = 'position: fixed; top: 80px; right: 20px; background: #4caf50; color: white; padding: 12px 20px; border-radius: 6px; z-index: 10001;';
+                    msg.textContent = `✓ Alert threshold set to ${value}%`;
+                    document.body.appendChild(msg);
+                    setTimeout(() => msg.remove(), 3000);
+                }
+            })
+            .catch(error => {
+                console.error('Error updating threshold:', error);
+            });
+        }
+
+        function loadGlobalThreshold() {
+            fetch('/api/admin/get_thresholds')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.thresholds && data.thresholds.global) {
+                    document.getElementById('globalThreshold').value = data.thresholds.global.value;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading threshold:', error);
+            });
+        }
+
+        function loadAlertSidebar() {
+            console.log('Loading alert sidebar...');
+            fetch('/api/admin/threshold_alerts/list')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Alert data received:', data);
+                    if (data.success) {
+                        allAlerts = data.alerts || [];
+                        console.log('Number of alerts:', allAlerts.length);
+                        console.log('Alerts:', allAlerts);
+                        renderAlerts(allAlerts);
+                        updateAlertBadge(allAlerts.filter(a => !a.acknowledged).length);
+                    } else {
+                        console.error('API returned success: false');
+                        showEmptyAlerts();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading alerts:', error);
+                    showEmptyAlerts();
+                });
+        }
+
+        function renderAlerts(alerts) {
+            const alertList = document.getElementById('sidebarAlertList');
+            console.log('Rendering alerts. Element found:', !!alertList);
+            console.log('Total alerts to render:', alerts ? alerts.length : 0);
+
+            if (!alerts || alerts.length === 0) {
+                console.log('No alerts - showing empty state');
+                showEmptyAlerts();
+                return;
+            }
+
+            // Filter alerts based on current filter
+            let filteredAlerts = alerts;
+            console.log('Current filter:', currentAlertFilter);
+
+            if (currentAlertFilter === 'acknowledged') {
+                filteredAlerts = alerts.filter(a => a.acknowledged);
+            } else if (currentAlertFilter === 'unacknowledged') {
+                filteredAlerts = alerts.filter(a => !a.acknowledged);
+            } else if (currentAlertFilter !== 'all') {
+                // Form type filter
+                filteredAlerts = alerts.filter(a =>
+                    a.form_type.toLowerCase().includes(currentAlertFilter)
+                );
+            }
+
+            console.log('Filtered alerts:', filteredAlerts.length);
+
+            if (filteredAlerts.length === 0) {
+                console.log('No filtered alerts - showing empty state');
+                showEmptyAlerts();
+                return;
+            }
+
+            const alertsHTML = filteredAlerts.map(alert => {
+                const timeAgo = getTimeAgo(alert.created_at);
+                const acknowledgedClass = alert.acknowledged ? 'acknowledged' : '';
+
+                return `
+                    <div class="alert-card ${acknowledgedClass}" data-alert-id="${alert.id}">
+                        <div class="alert-card-header">
+                            <div class="alert-card-title">
+                                ${alert.acknowledged ? '✓' : '⚠️'} ${alert.form_type}
+                            </div>
+                            <div class="alert-card-time">${timeAgo}</div>
+                        </div>
+                        <div class="alert-card-body">
+                            Inspector: <strong>${alert.inspector_name || 'Unknown'}</strong><br>
+                            Score: <strong>${alert.score.toFixed(1)}%</strong> (Threshold: ${alert.threshold_value}%)
+                        </div>
+                        <div class="alert-card-details">
+                            <span>📋 ID: ${alert.inspection_id || 'N/A'}</span>
+                            ${alert.acknowledged ? `<span>✓ By: ${alert.acknowledged_by || 'Unknown'}</span>` : ''}
+                        </div>
+                        ${!alert.acknowledged ? `
+                            <div class="alert-card-actions">
+                                <button class="alert-action-btn acknowledge" onclick="acknowledgeAlert(${alert.id})">
+                                    ✓ Acknowledge
+                                </button>
+                                <button class="alert-action-btn view" onclick="viewInspection(${alert.inspection_id}, '${alert.form_type}')">
+                                    👁️ View
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            alertList.innerHTML = alertsHTML;
+        }
+
+        function showEmptyAlerts() {
+            const alertList = document.getElementById('sidebarAlertList');
+            if (alertList) {
+                alertList.innerHTML = `
+                    <div class="alert-empty">
+                        <div class="alert-empty-icon">📭</div>
+                        <div>No alerts found</div>
+                    </div>
+                `;
+            }
+        }
+
+        function filterAlerts(filter) {
+            currentAlertFilter = filter;
+
+            // Update active button
+            document.querySelectorAll('.alert-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.filter === filter || btn.textContent.toLowerCase().includes(filter)) {
+                    btn.classList.add('active');
+                }
+            });
+
+            renderAlerts(allAlerts);
+        }
+
+        function acknowledgeAlert(alertId) {
+            fetch(`/api/admin/threshold_alerts/acknowledge/${alertId}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    acknowledged_by: '{{ session.get("username", "admin") }}'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadAlertSidebar(); // Reload alerts
+                }
+            })
+            .catch(error => {
+                console.error('Error acknowledging alert:', error);
+            });
+        }
+
+        function acknowledgeAllAlerts() {
+            const unacknowledgedAlerts = allAlerts.filter(a => !a.acknowledged);
+
+            if (unacknowledgedAlerts.length === 0) {
+                alert('No unacknowledged alerts to acknowledge');
+                return;
+            }
+
+            if (!confirm(`Acknowledge ${unacknowledgedAlerts.length} alert(s)?`)) {
+                return;
+            }
+
+            Promise.all(unacknowledgedAlerts.map(alert =>
+                fetch(`/api/admin/threshold_alerts/acknowledge/${alert.id}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        acknowledged_by: '{{ session.get("username", "admin") }}'
+                    })
+                })
+            ))
+            .then(() => {
+                loadAlertSidebar();
+            })
+            .catch(error => {
+                console.error('Error acknowledging all alerts:', error);
+            });
+        }
+
+        function clearAcknowledgedAlerts() {
+            const acknowledgedAlerts = allAlerts.filter(a => a.acknowledged);
+
+            if (acknowledgedAlerts.length === 0) {
+                alert('No acknowledged alerts to clear');
+                return;
+            }
+
+            if (!confirm(`Clear ${acknowledgedAlerts.length} acknowledged alert(s)?`)) {
+                return;
+            }
+
+            fetch('/api/admin/threshold_alerts/clear_acknowledged', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadAlertSidebar();
+                }
+            })
+            .catch(error => {
+                console.error('Error clearing alerts:', error);
+            });
+        }
+
+        function updateAlertBadge(count) {
+            const badge = document.getElementById('alertSidebarBadge');
+            const alertBtn = document.getElementById('alertSidebarToggle');
+
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'flex';
+                // Add glowing effect when there are alerts
+                if (alertBtn) {
+                    alertBtn.classList.add('has-alerts');
+                }
+            } else {
+                badge.style.display = 'none';
+                // Remove glowing effect when no alerts
+                if (alertBtn) {
+                    alertBtn.classList.remove('has-alerts');
+                }
+            }
+        }
+
+        function viewInspection(inspectionId, formType) {
+            // Use existing viewForm function
+            viewForm(inspectionId, formType);
+        }
+
+        function getTimeAgo(timestamp) {
+            const now = new Date();
+            const alertTime = new Date(timestamp);
+            const diffMs = now - alertTime;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            return `${diffDays}d ago`;
+        }
+
+        // ========================================
         // ADMIN TOOLS FUNCTIONALITY
         // ========================================
 
@@ -4050,6 +4801,301 @@ document.addEventListener('click', function(e) {
             document.body.removeChild(link);
 
             showNotification('📥 Dashboard PDF download started!', 'success');
+        }
+
+        // NEW: Generate Custom Report Function
+        function generateCustomReport() {
+            const reportType = document.getElementById('reportType').value;
+            const inspectionType = document.getElementById('reportInspectionType').value;
+            const timeframe = document.getElementById('reportTimeframe').value;
+
+            let startDate, endDate;
+            const today = new Date();
+
+            if (timeframe === 'custom') {
+                startDate = document.getElementById('startDate').value;
+                endDate = document.getElementById('endDate').value;
+
+                if (!startDate || !endDate) {
+                    showNotification('Please select both start and end dates', 'error');
+                    return;
+                }
+            } else if (timeframe === 'all') {
+                startDate = '2020-01-01';
+                endDate = today.toISOString().split('T')[0];
+            } else {
+                const daysAgo = parseInt(timeframe);
+                const startDateObj = new Date();
+                startDateObj.setDate(today.getDate() - daysAgo);
+                startDate = startDateObj.toISOString().split('T')[0];
+                endDate = today.toISOString().split('T')[0];
+            }
+
+            // Show loading state
+            document.getElementById('dashboardInitial').style.display = 'none';
+            document.getElementById('reportContent').style.display = 'none';
+            document.getElementById('dashboardLoading').style.display = 'block';
+
+            // Store current report parameters
+            window.currentReportParams = {
+                reportType,
+                inspectionType,
+                startDate,
+                endDate
+            };
+
+            // Fetch report data
+            fetch('/api/admin/generate_report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    report_type: reportType,
+                    inspection_type: inspectionType,
+                    start_date: startDate,
+                    end_date: endDate
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('dashboardLoading').style.display = 'none';
+
+                if (data.success) {
+                    displayReport(data.report, reportType);
+                    // Enable export buttons
+                    document.getElementById('exportPDFBtn').disabled = false;
+                    document.getElementById('exportCSVBtn').disabled = false;
+                    showNotification('Report generated successfully!', 'success');
+                } else {
+                    document.getElementById('dashboardInitial').style.display = 'block';
+                    showNotification('Error generating report: ' + (data.error || 'Unknown error'), 'error');
+                }
+            })
+            .catch(error => {
+                document.getElementById('dashboardLoading').style.display = 'none';
+                document.getElementById('dashboardInitial').style.display = 'block';
+                showNotification('Error generating report: ' + error.message, 'error');
+            });
+        }
+
+        // Display report in the UI
+        function displayReport(reportData, reportType) {
+            const reportContent = document.getElementById('reportContent');
+            const reportTitle = document.getElementById('reportTitle');
+            const reportSubtitle = document.getElementById('reportSubtitle');
+            const reportBody = document.getElementById('reportBody');
+
+            // Set title
+            const reportTitles = {
+                'comprehensive': '📊 Comprehensive Dashboard',
+                'basic_summary': '📄 Executive Summary Report',
+                'trend_analysis': '📈 Trend Analysis Report',
+                'failure_breakdown': '❌ Failure Breakdown Analysis',
+                'inspector_performance': '👤 Inspector Performance Report',
+                'scores_by_type': '🎯 Scores by Inspection Type',
+                'monthly_trends': '📅 Monthly Trends Analysis',
+                'establishment_ranking': '🏆 Establishment Rankings',
+                'parish_analysis': '🗺️ Parish-Level Analysis'
+            };
+
+            reportTitle.textContent = reportTitles[reportType] || 'Inspection Report';
+            reportSubtitle.textContent = `${reportData.title || ''} | Period: ${window.currentReportParams.startDate} to ${window.currentReportParams.endDate}`;
+
+            // Build report body HTML
+            let html = '';
+
+            // Summary cards
+            if (reportData.summary) {
+                html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">';
+                const summary = reportData.summary;
+
+                html += `
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <div class="text-sm text-blue-600 font-medium">Total Inspections</div>
+                        <div class="text-3xl font-bold text-blue-900">${summary.total_inspections || 0}</div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <div class="text-sm text-green-600 font-medium">Passed</div>
+                        <div class="text-3xl font-bold text-green-900">${summary.passed_inspections || 0}</div>
+                        <div class="text-xs text-green-600">${summary.pass_percentage || 0}%</div>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                        <div class="text-sm text-red-600 font-medium">Failed</div>
+                        <div class="text-3xl font-bold text-red-900">${summary.failed_inspections || 0}</div>
+                        <div class="text-xs text-red-600">${summary.fail_percentage || 0}%</div>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                        <div class="text-sm text-purple-600 font-medium">Avg Score</div>
+                        <div class="text-3xl font-bold text-purple-900">${summary.average_score || 0}%</div>
+                    </div>
+                `;
+                html += '</div>';
+            }
+
+            // Trend Data Chart
+            if (reportData.trend_data && reportData.trend_data.length > 0) {
+                html += '<div class="mb-6"><h4 class="text-lg font-bold mb-3">📈 Pass/Fail Trend Over Time</h4>';
+                html += '<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Date</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Total</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Passed</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Failed</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Pass Rate</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Avg Score</th>';
+                html += '</tr></thead><tbody class="bg-white divide-y divide-gray-200">';
+
+                reportData.trend_data.slice(0, 30).forEach(day => {
+                    html += `<tr>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm">${day.date}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm font-semibold">${day.total}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-green-600">${day.passed}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-red-600">${day.failed}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm font-medium">${day.pass_rate}%</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm">${day.avg_score}%</td>
+                    </tr>`;
+                });
+                html += '</tbody></table></div></div>';
+            }
+
+            // Top Inspectors with Perfect Scores
+            if (reportData.top_inspectors) {
+                html += '<div class="mb-6"><h4 class="text-lg font-bold mb-3">🏆 Top Performing Inspectors</h4>';
+                html += '<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Inspector</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Total</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Perfect Scores</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Avg Overall</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Avg Critical</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Pass Rate</th>';
+                html += '</tr></thead><tbody class="bg-white divide-y divide-gray-200">';
+
+                reportData.top_inspectors.forEach((inspector, idx) => {
+                    const rowClass = inspector.perfect_scores > 0 ? 'bg-yellow-50' : '';
+                    html += `<tr class="${rowClass}">
+                        <td class="px-4 py-2 whitespace-nowrap font-medium">${inspector.name}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">${inspector.total_inspections}</td>
+                        <td class="px-4 py-2 whitespace-nowrap ${inspector.perfect_scores > 0 ? 'text-green-600 font-bold' : ''}">${inspector.perfect_scores} ${inspector.perfect_scores > 0 ? '⭐' : ''}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">${inspector.avg_overall_score}%</td>
+                        <td class="px-4 py-2 whitespace-nowrap">${inspector.avg_critical_score}%</td>
+                        <td class="px-4 py-2 whitespace-nowrap font-medium">${inspector.pass_rate}%</td>
+                    </tr>`;
+                });
+                html += '</tbody></table></div></div>';
+            }
+
+            // Most Failed Checklist Items
+            if (reportData.common_failures && reportData.common_failures.length > 0) {
+                html += '<div class="mb-6"><h4 class="text-lg font-bold mb-3">❌ Most Failed Checklist Items</h4>';
+                html += '<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Item ID</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Form Type</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Total Checks</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Failures</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Failure Rate</th>';
+                html += '</tr></thead><tbody class="bg-white divide-y divide-gray-200">';
+
+                reportData.common_failures.forEach(failure => {
+                    const severity = failure.failure_rate > 50 ? 'bg-red-50' : failure.failure_rate > 25 ? 'bg-yellow-50' : '';
+                    html += `<tr class="${severity}">
+                        <td class="px-4 py-2 whitespace-nowrap font-mono">${failure.item_id}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm">${failure.form_type}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">${failure.total_checks}</td>
+                        <td class="px-4 py-2 whitespace-nowrap font-bold text-red-600">${failure.failure_count}</td>
+                        <td class="px-4 py-2 whitespace-nowrap font-medium">${failure.failure_rate}%</td>
+                    </tr>`;
+                });
+                html += '</tbody></table></div></div>';
+            }
+
+            // Top Establishments
+            if (reportData.top_establishments && reportData.top_establishments.length > 0) {
+                html += '<div class="mb-6"><h4 class="text-lg font-bold mb-3">🏆 Top Performing Establishments</h4>';
+                html += '<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Establishment</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Type</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Inspections</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Avg Score</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Best/Worst</th>';
+                html += '</tr></thead><tbody class="bg-white divide-y divide-gray-200">';
+
+                reportData.top_establishments.forEach(est => {
+                    html += `<tr class="bg-green-50">
+                        <td class="px-4 py-2 font-medium">${est.name}</td>
+                        <td class="px-4 py-2 text-sm">${est.type}</td>
+                        <td class="px-4 py-2">${est.count}</td>
+                        <td class="px-4 py-2 font-bold text-green-600">${est.avg_score}%</td>
+                        <td class="px-4 py-2 text-sm">${est.best_score}% / ${est.worst_score}%</td>
+                    </tr>`;
+                });
+                html += '</tbody></table></div></div>';
+            }
+
+            // Failing Establishments
+            if (reportData.failing_establishments && reportData.failing_establishments.length > 0) {
+                html += '<div class="mb-6"><h4 class="text-lg font-bold mb-3">⚠️ Failing Establishments (Need Attention)</h4>';
+                html += '<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Establishment</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Type</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Inspections</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Avg Score</th>';
+                html += '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Best/Worst</th>';
+                html += '</tr></thead><tbody class="bg-white divide-y divide-gray-200">';
+
+                reportData.failing_establishments.forEach(est => {
+                    html += `<tr class="bg-red-50">
+                        <td class="px-4 py-2 font-medium">${est.name}</td>
+                        <td class="px-4 py-2 text-sm">${est.type}</td>
+                        <td class="px-4 py-2">${est.count}</td>
+                        <td class="px-4 py-2 font-bold text-red-600">${est.avg_score}%</td>
+                        <td class="px-4 py-2 text-sm">${est.best_score}% / ${est.worst_score}%</td>
+                    </tr>`;
+                });
+                html += '</tbody></table></div></div>';
+            }
+
+            reportBody.innerHTML = html;
+            reportContent.style.display = 'block';
+        }
+
+        // Export report as PDF
+        function exportReportPDF() {
+            if (!window.currentReportParams) {
+                showNotification('Please generate a report first', 'error');
+                return;
+            }
+
+            const params = window.currentReportParams;
+            const url = `/api/admin/download_report?${new URLSearchParams({
+                report_type: params.reportType,
+                inspection_type: params.inspectionType,
+                start_date: params.startDate,
+                end_date: params.endDate,
+                format: 'pdf'
+            }).toString()}`;
+
+            window.open(url, '_blank');
+            showNotification('📄 PDF report download started!', 'success');
+        }
+
+        // Export report as CSV
+        function exportReportCSV() {
+            if (!window.currentReportParams) {
+                showNotification('Please generate a report first', 'error');
+                return;
+            }
+
+            const params = window.currentReportParams;
+            const url = `/api/admin/download_report?${new URLSearchParams({
+                report_type: params.reportType,
+                inspection_type: params.inspectionType,
+                start_date: params.startDate,
+                end_date: params.endDate,
+                format: 'csv'
+            }).toString()}`;
+
+            window.open(url, '_blank');
+            showNotification('📊 CSV report download started!', 'success');
         }
 
         // Show custom date range when selected

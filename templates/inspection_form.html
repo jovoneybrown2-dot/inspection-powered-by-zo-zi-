@@ -395,7 +395,7 @@
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
                 const formData = new FormData(this);
-                const actionUrl = '{{ url_for("submit_form", form_type="inspection") | safe }}';
+                const actionUrl = this.getAttribute('action') || '{{ url_for("submit_form", form_type="inspection") | safe }}';
                 fetch(actionUrl, {
                     method: 'POST',
                     body: formData
@@ -405,13 +405,13 @@
                     return response.json();
                 })
                 .then(data => {
-                    if (data.success) {
-                        // Show success popup
-                        showSuccessPopup();
+                    if (data.success || data.status === 'success') {
+                        // Show modern success popup
+                        showModernSuccessPopup(data);
                         form.reset();
                         calculateScores();
                     } else {
-                        alert('Error: ' + data.error);
+                        alert('Error: ' + (data.error || data.message));
                     }
                 })
                 .catch(error => alert('An error occurred: ' + error.message));
@@ -440,18 +440,7 @@
                 });
             });
 
-            // Popup functions
-            function showSuccessPopup() {
-                document.getElementById('successPopup').classList.add('show');
-            }
-
-            function closePopup() {
-                document.getElementById('successPopup').classList.remove('show');
-            }
-
-            // Make functions globally accessible
-            window.showSuccessPopup = showSuccessPopup;
-            window.closePopup = closePopup;
+            // Popup functions are now handled by modern_success_popup.html
         });
     </script>
 </head>
@@ -797,19 +786,7 @@
                 </div>
             </form>
 
-            <!-- Success Popup -->
-            <div id="successPopup" class="popup-overlay">
-                <div class="popup-content">
-                    <div class="success-icon">✓</div>
-                    <div class="popup-title">Submission Successful!</div>
-                    <div class="popup-message">Your food establishment inspection report has been submitted successfully.</div>
-                    <div class="popup-thank-you">Thank you, Inspector!</div>
-                    <div class="popup-buttons">
-                        <a href="{{ url_for('dashboard') }}" class="popup-btn primary">Back to Dashboard</a>
-                        <button onclick="closePopup()" class="popup-btn secondary">Stay on Page</button>
-                    </div>
-                </div>
-            </div>
+            {% include 'modern_success_popup.html' %}
         {% else %}
             <h1>Westmoreland Health Department</h1>
             <div class="search-section">

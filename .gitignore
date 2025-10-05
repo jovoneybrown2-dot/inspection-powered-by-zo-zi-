@@ -3,3 +3,14 @@ __pycache__/
 .DS_Store
 .venv/
 static/*.mp4
+
+# Environment variables (NEVER COMMIT!)
+.env
+
+# Database backups
+backups/
+*.db-backup
+*.sql.backup
+
+# SQLite backup
+database_sqlite_backup.py

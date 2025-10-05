@@ -459,6 +459,8 @@
         </form>
     </div>
 
+    {% include 'modern_success_popup.html' %}
+
     <script>
         function initializeScoring() {
             console.log('Initializing scoring system...');
@@ -586,16 +588,16 @@
 
             const formData = new FormData(this);
 
-            fetch(this.action, {
+            fetch(this.getAttribute('action'), {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
-                if (data.status === 'success') {
-                    showEnhancedSuccessPopup(data);
+                if (data.status === 'success' || data.message === 'Submit successfully') {
+                    showModernSuccessPopup(data);
                 } else {
-                    alert('Error: ' + data.message);
+                    alert('Error: ' + (data.message || 'Unknown error occurred'));
                     submitBtn.textContent = originalText;
                     submitBtn.disabled = false;
                 }

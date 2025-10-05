@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <title>Login</title>
     <style>
+        /* Prevent flash of unstyled content */
+        html {
+            opacity: 0;
+            transition: opacity 0.1s ease-in;
+        }
+        html.loaded {
+            opacity: 1;
+        }
+
         body {
             font-family: 'Arial', sans-serif;
             margin: 0;
@@ -14,6 +23,7 @@
             align-items: center;
             overflow: hidden;
             position: relative;
+            background: #000;
         }
         video {
             position: absolute;
@@ -140,5 +150,12 @@
             <button type="submit">Login</button>
         </form>
     </div>
+
+    <script>
+        // Remove flash by showing page when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            document.documentElement.classList.add('loaded');
+        });
+    </script>
 </body>
 </html>

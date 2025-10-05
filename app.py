@@ -1062,6 +1062,15 @@ def submit_spirit_licence():
                       (inspection_id, item['id'], score))
         conn.commit()
         conn.close()
+
+        # Check and create alert if score below threshold
+        check_and_create_alert(
+            inspection_id,
+            data['inspector_name'],
+            'Spirit Licence Premises',
+            data['overall_score']
+        )
+
         return jsonify({'status': 'success', 'message': 'Submit Successfully'})
     except sqlite3.Error as e:
         return jsonify({'status': 'error', 'message': f'Database error: {str(e)}'}), 500
@@ -1108,6 +1117,15 @@ def submit_form(form_type):
                           (inspection_id, item["id"], score))
             conn.commit()
             conn.close()
+
+            # Check and create alert if score below threshold
+            check_and_create_alert(
+                inspection_id,
+                data['inspector_name'],
+                'Food Establishment',
+                data['overall_score']
+            )
+
             return jsonify({'success': True, 'message': 'Form submitted', 'inspection_id': inspection_id})
         return jsonify({'success': False, 'error': 'Invalid form type'}), 400
     except Exception as e:
@@ -1162,6 +1180,14 @@ def submit_residential():
                   (inspection_id, item["id"], safe_score))
     conn.commit()
     conn.close()
+
+    # Check and create alert if score below threshold
+    check_and_create_alert(
+        inspection_id,
+        data['inspector_name'],
+        'Residential',
+        data['overall_score']
+    )
 
     return render_template('residential_form.html',
                            checklist=RESIDENTIAL_CHECKLIST_ITEMS,
@@ -4179,67 +4205,28 @@ def download_spirit_licence_pdf(form_id):
 
     # Get scores and comments
     scores = inspection.get('scores', {})
-    comments = inspection.get('comments', '')
-    comment_lines = comments.split('\n') if comments else []
+    parsed_comments = inspection.get('parsed_comments', {})
 
-    # Parse comments into a dictionary
-    parsed_comments = {}
-    for line in comment_lines:
-        if ':' in line:
-            parts = line.split(':', 1)
-            if len(parts) == 2 and parts[0].strip().isdigit():
-                parsed_comments[parts[0].strip()] = parts[1].strip()
-
-    # Categories with their items (matching your HTML structure)
+    # Organize checklist items by categories matching the HTML form structure
+    # Based on the HTML form: Building=1,2; Walls=3; Floors=4,5; Service Counter=6,7; Lighting=8;
+    # Washing and Sanitization=9,10,11; Water Supply=12,13; Storage=14,15,16;
+    # Sanitary=17,18,19,20,21; Solid Waste=22,23,24; Pest Control=25
     categories = [
-        ("Building", [
-            (1, "Sound, clean and in good repair", 3, False),
-            (2, "No smoking sign displayed at entrance to premises", 3, False),
-        ]),
-        ("Walls", [
-            (3, "Sound, clean and in good repair", 3, False),
-        ]),
-        ("Floors", [
-            (4, "Constructed of impervious, non-slip material", 3, False),
-            (5, "Clean, drained and in good repair", 3, False),
-        ]),
-        ("Service Counter", [
-            (6, "Constructed of impervious material", 3, False),
-            (7, "Designed, clean and in good repair", 3, False),
-        ]),
-        ("Lighting", [
-            (8, "Lighting provided as required", 3, False),
-        ]),
-        ("Washing and Sanitization Facilities", [
-            (9, "Fitted with at least double compartment sink", 5, True),
-            (10, "Soap and sanitizer provided", 5, True),
-            (11, "Equipped handwashing facility provided", 5, True),
-        ]),
-        ("Water Supply", [
-            (12, "Potable", 5, True),
-            (13, "Piped", 5, True),
-        ]),
-        ("Storage Facilities", [
-            (14, "Clean and adequate storage of glasses & utensils", 5, True),
-            (15, "Free of insects and other vermins", 5, True),
-            (16, "Being used for its intended purpose", 5, True),
-        ]),
-        ("Sanitary Facilities", [
-            (17, "Toilet facility provided", 5, True),
-            (18, "Adequate, accessible with lavatory basin and soap", 5, True),
-            (19, "Satisfactory", 5, True),
-            (20, "Urinal(s) provided", 3, False),
-            (21, "Satisfactory", 3, False),
-        ]),
-        ("Solid Waste Management", [
-            (22, "Covered, adequate, pest proof and clean receptacles", 4, False),
-            (23, "Provision made for satisfactory disposal of waste", 3, False),
-            (24, "Premises free of litter and unnecessary articles", 3, False),
-        ]),
-        ("Pest Control", [
-            (25, "Premises free of rodents, insects and vermins", 5, True),
-        ]),
+        ("Building", [1, 2]),
+        ("Walls", [3]),
+        ("Floors", [4, 5]),
+        ("Service Counter", [6, 7]),
+        ("Lighting", [8]),
+        ("Washing and Sanitization Facilities", [9, 10, 11]),
+        ("Water Supply", [12, 13]),
+        ("Storage Facilities", [14, 15, 16]),
+        ("Sanitary Facilities", [17, 18, 19, 20, 21]),
+        ("Solid Waste Management", [22, 23, 24]),
+        ("Pest Control", [25]),
     ]
+
+    # Create a lookup for checklist items
+    checklist_lookup = {item['id']: item for item in SPIRIT_LICENCE_CHECKLIST_ITEMS}
 
     page_num = 1
 
@@ -4264,7 +4251,7 @@ def download_spirit_licence_pdf(form_id):
         y -= row_height
 
         # Category items
-        for item_id, description, weight, is_critical in items:
+        for item_id in items:
             if y < 30:
                 p.showPage()
                 page_num += 1
@@ -4272,6 +4259,15 @@ def download_spirit_licence_pdf(form_id):
 
                 # Redraw header
                 y = draw_table_header(p, table_x, y, table_width, col_widths, header_height)
+
+            # Get item data from checklist
+            item_data = checklist_lookup.get(item_id)
+            if not item_data:
+                continue
+
+            description = item_data['description']
+            weight = item_data['wt']
+            is_critical = weight >= 5  # Critical items have weight 5 or higher
 
             # Critical item background (matching your HTML .critical class)
             if is_critical:
@@ -4842,6 +4838,14 @@ def submit_barbershop():
 
         conn.commit()
         conn.close()
+
+        # Check and create alert if score below threshold
+        check_and_create_alert(
+            inspection_id,
+            data['inspector_name'],
+            'Barbershop',
+            data['overall_score']
+        )
 
         # Return success with redirect
         return jsonify({
@@ -8405,27 +8409,30 @@ def generate_admin_report():
         if not data:
             return jsonify({'error': 'No data received'}), 400
 
-        report_type = data.get('reportType', 'basic_summary')
-        inspection_type = data.get('inspectionType', 'all')
-        start_date = data.get('startDate')
-        end_date = data.get('endDate')
+        # Support both camelCase and snake_case
+        report_type = data.get('report_type') or data.get('reportType', 'basic_summary')
+        inspection_type = data.get('inspection_type') or data.get('inspectionType', 'all')
+        start_date = data.get('start_date') or data.get('startDate')
+        end_date = data.get('end_date') or data.get('endDate')
 
         print(f"DEBUG: Received data: {data}")
         print(f"DEBUG: Report type: {report_type}, Inspection type: {inspection_type}")
         print(f"DEBUG: Date range: {start_date} to {end_date}")
 
         if not start_date or not end_date:
-            return jsonify({'error': 'Start date and end date are required'}), 400
+            return jsonify({'error': 'Start date and end date are required', 'received': data}), 400
 
         # Generate basic report based on type
         report_generators = {
+            'comprehensive': generate_basic_summary_report,  # Use basic summary for comprehensive
             'basic_summary': generate_basic_summary_report,
             'trend_analysis': generate_trend_analysis_report,
             'failure_breakdown': generate_failure_breakdown_report,
             'inspector_performance': generate_inspector_performance_report,
             'scores_by_type': generate_scores_by_type_report,
             'monthly_trends': generate_monthly_trends_report,
-            'establishment_ranking': generate_establishment_ranking_report
+            'establishment_ranking': generate_establishment_ranking_report,
+            'parish_analysis': generate_basic_summary_report  # Placeholder for parish analysis
         }
 
         generator_func = report_generators.get(report_type, generate_basic_summary_report)
@@ -8448,100 +8455,425 @@ def generate_admin_report():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Basic Report Generator Functions
-def generate_basic_summary_report(inspection_type, start_date, end_date):
+def check_and_create_alert(inspection_id, inspector_name, form_type, score):
+    """Check if inspection score is below threshold and create alert if needed"""
     try:
-        print(f"DEBUG: Generating basic summary for {inspection_type} from {start_date} to {end_date}")
+        conn = sqlite3.connect('inspections.db')
+        c = conn.cursor()
+
+        # Get global threshold
+        c.execute('SELECT threshold_value FROM threshold_settings WHERE chart_type = ? AND enabled = 1', ('global',))
+        result = c.fetchone()
+
+        if result:
+            threshold_value = result[0]
+
+            # Check if score is below threshold
+            if score < threshold_value:
+                # Create alert
+                c.execute('''
+                    INSERT INTO threshold_alerts
+                    (inspection_id, inspector_name, form_type, score, threshold_value, created_at)
+                    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                ''', (inspection_id, inspector_name, form_type, score, threshold_value))
+
+                conn.commit()
+                print(f"Alert created: Inspection {inspection_id}, Score {score} below threshold {threshold_value}")
+
+        conn.close()
+    except Exception as e:
+        print(f"Error creating alert: {str(e)}")
+
+@app.route('/api/admin/save_threshold', methods=['POST'])
+def save_threshold():
+    """Save threshold settings for chart alerts"""
+    try:
+        data = request.json
+        chart_type = data.get('chart_type')
+        threshold_value = data.get('threshold_value')
+        enabled = data.get('enabled', 1)
 
         conn = sqlite3.connect('inspections.db')
         c = conn.cursor()
 
-        # Build query based on inspection type
+        # Upsert threshold setting
+        c.execute('''
+            INSERT INTO threshold_settings (chart_type, inspection_type, threshold_value, enabled, updated_at)
+            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(chart_type, inspection_type) DO UPDATE SET
+                threshold_value = excluded.threshold_value,
+                enabled = excluded.enabled,
+                updated_at = CURRENT_TIMESTAMP
+        ''', (chart_type, chart_type, threshold_value, enabled))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': 'Threshold saved successfully',
+            'chart_type': chart_type,
+            'threshold_value': threshold_value
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/get_thresholds', methods=['GET'])
+def get_thresholds():
+    """Get all threshold settings"""
+    try:
+        conn = sqlite3.connect('inspections.db')
+        c = conn.cursor()
+
+        c.execute('''
+            SELECT chart_type, threshold_value, enabled
+            FROM threshold_settings
+            WHERE enabled = 1
+        ''')
+
+        thresholds = {}
+        for row in c.fetchall():
+            thresholds[row[0]] = {
+                'value': row[1],
+                'enabled': row[2] == 1
+            }
+
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'thresholds': thresholds
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/threshold_alerts', methods=['POST'])
+def create_threshold_alert():
+    """Create threshold alert when inspection falls below threshold"""
+    try:
+        data = request.json
+        inspection_id = data.get('inspection_id')
+        inspector_name = data.get('inspector_name')
+        form_type = data.get('form_type')
+        score = data.get('score')
+        threshold_value = data.get('threshold_value')
+
+        conn = sqlite3.connect('inspections.db')
+        c = conn.cursor()
+
+        c.execute('''
+            INSERT INTO threshold_alerts
+            (inspection_id, inspector_name, form_type, score, threshold_value, created_at)
+            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ''', (inspection_id, inspector_name, form_type, score, threshold_value))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': 'Alert created successfully'
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/threshold_alerts/acknowledge/<int:alert_id>', methods=['POST'])
+def acknowledge_alert(alert_id):
+    """Acknowledge a threshold alert"""
+    try:
+        data = request.json
+        acknowledged_by = data.get('acknowledged_by', session.get('username', 'admin'))
+
+        conn = sqlite3.connect('inspections.db')
+        c = conn.cursor()
+
+        c.execute('''
+            UPDATE threshold_alerts
+            SET acknowledged = 1,
+                acknowledged_by = ?,
+                acknowledged_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ''', (acknowledged_by, alert_id))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': 'Alert acknowledged'
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/threshold_alerts/list', methods=['GET'])
+def list_threshold_alerts():
+    """List all threshold alerts"""
+    try:
+        conn = sqlite3.connect('inspections.db')
+        c = conn.cursor()
+
+        c.execute('''
+            SELECT id, inspection_id, inspector_name, form_type, score, threshold_value,
+                   acknowledged, acknowledged_by, acknowledged_at, created_at
+            FROM threshold_alerts
+            ORDER BY acknowledged ASC, created_at DESC
+        ''')
+
+        alerts = []
+        for row in c.fetchall():
+            alerts.append({
+                'id': row[0],
+                'inspection_id': row[1],
+                'inspector_name': row[2],
+                'form_type': row[3],
+                'score': row[4],
+                'threshold_value': row[5],
+                'acknowledged': row[6] == 1,
+                'acknowledged_by': row[7],
+                'acknowledged_at': row[8],
+                'created_at': row[9]
+            })
+
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'alerts': alerts
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/threshold_alerts/clear_acknowledged', methods=['POST'])
+def clear_acknowledged_alerts():
+    """Clear all acknowledged alerts"""
+    try:
+        conn = sqlite3.connect('inspections.db')
+        c = conn.cursor()
+
+        c.execute('DELETE FROM threshold_alerts WHERE acknowledged = 1')
+
+        conn.commit()
+        deleted_count = c.rowcount
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': f'{deleted_count} alert(s) cleared'
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# Enhanced Comprehensive Report Generator Functions
+def generate_basic_summary_report(inspection_type, start_date, end_date):
+    try:
+        print(f"DEBUG: Generating comprehensive report for {inspection_type} from {start_date} to {end_date}")
+
+        conn = sqlite3.connect('inspections.db')
+        c = conn.cursor()
+
+        # 1. OVERALL SUMMARY with Pass/Fail Rates
         if inspection_type == 'all':
-            query = """
+            summary_query = """
                 SELECT
                     COUNT(*) as total,
-                    SUM(CASE WHEN overall_score >= 70 THEN 1 ELSE 0 END) as passed,
-                    SUM(CASE WHEN overall_score < 70 THEN 1 ELSE 0 END) as failed
+                    SUM(CASE WHEN result IN ('Pass', 'Satisfactory') OR overall_score >= 70 THEN 1 ELSE 0 END) as passed,
+                    SUM(CASE WHEN result IN ('Fail', 'Unsatisfactory') OR overall_score < 70 THEN 1 ELSE 0 END) as failed,
+                    AVG(overall_score) as avg_score,
+                    MAX(overall_score) as max_score,
+                    MIN(overall_score) as min_score
                 FROM inspections
-                WHERE inspection_date BETWEEN ? AND ?
-                AND inspection_date IS NOT NULL
+                WHERE DATE(inspection_date) BETWEEN ? AND ?
             """
             params = (start_date, end_date)
         else:
-            query = """
+            summary_query = """
                 SELECT
                     COUNT(*) as total,
-                    SUM(CASE WHEN overall_score >= 70 THEN 1 ELSE 0 END) as passed,
-                    SUM(CASE WHEN overall_score < 70 THEN 1 ELSE 0 END) as failed
+                    SUM(CASE WHEN result IN ('Pass', 'Satisfactory') OR overall_score >= 70 THEN 1 ELSE 0 END) as passed,
+                    SUM(CASE WHEN result IN ('Fail', 'Unsatisfactory') OR overall_score < 70 THEN 1 ELSE 0 END) as failed,
+                    AVG(overall_score) as avg_score,
+                    MAX(overall_score) as max_score,
+                    MIN(overall_score) as min_score
                 FROM inspections
-                WHERE inspection_date BETWEEN ? AND ?
+                WHERE DATE(inspection_date) BETWEEN ? AND ?
                 AND form_type = ?
-                AND inspection_date IS NOT NULL
             """
             params = (start_date, end_date, inspection_type)
 
-        c.execute(query, params)
+        c.execute(summary_query, params)
         result = c.fetchone()
 
         total_inspections = result[0] or 0
         passed_inspections = result[1] or 0
         failed_inspections = result[2] or 0
+        avg_score = result[3] or 0
+        max_score = result[4] or 0
+        min_score = result[5] or 0
 
         pass_percentage = (passed_inspections / total_inspections * 100) if total_inspections > 0 else 0
         fail_percentage = (failed_inspections / total_inspections * 100) if total_inspections > 0 else 0
 
-        # Calculate daily averages
-        if inspection_type == 'all':
-            daily_query = """
-                SELECT DATE(inspection_date) as date, COUNT(*) as count
-                FROM inspections
-                WHERE inspection_date BETWEEN ? AND ?
-                AND inspection_date IS NOT NULL
-                GROUP BY DATE(inspection_date)
-            """
-            daily_params = (start_date, end_date)
-        else:
-            daily_query = """
-                SELECT DATE(inspection_date) as date, COUNT(*) as count
-                FROM inspections
-                WHERE inspection_date BETWEEN ? AND ?
-                AND form_type = ?
-                AND inspection_date IS NOT NULL
-                GROUP BY DATE(inspection_date)
-            """
-            daily_params = (start_date, end_date, inspection_type)
+        print(f"DEBUG: Found {total_inspections} total inspections")
 
-        c.execute(daily_query, daily_params)
-        daily_results = c.fetchall()
+        # 2. TREND DATA - Daily/Weekly breakdown
+        trend_query = """
+            SELECT
+                DATE(inspection_date) as date,
+                COUNT(*) as total,
+                SUM(CASE WHEN result IN ('Pass', 'Satisfactory') OR overall_score >= 70 THEN 1 ELSE 0 END) as passed,
+                SUM(CASE WHEN result IN ('Fail', 'Unsatisfactory') OR overall_score < 70 THEN 1 ELSE 0 END) as failed,
+                AVG(overall_score) as avg_score
+            FROM inspections
+            WHERE DATE(inspection_date) BETWEEN ? AND ?
+            {}
+            GROUP BY DATE(inspection_date)
+            ORDER BY date
+        """.format("AND form_type = ?" if inspection_type != 'all' else "")
 
-        avg_daily = sum([count for date, count in daily_results]) / len(daily_results) if daily_results else 0
+        trend_params = params
+        c.execute(trend_query, trend_params)
+        trend_data = [{
+            'date': row[0],
+            'total': row[1],
+            'passed': row[2],
+            'failed': row[3],
+            'avg_score': round(row[4], 1) if row[4] else 0,
+            'pass_rate': round((row[2] / row[1] * 100) if row[1] > 0 else 0, 1)
+        } for row in c.fetchall()]
+
+        # 3. TOP PERFORMING INSPECTORS (Perfect Scores)
+        inspector_query = """
+            SELECT
+                inspector_name,
+                COUNT(*) as total_inspections,
+                SUM(CASE WHEN overall_score = 100 THEN 1 ELSE 0 END) as perfect_scores,
+                SUM(CASE WHEN critical_score = (SELECT MAX(critical_score) FROM inspections WHERE inspector_name = i.inspector_name) THEN 1 ELSE 0 END) as max_critical,
+                AVG(overall_score) as avg_overall,
+                AVG(critical_score) as avg_critical,
+                SUM(CASE WHEN result IN ('Pass', 'Satisfactory') THEN 1 ELSE 0 END) as passes
+            FROM inspections i
+            WHERE DATE(inspection_date) BETWEEN ? AND ?
+            {}
+            GROUP BY inspector_name
+            HAVING COUNT(*) > 0
+            ORDER BY perfect_scores DESC, avg_overall DESC
+            LIMIT 10
+        """.format("AND form_type = ?" if inspection_type != 'all' else "")
+
+        c.execute(inspector_query, params)
+        top_inspectors = [{
+            'name': row[0],
+            'total_inspections': row[1],
+            'perfect_scores': row[2],
+            'max_critical_scores': row[3],
+            'avg_overall_score': round(row[4], 1) if row[4] else 0,
+            'avg_critical_score': round(row[5], 1) if row[5] else 0,
+            'pass_count': row[6],
+            'pass_rate': round((row[6] / row[1] * 100) if row[1] > 0 else 0, 1)
+        } for row in c.fetchall()]
+
+        # 4. MOST FAILED CHECKLIST ITEMS
+        # Get all inspection_items with failures
+        checklist_query = """
+            SELECT
+                ii.item_id,
+                COUNT(*) as total_checks,
+                SUM(CASE WHEN CAST(ii.details AS INTEGER) = 0 THEN 1 ELSE 0 END) as failures,
+                i.form_type
+            FROM inspection_items ii
+            JOIN inspections i ON ii.inspection_id = i.id
+            WHERE DATE(i.inspection_date) BETWEEN ? AND ?
+            {}
+            GROUP BY ii.item_id, i.form_type
+            HAVING failures > 0
+            ORDER BY failures DESC, total_checks DESC
+            LIMIT 20
+        """.format("AND i.form_type = ?" if inspection_type != 'all' else "")
+
+        c.execute(checklist_query, params)
+        failed_items = [{
+            'item_id': row[0],
+            'total_checks': row[1],
+            'failure_count': row[2],
+            'form_type': row[3],
+            'failure_rate': round((row[2] / row[1] * 100) if row[1] > 0 else 0, 1)
+        } for row in c.fetchall()]
+
+        # 5. ESTABLISHMENT RANKINGS
+        establishment_query = """
+            SELECT
+                establishment_name,
+                form_type,
+                COUNT(*) as inspection_count,
+                AVG(overall_score) as avg_score,
+                MAX(overall_score) as best_score,
+                MIN(overall_score) as worst_score,
+                SUM(CASE WHEN result IN ('Pass', 'Satisfactory') THEN 1 ELSE 0 END) as passes
+            FROM inspections
+            WHERE DATE(inspection_date) BETWEEN ? AND ?
+            AND establishment_name IS NOT NULL
+            AND establishment_name != ''
+            {}
+            GROUP BY establishment_name, form_type
+            HAVING COUNT(*) > 0
+            ORDER BY avg_score DESC
+        """.format("AND form_type = ?" if inspection_type != 'all' else "")
+
+        c.execute(establishment_query, params)
+        all_establishments = c.fetchall()
+
+        top_establishments = [{
+            'name': row[0],
+            'type': row[1],
+            'count': row[2],
+            'avg_score': round(row[3], 1) if row[3] else 0,
+            'best_score': round(row[4], 1) if row[4] else 0,
+            'worst_score': round(row[5], 1) if row[5] else 0,
+            'pass_count': row[6]
+        } for row in all_establishments[:10]]
+
+        failing_establishments = [{
+            'name': row[0],
+            'type': row[1],
+            'count': row[2],
+            'avg_score': round(row[3], 1) if row[3] else 0,
+            'best_score': round(row[4], 1) if row[4] else 0,
+            'worst_score': round(row[5], 1) if row[5] else 0,
+            'pass_count': row[6]
+        } for row in sorted(all_establishments, key=lambda x: x[3])[:10]]
 
         conn.close()
 
-        print(f"DEBUG: Found {total_inspections} inspections, {passed_inspections} passed, {failed_inspections} failed")
-
         return {
-            'title': f'Basic Summary Report - {inspection_type}',
+            'title': f'Comprehensive Inspection Report - {inspection_type}',
             'summary': {
                 'total_inspections': total_inspections,
                 'passed_inspections': passed_inspections,
                 'failed_inspections': failed_inspections,
                 'pass_percentage': round(pass_percentage, 1),
                 'fail_percentage': round(fail_percentage, 1),
-                'average_daily_inspections': round(avg_daily, 1)
+                'average_score': round(avg_score, 1),
+                'highest_score': round(max_score, 1),
+                'lowest_score': round(min_score, 1)
             },
-            'date_range': f"{start_date} to {end_date}",
-            'charts': {
-                'pass_fail_chart': {
-                    'passed': passed_inspections,
-                    'failed': failed_inspections
-                }
-            }
+            'trend_data': trend_data,
+            'top_inspectors': top_inspectors,
+            'common_failures': failed_items,
+            'top_establishments': top_establishments,
+            'failing_establishments': failing_establishments,
+            'date_range': f"{start_date} to {end_date}"
         }
     except Exception as e:
         print(f"DEBUG: Error in generate_basic_summary_report: {str(e)}")
-        return {'error': f'Error generating basic summary: {str(e)}'}
+        import traceback
+        traceback.print_exc()
+        return {'error': f'Error generating report: {str(e)}'}
 
 def generate_trend_analysis_report(inspection_type, start_date, end_date):
     try:
@@ -9534,11 +9866,11 @@ def download_report():
         return jsonify({'error': 'Unauthorized - Please log in'}), 401
 
     try:
-        # Get parameters from query string
-        report_type = request.args.get('reportType', 'basic_summary')
-        inspection_type = request.args.get('inspectionType', 'all')
-        start_date = request.args.get('startDate')
-        end_date = request.args.get('endDate')
+        # Get parameters from query string (support both naming conventions)
+        report_type = request.args.get('report_type') or request.args.get('reportType', 'basic_summary')
+        inspection_type = request.args.get('inspection_type') or request.args.get('inspectionType', 'all')
+        start_date = request.args.get('start_date') or request.args.get('startDate')
+        end_date = request.args.get('end_date') or request.args.get('endDate')
         format_type = request.args.get('format', 'pdf')
 
         # Generate report data using the simplified functions
@@ -9546,7 +9878,11 @@ def download_report():
             'basic_summary': generate_basic_summary_report,
             'trend_analysis': generate_trend_analysis_report,
             'failure_breakdown': generate_failure_breakdown_report,
-            'inspector_performance': generate_inspector_performance_report
+            'inspector_performance': generate_inspector_performance_report,
+            'scores_by_type': generate_scores_by_type_report,
+            'monthly_trends': generate_monthly_trends_report,
+            'establishment_ranking': generate_establishment_ranking_report,
+            'comprehensive': generate_basic_summary_report  # Use basic summary for comprehensive
         }
 
         generator_func = report_generators.get(report_type, generate_basic_summary_report)
@@ -9554,10 +9890,13 @@ def download_report():
 
         if format_type == 'pdf':
             return generate_professional_pdf_report(report_data, report_type, inspection_type, start_date, end_date)
+        elif format_type == 'csv':
+            return generate_csv_download(report_data, report_type, inspection_type, start_date, end_date)
         else:
-            return jsonify({'error': 'Only PDF format is supported'}), 400
+            return jsonify({'error': 'Unsupported format. Use pdf or csv'}), 400
 
     except Exception as e:
+        print(f"Download error: {str(e)}")
         return jsonify({'error': f'Download failed: {str(e)}'}), 500
 
 def generate_professional_pdf_report(report_data, report_type, inspection_type, start_date, end_date):
@@ -9871,7 +10210,88 @@ def generate_csv_report(summary, checklist_failures, inspector_stats, inspection
     response.headers['Content-Disposition'] = f'attachment; filename="inspection_report_{start_date}_to_{end_date}.csv"'
     return response
 
+def generate_csv_download(report_data, report_type, inspection_type, start_date, end_date):
+    """Generate CSV file download from report data"""
+    import csv
+    from io import StringIO
+
+    output = StringIO()
+    writer = csv.writer(output)
+
+    # Header
+    writer.writerow(['Inspection Management System - Analytics Report'])
+    writer.writerow(['Report Type', report_type.replace('_', ' ').title()])
+    writer.writerow(['Inspection Type', inspection_type])
+    writer.writerow(['Period', f'{start_date} to {end_date}'])
+    writer.writerow(['Generated', datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
+    writer.writerow([])
+
+    # Summary Section
+    if 'summary' in report_data:
+        writer.writerow(['EXECUTIVE SUMMARY'])
+        writer.writerow(['Metric', 'Value'])
+        summary = report_data['summary']
+        writer.writerow(['Total Inspections', summary.get('total_inspections', 0)])
+        writer.writerow(['Passed Inspections', summary.get('passed_inspections', 0)])
+        writer.writerow(['Failed Inspections', summary.get('failed_inspections', 0)])
+        writer.writerow(['Pass Rate', f"{summary.get('pass_percentage', 0)}%"])
+        writer.writerow(['Fail Rate', f"{summary.get('fail_percentage', 0)}%"])
+        writer.writerow(['Average Score', f"{summary.get('average_score', 0)}%"])
+        writer.writerow(['Average Daily Inspections', summary.get('average_daily_inspections', 0)])
+        writer.writerow([])
+
+    # Top Inspectors
+    if 'top_inspectors' in report_data:
+        writer.writerow(['TOP PERFORMING INSPECTORS'])
+        writer.writerow(['Inspector Name', 'Total Inspections', 'Average Score'])
+        for inspector in report_data['top_inspectors']:
+            writer.writerow([inspector.get('name'), inspector.get('count'), f"{inspector.get('avg_score', 0)}%"])
+        writer.writerow([])
+
+    # Common Failures
+    if 'common_failures' in report_data:
+        writer.writerow(['MOST COMMON FAILURES'])
+        writer.writerow(['Item', 'Failure Count'])
+        for failure in report_data['common_failures']:
+            writer.writerow([failure.get('item'), failure.get('count')])
+        writer.writerow([])
+
+    # Monthly Trends
+    if 'monthly_data' in report_data:
+        writer.writerow(['MONTHLY TRENDS'])
+        writer.writerow(['Month', 'Total Inspections', 'Passed', 'Failed', 'Pass Rate'])
+        for month in report_data['monthly_data']:
+            writer.writerow([
+                month.get('month'),
+                month.get('total', 0),
+                month.get('passed', 0),
+                month.get('failed', 0),
+                f"{month.get('pass_rate', 0)}%"
+            ])
+        writer.writerow([])
+
+    # Establishment Rankings
+    if 'top_establishments' in report_data:
+        writer.writerow(['TOP PERFORMING ESTABLISHMENTS'])
+        writer.writerow(['Establishment Name', 'Average Score', 'Inspections'])
+        for est in report_data['top_establishments']:
+            writer.writerow([est.get('name'), f"{est.get('avg_score', 0)}%", est.get('count', 0)])
+        writer.writerow([])
+
+    if 'failing_establishments' in report_data:
+        writer.writerow(['FAILING ESTABLISHMENTS'])
+        writer.writerow(['Establishment Name', 'Average Score', 'Inspections'])
+        for est in report_data['failing_establishments']:
+            writer.writerow([est.get('name'), f"{est.get('avg_score', 0)}%", est.get('count', 0)])
+        writer.writerow([])
+
+    output.seek(0)
+    response = make_response(output.getvalue())
+    response.headers['Content-Type'] = 'text/csv; charset=utf-8'
+    response.headers['Content-Disposition'] = f'attachment; filename="inspection_report_{report_type}_{start_date}_to_{end_date}.csv"'
+    return response
+
 if __name__ == '__main__':
     init_db()
     init_form_management_db()
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5002)

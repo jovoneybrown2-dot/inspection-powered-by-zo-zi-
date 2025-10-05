@@ -313,6 +313,42 @@
                     window.location.href = `/residential/inspection/${id}`;
                 });
             });
+
+            // Modern popup form submission
+            const residentialForm = document.querySelector('form[action="/submit_residential"]');
+            if (residentialForm) {
+                residentialForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const submitBtn = document.querySelector('.submit-button');
+                    const originalText = submitBtn.textContent;
+                    submitBtn.textContent = 'Submitting...';
+                    submitBtn.disabled = true;
+
+                    const formData = new FormData(this);
+
+                    fetch(this.getAttribute('action'), {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success' || data.message === 'Submit successfully' || data.success) {
+                            showModernSuccessPopup(data);
+                        } else {
+                            alert('Error: ' + (data.message || data.error || 'Unknown error occurred'));
+                            submitBtn.textContent = originalText;
+                            submitBtn.disabled = false;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while submitting the form');
+                        submitBtn.textContent = originalText;
+                        submitBtn.disabled = false;
+                    });
+                });
+            }
         });
     </script>
 </head>
@@ -582,11 +618,8 @@
                     <button type="button" class="cancel-button" onclick="window.location.href='/'">Cancel Form</button>
                 </div>
             </form>
-            {% if success %}
-                <div class="success"></div>
-                <div class="submission-complete">Submission complete</div>
-                <a href="/" class="back-button">Back to Dashboard</a>
-            {% endif %}
+
+            {% include 'modern_success_popup.html' %}
         {% else %}
             <h1>Westmoreland Health Department</h1>
             <div class="search-section">

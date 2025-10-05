@@ -1,0 +1,400 @@
+<!-- Modern Success Popup - Include this file in your forms -->
+<div id="modernSuccessPopup" class="modern-popup-overlay">
+    <div class="modern-popup-container">
+        <div class="modern-popup-content">
+            <!-- Animated Success Checkmark -->
+            <div class="success-checkmark">
+                <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                    <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                    <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                </svg>
+            </div>
+
+            <!-- Success Title -->
+            <h2 class="modern-popup-title">Submission Successful!</h2>
+            <p class="modern-popup-message">Your inspection report has been submitted successfully.</p>
+
+            <!-- Inspection Details -->
+            <div id="modernPopupDetails" class="modern-popup-details"></div>
+
+            <!-- Countdown Timer -->
+            <div class="modern-popup-countdown">
+                Redirecting in <span id="modernCountdownNumber">5</span> seconds...
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="modern-popup-buttons">
+                <a href="{{ url_for('dashboard') }}" class="modern-btn modern-btn-primary">
+                    <span>Back to Dashboard</span>
+                </a>
+                <button onclick="closeModernPopup()" class="modern-btn modern-btn-secondary">
+                    <span>Stay on Page</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .modern-popup-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(10px);
+        z-index: 10000;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .modern-popup-overlay.active {
+        display: flex;
+        opacity: 1;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .modern-popup-container {
+        perspective: 1000px;
+    }
+
+    .modern-popup-content {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        border-radius: 20px;
+        padding: 50px 40px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
+                    0 0 40px rgba(0, 255, 255, 0.3);
+        border: 2px solid rgba(0, 255, 255, 0.3);
+        text-align: center;
+        animation: slideInScale 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .modern-popup-content::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+        animation: shimmer 3s infinite;
+    }
+
+    .success-checkmark {
+        margin: 0 auto 30px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .checkmark {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        display: block;
+        stroke-width: 3;
+        stroke: #00ffff;
+        stroke-miterlimit: 10;
+        box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+        animation: fillCheckmark 0.4s ease-in-out 0.4s forwards,
+                   scaleCheckmark 0.3s ease-in-out 0.9s both;
+    }
+
+    .checkmark-circle {
+        stroke-dasharray: 166;
+        stroke-dashoffset: 166;
+        stroke-width: 3;
+        stroke: #00ffff;
+        fill: rgba(0, 255, 255, 0.1);
+        animation: strokeCircle 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+
+    .checkmark-check {
+        transform-origin: 50% 50%;
+        stroke-dasharray: 48;
+        stroke-dashoffset: 48;
+        stroke: #00ffff;
+        animation: strokeCheck 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.6s forwards;
+    }
+
+    .modern-popup-title {
+        color: #00ffff;
+        font-size: 32px;
+        font-weight: bold;
+        margin-bottom: 15px;
+        text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        position: relative;
+        z-index: 1;
+    }
+
+    .modern-popup-message {
+        color: #ffffff;
+        font-size: 18px;
+        margin-bottom: 25px;
+        line-height: 1.6;
+        position: relative;
+        z-index: 1;
+    }
+
+    .modern-popup-details {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(0, 255, 255, 0.2);
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
+        text-align: left;
+        color: #ffffff;
+        position: relative;
+        z-index: 1;
+    }
+
+    .modern-popup-details p {
+        margin: 10px 0;
+        font-size: 14px;
+    }
+
+    .modern-popup-details strong {
+        color: #00ffff;
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    }
+
+    .modern-popup-countdown {
+        color: #ffffff;
+        font-size: 16px;
+        margin: 25px 0;
+        opacity: 0.8;
+        position: relative;
+        z-index: 1;
+    }
+
+    #modernCountdownNumber {
+        color: #00ffff;
+        font-weight: bold;
+        font-size: 20px;
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    }
+
+    .modern-popup-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 30px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .modern-btn {
+        padding: 15px 30px;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .modern-btn::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        transform: translate(-50%, -50%);
+        transition: width 0.3s, height 0.3s;
+    }
+
+    .modern-btn:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .modern-btn span {
+        position: relative;
+        z-index: 1;
+    }
+
+    .modern-btn-primary {
+        background: linear-gradient(135deg, #00ffff 0%, #00cccc 100%);
+        color: #1e3c72;
+        box-shadow: 0 5px 20px rgba(0, 255, 255, 0.4);
+    }
+
+    .modern-btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 30px rgba(0, 255, 255, 0.6);
+    }
+
+    .modern-btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .modern-btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-3px);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideInScale {
+        0% {
+            opacity: 0;
+            transform: translateY(-50px) scale(0.8);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    @keyframes strokeCircle {
+        100% {
+            stroke-dashoffset: 0;
+        }
+    }
+
+    @keyframes strokeCheck {
+        100% {
+            stroke-dashoffset: 0;
+        }
+    }
+
+    @keyframes fillCheckmark {
+        100% {
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.8);
+        }
+    }
+
+    @keyframes scaleCheckmark {
+        0%, 100% {
+            transform: none;
+        }
+        50% {
+            transform: scale(1.1);
+        }
+    }
+
+    @keyframes shimmer {
+        0% {
+            transform: translateX(-100%) translateY(-100%) rotate(45deg);
+        }
+        100% {
+            transform: translateX(100%) translateY(100%) rotate(45deg);
+        }
+    }
+</style>
+
+<script>
+    let modernCountdownInterval;
+
+    function showModernSuccessPopup(data) {
+        const overlay = document.getElementById('modernSuccessPopup');
+        const detailsDiv = document.getElementById('modernPopupDetails');
+
+        // Populate inspection details if provided
+        if (data && data.inspection_details) {
+            const details = data.inspection_details;
+            let detailsHTML = '';
+
+            if (details.establishment_name) {
+                detailsHTML += `<p><strong>Establishment:</strong> ${details.establishment_name}</p>`;
+            }
+            if (details.inspector_name) {
+                detailsHTML += `<p><strong>Inspector:</strong> ${details.inspector_name}</p>`;
+            }
+            if (details.inspection_date) {
+                detailsHTML += `<p><strong>Date:</strong> ${details.inspection_date}</p>`;
+            }
+            if (data.scores) {
+                if (data.scores.total_score !== undefined) {
+                    detailsHTML += `<p><strong>Score:</strong> ${data.scores.total_score}%</p>`;
+                }
+                if (data.scores.result) {
+                    detailsHTML += `<p><strong>Result:</strong> ${data.scores.result}</p>`;
+                }
+            }
+
+            detailsDiv.innerHTML = detailsHTML;
+        }
+
+        // Show overlay
+        overlay.classList.add('active');
+
+        // Start countdown
+        startModernPopupCountdown(5);
+    }
+
+    function startModernPopupCountdown(seconds) {
+        const countdownElement = document.getElementById('modernCountdownNumber');
+        let remaining = seconds;
+
+        countdownElement.textContent = remaining;
+
+        // Clear any existing interval
+        if (modernCountdownInterval) {
+            clearInterval(modernCountdownInterval);
+        }
+
+        modernCountdownInterval = setInterval(() => {
+            remaining--;
+            countdownElement.textContent = remaining;
+
+            if (remaining <= 0) {
+                clearInterval(modernCountdownInterval);
+                window.location.href = "{{ url_for('dashboard') }}";
+            }
+        }, 1000);
+    }
+
+    function closeModernPopup() {
+        const overlay = document.getElementById('modernSuccessPopup');
+        overlay.classList.remove('active');
+
+        // Clear countdown
+        if (modernCountdownInterval) {
+            clearInterval(modernCountdownInterval);
+        }
+
+        // Reset form if it exists
+        const forms = document.querySelectorAll('form[data-offline-form="true"]');
+        forms.forEach(form => {
+            form.reset();
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.textContent = 'Submit';
+                submitBtn.disabled = false;
+            }
+        });
+    }
+
+    // Close popup when clicking overlay background
+    if (document.getElementById('modernSuccessPopup')) {
+        document.getElementById('modernSuccessPopup').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModernPopup();
+            }
+        });
+    }
+</script>

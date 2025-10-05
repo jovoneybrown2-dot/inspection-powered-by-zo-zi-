@@ -546,13 +546,9 @@
             </div>
         </div>
     </form>
-    <!-- Success Modal -->
-    <div id="success-modal" class="modal">
-        <div class="modal-content">
-            <p>Submission successful!</p>
-            <a href="{{ url_for('dashboard') }}" class="btn">Back to Dashboard</a>
-        </div>
-    </div>
+
+    {% include 'modern_success_popup.html' %}
+
     <script>
         // Real-time score calculation
         const scoreInputs = document.querySelectorAll('.score-input');
@@ -582,7 +578,38 @@
        // Initial score calculation
         updateScores();
 
-        // Form submission is now handled by the offline system
+        // Modern popup form submission
+        document.getElementById('spirit-licence-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submit-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Submitting...';
+            submitBtn.disabled = true;
+
+            const formData = new FormData(this);
+
+            fetch(this.getAttribute('action'), {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success' || data.message === 'Submit successfully') {
+                    showModernSuccessPopup(data);
+                } else {
+                    alert('Error: ' + (data.message || 'Unknown error occurred'));
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while submitting the form');
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            });
+        });
     </script>
 </body>
 </html>
