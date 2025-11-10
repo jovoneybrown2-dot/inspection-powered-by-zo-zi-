@@ -97,6 +97,44 @@ def init_db():
                   score INTEGER,
                   FOREIGN KEY (form_id) REFERENCES residential_inspections(id))''')
 
+    # Meat processing inspections table
+    c.execute('''CREATE TABLE IF NOT EXISTS meat_processing_inspections
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  establishment_name TEXT,
+                  owner_operator TEXT,
+                  address TEXT,
+                  inspector_name TEXT,
+                  establishment_no TEXT,
+                  overall_score REAL,
+                  food_contact_surfaces INTEGER,
+                  water_samples INTEGER,
+                  product_samples INTEGER,
+                  types_of_products TEXT,
+                  staff_fhp INTEGER,
+                  water_public INTEGER,
+                  water_private INTEGER,
+                  type_processing INTEGER,
+                  type_slaughter INTEGER,
+                  purpose_of_visit TEXT,
+                  inspection_date TEXT,
+                  inspector_code TEXT,
+                  result TEXT,
+                  telephone_no TEXT,
+                  registration_status TEXT,
+                  action TEXT,
+                  comments TEXT,
+                  inspector_signature TEXT,
+                  received_by TEXT,
+                  created_at TEXT DEFAULT CURRENT_TIMESTAMP)''')
+
+    # Meat processing checklist scores table
+    c.execute('''CREATE TABLE IF NOT EXISTS meat_processing_checklist_scores
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  form_id INTEGER,
+                  item_id INTEGER,
+                  score REAL,
+                  FOREIGN KEY (form_id) REFERENCES meat_processing_inspections(id))''')
+
     # Users table
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -150,17 +188,18 @@ def init_db():
 def save_inspection(data):
     conn = sqlite3.connect('inspections.db')
     c = conn.cursor()
-    c.execute('''INSERT INTO inspections (establishment_name, address, inspector_name, inspection_date, inspection_time, 
-                 type_of_establishment, no_of_employees, purpose_of_visit, action, result, food_inspected, food_condemned, 
-                 critical_score, overall_score, comments, inspector_signature, received_by, form_type, scores, created_at, 
-                 inspector_code, license_no, owner)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+    c.execute('''INSERT INTO inspections (establishment_name, address, inspector_name, inspection_date, inspection_time,
+                 type_of_establishment, no_of_employees, purpose_of_visit, action, result, food_inspected, food_condemned,
+                 critical_score, overall_score, comments, inspector_signature, received_by, form_type, scores, created_at,
+                 inspector_code, license_no, owner, photo_data)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
               (data['establishment_name'], data['address'], data['inspector_name'], data['inspection_date'],
                data['inspection_time'], data['type_of_establishment'], data['no_of_employees'],
                data['purpose_of_visit'], data['action'], data['result'], data['food_inspected'],
                data['food_condemned'], data['critical_score'], data['overall_score'], data['comments'],
                data['inspector_signature'], data['received_by'], data['form_type'], data['scores'],
-               data['created_at'], data['inspector_code'], data['license_no'], data['owner']))
+               data['created_at'], data['inspector_code'], data['license_no'], data['owner'],
+               data.get('photo_data', '[]')))
     conn.commit()
     inspection_id = c.lastrowid
     conn.close()
@@ -171,30 +210,31 @@ def save_burial_inspection(data):
     c = conn.cursor()
     try:
         if data.get('id'):
-            c.execute('''UPDATE burial_site_inspections SET 
-                         inspection_date = ?, applicant_name = ?, deceased_name = ?, burial_location = ?, 
-                         site_description = ?, proximity_water_source = ?, proximity_perimeter_boundaries = ?, 
-                         proximity_road_pathway = ?, proximity_trees = ?, proximity_houses_buildings = ?, 
-                         proposed_grave_type = ?, general_remarks = ?, inspector_signature = ?, 
-                         received_by = ?, created_at = ?
+            c.execute('''UPDATE burial_site_inspections SET
+                         inspection_date = ?, applicant_name = ?, deceased_name = ?, burial_location = ?,
+                         site_description = ?, proximity_water_source = ?, proximity_perimeter_boundaries = ?,
+                         proximity_road_pathway = ?, proximity_trees = ?, proximity_houses_buildings = ?,
+                         proposed_grave_type = ?, general_remarks = ?, inspector_signature = ?,
+                         received_by = ?, photo_data = ?, created_at = ?
                          WHERE id = ?''',
                       (data['inspection_date'], data['applicant_name'], data['deceased_name'], data['burial_location'],
                        data['site_description'], data['proximity_water_source'], data['proximity_perimeter_boundaries'],
                        data['proximity_road_pathway'], data['proximity_trees'], data['proximity_houses_buildings'],
                        data['proposed_grave_type'], data['general_remarks'], data['inspector_signature'],
-                       data['received_by'], data.get('created_at', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+                       data['received_by'], data.get('photo_data', '[]'),
+                       data.get('created_at', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
                        data['id']))
         else:
-            c.execute('''INSERT INTO burial_site_inspections (inspection_date, applicant_name, deceased_name, burial_location, 
-                        site_description, proximity_water_source, proximity_perimeter_boundaries, proximity_road_pathway, 
-                        proximity_trees, proximity_houses_buildings, proposed_grave_type, general_remarks, 
-                        inspector_signature, received_by, created_at) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+            c.execute('''INSERT INTO burial_site_inspections (inspection_date, applicant_name, deceased_name, burial_location,
+                        site_description, proximity_water_source, proximity_perimeter_boundaries, proximity_road_pathway,
+                        proximity_trees, proximity_houses_buildings, proposed_grave_type, general_remarks,
+                        inspector_signature, received_by, photo_data, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                       (data['inspection_date'], data['applicant_name'], data['deceased_name'], data['burial_location'],
                        data['site_description'], data['proximity_water_source'], data['proximity_perimeter_boundaries'],
                        data['proximity_road_pathway'], data['proximity_trees'], data['proximity_houses_buildings'],
                        data['proposed_grave_type'], data['general_remarks'], data['inspector_signature'],
-                       data['received_by'], datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+                       data['received_by'], data.get('photo_data', '[]'), datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
         conn.commit()
     except sqlite3.Error as e:
         print(f"Database error: {e}")
@@ -207,13 +247,13 @@ def save_residential_inspection(data):
     try:
         if data.get('id'):
             c.execute("""
-                            UPDATE residential_inspections 
+                            UPDATE residential_inspections
                             SET premises_name = ?, owner = ?, address = ?, inspector_name = ?,
                                 inspection_date = ?, inspector_code = ?, treatment_facility = ?, vector = ?,
                                 result = ?, onsite_system = ?, building_construction_type = ?, purpose_of_visit = ?,
                                 action = ?, no_of_bedrooms = ?, total_population = ?, critical_score = ?,
                                 overall_score = ?, comments = ?, inspector_signature = ?, received_by = ?,
-                                created_at = ?
+                                created_at = ?, photo_data = ?
                             WHERE id = ?
                         """,
                         (data['premises_name'], data['owner'], data['address'], data['inspector_name'],
@@ -222,16 +262,17 @@ def save_residential_inspection(data):
                          data['action'], data.get('no_of_bedrooms', ''), data.get('total_population', ''),
                          data.get('critical_score', 0), data.get('overall_score', 0), data['comments'],
                          data['inspector_signature'], data['received_by'],
-                         data.get('created_at', datetime.now().strftime('%Y-%m-%d %H:%M:%S')), data['id']))
+                         data.get('created_at', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+                         data.get('photo_data', '[]'), data['id']))
         else:
             c.execute("""
                 INSERT INTO residential_inspections (
                     premises_name, owner, address, inspector_name,
                     inspection_date, inspector_code, treatment_facility, vector, result, onsite_system,
                     building_construction_type, purpose_of_visit, action, no_of_bedrooms, total_population,
-                    critical_score, overall_score, comments, inspector_signature, received_by, created_at
+                    critical_score, overall_score, comments, inspector_signature, received_by, created_at, photo_data
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 data['premises_name'], data['owner'], data['address'], data['inspector_name'],
                 data['inspection_date'], data['inspector_code'], data['treatment_facility'], data['vector'],
@@ -239,7 +280,65 @@ def save_residential_inspection(data):
                 data['action'], data.get('no_of_bedrooms', ''), data.get('total_population', ''),
                 data.get('critical_score', 0), data.get('overall_score', 0), data['comments'],
                 data['inspector_signature'], data['received_by'],
-                datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                data.get('photo_data', '[]')
+            ))
+            conn.commit()
+
+        inspection_id = c.lastrowid if not data.get('id') else data['id']
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        inspection_id = None
+    finally:
+        conn.close()
+    return inspection_id
+
+def save_meat_processing_inspection(data):
+    conn = sqlite3.connect('inspections.db')
+    c = conn.cursor()
+    try:
+        if data.get('id'):
+            c.execute("""
+                UPDATE meat_processing_inspections
+                SET establishment_name = ?, owner_operator = ?, address = ?, inspector_name = ?,
+                    establishment_no = ?, overall_score = ?, food_contact_surfaces = ?, water_samples = ?,
+                    product_samples = ?, types_of_products = ?, staff_fhp = ?, water_public = ?,
+                    water_private = ?, type_processing = ?, type_slaughter = ?, purpose_of_visit = ?,
+                    inspection_date = ?, inspector_code = ?, result = ?, telephone_no = ?,
+                    registration_status = ?, action = ?, comments = ?, inspector_signature = ?,
+                    received_by = ?, created_at = ?, photo_data = ?
+                WHERE id = ?
+            """, (
+                data['establishment_name'], data['owner_operator'], data['address'], data['inspector_name'],
+                data['establishment_no'], data['overall_score'], data['food_contact_surfaces'], data['water_samples'],
+                data['product_samples'], data['types_of_products'], data['staff_fhp'], data['water_public'],
+                data['water_private'], data['type_processing'], data['type_slaughter'], data['purpose_of_visit'],
+                data['inspection_date'], data['inspector_code'], data['result'], data['telephone_no'],
+                data['registration_status'], data['action'], data['comments'], data['inspector_signature'],
+                data['received_by'], data.get('created_at', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+                data.get('photo_data', '[]'), data['id']
+            ))
+        else:
+            c.execute("""
+                INSERT INTO meat_processing_inspections (
+                    establishment_name, owner_operator, address, inspector_name,
+                    establishment_no, overall_score, food_contact_surfaces, water_samples,
+                    product_samples, types_of_products, staff_fhp, water_public,
+                    water_private, type_processing, type_slaughter, purpose_of_visit,
+                    inspection_date, inspector_code, result, telephone_no,
+                    registration_status, action, comments, inspector_signature,
+                    received_by, created_at, photo_data
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                data['establishment_name'], data['owner_operator'], data['address'], data['inspector_name'],
+                data['establishment_no'], data['overall_score'], data['food_contact_surfaces'], data['water_samples'],
+                data['product_samples'], data['types_of_products'], data['staff_fhp'], data['water_public'],
+                data['water_private'], data['type_processing'], data['type_slaughter'], data['purpose_of_visit'],
+                data['inspection_date'], data['inspector_code'], data['result'], data['telephone_no'],
+                data['registration_status'], data['action'], data['comments'], data['inspector_signature'],
+                data['received_by'], datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                data.get('photo_data', '[]')
             ))
             conn.commit()
 
@@ -293,6 +392,14 @@ def get_residential_inspections():
     conn.close()
     return inspections
 
+def get_meat_processing_inspections():
+    conn = sqlite3.connect('inspections.db')
+    c = conn.cursor()
+    c.execute("SELECT id, establishment_name, inspection_date, result FROM meat_processing_inspections")
+    inspections = c.fetchall()
+    conn.close()
+    return inspections
+
 def get_inspection_details(inspection_id):
     conn = sqlite3.connect('inspections.db')
     c = conn.cursor()
@@ -329,7 +436,8 @@ def get_inspection_details(inspection_id):
                 'received_by': inspection[23] or '',
                 'form_type': inspection[24] or '',
                 'scores': dict(zip(range(1, 46), scores)),
-                'inspector_code': inspection[26] or ''
+                'inspector_code': inspection[26] or '',
+                'photo_data': inspection[27] if len(inspection) > 27 else '[]'
             }
         else:
             c.execute("SELECT item_id, details, obser, error FROM inspection_items WHERE inspection_id = ?", (inspection_id,))
@@ -362,7 +470,8 @@ def get_inspection_details(inspection_id):
                 'received_by': inspection[23] or '',
                 'form_type': inspection[24] or '',
                 'scores': scores,
-                'inspector_code': inspection[26] or ''
+                'inspector_code': inspection[26] or '',
+                'photo_data': inspection[27] if len(inspection) > 27 else '[]'
             }
         conn.close()
         return inspection_dict
@@ -392,7 +501,8 @@ def get_burial_inspection_details(inspection_id):
             'general_remarks': inspection[12] or '',
             'inspector_signature': inspection[13] or '',
             'received_by': inspection[14] or '',
-            'created_at': inspection[15] or ''
+            'created_at': inspection[15] or '',
+            'photo_data': inspection[16] if len(inspection) > 16 else '[]'
         }
     return None
 
@@ -428,6 +538,50 @@ def get_residential_inspection_details(inspection_id):
             'inspector_signature': inspection[19] or '',
             'received_by': inspection[20] or '',
             'created_at': inspection[21] or '',
+            'photo_data': inspection[22] if len(inspection) > 22 else '[]',
+            'checklist_scores': checklist_scores
+        }
+    conn.close()
+    return None
+
+def get_meat_processing_inspection_details(inspection_id):
+    conn = sqlite3.connect('inspections.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM meat_processing_inspections WHERE id = ?", (inspection_id,))
+    inspection = c.fetchone()
+    if inspection:
+        c.execute("SELECT item_id, score FROM meat_processing_checklist_scores WHERE form_id = ?", (inspection_id,))
+        checklist_scores = dict(c.fetchall())
+        conn.close()
+        return {
+            'id': inspection[0],
+            'establishment_name': inspection[1] or '',
+            'owner_operator': inspection[2] or '',
+            'address': inspection[3] or '',
+            'inspector_name': inspection[4] or '',
+            'establishment_no': inspection[5] or '',
+            'overall_score': inspection[6] or 0.0,
+            'food_contact_surfaces': inspection[7] or 0,
+            'water_samples': inspection[8] or 0,
+            'product_samples': inspection[9] or 0,
+            'types_of_products': inspection[10] or '',
+            'staff_fhp': inspection[11] or 0,
+            'water_public': inspection[12] or 0,
+            'water_private': inspection[13] or 0,
+            'type_processing': inspection[14] or 0,
+            'type_slaughter': inspection[15] or 0,
+            'purpose_of_visit': inspection[16] or '',
+            'inspection_date': inspection[17] or '',
+            'inspector_code': inspection[18] or '',
+            'result': inspection[19] or '',
+            'telephone_no': inspection[20] or '',
+            'registration_status': inspection[21] or '',
+            'action': inspection[22] or '',
+            'comments': inspection[23] or '',
+            'inspector_signature': inspection[24] or '',
+            'received_by': inspection[25] or '',
+            'created_at': inspection[26] or '',
+            'photo_data': inspection[27] if len(inspection) > 27 else '[]',
             'checklist_scores': checklist_scores
         }
     conn.close()

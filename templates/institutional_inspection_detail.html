@@ -8,10 +8,11 @@
         body {
             margin: 0;
             padding: 20px;
-            background: white; /* Changed from dark gradient to white */
+            background: white;
             min-height: 100vh;
             font-family: Arial, sans-serif;
             display: flex;
+            gap: 20px;
             justify-content: center;
             align-items: flex-start;
         }
@@ -26,8 +27,6 @@
             border-radius: 8px;
             position: relative;
         }
-
-        /* Removed the ::before overlay completely to show your background image clearly */
 
         .form-container > * {
             position: relative;
@@ -220,310 +219,652 @@
         .footnotes p {
             margin: 5px 0;
         }
+
+        .main-content-wrapper {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 1600px;
+        }
+
+        .photos-sidebar {
+            width: 350px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+            position: sticky;
+            top: 20px;
+        }
+
+        .photos-sidebar h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .photo-count-badge {
+            background: #4CAF50;
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .photo-item {
+            margin-bottom: 20px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            border-left: 4px solid #4CAF50;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .photo-item:hover {
+            transform: translateX(3px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+        }
+
+        .photo-item img {
+            width: 100%;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .photo-item img:hover {
+            transform: scale(1.05);
+        }
+
+        .photo-item-number {
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .photo-item-comment {
+            font-size: 13px;
+            color: #666;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #f0f0f0;
+            line-height: 1.4;
+        }
+
+        .photo-item-timestamp {
+            font-size: 11px;
+            color: #999;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .no-photos {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+            font-style: italic;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border: 2px dashed #ddd;
+        }
+
+        .no-photos svg {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
+
+        /* Full-size photo modal */
+        .photo-fullsize-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .photo-fullsize-modal.active {
+            display: flex;
+        }
+
+        .photo-fullsize-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .photo-fullsize-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+
+        .photo-fullsize-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        @media print {
+            .photos-sidebar {
+                display: block !important;
+                page-break-before: always;
+                position: relative;
+            }
+
+            .photo-fullsize-modal {
+                display: none !important;
+            }
+        }
+
+        @media screen and (max-width: 1400px) {
+            .main-content-wrapper {
+                flex-direction: column;
+            }
+
+            .photos-sidebar {
+                width: 100%;
+                position: relative;
+                max-height: none;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="form-container">
-        <div class="page-number">Page 1 of 1</div>
-
-        <div class="form-header">
-            <div class="form-number">COMPLETED</div>
-            <div class="form-title">Ministry of Health<br>Institutional Health Inspection Form¹</div>
-        </div>
-
-        <div class="info-section">
-            <div class="info-box">
-                <div class="info-label">Name of Establishment</div>
-                <span>{{ inspection.establishment_name }}</span>
-            </div>
-            <div class="info-box">
-                <div class="info-label">Owner/Operator</div>
-                <span>{{ inspection.owner }}</span>
-            </div>
-            <div class="info-box">
-                <div class="info-label">Address and Parish</div>
-                <span>{{ inspection.address }}</span>
-            </div>
-            <div class="info-box">
-                <div class="info-label">Inspector Name</div>
-                <span>{{ inspection.inspector_name }}</span>
-            </div>
-            <div class="info-box">
-                <div class="info-label">Critical Sc.</div>
-                <span>{{ inspection.critical_score }}</span>
-            </div>
-            <div class="info-box">
-                <div class="info-label">Overall Sc.</div>
-                <span>{{ inspection.overall_score }}</span>
+    <div class="main-content-wrapper">
+        <!-- Photos Sidebar -->
+        <div class="photos-sidebar">
+            <h3>
+                📷 Inspection Photos
+                <span class="photo-count-badge" id="photoCountDisplay">0</span>
+            </h3>
+            <div id="photosSidebarContainer">
+                <div class="no-photos">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <div>No photos attached to this inspection.</div>
+                </div>
             </div>
         </div>
 
-        <div class="institutional-details">
-            <div>
-                <strong>Staff Complement:</strong>
-                <span>{{ inspection.staff_complement or 'N/A' }}</span>
-            </div>
-            <div>
-                <strong>No. of Occupants:</strong>
-                <span>{{ inspection.num_occupants or 'N/A' }}</span>
-            </div>
-            <div>
-                <strong>Type of Institution¹:</strong>
-                <span>{{ inspection.institution_type or 'N/A' }}</span>
-            </div>
-        </div>
+        <!-- Main Form Container -->
+        <div class="form-container">
+            <div class="page-number">Page 1 of 1</div>
 
-        <div class="building-details">
-            <div>
-                <strong>Building Size:</strong><br>
-                <span>{{ inspection.building_size_value or 'N/A' }}
-                {% if inspection.building_size_ft2 %}ft²{% elif inspection.building_size_m2 %}m²{% endif %}</span>
+            <div class="form-header">
+                <div class="form-number">COMPLETED</div>
+                <div class="form-title">Ministry of Health<br>Institutional Health Inspection Form¹</div>
             </div>
-            <div>
-                <strong>Telephone No.:</strong><br>
-                <span>{{ inspection.telephone_no or 'N/A' }}</span>
-            </div>
-            <div>
-                <strong>No. of Building(s):</strong><br>
-                <span>{{ inspection.num_buildings or 'N/A' }}</span>
-            </div>
-        </div>
 
-        <div class="checkbox-row">
-            <strong>Purpose of Visit:</strong>
-            <span>{{ inspection.purpose_of_visit or 'N/A' }}</span>
-        </div>
+            <div class="info-section">
+                <div class="info-box">
+                    <div class="info-label">Name of Establishment</div>
+                    <span>{{ inspection.establishment_name }}</span>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Owner/Operator</div>
+                    <span>{{ inspection.owner }}</span>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Address and Parish</div>
+                    <span>{{ inspection.address }}</span>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Inspector Name</div>
+                    <span>{{ inspection.inspector_name }}</span>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Critical Sc.</div>
+                    <span>{{ inspection.critical_score }}</span>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Overall Sc.</div>
+                    <span>{{ inspection.overall_score }}</span>
+                </div>
+            </div>
 
-        <div class="compliance-section">
-            <div>
-                <div style="margin-bottom: 10px;">
-                    <strong>Inspection Date:</strong>
-                    <span>{{ inspection.inspection_date }}</span>
+            <div class="institutional-details">
+                <div>
+                    <strong>Staff Complement:</strong>
+                    <span>{{ inspection.staff_complement or 'N/A' }}</span>
                 </div>
                 <div>
-                    <strong>Inspector code:</strong>
-                    <span>{{ inspection.inspector_code or 'N/A' }}</span>
+                    <strong>No. of Occupants:</strong>
+                    <span>{{ inspection.num_occupants or 'N/A' }}</span>
                 </div>
-                <div style="margin-top: 10px;">
-                    <strong>Compliance Result:</strong>
-                    <span>{{ inspection.result or 'N/A' }}</span>
-                </div>
-            </div>
-            <div>
                 <div>
-                    <strong>License No.:</strong>
-                    <span>{{ inspection.license_no or 'N/A' }}</span>
-                </div>
-                <div style="margin-top: 10px;">
-                    <strong>Registration Status:</strong>
-                    <span>{{ inspection.registration_status or 'N/A' }}</span>
+                    <strong>Type of Institution¹:</strong>
+                    <span>{{ inspection.institution_type or 'N/A' }}</span>
                 </div>
             </div>
-        </div>
 
-        <div class="checkbox-row">
-            <strong>Action:</strong>
-            <span>{{ inspection.action or 'NAI' }}</span>
-        </div>
-
-        <table class="inspection-table">
-            <thead>
-                <tr>
-                    <th>Item</th>
-                    <th>Wt</th>
-                    <th>Sc</th>
-                    <th>Item</th>
-                    <th>Wt</th>
-                    <th>Sc</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td colspan="3" class="section-header">BUILDING</td>
-                    <td colspan="3" class="section-header">PESTS</td>
-                </tr>
-                <tr class="critical-item">
-                    <td>01 Absence of overcrowding</td>
-                    <td class="score-cell">5</td>
-                    <td class="score-cell">{{ inspection.scores.get('01', 0) }}</td>
-                    <td class="critical-item">19 Absence</td>
-                    <td class="score-cell critical-item">5</td>
-                    <td class="score-cell critical-item">{{ inspection.scores.get('19', 0) }}</td>
-                </tr>
-                <tr>
-                    <td>02 Structural Integrity</td>
-                    <td class="score-cell">2</td>
-                    <td class="score-cell">{{ inspection.scores.get('02', 0) }}</td>
-                    <td class="critical-item">20 Control system in place</td>
-                    <td class="score-cell critical-item">5</td>
-                    <td class="score-cell critical-item">{{ inspection.scores.get('20', 0) }}</td>
-                </tr>
-                <tr>
-                    <td>03 Housekeeping</td>
-                    <td class="score-cell">2</td>
-                    <td class="score-cell">{{ inspection.scores.get('03', 0) }}</td>
-                    <td colspan="3" class="section-header">COMPOUND</td>
-                </tr>
-                <tr>
-                    <td>04 Clean Floor</td>
-                    <td class="score-cell">1</td>
-                    <td class="score-cell">{{ inspection.scores.get('04', 0) }}</td>
-                    <td>21 General Cleanliness</td>
-                    <td class="score-cell">2</td>
-                    <td class="score-cell">{{ inspection.scores.get('21', 0) }}</td>
-                </tr>
-                <tr>
-                    <td>05 Clean Walls</td>
-                    <td class="score-cell">1</td>
-                    <td class="score-cell">{{ inspection.scores.get('05', 0) }}</td>
-                    <td>22 Drainage</td>
-                    <td class="score-cell">2</td>
-                    <td class="score-cell">{{ inspection.scores.get('22', 0) }}</td>
-                </tr>
-                <tr>
-                    <td>06 Clean Ceiling</td>
-                    <td class="score-cell">1</td>
-                    <td class="score-cell">{{ inspection.scores.get('06', 0) }}</td>
-                    <td>23 Protected from stray animals</td>
-                    <td class="score-cell">2</td>
-                    <td class="score-cell">{{ inspection.scores.get('23', 0) }}</td>
-                </tr>
-                <tr>
-                    <td>07 Lighting</td>
-                    <td class="score-cell">1</td>
-                    <td class="score-cell">{{ inspection.scores.get('07', 0) }}</td>
-                    <td>24 Vegetation</td>
-                    <td class="score-cell">2</td>
-                    <td class="score-cell">{{ inspection.scores.get('24', 0) }}</td>
-                </tr>
-                <tr>
-                    <td>08 Ventilation</td>
-                    <td class="score-cell">3</td>
-                    <td class="score-cell">{{ inspection.scores.get('08', 0) }}</td>
-                    <td colspan="3" class="section-header">SAFETY MEASURES</td>
-                </tr>
-                <tr>
-                    <td colspan="3" class="section-header">WATER SUPPLY</td>
-                    <td>25 Provision for physically challenged</td>
-                    <td class="score-cell">2</td>
-                    <td class="score-cell">{{ inspection.scores.get('25', 0) }}</td>
-                </tr>
-                <tr class="critical-item">
-                    <td>09 Adequacy</td>
-                    <td class="score-cell">5</td>
-                    <td class="score-cell">{{ inspection.scores.get('09', 0) }}</td>
-                    <td class="critical-item">26 Fire extinguishers</td>
-                    <td class="score-cell critical-item">5</td>
-                    <td class="score-cell critical-item">{{ inspection.scores.get('26', 0) }}</td>
-                </tr>
-                <tr>
-                    <td class="critical-item">10 Potability</td>
-                    <td class="score-cell critical-item">5</td>
-                    <td class="score-cell critical-item">{{ inspection.scores.get('10', 0) }}</td>
-                    <td>27 Access to medical care</td>
-                    <td class="score-cell">2</td>
-                    <td class="score-cell">{{ inspection.scores.get('27', 0) }}</td>
-                </tr>
-                <tr>
-                    <td colspan="3" class="section-header">EXCRETA DISPOSAL FACILITIES</td>
-                    <td>28 First Aid available</td>
-                    <td class="score-cell">2</td>
-                    <td class="score-cell">{{ inspection.scores.get('28', 0) }}</td>
-                </tr>
-                <tr>
-                    <td class="critical-item">11 Sanitary excreta disposal</td>
-                    <td class="score-cell critical-item">5</td>
-                    <td class="score-cell critical-item">{{ inspection.scores.get('11', 0) }}</td>
-                    <td>29 Emergency exit</td>
-                    <td class="score-cell">2</td>
-                    <td class="score-cell">{{ inspection.scores.get('29', 0) }}</td>
-                </tr>
-                <tr>
-                    <td class="critical-item">12 Adequacy</td>
-                    <td class="score-cell critical-item">5</td>
-                    <td class="score-cell critical-item">{{ inspection.scores.get('12', 0) }}</td>
-                    <td>30 Veterinary certification of pets</td>
-                    <td class="score-cell">1</td>
-                    <td class="score-cell">{{ inspection.scores.get('30', 0) }}</td>
-                </tr>
-                <tr>
-                    <td colspan="3" class="section-header">FOOD HANDLING FACILITIES²</td>
-                    <td colspan="3" class="section-header">REFRIGERATION FOR NON-FOOD³</td>
-                </tr>
-                <tr>
-                    <td class="critical-item">13 Food Storage</td>
-                    <td class="score-cell critical-item">5</td>
-                    <td class="score-cell critical-item">{{ inspection.scores.get('13', 0) }}</td>
-                    <td>31 Adequacy</td>
-                    <td class="score-cell">2</td>
-                    <td class="score-cell">{{ inspection.scores.get('31', 0) }}</td>
-                </tr>
-                <tr class="critical-item">
-                    <td>14 Kitchen</td>
-                    <td class="score-cell">5</td>
-                    <td class="score-cell">{{ inspection.scores.get('14', 0) }}</td>
-                    <td colspan="3"></td>
-                </tr>
-                <tr class="critical-item">
-                    <td>15 Dining Room</td>
-                    <td class="score-cell">5</td>
-                    <td class="score-cell">{{ inspection.scores.get('15', 0) }}</td>
-                    <td colspan="3"></td>
-                </tr>
-                <tr class="critical-item">
-                    <td>16 Food handling practices</td>
-                    <td class="score-cell">5</td>
-                    <td class="score-cell">{{ inspection.scores.get('16', 0) }}</td>
-                    <td colspan="3"></td>
-                </tr>
-                <tr>
-                    <td colspan="3" class="section-header">SOLID WASTE MANAGEMENT</td>
-                    <td colspan="3"></td>
-                </tr>
-                <tr class="critical-item">
-                    <td>17 Storage</td>
-                    <td class="score-cell">5</td>
-                    <td class="score-cell">{{ inspection.scores.get('17', 0) }}</td>
-                    <td colspan="3"></td>
-                </tr>
-                <tr class="critical-item">
-                    <td>18 Disposal</td>
-                    <td class="score-cell">5</td>
-                    <td class="score-cell">{{ inspection.scores.get('18', 0) }}</td>
-                    <td colspan="3"></td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div style="margin-top: 20px;">
-            <strong>Inspector's Comments:</strong>
-            <div style="border: 1px solid black; min-height: 60px; width: 100%; padding: 5px; font-size: 14px;">
-                {{ inspection.comments or 'N/A' }}
+            <div class="building-details">
+                <div>
+                    <strong>Building Size:</strong><br>
+                    <span>{{ inspection.building_size_value or 'N/A' }}
+                    {% if inspection.building_size_ft2 %}ft²{% elif inspection.building_size_m2 %}m²{% endif %}</span>
+                </div>
+                <div>
+                    <strong>Telephone No.:</strong><br>
+                    <span>{{ inspection.telephone_no or 'N/A' }}</span>
+                </div>
+                <div>
+                    <strong>No. of Building(s):</strong><br>
+                    <span>{{ inspection.num_buildings or 'N/A' }}</span>
+                </div>
             </div>
-        </div>
 
-        <div class="signature-section">
-            <div>
-                <strong>Inspector's Signature:</strong>
-                <span class="signature-line">{{ inspection.inspector_signature or 'N/A' }}</span>
+            <div class="checkbox-row">
+                <strong>Purpose of Visit:</strong>
+                <span>{{ inspection.purpose_of_visit or 'N/A' }}</span>
             </div>
-            <div>
-                <strong>Rec'd By:</strong>
-                <span class="signature-line">{{ inspection.received_by or 'N/A' }}</span>
+
+            <div class="compliance-section">
+                <div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>Inspection Date:</strong>
+                        <span>{{ inspection.inspection_date }}</span>
+                    </div>
+                    <div>
+                        <strong>Inspector code:</strong>
+                        <span>{{ inspection.inspector_code or 'N/A' }}</span>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <strong>Compliance Result:</strong>
+                        <span>{{ inspection.result or 'N/A' }}</span>
+                    </div>
+                </div>
+                <div>
+                    <div>
+                        <strong>License No.:</strong>
+                        <span>{{ inspection.license_no or 'N/A' }}</span>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <strong>Registration Status:</strong>
+                        <span>{{ inspection.registration_status or 'N/A' }}</span>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <div class="footnotes">
-            <p><strong>¹</strong> Institutions shall include: hospitals, infirmaries, nursing homes, day care centres, training schools, prisons, police stations and lockups, and places of safety.</p>
-            <p><strong>²</strong> Apply Food Handling Establishment Guidelines</p>
-            <p><strong>³</strong> Use where applicable</p>
-            <p><strong>EHU (Rev. May 2002)</strong></p>
-        </div>
+            <div class="checkbox-row">
+                <strong>Action:</strong>
+                <span>{{ inspection.action or 'NAI' }}</span>
+            </div>
 
-        <div class="button-container">
-            <a href="{{ url_for('dashboard') }}" class="action-button back-button">Back to Dashboard</a>
-            <a href="{{ url_for('download_institutional_pdf', form_id=inspection.id) }}" class="action-button">Download PDF</a>
+            <table class="inspection-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Wt</th>
+                        <th>Sc</th>
+                        <th>Item</th>
+                        <th>Wt</th>
+                        <th>Sc</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="3" class="section-header">BUILDING</td>
+                        <td colspan="3" class="section-header">PESTS</td>
+                    </tr>
+                    <tr class="critical-item">
+                        <td>01 Absence of overcrowding</td>
+                        <td class="score-cell">5</td>
+                        <td class="score-cell">{{ inspection.scores.get('01', 0) }}</td>
+                        <td class="critical-item">19 Absence</td>
+                        <td class="score-cell critical-item">5</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('19', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td>02 Structural Integrity</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('02', 0) }}</td>
+                        <td class="critical-item">20 Control system in place</td>
+                        <td class="score-cell critical-item">5</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('20', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td>03 Housekeeping</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('03', 0) }}</td>
+                        <td colspan="3" class="section-header">COMPOUND</td>
+                    </tr>
+                    <tr>
+                        <td>04 Clean Floor</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('04', 0) }}</td>
+                        <td>21 General Cleanliness</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('21', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td>05 Clean Walls</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('05', 0) }}</td>
+                        <td>22 Drainage</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('22', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td>06 Clean Ceiling</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('06', 0) }}</td>
+                        <td>23 Protected from stray animals</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('23', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td>07 Lighting</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('07', 0) }}</td>
+                        <td>24 Vegetation</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('24', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td>08 Ventilation</td>
+                        <td class="score-cell">3</td>
+                        <td class="score-cell">{{ inspection.scores.get('08', 0) }}</td>
+                        <td colspan="3" class="section-header">SAFETY MEASURES</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" class="section-header">WATER SUPPLY</td>
+                        <td>25 Provision for physically challenged</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('25', 0) }}</td>
+                    </tr>
+                    <tr class="critical-item">
+                        <td>09 Adequacy</td>
+                        <td class="score-cell">5</td>
+                        <td class="score-cell">{{ inspection.scores.get('09', 0) }}</td>
+                        <td class="critical-item">26 Fire extinguishers</td>
+                        <td class="score-cell critical-item">5</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('26', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="critical-item">10 Potability</td>
+                        <td class="score-cell critical-item">5</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('10', 0) }}</td>
+                        <td>27 Access to medical care</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('27', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" class="section-header">EXCRETA DISPOSAL FACILITIES</td>
+                        <td>28 First Aid available</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('28', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="critical-item">11 Sanitary excreta disposal</td>
+                        <td class="score-cell critical-item">5</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('11', 0) }}</td>
+                        <td>29 Emergency exit</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('29', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="critical-item">12 Adequacy</td>
+                        <td class="score-cell critical-item">5</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('12', 0) }}</td>
+                        <td>30 Veterinary certification of pets</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('30', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" class="section-header">FOOD HANDLING FACILITIES²</td>
+                        <td colspan="3" class="section-header">REFRIGERATION FOR NON-FOOD³</td>
+                    </tr>
+                    <tr>
+                        <td class="critical-item">13 Food Storage</td>
+                        <td class="score-cell critical-item">5</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('13', 0) }}</td>
+                        <td>31 Adequacy</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('31', 0) }}</td>
+                    </tr>
+                    <tr class="critical-item">
+                        <td>14 Kitchen</td>
+                        <td class="score-cell">5</td>
+                        <td class="score-cell">{{ inspection.scores.get('14', 0) }}</td>
+                        <td colspan="3"></td>
+                    </tr>
+                    <tr class="critical-item">
+                        <td>15 Dining Room</td>
+                        <td class="score-cell">5</td>
+                        <td class="score-cell">{{ inspection.scores.get('15', 0) }}</td>
+                        <td colspan="3"></td>
+                    </tr>
+                    <tr class="critical-item">
+                        <td>16 Food handling practices</td>
+                        <td class="score-cell">5</td>
+                        <td class="score-cell">{{ inspection.scores.get('16', 0) }}</td>
+                        <td colspan="3"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" class="section-header">SOLID WASTE MANAGEMENT</td>
+                        <td colspan="3"></td>
+                    </tr>
+                    <tr class="critical-item">
+                        <td>17 Storage</td>
+                        <td class="score-cell">5</td>
+                        <td class="score-cell">{{ inspection.scores.get('17', 0) }}</td>
+                        <td colspan="3"></td>
+                    </tr>
+                    <tr class="critical-item">
+                        <td>18 Disposal</td>
+                        <td class="score-cell">5</td>
+                        <td class="score-cell">{{ inspection.scores.get('18', 0) }}</td>
+                        <td colspan="3"></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="margin-top: 20px;">
+                <strong>Inspector's Comments:</strong>
+                <div style="border: 1px solid black; min-height: 60px; width: 100%; padding: 5px; font-size: 14px;">
+                    {{ inspection.comments or 'N/A' }}
+                </div>
+            </div>
+
+            <div class="signature-section">
+                <div>
+                    <strong>Inspector's Signature:</strong>
+                    <span class="signature-line">{{ inspection.inspector_signature or 'N/A' }}</span>
+                </div>
+                <div>
+                    <strong>Rec'd By:</strong>
+                    <span class="signature-line">{{ inspection.received_by or 'N/A' }}</span>
+                </div>
+            </div>
+
+            <div class="footnotes">
+                <p><strong>¹</strong> Institutions shall include: hospitals, infirmaries, nursing homes, day care centres, training schools, prisons, police stations and lockups, and places of safety.</p>
+                <p><strong>²</strong> Apply Food Handling Establishment Guidelines</p>
+                <p><strong>³</strong> Use where applicable</p>
+                <p><strong>EHU (Rev. May 2002)</strong></p>
+            </div>
+
+            <div class="button-container">
+                <a href="{{ url_for('dashboard') }}" class="action-button back-button">Back to Dashboard</a>
+                <button onclick="window.print()" class="action-button" style="background: #2196F3; cursor: pointer; border: none;">Print</button>
+                <a href="{{ url_for('download_institutional_pdf', form_id=inspection.id) }}" class="action-button">Download PDF</a>
+            </div>
         </div>
     </div>
+
+    <!-- Full-size photo modal -->
+    <div class="photo-fullsize-modal" id="photoFullsizeModal">
+        <span class="photo-fullsize-close" onclick="closeFullsizePhoto()">&times;</span>
+        <img id="fullsizePhotoImg" src="" alt="Full size photo">
+    </div>
+
+    <script>
+        // Display photos in sidebar with enhanced error handling
+        function displayPhotos() {
+            console.log('=== PHOTO DISPLAY DEBUG ===');
+
+            // Get photo data from backend
+            const photoDataRaw = {{ photo_data|tojson|safe }};
+            console.log('Raw photo data:', photoDataRaw);
+            console.log('Type:', typeof photoDataRaw);
+
+            const container = document.getElementById('photosSidebarContainer');
+            const countBadge = document.getElementById('photoCountDisplay');
+
+            // Handle null, undefined, or empty string
+            if (!photoDataRaw || photoDataRaw === '' || photoDataRaw === 'null') {
+                console.log('No photo data available');
+                container.innerHTML = `
+                    <div class="no-photos">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <div>No photos attached to this inspection.</div>
+                    </div>
+                `;
+                countBadge.textContent = '0';
+                return;
+            }
+
+            let photos = [];
+
+            try {
+                // Parse if it's a string
+                if (typeof photoDataRaw === 'string') {
+                    // Handle empty array string
+                    if (photoDataRaw === '[]') {
+                        console.log('Empty array string');
+                        throw new Error('Empty photos array');
+                    }
+                    photos = JSON.parse(photoDataRaw);
+                } else if (Array.isArray(photoDataRaw)) {
+                    photos = photoDataRaw;
+                } else {
+                    console.error('Unexpected data type:', typeof photoDataRaw);
+                    throw new Error('Invalid photo data format');
+                }
+
+                console.log('Parsed photos:', photos);
+                console.log('Number of photos:', photos.length);
+
+                // Check if array is empty
+                if (!Array.isArray(photos) || photos.length === 0) {
+                    throw new Error('No photos in array');
+                }
+
+                // Build HTML for photos
+                const photosHtml = photos.map((photo, index) => {
+                    console.log(`Photo ${index}:`, {
+                        hasNumber: !!photo.number,
+                        hasData: !!photo.data,
+                        hasComment: !!photo.comment,
+                        dataLength: photo.data ? photo.data.length : 0
+                    });
+
+                    const photoNumber = photo.number || `Photo ${index + 1}`;
+                    const photoComment = photo.comment || '';
+                    const timestamp = photo.timestamp ? new Date(photo.timestamp).toLocaleString() : '';
+
+                    return `
+                        <div class="photo-item">
+                            <div class="photo-item-number">📷 ${photoNumber}</div>
+                            <img src="${photo.data}"
+                                 alt="${photoNumber}"
+                                 onclick="viewPhotoFullSize('${photo.data}')"
+                                 onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22>Image Error</text></svg>'">
+                            ${photoComment ? `<div class="photo-item-comment">${photoComment}</div>` : ''}
+                            ${timestamp ? `<div class="photo-item-timestamp">📅 ${timestamp}</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = photosHtml;
+                countBadge.textContent = photos.length;
+                console.log('✅ Photos displayed successfully');
+
+            } catch (e) {
+                console.error('❌ Error displaying photos:', e);
+                container.innerHTML = `
+                    <div class="no-photos">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <div>No photos attached to this inspection.</div>
+                    </div>
+                `;
+                countBadge.textContent = '0';
+            }
+        }
+
+        function viewPhotoFullSize(dataUrl) {
+            const modal = document.getElementById('photoFullsizeModal');
+            const img = document.getElementById('fullsizePhotoImg');
+            img.src = dataUrl;
+            modal.classList.add('active');
+        }
+
+        function closeFullsizePhoto() {
+            const modal = document.getElementById('photoFullsizeModal');
+            modal.classList.remove('active');
+        }
+
+        // Close modal on click outside image
+        document.getElementById('photoFullsizeModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeFullsizePhoto();
+            }
+        });
+
+        // Close modal on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeFullsizePhoto();
+            }
+        });
+
+        // Display photos on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, displaying photos...');
+            displayPhotos();
+        });
+    </script>
+
+    {% include 'zozi_badge.html' %}
 </body>
 </html>

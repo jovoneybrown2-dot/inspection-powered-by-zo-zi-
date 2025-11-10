@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(for:*)",
+      "Bash(do)",
+      "Bash(if ! grep -q \"displayPhotos\" \"$file\")",
+      "Bash(then)",
+      "Bash(echo \"Adding JavaScript to $file\")",
+      "Bash(fi)",
+      "Bash(do echo \"=== $func ===\" grep -A 100 \"def $func\" /Users/jovoneybrown/PycharmProjects/Python-food_Inspection_2/app.py)",
+      "Bash(do if [ -f \"$file\" ])",
+      "Bash(echo \"=== $file ===\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

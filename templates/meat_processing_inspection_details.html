@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Residential & Non-Residential Inspection Form - Completed</title>
+    <title>Meat Processing Plant and Slaughter Place Inspection Form - Completed</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -128,21 +128,14 @@
             box-sizing: border-box;
             margin-top: 5px;
         }
-        .barcode-container {
-            display: flex;
-            align-items: center;
-            margin-top: 5px;
+        .checkbox-section {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 4px;
         }
-        .barcode {
-            width: 100px;
-            height: 30px;
-            background: repeating-linear-gradient(90deg, black, black 2px, white 2px, white 4px);
-            margin-right: 10px;
-        }
-        .barcode-line {
-            flex: 1;
-            height: 1px;
-            background: black;
+        .checkbox-row {
+            margin: 8px 0;
         }
         .signature-row {
             display: flex;
@@ -214,54 +207,77 @@
         <div class="photos-sidebar">
             <h3>📷 Inspection Photos</h3>
             <div id="photosSidebarContainer">
+                <!-- Photos will be loaded here -->
                 <div class="no-photos">No photos attached to this inspection.</div>
             </div>
         </div>
 
         <!-- Main Form Container -->
         <div class="form-container">
-            <h1>Residential & Non-Residential Inspection Form - Completed</h1>
+            <h1>Meat Processing Plant and Slaughter Place Inspection Form - Completed</h1>
         <div class="form-section">
-            <h2>Premises Details</h2>
+            <h2>Establishment Details</h2>
             <table class="pair-table">
                 <tr>
-                    <td><label>Name of Premises:</label><div class="form-value">{{ premises_name }}</div></td>
-                    <td><label>Owner/Agent/Occupier:</label><div class="form-value">{{ owner }}</div></td>
-                    <td><label>Critical Score:</label><div class="form-value score-box">{{ critical_score }}</div></td>
+                    <td><label>Name of Establishment:</label><div class="form-value">{{ establishment_name }}</div></td>
+                    <td><label>Owner/Operator:</label><div class="form-value">{{ owner_operator }}</div></td>
+                    <td><label>Establishment No.:</label><div class="form-value">{{ establishment_no }}</div></td>
                 </tr>
                 <tr>
                     <td><label>Address and Parish:</label><div class="form-value">{{ address }}</div></td>
-                    <td><label>Inspector Name:</label><div class="form-value">{{ inspector_name }}</div></td>
+                    <td><label>Telephone No.:</label><div class="form-value">{{ telephone_no }}</div></td>
                     <td><label>Overall Score:</label><div class="form-value score-box">{{ overall_score }}</div></td>
                 </tr>
                 <tr>
+                    <td><label>Inspector Name:</label><div class="form-value">{{ inspector_name }}</div></td>
                     <td><label>Inspection Date:</label><div class="form-value">{{ inspection_date }}</div></td>
                     <td><label>Inspector Code:</label><div class="form-value">{{ inspector_code }}</div></td>
-                    <td><label>Type of Treatment Facility:</label><div class="form-value">{{ treatment_facility }}</div></td>
-                </tr>
-                <tr>
-                    <td><label>Vector:</label><div class="form-value">{{ vector }}</div></td>
-                    <td><label>Compliance Result:</label><div class="form-value">{{ result }}</div></td>
-                    <td><label>IF Onsite/Communal System:</label><div class="form-value">{{ onsite_system }}</div></td>
-                </tr>
-                <tr>
-                    <td><label>Building Construction Type:</label><div class="form-value">{{ building_construction_type }}</div></td>
-                    <td><label>Purpose of Building:</label><div class="form-value">{{ purpose_of_building }}</div></td>
-                    <td><label>Purpose of Visit:</label><div class="form-value">{{ purpose_of_visit }}</div></td>
-                </tr>
-                <tr>
-                    <td><label>Action:</label><div class="form-value">{{ action }}</div></td>
-                    <td><label>No. of Bedrooms:</label><div class="form-value">{{ no_of_bedrooms }}</div></td>
-                    <td><label>Total Population (Males/Females/Boys/Girls):</label><div class="form-value">{{ total_population }}</div></td>
-                </tr>
-                <tr>
-                    <td><label>Barcode:</label><div class="barcode-container"><div class="barcode"></div><div class="barcode-line"></div></div></td>
-                    <td colspan="2"></td>
                 </tr>
             </table>
-            <div id="scoreMessage" class="score-message {{ 'pass' if critical_score >= 50 and overall_score >= 70 else '' }}">
-                {{ 'Pass: Critical Score = ' + critical_score|string + ', Total Score = ' + overall_score|string if critical_score >= 50 and overall_score >= 70 else 'Fail: Critical Score = ' + critical_score|string + ' (needs 50+), Total Score = ' + overall_score|string + ' (needs 70+)' }}
+
+            <div class="checkbox-section">
+                <h3>Water Source</h3>
+                <div class="checkbox-row">
+                    <label>Public:</label> <span class="form-value" style="display:inline-block; width:auto; min-width:60px;">{{ water_source_public }}</span>
+                    <label style="margin-left:20px;">Private:</label> <span class="form-value" style="display:inline-block; width:auto; min-width:60px;">{{ water_source_private }}</span>
+                </div>
+
+                <h3>Type of Establishment</h3>
+                <div class="checkbox-row">
+                    <label>Processing Plant:</label> <span class="form-value" style="display:inline-block; width:auto; min-width:60px;">{{ type_processing_plant }}</span>
+                    <label style="margin-left:20px;">Slaughter Place:</label> <span class="form-value" style="display:inline-block; width:auto; min-width:60px;">{{ type_slaughter_place }}</span>
+                </div>
             </div>
+        </div>
+
+        <div class="form-section">
+            <h2>Lab Samples</h2>
+            <table class="pair-table">
+                <tr>
+                    <td><label>Food Contact Surfaces:</label><div class="form-value">{{ food_contact_surfaces }}</div></td>
+                    <td><label>Water Samples:</label><div class="form-value">{{ water_samples }}</div></td>
+                    <td><label>Product Samples:</label><div class="form-value">{{ product_samples }}</div></td>
+                </tr>
+                <tr>
+                    <td><label>Types of Products:</label><div class="form-value">{{ types_of_products }}</div></td>
+                    <td><label>Staff with FHP:</label><div class="form-value">{{ staff_with_fhp }}</div></td>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="form-section">
+            <h2>Inspection Details</h2>
+            <table class="pair-table">
+                <tr>
+                    <td><label>Purpose of Visit:</label><div class="form-value">{{ purpose_of_visit }}</div></td>
+                    <td><label>Registration Status:</label><div class="form-value">{{ registration_status }}</div></td>
+                    <td><label>Result:</label><div class="form-value">{{ result }}</div></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><label>Action:</label><div class="form-value">{{ action }}</div></td>
+                </tr>
+            </table>
         </div>
 
         <div class="form-section">
@@ -273,8 +289,8 @@
                     <th>Weight</th>
                     <th>Score</th>
                 </tr>
-                <tr class="category-header"><td colspan="4">BUILDING (1-8)</td></tr>
-                {% for item in checklist if 1 <= item.id <= 8 %}
+                <tr class="category-header"><td colspan="4">LOCATION AND DESIGN (1-4)</td></tr>
+                {% for item in checklist if 1 <= item.id <= 4 %}
                 <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
                     <td>{{ item.id }}</td>
                     <td>{{ item.desc }}</td>
@@ -282,8 +298,8 @@
                     <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
                 </tr>
                 {% endfor %}
-                <tr class="category-header"><td colspan="4">WATER SUPPLY (9-10)</td></tr>
-                {% for item in checklist if 9 <= item.id <= 10 %}
+                <tr class="category-header"><td colspan="4">CONSTRUCTION (5-11)</td></tr>
+                {% for item in checklist if 5 <= item.id <= 11 %}
                 <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
                     <td>{{ item.id }}</td>
                     <td>{{ item.desc }}</td>
@@ -291,17 +307,8 @@
                     <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
                 </tr>
                 {% endfor %}
-                <tr class="category-header"><td colspan="4">DRAINAGE (11-12)</td></tr>
-                {% for item in checklist if 11 <= item.id <= 12 %}
-                <tr class="{% if item.id == 12 %}important-weight{% endif %}">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td>{{ item.wt }}</td>
-                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
-                </tr>
-                {% endfor %}
-                <tr class="category-header"><td colspan="4">MOSQUITO CONTROL (13-14)</td></tr>
-                {% for item in checklist if 13 <= item.id <= 14 %}
+                <tr class="category-header"><td colspan="4">WATER SUPPLY (12-13)</td></tr>
+                {% for item in checklist if 12 <= item.id <= 13 %}
                 <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
                     <td>{{ item.id }}</td>
                     <td>{{ item.desc }}</td>
@@ -309,17 +316,8 @@
                     <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
                 </tr>
                 {% endfor %}
-                <tr class="category-header"><td colspan="4">RODENT CONTROL (15-16)</td></tr>
-                {% for item in checklist if 15 <= item.id <= 16 %}
-                <tr class="{% if item.wt|float >= 4 or item.id == 15 or item.id == 16 %}important-weight{% endif %}">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td>{{ item.wt }}</td>
-                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
-                </tr>
-                {% endfor %}
-                <tr class="category-header"><td colspan="4">OTHER VECTORS (17-18)</td></tr>
-                {% for item in checklist if 17 <= item.id <= 18 %}
+                <tr class="category-header"><td colspan="4">SEWAGE AND WASTE WATER DISPOSAL (14-15)</td></tr>
+                {% for item in checklist if 14 <= item.id <= 15 %}
                 <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
                     <td>{{ item.id }}</td>
                     <td>{{ item.desc }}</td>
@@ -327,8 +325,8 @@
                     <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
                 </tr>
                 {% endfor %}
-                <tr class="category-header"><td colspan="4">SEWAGE/EXCRETA DISPOSAL (19-21)</td></tr>
-                {% for item in checklist if 19 <= item.id <= 21 %}
+                <tr class="category-header"><td colspan="4">WASHING AND SANITATION FACILITIES (16-19)</td></tr>
+                {% for item in checklist if 16 <= item.id <= 19 %}
                 <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
                     <td>{{ item.id }}</td>
                     <td>{{ item.desc }}</td>
@@ -336,17 +334,8 @@
                     <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
                 </tr>
                 {% endfor %}
-                <tr class="category-header"><td colspan="4">OTHER OPERATIONS (22)</td></tr>
-                {% for item in checklist if item.id == 22 %}
-                <tr>
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td>{{ item.wt }}</td>
-                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
-                </tr>
-                {% endfor %}
-                <tr class="category-header"><td colspan="4">SOLID WASTE MANAGEMENT (23-24)</td></tr>
-                {% for item in checklist if 23 <= item.id <= 24 %}
+                <tr class="category-header"><td colspan="4">SOLID WASTE STORAGE (20)</td></tr>
+                {% for item in checklist if item.id == 20 %}
                 <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
                     <td>{{ item.id }}</td>
                     <td>{{ item.desc }}</td>
@@ -354,9 +343,72 @@
                     <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
                 </tr>
                 {% endfor %}
-                <tr class="category-header"><td colspan="4">COMPOUND (25-26)</td></tr>
-                {% for item in checklist if 25 <= item.id <= 26 %}
-                <tr class="{% if item.id == 26 %}important-weight{% endif %}">
+                <tr class="category-header"><td colspan="4">HEALTH AND HYGIENE OF PERSONNEL (21-25)</td></tr>
+                {% for item in checklist if 21 <= item.id <= 25 %}
+                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.desc }}</td>
+                    <td>{{ item.wt }}</td>
+                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
+                </tr>
+                {% endfor %}
+                <tr class="category-header"><td colspan="4">RAW MATERIAL HANDLING (26-28)</td></tr>
+                {% for item in checklist if 26 <= item.id <= 28 %}
+                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.desc }}</td>
+                    <td>{{ item.wt }}</td>
+                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
+                </tr>
+                {% endfor %}
+                <tr class="category-header"><td colspan="4">PRODUCTION OPERATIONS (29-35)</td></tr>
+                {% for item in checklist if 29 <= item.id <= 35 %}
+                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.desc }}</td>
+                    <td>{{ item.wt }}</td>
+                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
+                </tr>
+                {% endfor %}
+                <tr class="category-header"><td colspan="4">PACKAGING AND STORAGE (36-40)</td></tr>
+                {% for item in checklist if 36 <= item.id <= 40 %}
+                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.desc }}</td>
+                    <td>{{ item.wt }}</td>
+                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
+                </tr>
+                {% endfor %}
+                <tr class="category-header"><td colspan="4">TRANSPORTATION (41-42)</td></tr>
+                {% for item in checklist if 41 <= item.id <= 42 %}
+                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.desc }}</td>
+                    <td>{{ item.wt }}</td>
+                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
+                </tr>
+                {% endfor %}
+                <tr class="category-header"><td colspan="4">PEST CONTROL (43-44)</td></tr>
+                {% for item in checklist if 43 <= item.id <= 44 %}
+                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.desc }}</td>
+                    <td>{{ item.wt }}</td>
+                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
+                </tr>
+                {% endfor %}
+                <tr class="category-header"><td colspan="4">LABORATORY FACILITIES (45-48)</td></tr>
+                {% for item in checklist if 45 <= item.id <= 48 %}
+                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.desc }}</td>
+                    <td>{{ item.wt }}</td>
+                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
+                </tr>
+                {% endfor %}
+                <tr class="category-header"><td colspan="4">GENERAL (49-51)</td></tr>
+                {% for item in checklist if 49 <= item.id <= 51 %}
+                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
                     <td>{{ item.id }}</td>
                     <td>{{ item.desc }}</td>
                     <td>{{ item.wt }}</td>
@@ -367,21 +419,21 @@
         </div>
 
         <div class="form-section">
-            <h2>Inspector's Comments</h2>
+            <h2>Comments and Signatures</h2>
             <div class="signature-row">
                 <div class="comments-area">
                     <label>Comments:</label><div class="form-value">{{ comments }}</div>
                 </div>
                 <div>
                     <label>Inspector's Signature:</label><div class="form-value">{{ inspector_signature }}</div>
-                    <label>Rec'd By:</label><div class="form-value">{{ received_by }}</div>
+                    <label>Received By:</label><div class="form-value">{{ received_by }}</div>
                 </div>
             </div>
         </div>
 
         <div class="action-buttons">
             <button onclick="window.print()">Print</button>
-            <button onclick="downloadPDF()">Download</button>
+            <button onclick="downloadPDF()">Download PDF</button>
             <button onclick="shareForm()">Share</button>
             <button onclick="window.location.href='/dashboard'">Back to Dashboard</button>
         </div>
@@ -392,7 +444,7 @@
 
     <script>
         function downloadPDF() {
-            window.location.href = '/download_residential_pdf/' + {{ form_id }};
+            window.location.href = '/download_meat_processing_pdf/' + {{ form_id }};
         }
 
         function shareForm() {
@@ -439,50 +491,6 @@
         // Load photos when page loads
         document.addEventListener('DOMContentLoaded', loadPhotos);
     </script>
-    
-    <script>
-        // Display photos in sidebar
-        function displayPhotos() {
-            const photoData = {{ photo_data|tojson|safe }};
-            const container = document.getElementById('photosSidebarContainer');
-
-            if (!photoData || photoData === '[]' || photoData.length === 0) {
-                container.innerHTML = '<div class="no-photos">No photos attached to this inspection.</div>';
-                return;
-            }
-
-            let photos = [];
-            try {
-                photos = typeof photoData === 'string' ? JSON.parse(photoData) : photoData;
-            } catch (e) {
-                console.error('Error parsing photo data:', e);
-                container.innerHTML = '<div class="no-photos">Error loading photos.</div>';
-                return;
-            }
-
-            if (!Array.isArray(photos) || photos.length === 0) {
-                container.innerHTML = '<div class="no-photos">No photos attached to this inspection.</div>';
-                return;
-            }
-
-            container.innerHTML = photos.map((photo, index) => `
-                <div class="photo-item">
-                    <div class="photo-item-number">📷 ${photo.number || 'Photo ' + (index + 1)}</div>
-                    <img src="${photo.data}" alt="${photo.number}" onclick="viewPhotoFullSize('${photo.data}')">
-                    ${photo.comment ? `<div class="photo-item-comment">${photo.comment}</div>` : ''}
-                </div>
-            `).join('');
-        }
-
-        function viewPhotoFullSize(dataUrl) {
-            window.open(dataUrl, '_blank');
-        }
-
-        // Display photos on page load
-        document.addEventListener('DOMContentLoaded', displayPhotos);
-    </script>
-
-
     {% include 'zozi_badge.html' %}
 </body>
 </html>

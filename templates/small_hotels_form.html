@@ -278,6 +278,254 @@
             right: 20px;
             font-size: 12px;
         }
+
+        /* PHOTO ATTACHMENT STYLES */
+        .photo-button-container {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1000;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            border: 2px solid #4CAF50;
+        }
+
+        .photo-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+
+        .photo-button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .photo-button svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .photo-count-badge {
+            background: #ff5722;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        .photo-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .photo-modal.active {
+            display: flex;
+        }
+
+        .photo-modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .photo-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .photo-modal-header h3 {
+            margin: 0;
+            color: #333;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-modal:hover {
+            color: #000;
+        }
+
+        .photo-input-group {
+            margin-bottom: 20px;
+        }
+
+        .photo-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .photo-input-group input,
+        .photo-input-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .photo-input-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .photo-preview {
+            width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .capture-photo-btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .capture-photo-btn:hover {
+            background: #1976D2;
+        }
+
+        .add-photo-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .add-photo-btn:hover {
+            background: #45a049;
+        }
+
+        .add-photo-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .photos-list {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .photos-list h4 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .photo-item {
+            background: #f9f9f9;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .photo-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .photo-item-number {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .delete-photo-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .delete-photo-btn:hover {
+            background: #d32f2f;
+        }
+
+        .photo-item-comment {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .photo-thumbnail {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-top: 8px;
+            cursor: pointer;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -766,18 +1014,17 @@
                         <td class="score-cell"><input type="number" class="score-input" name="error_13a" min="0" value="{{ inspection.error.get('13a', '') if inspection else '' }}"></td>
                     </tr>
                     <tr>
-                        <!-- Solid Waste Storage Area Section -->
+                        <!-- HAZARDOUS MATERIALS Section -->
                     <tr>
                         <td colspan="4" class="section-header">12- HAZARDOUS MATERIALS STORAGE, HANDLING AND DISPOSAL (5.5%)</td>
                     </tr>
                     <tr>
                         <td>A</td>
                         <td>Hazardous materials stored in properly labelled containers</td>
-                        <td class="score-cell"><input type="number" class="score-input" name="obser_12a" min="0" value="{{ inspection.obser.get('12a', '') if inspection else '' }}"></td>
-                        <td class="score-cell"><input type="number" class="score-input" name="error_12a" min="0" value="{{ inspection.error.get('12a', '') if inspection else '' }}"></td>
+                        <td class="score-cell"><input type="number" class="score-input" name="obser_14a" min="0" value="{{ inspection.obser.get('14a', '') if inspection else '' }}"></td>
+                        <td class="score-cell"><input type="number" class="score-input" name="error_14a" min="0" value="{{ inspection.error.get('14a', '') if inspection else '' }}"></td>
                     </tr>
-                    <tr>
-                        <tr class="critical-item">
+                    <tr class="critical-item">
                         <td>B</td>
                         <td>Stored away from living quarters and food areas</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_13b" min="0" value="{{ inspection.obser.get('13b', '') if inspection else '' }}"></td>
@@ -813,15 +1060,14 @@
                     <tr>
                         <td>B</td>
                         <td>Suitable post control programme</td>
-                        <td class="score-cell"><input type="number" class="score-input" name="obser_16a" min="0" value="{{ inspection.obser.get('16a', '') if inspection else '' }}"></td>
-                        <td class="score-cell"><input type="number" class="score-input" name="error_16a" min="0" value="{{ inspection.error.get('16a', '') if inspection else '' }}"></td>
+                        <td class="score-cell"><input type="number" class="score-input" name="obser_16b" min="0" value="{{ inspection.obser.get('16b', '') if inspection else '' }}"></td>
+                        <td class="score-cell"><input type="number" class="score-input" name="error_16b" min="0" value="{{ inspection.error.get('16b', '') if inspection else '' }}"></td>
                     </tr>
 
                     <tr>
                         <td colspan="4" class="section-header">15 - SANITARY ENGINEERING: WATER SUPPLY (3%)</td>
                     </tr>
-                    <tr>
-                        <tr class="critical-item">
+                    <tr class="critical-item">
                         <td>A</td>
                         <td>Approved source(s) sufficient pressure and capacity</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_17a" min="0" value="{{ inspection.obser.get('17a', '') if inspection else '' }}"></td>
@@ -919,9 +1165,166 @@
         </form>
     </div>
 
+    <!-- PHOTO BUTTON (Floating, Scrolls with Form) -->
+    <div class="photo-button-container">
+        <button type="button" class="photo-button" onclick="openPhotoModal()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            Add Photo
+        </button>
+        <div class="photo-count-badge" id="photoCountBadge">0</div>
+    </div>
+
+    <!-- PHOTO MODAL -->
+    <div class="photo-modal" id="photoModal">
+        <div class="photo-modal-content">
+            <div class="photo-modal-header">
+                <h3>📷 Add Inspection Photo</h3>
+                <button type="button" class="close-modal" onclick="closePhotoModal()">&times;</button>
+            </div>
+
+            <div class="photo-input-group">
+                <label>Photo Number/Reference:</label>
+                <input type="text" id="photoNumber" placeholder="e.g., Photo 1, Item 3h, Temperature Issue">
+            </div>
+
+            <div class="photo-input-group">
+                <label>Comment/Description:</label>
+                <textarea id="photoComment" placeholder="Describe what the photo shows..."></textarea>
+            </div>
+
+            <input type="file" id="photoFileInput" accept="image/*" capture="environment" onchange="handlePhotoSelect(event)">
+
+            <button type="button" class="capture-photo-btn" onclick="triggerPhotoCapture()">
+                📸 Take/Select Photo
+            </button>
+
+            <img id="photoPreview" class="photo-preview" style="display: none;">
+
+            <button type="button" class="add-photo-btn" id="addPhotoBtn" onclick="addPhoto()" disabled>
+                ✅ Add Photo to Inspection
+            </button>
+
+            <div class="photos-list" id="photosList" style="display: none;">
+                <h4>📎 Attached Photos (<span id="photosCount">0</span>)</h4>
+                <div id="photosContainer"></div>
+            </div>
+        </div>
+    </div>
+
     {% include 'modern_success_popup.html' %}
 
     <script>
+        // Photo Management
+        let inspectionPhotos = [];
+        let currentPhotoData = null;
+
+        function openPhotoModal() {
+            document.getElementById('photoModal').classList.add('active');
+        }
+
+        function closePhotoModal() {
+            document.getElementById('photoModal').classList.remove('active');
+            resetPhotoForm();
+        }
+
+        function triggerPhotoCapture() {
+            document.getElementById('photoFileInput').click();
+        }
+
+        function handlePhotoSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentPhotoData = e.target.result;
+                document.getElementById('photoPreview').src = currentPhotoData;
+                document.getElementById('photoPreview').style.display = 'block';
+                document.getElementById('addPhotoBtn').disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function addPhoto() {
+            const number = document.getElementById('photoNumber').value.trim();
+            const comment = document.getElementById('photoComment').value.trim();
+
+            if (!number) {
+                alert('Please enter a photo number or reference');
+                return;
+            }
+
+            if (!currentPhotoData) {
+                alert('Please capture or select a photo first');
+                return;
+            }
+
+            const photo = {
+                id: Date.now(),
+                number: number,
+                comment: comment,
+                data: currentPhotoData,
+                timestamp: new Date().toISOString()
+            };
+
+            inspectionPhotos.push(photo);
+            updatePhotosList();
+            resetPhotoForm();
+            updatePhotoCount();
+        }
+
+        function deletePhoto(photoId) {
+            if (confirm('Remove this photo from the inspection?')) {
+                inspectionPhotos = inspectionPhotos.filter(p => p.id !== photoId);
+                updatePhotosList();
+                updatePhotoCount();
+            }
+        }
+
+        function updatePhotosList() {
+            const container = document.getElementById('photosContainer');
+            const listSection = document.getElementById('photosList');
+
+            if (inspectionPhotos.length === 0) {
+                listSection.style.display = 'none';
+                return;
+            }
+
+            listSection.style.display = 'block';
+            document.getElementById('photosCount').textContent = inspectionPhotos.length;
+
+            container.innerHTML = inspectionPhotos.map(photo => `
+                <div class="photo-item">
+                    <div class="photo-item-header">
+                        <span class="photo-item-number">📷 ${photo.number}</span>
+                        <button type="button" class="delete-photo-btn" onclick="deletePhoto(${photo.id})">Delete</button>
+                    </div>
+                    <div class="photo-item-comment">${photo.comment || 'No comment'}</div>
+                    <img src="${photo.data}" class="photo-thumbnail" onclick="viewPhotoFullSize('${photo.data}')">
+                </div>
+            `).join('');
+        }
+
+        function viewPhotoFullSize(dataUrl) {
+            window.open(dataUrl, '_blank');
+        }
+
+        function resetPhotoForm() {
+            document.getElementById('photoNumber').value = '';
+            document.getElementById('photoComment').value = '';
+            document.getElementById('photoFileInput').value = '';
+            document.getElementById('photoPreview').style.display = 'none';
+            document.getElementById('addPhotoBtn').disabled = true;
+            currentPhotoData = null;
+        }
+
+        function updatePhotoCount() {
+            document.getElementById('photoCountBadge').textContent = inspectionPhotos.length;
+        }
+
         // Critical items based on form's blue highlighting
         const criticalItems = [
             '1b', '2a', '2e', '3a', '3d', '3f', '3h', '3i', '4a', '4b', '4c', '4d', '4e',
@@ -992,6 +1395,9 @@
 
             const formData = new FormData(this);
 
+            // Add photos as JSON
+            formData.append('photos', JSON.stringify(inspectionPhotos));
+
             fetch(this.getAttribute('action'), {
                 method: 'POST',
                 body: formData
@@ -1000,6 +1406,10 @@
             .then(data => {
                 if (data.status === 'success' || data.message === 'Submit successfully') {
                     showModernSuccessPopup(data);
+                    // Clear photos after successful submission
+                    inspectionPhotos = [];
+                    updatePhotoCount();
+                    updatePhotosList();
                 } else {
                     alert('Error: ' + (data.message || 'Unknown error occurred'));
                     submitBtn.textContent = originalText;
@@ -1014,230 +1424,13 @@
             });
         });
 
-        // Old popup function (replaced by modern popup)
-        function showEnhancedSuccessPopup(data) {
-            // Remove any existing popup
-            const existingPopup = document.getElementById('successPopupOverlay');
-            if (existingPopup) {
-                existingPopup.remove();
-            }
-
-            // Get inspection details from response
-            const details = data.inspection_details || {};
-            const scores = details.scores || {};
-
-            // Create popup overlay
-            const popup = document.createElement('div');
-            popup.id = 'successPopupOverlay';
-            popup.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.6);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                z-index: 10000;
-                animation: fadeIn 0.3s ease-out;
-            `;
-
-            // Create popup content
-            const popupContent = document.createElement('div');
-            popupContent.style.cssText = `
-                background: white;
-                border-radius: 12px;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-                max-width: 500px;
-                width: 90%;
-                max-height: 80vh;
-                overflow-y: auto;
-                font-family: Arial, sans-serif;
-                animation: slideIn 0.3s ease-out;
-            `;
-
-            popupContent.innerHTML = `
-                <div style="padding: 30px;">
-                    <!-- Success Header -->
-                    <div style="text-align: center; margin-bottom: 25px;">
-                        <div style="font-size: 60px; color: #4CAF50; margin-bottom: 15px;">✅</div>
-                        <h2 style="color: #4CAF50; margin: 0; font-size: 24px; font-weight: bold;">
-                            ${data.message || 'Inspection Report Successfully Submitted!'}
-                        </h2>
-                    </div>
-
-                    <!-- Inspection Summary -->
-                    <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px; border-left: 4px solid #4CAF50;">
-                        <h3 style="color: #4CAF50; margin: 0 0 15px 0; font-size: 18px;">Inspection Summary</h3>
-
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-                                <span style="font-weight: bold; color: #495057;">Inspection ID:</span>
-                                <span style="color: #4CAF50; font-weight: bold;">#${details.id || 'N/A'}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-                                <span style="font-weight: bold; color: #495057;">Date:</span>
-                                <span>${details.inspection_date || 'N/A'}</span>
-                            </div>
-                        </div>
-
-                        <div style="margin-bottom: 15px; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-                            <span style="font-weight: bold; color: #495057;">Hotel:</span>
-                            <span style="margin-left: 10px;">${details.establishment_name || 'N/A'}</span>
-                        </div>
-
-                        <div style="margin-bottom: 15px; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-                            <span style="font-weight: bold; color: #495057;">Inspector:</span>
-                            <span style="margin-left: 10px;">${details.inspector_name || 'N/A'}</span>
-                        </div>
-
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
-                            <span style="font-weight: bold; color: #495057;">Result:</span>
-                            <span style="padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 14px;
-                                   background: ${details.result === 'Pass' ? '#d4edda' : '#f8d7da'};
-                                   color: ${details.result === 'Pass' ? '#155724' : '#721c24'};">
-                                ${details.result || 'N/A'}
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Scores Section -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
-                        <div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px; border: 2px solid ${scores.overall >= 70 ? '#4CAF50' : '#dc3545'};">
-                            <div style="font-size: 32px; font-weight: bold; color: ${scores.overall >= 70 ? '#4CAF50' : '#dc3545'}; margin-bottom: 5px;">
-                                ${scores.overall || 0}%
-                            </div>
-                            <div style="font-size: 14px; font-weight: bold; color: #495057;">Overall Score</div>
-                        </div>
-                        <div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px; border: 2px solid ${scores.critical >= 70 ? '#4CAF50' : '#dc3545'};">
-                            <div style="font-size: 32px; font-weight: bold; color: ${scores.critical >= 70 ? '#4CAF50' : '#dc3545'}; margin-bottom: 5px;">
-                                ${scores.critical || 0}%
-                            </div>
-                            <div style="font-size: 14px; font-weight: bold; color: #495057;">Critical Score</div>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-                        <button id="backToDashboard" style="padding: 12px 20px; background: #4CAF50; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s;">
-                            Back to Dashboard
-                        </button>
-                        <button id="stayOnPage" style="padding: 12px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s;">
-                            Stay on Page
-                        </button>
-                    </div>
-
-                    <!-- Auto-redirect Notice -->
-                    <div id="autoRedirectNotice" style="text-align: center; padding: 15px; background: #e7f3ff; border-radius: 6px; border-left: 4px solid #0066cc;">
-                        <p style="margin: 0; color: #0066cc; font-weight: bold;">
-                            🕒 Redirecting to dashboard in <span id="redirectCounter">5</span> seconds...
-                        </p>
-                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">
-                            Click "Stay on Page" to cancel auto-redirect
-                        </p>
-                    </div>
-                </div>
-            `;
-
-            // Add CSS animations
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                @keyframes slideIn {
-                    from { transform: translateY(-50px); opacity: 0; }
-                    to { transform: translateY(0); opacity: 1; }
-                }
-            `;
-            document.head.appendChild(style);
-
-            popup.appendChild(popupContent);
-            document.body.appendChild(popup);
-
-            // Add button hover effects
-            const backBtn = document.getElementById('backToDashboard');
-            const stayBtn = document.getElementById('stayOnPage');
-
-            backBtn.addEventListener('mouseenter', () => backBtn.style.background = '#45a049');
-            backBtn.addEventListener('mouseleave', () => backBtn.style.background = '#4CAF50');
-
-            stayBtn.addEventListener('mouseenter', () => stayBtn.style.background = '#5a6268');
-            stayBtn.addEventListener('mouseleave', () => stayBtn.style.background = '#6c757d');
-
-            // Add event listeners
-            backBtn.addEventListener('click', redirectToDashboard);
-            stayBtn.addEventListener('click', closeSuccessPopup);
-
-            // Start auto-redirect countdown
-            startRedirectCountdown(5); // 5 seconds countdown
-        }
-
-        // Countdown and auto-redirect function
-        function startRedirectCountdown(seconds) {
-            const counter = document.getElementById('redirectCounter');
-            const notice = document.getElementById('autoRedirectNotice');
-            let timeLeft = seconds;
-
-            const countdown = setInterval(() => {
-                timeLeft--;
-                if (counter) {
-                    counter.textContent = timeLeft;
-                }
-
-                if (timeLeft <= 0) {
-                    clearInterval(countdown);
-                    redirectToDashboard();
-                }
-            }, 1000);
-
-            // Store the interval ID so we can cancel it if user chooses to stay
-            window.redirectCountdownInterval = countdown;
-        }
-
-        // Redirect to dashboard function
-        function redirectToDashboard() {
-            if (window.redirectCountdownInterval) {
-                clearInterval(window.redirectCountdownInterval);
-            }
-            closeSuccessPopup();
-
-            // Reset the submit button before redirecting
-            const submitBtn = document.getElementById('submit-btn');
-            if (submitBtn) {
-                submitBtn.textContent = 'Submit Inspection';
-                submitBtn.disabled = false;
-            }
-
-            window.location.href = '/dashboard';
-        }
-
-        // Close popup function
-        function closeSuccessPopup() {
-            if (window.redirectCountdownInterval) {
-                clearInterval(window.redirectCountdownInterval);
-            }
-            const popup = document.getElementById('successPopupOverlay');
-            if (popup) {
-                popup.remove();
-            }
-
-            // Reset the submit button
-            const submitBtn = document.getElementById('submit-btn');
-            if (submitBtn) {
-                submitBtn.textContent = 'Submit Inspection';
-                submitBtn.disabled = false;
-            }
-        }
-
         // Offline functionality
         function saveOffline() {
             const formData = new FormData(document.getElementById('inspection-form'));
             const data = Object.fromEntries(formData.entries());
+            data.photos = inspectionPhotos; // Include photos in offline save
             localStorage.setItem('small_hotels_inspection', JSON.stringify(data));
-            alert('Form saved offline successfully!');
+            alert('Form saved offline successfully with ' + inspectionPhotos.length + ' photo(s)!');
         }
 
         function shareForm() {
@@ -1254,5 +1447,6 @@
             }
         }
     </script>
+    {% include 'zozi_badge.html' %}
 </body>
 </html>

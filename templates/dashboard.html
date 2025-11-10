@@ -1474,6 +1474,7 @@
                 <option value="/new_swimming_pool_form">Swimming Pool Inspection Form</option>
                 <option value="/new_barbershop_form">Barbershop & Beauty Salon Inspection Form</option>
                 <option value="/new_institutional_form">Institutional Health Inspection Form</option>
+                <option value="/new_meat_processing_form">Meat Processing Plant & Slaughter Place Inspection Form</option>
             </select>
         </div>
         <div class="tab-container">
@@ -1486,6 +1487,7 @@
             <div class="tab" data-tab="small_hotels">Small Hotels Inspection</div>
             <div class="tab" data-tab="barbershop">Barbershop & Beauty Salon</div>
             <div class="tab" data-tab="institutional">Institutional Health</div>
+            <div class="tab" data-tab="meat_processing">Meat Processing Inspection</div>
         </div>
 
         <div class="tab-content active" id="overview">
@@ -1696,6 +1698,27 @@
                 </tr>
             </thead>
             <tbody id="institutional-results-body"></tbody>
+        </table>
+    </div>
+</div>
+
+    <div class="tab-content" id="meat_processing">
+    <h2>Meat Processing & Slaughter Place Inspection Forms</h2>
+    <div class="meat-processing-search-container">
+        <input type="text" id="meat-processing-search" placeholder="Search completed meat processing forms...">
+        <span class="meat-processing-search-icon">🔍</span>
+    </div>
+    <div class="results" id="meat-processing-results">
+        <table>
+            <thead>
+                <tr>
+                    <th>Form ID</th>
+                    <th>Establishment Name</th>
+                    <th>Date Completed</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="meat-processing-results-body"></tbody>
         </table>
     </div>
 </div>
@@ -3182,5 +3205,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadSavedTheme();
 });
     </script>
+
+    {% include 'zozi_badge.html' %}
 </body>
 </html>

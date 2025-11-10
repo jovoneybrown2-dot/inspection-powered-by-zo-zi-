@@ -13,6 +13,7 @@
             background: rgba(255, 255, 255, 0.2) url('/static/d.jpg') no-repeat center center fixed;
             background-size: cover;
             display: flex;
+            gap: 20px;
             justify-content: center;
             align-items: flex-start;
         }
@@ -138,10 +139,81 @@
         .score-message.pass {
             color: #28a745;
         }
+        .main-content-wrapper {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 1600px;
+        }
+        .photos-sidebar {
+            width: 350px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+            position: sticky;
+            top: 20px;
+        }
+        .photos-sidebar h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .photo-item {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .photo-item img {
+            width: 100%;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .photo-item img:hover {
+            transform: scale(1.02);
+        }
+        .photo-item-number {
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 5px;
+        }
+        .photo-item-comment {
+            font-size: 13px;
+            color: #666;
+            margin-top: 8px;
+        }
+        .no-photos {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-style: italic;
+        }
+        @media print {
+            .photos-sidebar {
+                display: block !important;
+                page-break-before: always;
+                position: relative;
+            }
+        }
     </style>
 </head>
-<body>
-    <div class="form-container">
+    <div class="main-content-wrapper">
+        <!-- Photos Sidebar -->
+        <div class="photos-sidebar">
+            <h3>📷 Inspection Photos</h3>
+            <div id="photosSidebarContainer">
+                <div class="no-photos">No photos attached to this inspection.</div>
+            </div>
+        </div>
+
+        <!-- Main Form Container -->
+        <div class="form-container">
         <h1>Food Establishment Inspection - Completed</h1>
         <div class="form-section">
             <h2>Establishment Details</h2>
@@ -381,6 +453,9 @@
             <button onclick="window.location.href='/dashboard'">Back to Dashboard</button>
         </div>
     </div>
+        <!-- End Form Container -->
+    </div>
+    <!-- End Main Content Wrapper -->
 
     <script>
         function downloadDetailedPDF() {
@@ -392,6 +467,92 @@
             const body = `Inspection ID: {{ inspection.id }}\nEstablishment: {{ inspection.establishment_name }}\nDate: {{ inspection.inspection_date }}\nResult: {{ inspection.result }}`;
             window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         }
+    
+        // Load and display photos
+        function loadPhotos() {
+            const photoData = {{ photo_data|tojson|safe }};
+            const container = document.getElementById('photosSidebarContainer');
+
+            if (!photoData || photoData === '[]' || photoData.length === 0) {
+                container.innerHTML = '<div class="no-photos">No photos attached to this inspection.</div>';
+                return;
+            }
+
+            let photos = [];
+            try {
+                photos = typeof photoData === 'string' ? JSON.parse(photoData) : photoData;
+            } catch (e) {
+                console.error('Error parsing photo data:', e);
+                container.innerHTML = '<div class="no-photos">Error loading photos.</div>';
+                return;
+            }
+
+            if (!Array.isArray(photos) || photos.length === 0) {
+                container.innerHTML = '<div class="no-photos">No photos attached to this inspection.</div>';
+                return;
+            }
+
+            container.innerHTML = photos.map((photo, index) => `
+                <div class="photo-item">
+                    <div class="photo-item-number">📷 ${photo.number || 'Photo ' + (index + 1)}</div>
+                    <img src="${photo.data}" alt="${photo.number}" onclick="viewPhotoFullSize('${photo.data}')">
+                    ${photo.comment ? `<div class="photo-item-comment">${photo.comment}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function viewPhotoFullSize(dataUrl) {
+            window.open(dataUrl, '_blank');
+        }
+
+        // Load photos when page loads
+        document.addEventListener('DOMContentLoaded', loadPhotos);
     </script>
+    </script>
+    
+    <script>
+        // Display photos in sidebar
+        function displayPhotos() {
+            const photoData = {{ photo_data|tojson|safe }};
+            const container = document.getElementById('photosSidebarContainer');
+
+            if (!photoData || photoData === '[]' || photoData.length === 0) {
+                container.innerHTML = '<div class="no-photos">No photos attached to this inspection.</div>';
+                return;
+            }
+
+            let photos = [];
+            try {
+                photos = typeof photoData === 'string' ? JSON.parse(photoData) : photoData;
+            } catch (e) {
+                console.error('Error parsing photo data:', e);
+                container.innerHTML = '<div class="no-photos">Error loading photos.</div>';
+                return;
+            }
+
+            if (!Array.isArray(photos) || photos.length === 0) {
+                container.innerHTML = '<div class="no-photos">No photos attached to this inspection.</div>';
+                return;
+            }
+
+            container.innerHTML = photos.map((photo, index) => `
+                <div class="photo-item">
+                    <div class="photo-item-number">📷 ${photo.number || 'Photo ' + (index + 1)}</div>
+                    <img src="${photo.data}" alt="${photo.number}" onclick="viewPhotoFullSize('${photo.data}')">
+                    ${photo.comment ? `<div class="photo-item-comment">${photo.comment}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function viewPhotoFullSize(dataUrl) {
+            window.open(dataUrl, '_blank');
+        }
+
+        // Display photos on page load
+        document.addEventListener('DOMContentLoaded', displayPhotos);
+    </script>
+
+
+    {% include 'zozi_badge.html' %}
 </body>
 </html>

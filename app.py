@@ -29,7 +29,10 @@ from database import (
     get_inspections_by_inspector,
     get_burial_inspections,
     get_inspection_details,
-    get_burial_inspection_details
+    get_burial_inspection_details,
+    save_meat_processing_inspection,
+    get_meat_processing_inspections,
+    get_meat_processing_inspection_details
 )
 
 app = Flask(__name__, template_folder='templates')
@@ -44,7 +47,7 @@ FOOD_CHECKLIST_ITEMS = [
     {"id": 2, "desc": "Original Container, Properly Labeled", "wt": 1},
 
     # FOOD PROTECTION (3-10)
-    {"id": 3, "desc": "Potentially Hazardous Food Meets Temperature Requirements During Storage, Preparation, Display, Service, Transportation", "wt": 5},
+    {"id": 3, "desc": "Potentially Hazardous Food Meets Temcjblperature Requirements During Storage, Preparation, Display, Service, Transportation", "wt": 5},
     {"id": 4, "desc": "Facilities to Maintain Product Temperature", "wt": 4},
     {"id": 5, "desc": "Thermometers Provided and Conspicuous", "wt": 1},
     {"id": 6, "desc": "Potentially Hazardous Food Properly Thawed", "wt": 2},
@@ -142,6 +145,59 @@ RESIDENTIAL_CHECKLIST_ITEMS = [
     {"id": 24, "desc": "Disposal", "wt": 4},
     {"id": 25, "desc": "Proper lairage for animals", "wt": 4},
     {"id": 26, "desc": "Controlled vegetation", "wt": 4},
+]
+
+MEAT_PROCESSING_CHECKLIST_ITEMS = [
+    {"id": 1, "desc": "Free of improperly stored equipment, litter, waste refuse, and unused weeds or grass", "wt": 1},
+    {"id": 2, "desc": "Clean, accessible roads, yards, and parking", "wt": 1},
+    {"id": 3, "desc": "Proper drainage", "wt": 1},
+    {"id": 4, "desc": "Effective control of birds, stray animals, pests, & filth from entering the plant", "wt": 2},
+    {"id": 5, "desc": "Animals subject to antemortem inspection", "wt": 1},
+    {"id": 6, "desc": "Slaughter free from infectious disease", "wt": 2, "critical": True},
+    {"id": 7, "desc": "Source & origin of animal records in place", "wt": 2, "critical": True},
+    {"id": 8, "desc": "Holding pen - clean, access to potable water", "wt": 1},
+    {"id": 9, "desc": "Holding pen - rails strong state of good repair", "wt": 1},
+    {"id": 10, "desc": "Holding pen - floor rugged, sloped for drainage", "wt": 1},
+    {"id": 11, "desc": "Animal restrained adequately; proper stunning effected", "wt": 2},
+    {"id": 13, "desc": "Floor/walls/ceiling easy to clean, free from accumulation of fat, blood, feaces, odour; sloped to drain", "wt": 2, "critical": True},
+    {"id": 14, "desc": "Made of impervious, durable material & sanitary", "wt": 1},
+    {"id": 15, "desc": "Handwashing stations; foot operated; adequate number", "wt": 3, "critical": True},
+    {"id": 16, "desc": "Edible product containers made of stainless steel", "wt": 1},
+    {"id": 17, "desc": "Adequate space provided for activities such as skinning, evisceration, carcass splitting; so as to avoid cross contamination", "wt": 3, "critical": True},
+    {"id": 18, "desc": "Area free of slime that promote microbial multiplication", "wt": 2, "critical": True},
+    {"id": 19, "desc": "Lighting permits effective dressing of carcass and performing inspection", "wt": 1},
+    {"id": 20, "desc": "Light shielded to prevent contamination", "wt": 1},
+    {"id": 21, "desc": "Room/area used for storing raw materials, maintained in a clean & sanitary manner", "wt": 1},
+    {"id": 22, "desc": "Items in storage properly labeled and packed", "wt": 2},
+    {"id": 23, "desc": "Vicora table, skinning cradle, hooks, saw, knives, rails, slicers, tenderizers, etc. in good repair; made from cleanable & non-corrosive material; no excess accumulation of blood, meat, fat, feaces, & odour", "wt": 3, "critical": True},
+    {"id": 24, "desc": "Properly maintained, cleaned, & sanitized after each use with approved chemicals or sanitizing agents; procedure and frequency of use written; pre-operational and post-operational activity located to prevent contamination and adequately spaced for operation, inspection, & maintenance", "wt": 3, "critical": True},
+    {"id": 25, "desc": "Chill room maintained at required temperature (4° C)", "wt": 2, "critical": True},
+    {"id": 26, "desc": "Carcass stored to facilitate air flow", "wt": 2},
+    {"id": 27, "desc": "Absence of condensation, mold, etc. and properly maintained and operated", "wt": 2},
+    {"id": 28, "desc": "Chill room fitted with functional thermometer", "wt": 1},
+    {"id": 29, "desc": "Meat held at -18°C; functional thermometers installed and displayed", "wt": 3, "critical": True},
+    {"id": 30, "desc": "Meat products stored on pallets under proper maintenance, operation, & packaging", "wt": 3, "critical": True},
+    {"id": 31, "desc": "No evidence of vermin/pests; effective pest control program in place", "wt": 3},
+    {"id": 32, "desc": "All staff trained in hygiene with valid food handlers permit", "wt": 2, "critical": True},
+    {"id": 33, "desc": "Protective & sanitary clothing used where required and otherwise appropriately attired", "wt": 1},
+    {"id": 34, "desc": "Staff take necessary precaution to prevent contamination of meat", "wt": 1},
+    {"id": 35, "desc": "Valid butcher's license", "wt": 1},
+    {"id": 36, "desc": "Habits, i.e. smoking, spitting not observed; no uncovered cuts or sores; no evidence of communicable disease or injuries", "wt": 2},
+    {"id": 37, "desc": "Drains clear, equipped with traps & vents", "wt": 2},
+    {"id": 38, "desc": "Proper arrangement for wastewater disposal; waste containers clearly identified & emptied at frequent intervals; and in a sanitary manner", "wt": 3},
+    {"id": 39, "desc": "Waste storage adequate; waste does not pose cross contamination risk", "wt": 3},
+    {"id": 40, "desc": "Lack of condensates, contaminants, or mold in processing areas", "wt": 1},
+    {"id": 41, "desc": "Absence of objectionable odours", "wt": 2},
+    {"id": 42, "desc": "Air filters/dust collectors, checked, cleaned/replaced regularly", "wt": 2},
+    {"id": 43, "desc": "Adequate handwashing facilities properly placed with directing signs and hot/cold running taps", "wt": 2},
+    {"id": 44, "desc": "Toilets do not open directly into processing area & adequately operated & maintained", "wt": 1},
+    {"id": 45, "desc": "Adequate soap, sanitizer & sanitary drying equipment or paper/towels; availability of potable water", "wt": 2, "critical": True},
+    {"id": 46, "desc": "Ice in adequate quantity & generated from potable water", "wt": 2, "critical": True},
+    {"id": 47, "desc": "Record of water treatment maintained; adequate quantity/pressure for all operations", "wt": 3, "critical": True},
+    {"id": 48, "desc": "Constructed and operated to protect meat and meat products from contamination and deterioration", "wt": 3, "critical": True},
+    {"id": 49, "desc": "Capable of maintaining 4° C for chilled products; capable of maintaining -18° C for frozen products", "wt": 3, "critical": True},
+    {"id": 50, "desc": "Insecticides, rodenticides, & cleaning agents properly labeled and stored to avoid cross contamination", "wt": 3, "critical": True},
+    {"id": 51, "desc": "Processing plant quality assurance records; analytical results, cleaning and sanitation manuals; and sampling plans in place", "wt": 3},
 ]
 
 SPIRIT_LICENCE_CHECKLIST_ITEMS = [
@@ -813,6 +869,7 @@ def submit_institutional():
         comments = request.form.get('comments', '')
         inspector_signature = request.form.get('inspector_signature', '')
         received_by = request.form.get('received_by', '')
+        photo_data = request.form.get('photos', '[]')
 
         print("=== PROCESSED FIELD VALUES ===")
         print(f"Staff Complement: '{staff_complement}'")
@@ -865,8 +922,8 @@ def submit_institutional():
                 telephone_no, num_buildings, inspection_date, inspector_code,
                 overall_score, critical_score, result, license_no,
                 registration_status, purpose_of_visit, action, comments,
-                inspector_signature, received_by, form_type, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                inspector_signature, received_by, photo_data, form_type, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             establishment_name, owner_operator, address, inspector_name,
             staff_complement, num_occupants, institution_type,
@@ -874,7 +931,7 @@ def submit_institutional():
             telephone_no, num_buildings, inspection_date, inspector_code,
             overall_score, critical_score, result, license_no,
             registration_status, purpose_of_visit, action, comments,
-            inspector_signature, received_by, 'Institutional Health', datetime.now()
+            inspector_signature, received_by, photo_data, 'Institutional Health', datetime.now()
         ))
 
         inspection_id = cursor.lastrowid
@@ -962,6 +1019,23 @@ def fix_institutional_status():
     return f"Updated {updated_count} institutional inspection records! <a href='/dashboard'>Back to Dashboard</a>"
 
 
+@app.route('/institutional_details/<int:form_id>')
+def institutional_details(form_id):
+    inspection = InstitutionalInspection.query.get_or_404(form_id)
+
+    # Parse photos from JSON string to Python list
+    photos = []
+    if inspection.photos:
+        try:
+            import json
+            photos = json.loads(inspection.photos)
+        except:
+            photos = []
+
+    return render_template('institutional_details.html',
+                           inspection=inspection,
+                           photo_data=photos)
+
 @app.route('/institutional/inspection/<int:id>')
 def institutional_inspection_detail(id):
     if 'inspector' not in session and 'admin' not in session:
@@ -1013,9 +1087,19 @@ def institutional_inspection_detail(id):
 
     conn.close()
 
+    # Parse photos from JSON string to Python list
+    photos = []
+    if inspection_dict.get('photo_data'):
+        try:
+            import json
+            photos = json.loads(inspection_dict.get('photo_data', '[]'))
+        except:
+            photos = []
+
     return render_template('institutional_inspection_detail.html',
                            inspection=inspection_dict,
-                           checklist=INSTITUTIONAL_CHECKLIST_ITEMS)
+                           checklist=INSTITUTIONAL_CHECKLIST_ITEMS,
+                           photo_data=photos)
 
 @app.route('/submit_spirit_licence', methods=['POST'])
 def submit_spirit_licence():
@@ -1046,6 +1130,7 @@ def submit_spirit_licence():
         'food_inspected': 0.0,
         'food_condemned': 0.0,
         'inspector_code': '',
+        'photo_data': request.form.get('photos', '[]'),
         'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
     overall_score = sum(int(request.form.get(f"score_{i}", 0)) for i in range(1, 35) if int(request.form.get(f"score_{i}", 0)) > 0)
@@ -1166,6 +1251,7 @@ def submit_residential():
         'comments': request.form.get('comments', ''),
         'inspector_signature': request.form['inspector_signature'],
         'received_by': request.form.get('received_by', ''),
+        'photo_data': request.form.get('photos', '[]'),
         'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
     inspection_id = save_residential_inspection(data)
@@ -1217,7 +1303,8 @@ def submit_burial():
         'proposed_grave_type': request.form.get('proposed_grave_type', ''),
         'general_remarks': request.form.get('general_remarks', ''),
         'inspector_signature': request.form.get('inspector_signature', ''),
-        'received_by': request.form.get('received_by', '')
+        'received_by': request.form.get('received_by', ''),
+        'photo_data': request.form.get('photos', '[]')
     }
 
     try:
@@ -1225,6 +1312,81 @@ def submit_burial():
         return jsonify({'message': 'Submit successfully', 'inspection_id': inspection_id})
     except Exception as e:
         return jsonify({'message': f'Error: {str(e)}'}), 500
+
+
+@app.route('/submit_meat_processing', methods=['POST'])
+def submit_meat_processing():
+    if 'inspector' not in session:
+        return jsonify({'message': 'Unauthorized: Please log in'}), 401
+
+    # Helper function to safely convert to float
+    def safe_float_convert(value, default=0.0):
+        try:
+            return float(value) if value else default
+        except (ValueError, TypeError):
+            return default
+
+    # Helper function to safely convert to int
+    def safe_int_convert(value, default=0):
+        try:
+            return int(value) if value else default
+        except (ValueError, TypeError):
+            return default
+
+    # Helper function to convert checkbox to int (1 if checked, 0 otherwise)
+    def checkbox_to_int(value):
+        return 1 if value == 'on' else 0
+
+    # Process photos if included
+    photos_json = request.form.get('photos', '[]')
+
+    data = {
+        'establishment_name': request.form.get('establishment_name', ''),
+        'owner_operator': request.form.get('owner_operator', ''),
+        'address': request.form.get('address', ''),
+        'inspector_name': request.form.get('inspector_name', ''),
+        'establishment_no': request.form.get('establishment_no', ''),
+        'overall_score': safe_float_convert(request.form.get('overall_score', '0')),
+        'food_contact_surfaces': safe_int_convert(request.form.get('food_contact_surfaces', '0')),
+        'water_samples': safe_int_convert(request.form.get('water_samples', '0')),
+        'product_samples': safe_int_convert(request.form.get('product_samples', '0')),
+        'types_of_products': request.form.get('types_of_products', ''),
+        'staff_fhp': safe_int_convert(request.form.get('staff_fhp', '0')),
+        'water_public': checkbox_to_int(request.form.get('water_public', '')),
+        'water_private': checkbox_to_int(request.form.get('water_private', '')),
+        'type_processing': checkbox_to_int(request.form.get('type_processing', '')),
+        'type_slaughter': checkbox_to_int(request.form.get('type_slaughter', '')),
+        'purpose_of_visit': request.form.get('purpose_of_visit', ''),
+        'inspection_date': request.form.get('inspection_date', ''),
+        'inspector_code': request.form.get('inspector_code', ''),
+        'result': request.form.get('result', ''),
+        'telephone_no': request.form.get('telephone_no', ''),
+        'registration_status': request.form.get('registration_status', ''),
+        'action': request.form.get('action', ''),
+        'comments': request.form.get('comments', ''),
+        'inspector_signature': request.form.get('inspector_signature', ''),
+        'received_by': request.form.get('received_by', ''),
+        'photo_data': photos_json  # Save photos as JSON
+    }
+
+    try:
+        inspection_id = save_meat_processing_inspection(data)
+
+        # Save checklist scores
+        conn = sqlite3.connect('inspections.db')
+        c = conn.cursor()
+        for item in MEAT_PROCESSING_CHECKLIST_ITEMS:
+            score = request.form.get(f'score_{item["id"]:02d}', '0')
+            safe_score = safe_float_convert(score, 0.0)
+            c.execute("INSERT INTO meat_processing_checklist_scores (form_id, item_id, score) VALUES (?, ?, ?)",
+                      (inspection_id, item["id"], safe_score))
+        conn.commit()
+        conn.close()
+
+        return jsonify({'status': 'success', 'message': 'Submit successfully', 'inspection_id': inspection_id})
+    except Exception as e:
+        print(f"Error submitting meat processing inspection: {e}")
+        return jsonify({'status': 'error', 'message': f'Error: {str(e)}'}), 500
 
 
 @app.route('/submit_swimming_pools', methods=['POST'])
@@ -1261,6 +1423,7 @@ def submit_swimming_pools():
     inspector_date = request.form.get('inspector_date')
     manager_signature = request.form.get('manager_signature')
     manager_date = request.form.get('manager_date')
+    photo_data = request.form.get('photos', '[]')
 
     # DEBUG: Print what we're receiving
     print("=== DEBUG: Form data received ===")
@@ -1308,15 +1471,15 @@ def submit_swimming_pools():
     print(f"Result: {result}")
 
     # Build the INSERT query dynamically to include all score columns
-    base_columns = '''establishment_name, owner, address, physical_location, 
-                     type_of_establishment, inspector_name, inspection_date, form_type, result, 
-                     created_at, comments, scores, overall_score, critical_score, inspector_signature, 
-                     received_by, manager_date'''
+    base_columns = '''establishment_name, owner, address, physical_location,
+                     type_of_establishment, inspector_name, inspection_date, form_type, result,
+                     created_at, comments, scores, overall_score, critical_score, inspector_signature,
+                     received_by, manager_date, photo_data'''
 
     score_columns = ', '.join([f"score_{item['id']}" for item in SWIMMING_POOL_CHECKLIST_ITEMS])
     all_columns = f"{base_columns}, {score_columns}"
 
-    base_placeholders = '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?'
+    base_placeholders = '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?'
     score_placeholders = ', '.join(['?' for _ in SWIMMING_POOL_CHECKLIST_ITEMS])
     all_placeholders = f"{base_placeholders}, {score_placeholders}"
 
@@ -1324,7 +1487,7 @@ def submit_swimming_pools():
         operator, operator, address, physical_location, pool_class, inspector_id,
         date_inspection, 'Swimming Pool', result, datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         inspector_comments, ','.join(scores), overall_score, critical_score,
-        inspector_signature, manager_signature, manager_date
+        inspector_signature, manager_signature, manager_date, photo_data
     )
 
     score_values = tuple(score_updates[f"score_{item['id']}"] for item in SWIMMING_POOL_CHECKLIST_ITEMS)
@@ -1529,14 +1692,14 @@ def submit_small_hotels():
     # Insert inspection with ALL required fields
     c.execute('''
         INSERT INTO inspections (
-            establishment_name, address, physical_location, inspector_name, 
+            establishment_name, address, physical_location, inspector_name,
             inspection_date, comments, result, overall_score, critical_score,
             inspector_signature, inspector_signature_date,
             manager_signature, manager_signature_date,
             received_by, received_by_date,
-            created_at, form_type
+            photo_data, created_at, form_type
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?)
     ''', (
         data.get('establishment_name', ''),
         data.get('address', ''),
@@ -1553,6 +1716,7 @@ def submit_small_hotels():
         data.get('manager_signature_date', ''),
         data.get('received_by', ''),
         data.get('received_by_date', ''),
+        data.get('photos', '[]'),
         'Small Hotel'
     ))
     inspection_id = c.lastrowid
@@ -1869,7 +2033,18 @@ def inspection_detail(id):
             'form_type': inspection[15],
             'created_at': inspection[14] or ''
         }
-        return render_template('inspection_detail.html', inspection=inspection_data, checklist=FOOD_CHECKLIST_ITEMS)
+
+        # Parse photos from JSON string to Python list
+        import json
+        photos = []
+        if inspection_data.get('photo_data'):
+            try:
+                photos = json.loads(inspection_data.get('photo_data', '[]'))
+            except:
+                photos = []
+
+        return render_template('inspection_detail.html', inspection=inspection_data, checklist=FOOD_CHECKLIST_ITEMS,
+                              photo_data=photos)
     return "Inspection not found", 404
 
 @app.route('/residential/inspection/<int:form_id>')
@@ -1904,6 +2079,16 @@ def residential_inspection(form_id):
         premises_name = owner = address = inspector_name = inspection_date = inspector_code = treatment_facility = vector = result = onsite_system = building_construction_type = purpose_of_visit = action = no_of_bedrooms = total_population = comments = inspector_signature = received_by = created_at = 'N/A'
         critical_score = overall_score = 0
         checklist_scores = {item['id']: '0' for item in RESIDENTIAL_CHECKLIST_ITEMS}
+
+    # Parse photos from JSON string to Python list
+    import json
+    photos = []
+    if details and details.get('photo_data'):
+        try:
+            photos = json.loads(details.get('photo_data', '[]'))
+        except:
+            photos = []
+
     return render_template('residential_inspection_details.html',
                           form_id=form_id,
                           premises_name=premises_name,
@@ -1928,7 +2113,57 @@ def residential_inspection(form_id):
                           received_by=received_by,
                           created_at=created_at,
                           checklist=RESIDENTIAL_CHECKLIST_ITEMS,
-                          checklist_scores=checklist_scores)
+                          checklist_scores=checklist_scores,
+                          photo_data=photos)
+
+@app.route('/meat_processing/inspection/<int:form_id>')
+def meat_processing_inspection(form_id):
+    if 'inspector' not in session and 'admin' not in session:
+        return redirect(url_for('login'))
+    details = get_meat_processing_inspection_details(form_id)
+    if details:
+        # Parse photos from JSON string to Python list
+        import json
+        photos = []
+        if details.get('photo_data'):
+            try:
+                photos = json.loads(details.get('photo_data', '[]'))
+            except:
+                photos = []
+
+        return render_template('meat_processing_inspection_details.html',
+                              form_id=form_id,
+                              establishment_name=details['establishment_name'],
+                              owner_operator=details['owner_operator'],
+                              address=details['address'],
+                              inspector_name=details['inspector_name'],
+                              establishment_no=details['establishment_no'],
+                              overall_score=details['overall_score'],
+                              food_contact_surfaces=details['food_contact_surfaces'],
+                              water_samples=details['water_samples'],
+                              product_samples=details['product_samples'],
+                              types_of_products=details['types_of_products'],
+                              staff_fhp=details['staff_fhp'],
+                              water_public=details['water_public'],
+                              water_private=details['water_private'],
+                              type_processing=details['type_processing'],
+                              type_slaughter=details['type_slaughter'],
+                              purpose_of_visit=details['purpose_of_visit'],
+                              inspection_date=details['inspection_date'],
+                              inspector_code=details['inspector_code'],
+                              result=details['result'],
+                              telephone_no=details['telephone_no'],
+                              registration_status=details['registration_status'],
+                              action=details['action'],
+                              comments=details['comments'],
+                              inspector_signature=details['inspector_signature'],
+                              received_by=details['received_by'],
+                              created_at=details['created_at'],
+                              checklist=MEAT_PROCESSING_CHECKLIST_ITEMS,
+                              checklist_scores=details['checklist_scores'],
+                              photo_data=photos)
+    else:
+        return "Inspection not found", 404
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -1960,7 +2195,18 @@ def burial_inspection_detail(id):
         'created_at': inspection['created_at']
     }
     logging.debug(f"Rendering burial inspection detail for id: {id}")
-    return render_template('burial_inspection_detail.html', inspection=inspection_data)
+
+    # Parse photos from JSON string to Python list
+    import json
+    photos = []
+    if inspection_data.get('photo_data'):
+        try:
+            photos = json.loads(inspection_data.get('photo_data', '[]'))
+        except:
+            photos = []
+
+    return render_template('burial_inspection_detail.html', inspection=inspection_data,
+                          photo_data=photos)
 
 # Replace ALL your PDF download functions with these exact form replicas
 
@@ -2148,6 +2394,245 @@ def download_residential_pdf(form_id):
     response = make_response(pdf_data)
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = f'attachment; filename=residential_inspection_{form_id}.pdf'
+    return response
+
+
+@app.route('/download_meat_processing_pdf/<int:form_id>')
+def download_meat_processing_pdf(form_id):
+    if 'inspector' not in session and 'admin' not in session:
+        return redirect(url_for('login'))
+
+    details = get_meat_processing_inspection_details(form_id)
+    if not details:
+        return jsonify({'error': 'Inspection not found'}), 404
+
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    # Title
+    y = height - 60
+    p.setFont("Times-Bold", 16)
+    p.drawCentredString(width / 2, y, "Ministry of Health")
+    y -= 20
+    p.setFont("Times-Bold", 14)
+    p.drawCentredString(width / 2, y, "Meat Processing Plant and Slaughter Place Inspection Report")
+    y -= 50
+
+    # Details section
+    p.setFont("Times-Bold", 12)
+    label_x = 50
+    value_x = 220
+    line_spacing = 20
+
+    # Basic Information
+    p.drawString(label_x, y, "Name of Establishment:")
+    p.setFont("Times-Roman", 12)
+    p.drawString(value_x, y, str(details.get('establishment_name', '')))
+    y -= line_spacing
+
+    p.setFont("Times-Bold", 12)
+    p.drawString(label_x, y, "Owner/Operator:")
+    p.setFont("Times-Roman", 12)
+    p.drawString(value_x, y, str(details.get('owner_operator', '')))
+    y -= line_spacing
+
+    p.setFont("Times-Bold", 12)
+    p.drawString(label_x, y, "Address and Parish:")
+    p.setFont("Times-Roman", 12)
+    p.drawString(value_x, y, str(details.get('address', '')))
+    y -= line_spacing
+
+    p.setFont("Times-Bold", 12)
+    p.drawString(label_x, y, "Inspector Name:")
+    p.setFont("Times-Roman", 12)
+    p.drawString(value_x, y, str(details.get('inspector_name', '')))
+    y -= line_spacing
+
+    p.setFont("Times-Bold", 12)
+    p.drawString(label_x, y, "Inspection Date:")
+    p.setFont("Times-Roman", 12)
+    p.drawString(value_x, y, str(details.get('inspection_date', '')))
+    y -= line_spacing
+
+    p.setFont("Times-Bold", 12)
+    p.drawString(label_x, y, "Establishment No.:")
+    p.setFont("Times-Roman", 12)
+    p.drawString(value_x, y, str(details.get('establishment_no', '')))
+    y -= line_spacing
+
+    # Lab Samples Section
+    y -= 10
+    p.setFont("Times-Bold", 12)
+    p.drawString(label_x, y, "Lab Samples Taken:")
+    y -= line_spacing
+
+    p.setFont("Times-Roman", 11)
+    p.drawString(label_x + 20, y, f"Food Contact Surfaces: {details.get('food_contact_surfaces', 0)}")
+    p.drawString(label_x + 220, y, f"Water: {details.get('water_samples', 0)}")
+    y -= line_spacing
+
+    p.drawString(label_x + 20, y, f"Product Samples: {details.get('product_samples', 0)}")
+    p.drawString(label_x + 220, y, f"Types of Products: {details.get('types_of_products', '')}")
+    y -= line_spacing
+
+    p.drawString(label_x + 20, y, f"Staff with FHP: {details.get('staff_fhp', 0)}")
+    y -= line_spacing + 10
+
+    # Water Source and Establishment Type
+    p.setFont("Times-Bold", 12)
+    p.drawString(label_x, y, "Water Source:")
+    p.setFont("Times-Roman", 11)
+    water_source = []
+    if details.get('water_public'):
+        water_source.append("Public")
+    if details.get('water_private'):
+        water_source.append("Private")
+    p.drawString(value_x, y, ", ".join(water_source) if water_source else "N/A")
+    y -= line_spacing
+
+    p.setFont("Times-Bold", 12)
+    p.drawString(label_x, y, "Type of Establishment:")
+    p.setFont("Times-Roman", 11)
+    est_types = []
+    if details.get('type_processing'):
+        est_types.append("Processing Plant")
+    if details.get('type_slaughter'):
+        est_types.append("Slaughter Place")
+    p.drawString(value_x, y, ", ".join(est_types) if est_types else "N/A")
+    y -= line_spacing + 10
+
+    # Inspection Results
+    p.setFont("Times-Bold", 14)
+    p.drawString(label_x, y, "Inspection Results:")
+    y -= line_spacing + 5
+
+    p.setFont("Times-Bold", 12)
+    p.drawString(label_x, y, f"Overall Score: {details.get('overall_score', 0)}")
+    y -= line_spacing
+
+    result = details.get('result', 'N/A')
+    result_color = colors.green if result == 'Satisfactory' else colors.red
+    p.setFillColor(result_color)
+    p.drawString(label_x, y, f"Result: {result}")
+    p.setFillColor(colors.black)
+    y -= line_spacing
+
+    p.setFont("Times-Roman", 11)
+    p.drawString(label_x, y, f"Purpose of Visit: {details.get('purpose_of_visit', 'N/A')}")
+    y -= line_spacing
+    p.drawString(label_x, y, f"Action: {details.get('action', 'N/A')}")
+    y -= line_spacing
+    p.drawString(label_x, y, f"Registration Status: {details.get('registration_status', 'N/A')}")
+    y -= 40
+
+    # Checklist Table
+    if y < 400:
+        p.showPage()
+        y = height - 50
+
+    p.setFont("Times-Bold", 14)
+    p.drawString(label_x, y, "Inspection Checklist")
+    y -= 25
+
+    # Table setup
+    table_x = 50
+    table_width = width - 100
+    header_height = 18
+    row_height = 14
+
+    # Table header
+    p.setLineWidth(1)
+    p.rect(table_x, y - header_height, table_width, header_height)
+    p.setFillColor(colors.lightgrey)
+    p.rect(table_x, y - header_height, table_width, header_height, fill=1)
+
+    p.setFillColor(colors.black)
+    p.setFont("Times-Bold", 10)
+    p.drawString(table_x + 5, y - 12, "ID")
+    p.drawString(table_x + 30, y - 12, "Description")
+    p.drawString(table_x + 420, y - 12, "Wt")
+    p.drawString(table_x + 455, y - 12, "Score")
+
+    y -= header_height
+
+    # Checklist items
+    checklist_scores = details.get('checklist_scores', {})
+
+    for item in MEAT_PROCESSING_CHECKLIST_ITEMS:
+        if y < 80:
+            p.showPage()
+            y = height - 50
+
+        score = checklist_scores.get(item['id'], 0)
+
+        p.setFont("Times-Roman", 9)
+        p.rect(table_x, y - row_height, table_width, row_height)
+
+        p.drawString(table_x + 5, y - 10, str(item['id']))
+
+        # Truncate long descriptions
+        desc = item['desc'][:52] + "..." if len(item['desc']) > 52 else item['desc']
+        p.drawString(table_x + 30, y - 10, desc)
+
+        p.drawString(table_x + 425, y - 10, str(item['wt']))
+        p.drawString(table_x + 460, y - 10, str(score))
+
+        y -= row_height
+
+    # Comments section
+    if y < 120:
+        p.showPage()
+        y = height - 50
+
+    y -= 30
+    p.setFont("Times-Bold", 12)
+    p.drawString(label_x, y, "Inspector's Comments:")
+    y -= 18
+
+    comments = details.get('comments', 'No comments provided.')
+    p.setFont("Times-Roman", 10)
+    if len(comments) > 80:
+        # Word wrap comments
+        words = comments.split()
+        lines = []
+        current_line = ""
+        for word in words:
+            if len(current_line + word) < 70:
+                current_line += word + " "
+            else:
+                lines.append(current_line.strip())
+                current_line = word + " "
+        if current_line:
+            lines.append(current_line.strip())
+
+        for line in lines[:4]:
+            p.drawString(label_x, y, line)
+            y -= 12
+    else:
+        p.drawString(label_x, y, comments)
+        y -= 12
+
+    # Signatures
+    y -= 30
+    p.setFont("Times-Bold", 12)
+    p.drawString(label_x, y, "Inspector's Signature:")
+    p.setFont("Times-Roman", 11)
+    p.drawString(label_x + 130, y, str(details.get('inspector_signature', '')))
+
+    p.setFont("Times-Bold", 12)
+    p.drawString(350, y, "Received by:")
+    p.setFont("Times-Roman", 11)
+    p.drawString(440, y, str(details.get('received_by', '')))
+
+    p.save()
+    buffer.seek(0)
+    pdf_data = buffer.getvalue()
+    buffer.close()
+
+    response = make_response(pdf_data)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename=meat_processing_inspection_{form_id}.pdf'
     return response
 
 
@@ -4079,8 +4564,18 @@ def spirit_licence_inspection_detail(id):
             'created_at': safe_get(inspection, 'created_at')
         }
 
+        # Parse photos from JSON string to Python list
+        import json
+        photos = []
+        if inspection_data.get('photo_data'):
+            try:
+                photos = json.loads(inspection_data.get('photo_data', '[]'))
+            except:
+                photos = []
+
         return render_template('spirit_licence_inspection_detail.html',
-                              checklist=[], inspection=inspection_data)
+                              checklist=[], inspection=inspection_data,
+                              photo_data=photos)
 
     return "Not Found", 404
 
@@ -4429,9 +4924,19 @@ def swimming_pool_inspection_detail(id):
             inspection_dict[score_field] = item_scores[item['id']]
             print(f"Using fallback for {score_field}: {item_scores[item['id']]}")
 
+    # Parse photos from JSON string to Python list
+    import json
+    photos = []
+    if inspection_dict.get('photo_data'):
+        try:
+            photos = json.loads(inspection_dict.get('photo_data', '[]'))
+        except:
+            photos = []
+
     return render_template('swimming_pool_inspection_detail.html',
                            inspection=inspection_dict,
-                           checklist=SWIMMING_POOL_CHECKLIST_ITEMS)
+                           checklist=SWIMMING_POOL_CHECKLIST_ITEMS,
+                           photo_data=photos)
 
 # Debug route for session verification
 @app.route('/debug_session')
@@ -4587,9 +5092,15 @@ def search_forms():
         elif form_type == 'institutional':
             c.execute("""
                 SELECT id, establishment_name, created_at, result, overall_score, critical_score
-                FROM inspections 
-                WHERE form_type = 'Institutional Health' 
+                FROM inspections
+                WHERE form_type = 'Institutional Health'
                 AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ?)
+            """, (f'%{query}%', f'%{query}%'))
+        elif form_type == 'meat_processing':
+            c.execute("""
+                SELECT id, establishment_name, inspection_date, result, overall_score
+                FROM meat_processing_inspections
+                WHERE (LOWER(establishment_name) LIKE ? OR LOWER(owner_operator) LIKE ?)
             """, (f'%{query}%', f'%{query}%'))
         else:
             conn.close()
@@ -4630,6 +5141,18 @@ def search_forms():
 
                 if not current_result or current_result == 'N/A':
                     form_data['status'] = calculate_status(overall_score, critical_score, 'Institutional Health')
+                else:
+                    form_data['status'] = current_result
+                form_data['result'] = form_data['status']
+
+            elif form_type == 'meat_processing':
+                form_data['establishment_name'] = record[1]
+                form_data['created_at'] = record[2] if len(record) > 2 else ''
+                overall_score = record[4] if len(record) > 4 else 0
+                current_result = record[3] if len(record) > 3 else ''
+
+                if not current_result or current_result == 'N/A':
+                    form_data['status'] = 'Pass' if float(overall_score) >= 80 else 'Fail'
                 else:
                     form_data['status'] = current_result
                 form_data['result'] = form_data['status']
@@ -4726,6 +5249,14 @@ def new_barbershop_form():
                            inspection=inspection)
 
 
+# Route to render new meat processing inspection form
+@app.route('/new_meat_processing_form')
+def new_meat_processing_form():
+    if 'inspector' not in session:
+        return redirect(url_for('login'))
+    return render_template('meat_processing_form.html')
+
+
 @app.route('/submit_barbershop', methods=['POST'])
 def submit_barbershop():
     if 'inspector' not in session:
@@ -4759,6 +5290,7 @@ def submit_barbershop():
         'comments': request.form.get('comments', ''),  # Get comments directly from form
         'inspector_signature': request.form.get('inspector_signature', ''),
         'received_by': request.form.get('received_by', ''),
+        'photo_data': request.form.get('photos', '[]'),  # Get photo data from 'photos' field
         'form_type': 'Barbershop',
         'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
@@ -4795,16 +5327,16 @@ def submit_barbershop():
         data['result'] = 'Unsatisfactory'
 
     # Build dynamic INSERT query
-    base_columns = '''establishment_name, owner, address, license_no, inspector_name, 
-                     inspection_date, inspection_time, type_of_establishment, no_of_employees, 
+    base_columns = '''establishment_name, owner, address, license_no, inspector_name,
+                     inspection_date, inspection_time, type_of_establishment, no_of_employees,
                      telephone_no, inspector_code, purpose_of_visit, action, registration_status,
-                     comments, result, overall_score, critical_score, scores, inspector_signature, 
-                     received_by, form_type, created_at'''
+                     comments, result, overall_score, critical_score, scores, inspector_signature,
+                     received_by, photo_data, form_type, created_at'''
 
     score_columns = ', '.join([f"score_{item['id']}" for item in BARBERSHOP_CHECKLIST_ITEMS])
     all_columns = f"{base_columns}, {score_columns}"
 
-    base_placeholders = '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?'
+    base_placeholders = '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?'
     score_placeholders = ', '.join(['?' for _ in BARBERSHOP_CHECKLIST_ITEMS])
     all_placeholders = f"{base_placeholders}, {score_placeholders}"
 
@@ -4814,8 +5346,8 @@ def submit_barbershop():
         data['type_of_establishment'], data['no_of_employees'], data['telephone_no'],
         data['inspector_code'], data['purpose_of_visit'], data['action'], data['registration_status'],
         data['comments'], data['result'], data['overall_score'], data['critical_score'],
-        data['scores'], data['inspector_signature'], data['received_by'], data['form_type'],
-        data['created_at']
+        data['scores'], data['inspector_signature'], data['received_by'], data['photo_data'],
+        data['form_type'], data['created_at']
     )
     score_values = tuple(score_updates[f"score_{item['id']}"] for item in BARBERSHOP_CHECKLIST_ITEMS)
     all_values = base_values + score_values
@@ -4906,7 +5438,18 @@ def barbershop_inspection_detail(id):
     inspection_dict['scores'] = scores
 
     conn.close()
-    return render_template('barbershop_inspection_detail.html', inspection=inspection_dict, checklist=BARBERSHOP_CHECKLIST_ITEMS)
+
+    # Parse photos from JSON string to Python list
+    import json
+    photos = []
+    if inspection_dict.get('photo_data'):
+        try:
+            photos = json.loads(inspection_dict.get('photo_data', '[]'))
+        except:
+            photos = []
+
+    return render_template('barbershop_inspection_detail.html', inspection=inspection_dict, checklist=BARBERSHOP_CHECKLIST_ITEMS,
+                          photo_data=photos)
 
 # Replace your download_barbershop_pdf function with this corrected version
 @app.route('/download_barbershop_pdf/<int:form_id>')
@@ -6488,9 +7031,19 @@ def get_security_metrics():
 
         conn.close()
 
+        # Parse photos from JSON string to Python list
+        import json
+        photos = []
+        if inspection_dict.get('photo_data'):
+            try:
+                photos = json.loads(inspection_dict.get('photo_data', '[]'))
+            except:
+                photos = []
+
         return render_template('small_hotels_inspection_detail.html',
                                inspection=inspection_dict,
-                               checklist=SMALL_HOTELS_CHECKLIST_ITEMS)
+                               checklist=SMALL_HOTELS_CHECKLIST_ITEMS,
+                               photo_data=photos)
 
 
     # 3. Route to get all users for contact list
@@ -7005,7 +7558,6 @@ def test_users():
     html += '<br><a href="/admin">Back to Admin Dashboard</a>'
 
     return html
-
 
 @app.route('/api/admin/users', methods=['POST'])
 def add_user():
@@ -8395,8 +8947,18 @@ def small_hotels_inspection_detail(id):
         'error': error_scores
     }
 
+    # Parse photos from JSON string to Python list
+    import json
+    photos = []
+    if inspection_dict.get('photo_data'):
+        try:
+            photos = json.loads(inspection_dict.get('photo_data', '[]'))
+        except:
+            photos = []
+
     return render_template('small_hotels_inspection_detail.html',
-                           inspection=inspection_obj)
+                           inspection=inspection_obj,
+                           photo_data=photos)
 
 # SIMPLIFIED INSPECTION REPORTS
 @app.route('/api/admin/generate_report', methods=['POST'])
