@@ -43,6 +43,25 @@ if not os.path.exists('inspections.db'):
     print("Database not found. Initializing...")
     init_db()
     print("Database initialized successfully!")
+else:
+    # Run migrations for existing databases
+    try:
+        conn = sqlite3.connect('inspections.db')
+        c = conn.cursor()
+
+        # Check if photo_data column exists
+        c.execute("PRAGMA table_info(inspections)")
+        columns = [column[1] for column in c.fetchall()]
+
+        if 'photo_data' not in columns:
+            print("Adding photo_data column to inspections table...")
+            c.execute("ALTER TABLE inspections ADD COLUMN photo_data TEXT")
+            conn.commit()
+            print("Migration completed: photo_data column added")
+
+        conn.close()
+    except Exception as e:
+        print(f"Migration error: {e}")
 
 # Corrected Checklist for Food Establishment Inspection Form
 # Complete 45-item structure matching the official form
