@@ -38,6 +38,12 @@ from database import (
 app = Flask(__name__, template_folder='templates')
 app.secret_key = os.urandom(24)
 
+# Auto-initialize database if it doesn't exist (for Gunicorn/Render deployment)
+if not os.path.exists('inspections.db'):
+    print("Database not found. Initializing...")
+    init_db()
+    print("Database initialized successfully!")
+
 # Corrected Checklist for Food Establishment Inspection Form
 # Complete 45-item structure matching the official form
 
