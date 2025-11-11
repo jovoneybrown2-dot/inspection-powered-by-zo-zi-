@@ -7,10 +7,6 @@ static/*.mp4
 # Environment variables (NEVER COMMIT!)
 .env
 
-# Database files (contains user data - don't push to GitHub!)
-*.db
-inspections.db
-
 # Database backups
 backups/
 *.db-backup
@@ -18,15 +14,3 @@ backups/
 
 # SQLite backup
 database_sqlite_backup.py
-
-# IDE files
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# Logs
-*.log
-
-# Uploaded photos (if you have them)
-static/uploads/
