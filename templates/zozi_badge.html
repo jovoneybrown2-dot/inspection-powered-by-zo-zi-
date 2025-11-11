@@ -4,51 +4,28 @@
         position: fixed;
         bottom: 10px;
         right: 10px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        background: rgba(255, 255, 255, 0.85);
-        padding: 5px 10px;
-        border-radius: 20px;
+        display: block;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 8px 12px;
+        border-radius: 10px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         z-index: 9999;
         transition: all 0.3s ease;
         backdrop-filter: blur(10px);
+        text-decoration: none;
     }
 
     .zozi-badge:hover {
-        background: rgba(255, 255, 255, 0.95);
+        background: rgba(255, 255, 255, 1);
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         transform: translateY(-2px);
     }
 
     .zozi-badge img {
-        height: 20px;
+        height: 30px;
         width: auto;
         object-fit: contain;
-    }
-
-    .zozi-badge-text {
-        font-size: 10px;
-        font-weight: 600;
-        color: #333;
-        letter-spacing: 0.3px;
-    }
-
-    .zozi-badge-text .powered-by {
-        font-size: 8px;
-        font-weight: 400;
-        color: #666;
         display: block;
-        line-height: 1;
-        margin-bottom: 1px;
-    }
-
-    .zozi-badge-text .brand {
-        font-size: 11px;
-        font-weight: 700;
-        color: #FF6B35;
-        line-height: 1;
     }
 
     /* Hide on print */
@@ -63,27 +40,15 @@
         .zozi-badge {
             bottom: 10px;
             right: 10px;
-            padding: 6px 12px;
+            padding: 6px 10px;
         }
 
         .zozi-badge img {
-            height: 24px;
-        }
-
-        .zozi-badge-text .powered-by {
-            font-size: 9px;
-        }
-
-        .zozi-badge-text .brand {
-            font-size: 12px;
+            height: 25px;
         }
     }
 </style>
 
-<div class="zozi-badge">
-    <img src="{{ url_for('static', filename='z.png') }}" alt="Zo-Zi Logo">
-    <div class="zozi-badge-text">
-        <span class="powered-by">Powered by</span>
-        <span class="brand">Zo-Zi</span>
-    </div>
-</div>
+<a href="https://www.zo-zi.com" target="_blank" class="zozi-badge">
+    <img src="{{ url_for('static', filename='z.png') }}" alt="Powered by Zo-Zi">
+</a>

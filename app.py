@@ -5985,61 +5985,7 @@ def init_messages_db():
     print("Messages table initialized successfully")
 
 
-def init_db():
-    conn = get_db_connection()
-    c = conn.cursor()
-
-    # Create tables
-    c.execute('''CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL,
-        role TEXT NOT NULL CHECK(role IN ('inspector', 'admin', 'medical_officer')),
-        email TEXT,
-        is_flagged INTEGER DEFAULT 0
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS login_history (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        username TEXT NOT NULL,
-        email TEXT,
-        role TEXT NOT NULL,
-        login_time TEXT NOT NULL,
-        ip_address TEXT,
-        FOREIGN KEY (user_id) REFERENCES users(id)
-    )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        sender_id INTEGER NOT NULL,
-        recipient_id INTEGER NOT NULL,
-        content TEXT NOT NULL,
-        timestamp TEXT NOT NULL,
-        is_read INTEGER DEFAULT 0,
-        FOREIGN KEY (sender_id) REFERENCES users(id),
-        FOREIGN KEY (recipient_id) REFERENCES users(id)
-    )''')
-
-    # Check if email column exists in users table and add it if not
-    c.execute("PRAGMA table_info(users)")
-    columns = [info[1] for info in c.fetchall()]
-    if 'email' not in columns:
-        c.execute('ALTER TABLE users ADD COLUMN email TEXT')
-        conn.commit()
-
-    # Insert default users
-    try:
-        c.execute('INSERT OR IGNORE INTO users (username, password, role, email) VALUES (?, ?, ?, ?)',
-                  ('admin', 'adminpass', 'admin', 'admin@example.com'))
-        c.execute('INSERT OR IGNORE INTO users (username, password, role, email) VALUES (?, ?, ?, ?)',
-                  ('medofficer', 'medpass', 'medical_officer', 'medofficer@example.com'))
-        for i in range(1, 7):
-            c.execute('INSERT OR IGNORE INTO users (username, password, role, email) VALUES (?, ?, ?, ?)',
-                      (f'inspector{i}', f'pass{i}', 'inspector', f'inspector{i}@example.com'))
-        conn.commit()
-    except sqlite3.IntegrityError as e:
-        logging.error(f"Database integrity error: {str(e)}")
-
-    conn.close()
+# init_db() is imported from database.py at top of file - removed duplicate definition
 
 
 # Replace your existing login_post() function with this updated version
