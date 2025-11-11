@@ -1,8 +1,9 @@
 import sqlite3
 from datetime import datetime
+from db_config import DB_PATH
 
 def init_db():
-    conn = sqlite3.connect('inspections.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
     # Inspections table
@@ -186,7 +187,7 @@ def init_db():
     conn.close()
 
 def save_inspection(data):
-    conn = sqlite3.connect('inspections.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute('''INSERT INTO inspections (establishment_name, address, inspector_name, inspection_date, inspection_time,
                  type_of_establishment, no_of_employees, purpose_of_visit, action, result, food_inspected, food_condemned,
@@ -206,7 +207,7 @@ def save_inspection(data):
     return inspection_id
 
 def save_burial_inspection(data):
-    conn = sqlite3.connect('inspections.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     try:
         if data.get('id'):
@@ -242,7 +243,7 @@ def save_burial_inspection(data):
         conn.close()
 
 def save_residential_inspection(data):
-    conn = sqlite3.connect('inspections.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     try:
         if data.get('id'):
@@ -294,7 +295,7 @@ def save_residential_inspection(data):
     return inspection_id
 
 def save_meat_processing_inspection(data):
-    conn = sqlite3.connect('inspections.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     try:
         if data.get('id'):
@@ -351,7 +352,7 @@ def save_meat_processing_inspection(data):
     return inspection_id
 
 def get_inspections():
-    conn = sqlite3.connect('inspections.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment, created_at, result FROM inspections")
     inspections = c.fetchall()
@@ -359,7 +360,7 @@ def get_inspections():
     return inspections
 
 def get_inspections_by_inspector(inspector_name, inspection_type='all'):
-    conn = sqlite3.connect('inspections.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
     if inspection_type == 'all':
@@ -377,7 +378,7 @@ def get_inspections_by_inspector(inspector_name, inspection_type='all'):
     return inspections
 
 def get_burial_inspections():
-    conn = sqlite3.connect('inspections.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT id, applicant_name, deceased_name, created_at, 'Completed' AS status FROM burial_site_inspections")
     inspections = c.fetchall()
@@ -385,7 +386,7 @@ def get_burial_inspections():
     return inspections
 
 def get_residential_inspections():
-    conn = sqlite3.connect('inspections.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT id, premises_name, inspection_date, result FROM residential_inspections")
     inspections = c.fetchall()
@@ -393,7 +394,7 @@ def get_residential_inspections():
     return inspections
 
 def get_meat_processing_inspections():
-    conn = sqlite3.connect('inspections.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT id, establishment_name, inspection_date, result FROM meat_processing_inspections")
     inspections = c.fetchall()
@@ -401,7 +402,7 @@ def get_meat_processing_inspections():
     return inspections
 
 def get_inspection_details(inspection_id):
-    conn = sqlite3.connect('inspections.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT * FROM inspections WHERE id = ?", (inspection_id,))
     inspection = c.fetchone()
@@ -479,7 +480,7 @@ def get_inspection_details(inspection_id):
     return None
 
 def get_burial_inspection_details(inspection_id):
-    conn = sqlite3.connect('inspections.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT * FROM burial_site_inspections WHERE id = ?", (inspection_id,))
     inspection = c.fetchone()
@@ -507,7 +508,7 @@ def get_burial_inspection_details(inspection_id):
     return None
 
 def get_residential_inspection_details(inspection_id):
-    conn = sqlite3.connect('inspections.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT * FROM residential_inspections WHERE id = ?", (inspection_id,))
     inspection = c.fetchone()
@@ -545,7 +546,7 @@ def get_residential_inspection_details(inspection_id):
     return None
 
 def get_meat_processing_inspection_details(inspection_id):
-    conn = sqlite3.connect('inspections.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT * FROM meat_processing_inspections WHERE id = ?", (inspection_id,))
     inspection = c.fetchone()
@@ -589,7 +590,7 @@ def get_meat_processing_inspection_details(inspection_id):
 
 
 def get_small_hotels_inspection_details(form_id):
-    conn = sqlite3.connect('inspections.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
@@ -620,7 +621,7 @@ def get_small_hotels_inspection_details(form_id):
 
 
 def get_spirit_licence_inspection_details(form_id):
-    conn = sqlite3.connect('inspections.db')
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
@@ -661,7 +662,7 @@ def get_spirit_licence_inspection_details(form_id):
 
 def update_database_schema():
     """Update database schema to handle all form types properly"""
-    conn = sqlite3.connect('inspections.db')
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
     # Add missing columns with error handling
