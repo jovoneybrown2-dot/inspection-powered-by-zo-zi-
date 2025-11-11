@@ -2,32 +2,234 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Meat Processing Plant and Slaughter Place Inspection Form - Completed</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meat Processing Inspection Details</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            height: 100vh;
-            overflow: auto;
-            background: url('{{ url_for("static", filename="d.jpg") }}') no-repeat center center fixed;
-            background-size: cover;
+            background: white;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
             display: flex;
+            gap: 20px;
             justify-content: center;
             align-items: flex-start;
-            gap: 20px;
         }
+
+        .form-container {
+            width: 8.5in;
+            min-height: 11in;
+            background: white url('/static/d.jpg') no-repeat center center;
+            background-size: cover;
+            padding: 0.5in;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .form-container > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        .form-header {
+            text-align: center;
+            border: 2px solid black;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-title {
+            font-weight: bold;
+            font-size: 18px;
+            text-transform: uppercase;
+        }
+
+        .form-number {
+            float: right;
+            color: red;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .info-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            border: 1px solid black;
+            padding: 8px;
+            height: 40px;
+            position: relative;
+        }
+
+        .info-box span {
+            font-size: 14px;
+            position: absolute;
+            top: 18px;
+            left: 4px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            position: absolute;
+            top: 4px;
+            left: 4px;
+        }
+
+        .institutional-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .checkbox-row {
+            display: flex;
+            gap: 15px;
+            margin: 10px 0;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .inspection-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .inspection-table th,
+        .inspection-table td {
+            border: 1px solid black;
+            padding: 6px;
+            text-align: left;
+        }
+
+        .inspection-table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+
+        .item-number {
+            width: 35px;
+            text-align: center;
+            font-weight: bold;
+            background-color: #f9f9f9;
+        }
+
+        .item-text {
+            padding: 6px 8px;
+        }
+
+        .score-cell {
+            width: 30px;
+            text-align: center;
+        }
+
+        .section-header {
+            background-color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .critical-item {
+            background-color: rgba(128, 128, 128, 0.2);
+        }
+
+        .signature-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid black;
+            font-size: 14px;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid black;
+            width: 200px;
+            height: 20px;
+            display: inline-block;
+            font-size: 14px;
+            vertical-align: bottom;
+        }
+
+        .page-number {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 12px;
+        }
+
+        .compliance-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .button-container {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .action-button:hover {
+            background-color: #45a049;
+        }
+
+        .back-button {
+            background-color: #6c757d;
+        }
+
+        .back-button:hover {
+            background-color: #5a6268;
+        }
+
+        .building-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .footnotes {
+            margin-top: 20px;
+            font-size: 11px;
+            line-height: 1.3;
+        }
+
+        .footnotes p {
+            margin: 5px 0;
+        }
+
         .main-content-wrapper {
             display: flex;
             gap: 20px;
             width: 100%;
             max-width: 1600px;
         }
-        .form-container {
-            flex: 1;
-            max-width: 1200px;
-            text-align: center;
-        }
+
         .photos-sidebar {
             width: 350px;
             background: rgba(255, 255, 255, 0.95);
@@ -39,165 +241,166 @@
             position: sticky;
             top: 20px;
         }
+
         .photos-sidebar h3 {
             margin-top: 0;
             color: #333;
             border-bottom: 2px solid #4CAF50;
             padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
+
+        .photo-count-badge {
+            background: #4CAF50;
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
         .photo-item {
             margin-bottom: 20px;
-            padding: 10px;
+            padding: 12px;
             background: white;
-            border-radius: 6px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            border-left: 4px solid #4CAF50;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
+
+        .photo-item:hover {
+            transform: translateX(3px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+        }
+
         .photo-item img {
             width: 100%;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+
         .photo-item img:hover {
-            transform: scale(1.02);
+            transform: scale(1.05);
         }
+
         .photo-item-number {
             font-weight: bold;
             color: #4CAF50;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            font-size: 14px;
         }
+
         .photo-item-comment {
             font-size: 13px;
             color: #666;
             margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #f0f0f0;
+            line-height: 1.4;
         }
+
+        .photo-item-timestamp {
+            font-size: 11px;
+            color: #999;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
         .no-photos {
             text-align: center;
             color: #999;
-            padding: 20px;
+            padding: 40px 20px;
             font-style: italic;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border: 2px dashed #ddd;
         }
+
+        .no-photos svg {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
+
+        /* Full-size photo modal */
+        .photo-fullsize-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .photo-fullsize-modal.active {
+            display: flex;
+        }
+
+        .photo-fullsize-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .photo-fullsize-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+
+        .photo-fullsize-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
         @media print {
             .photos-sidebar {
                 display: block !important;
                 page-break-before: always;
                 position: relative;
             }
+
+            .photo-fullsize-modal {
+                display: none !important;
+            }
         }
-        h1 {
-            text-align: center;
-            margin: 20px 0;
-            font-size: 24px;
-            font-weight: bold;
-            background: rgba(255, 255, 255, 0.75);
-            padding: 10px;
-            border-radius: 5px;
-        }
-        .form-section {
-            margin-bottom: 30px;
-            text-align: left;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.6);
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .pair-table {
-            display: table;
-            border-collapse: collapse;
-            margin: 0 auto;
-            width: 100%;
-            max-width: 800px;
-            background: rgba(0, 0, 0, 0.3);
-        }
-        .pair-table td {
-            padding: 10px 0;
-            vertical-align: top;
-            width: 33.33%;
-            padding-right: 10px;
-        }
-        .pair-table td:last-child {
-            padding-right: 0;
-        }
-        .form-value {
-            padding: 5px;
-            background: #f9f9f9;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            display: block;
-            width: 90%;
-            box-sizing: border-box;
-            margin-top: 5px;
-        }
-        .checkbox-section {
-            margin-top: 15px;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.4);
-            border-radius: 4px;
-        }
-        .checkbox-row {
-            margin: 8px 0;
-        }
-        .signature-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-top: 10px;
-        }
-        .comments-area {
-            flex: 2;
-            margin-right: 20px;
-        }
-        .score-box {
-            display: block;
-            width: 80px;
-            padding: 5px;
-            margin-top: 5px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 10px;
-            text-align: left;
-        }
-        th {
-            background-color: #f0f0f0;
-        }
-        tr.important-weight {
-            background: rgba(0, 0, 0, 0.3);
-        }
-        .category-header {
-            font-weight: bold;
-            background-color: #e0e0e0;
-            padding: 5px 10px;
-            margin-top: 10px;
-        }
-        .action-buttons {
-            margin-top: 20px;
-            text-align: center;
-        }
-        .action-buttons button {
-            padding: 10px 20px;
-            margin: 0 10px;
-            background: #007BFF;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        .action-buttons button.email {
-            background: #28a745;
-        }
-        .score-message {
-            margin-top: 10px;
-            font-weight: bold;
-            color: #dc3545;
-        }
-        .score-message.pass {
-            color: #28a745;
+
+        @media screen and (max-width: 1400px) {
+            .main-content-wrapper {
+                flex-direction: column;
+            }
+
+            .photos-sidebar {
+                width: 100%;
+                position: relative;
+                max-height: none;
+            }
         }
     </style>
 </head>
@@ -205,292 +408,609 @@
     <div class="main-content-wrapper">
         <!-- Photos Sidebar -->
         <div class="photos-sidebar">
-            <h3>📷 Inspection Photos</h3>
+            <h3>
+                📷 Inspection Photos
+                <span class="photo-count-badge" id="photoCountDisplay">0</span>
+            </h3>
             <div id="photosSidebarContainer">
-                <!-- Photos will be loaded here -->
-                <div class="no-photos">No photos attached to this inspection.</div>
+                <div class="no-photos">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <div>No photos attached to this inspection.</div>
+                </div>
             </div>
         </div>
 
         <!-- Main Form Container -->
         <div class="form-container">
-            <h1>Meat Processing Plant and Slaughter Place Inspection Form - Completed</h1>
-        <div class="form-section">
-            <h2>Establishment Details</h2>
-            <table class="pair-table">
-                <tr>
-                    <td><label>Name of Establishment:</label><div class="form-value">{{ establishment_name }}</div></td>
-                    <td><label>Owner/Operator:</label><div class="form-value">{{ owner_operator }}</div></td>
-                    <td><label>Establishment No.:</label><div class="form-value">{{ establishment_no }}</div></td>
-                </tr>
-                <tr>
-                    <td><label>Address and Parish:</label><div class="form-value">{{ address }}</div></td>
-                    <td><label>Telephone No.:</label><div class="form-value">{{ telephone_no }}</div></td>
-                    <td><label>Overall Score:</label><div class="form-value score-box">{{ overall_score }}</div></td>
-                </tr>
-                <tr>
-                    <td><label>Inspector Name:</label><div class="form-value">{{ inspector_name }}</div></td>
-                    <td><label>Inspection Date:</label><div class="form-value">{{ inspection_date }}</div></td>
-                    <td><label>Inspector Code:</label><div class="form-value">{{ inspector_code }}</div></td>
-                </tr>
-            </table>
+            <div class="page-number">Page 1 of 2</div>
 
-            <div class="checkbox-section">
-                <h3>Water Source</h3>
-                <div class="checkbox-row">
-                    <label>Public:</label> <span class="form-value" style="display:inline-block; width:auto; min-width:60px;">{{ water_source_public }}</span>
-                    <label style="margin-left:20px;">Private:</label> <span class="form-value" style="display:inline-block; width:auto; min-width:60px;">{{ water_source_private }}</span>
+            <div class="form-header">
+                <div class="form-number">COMPLETED</div>
+                <div class="form-title">Ministry of Health<br>Meat Processing Plant and Slaughter Place Inspection Form</div>
+            </div>
+
+            <div class="info-section">
+                <div class="info-box">
+                    <div class="info-label">Name of Establishment</div>
+                    <span>{{ inspection.establishment_name }}</span>
                 </div>
-
-                <h3>Type of Establishment</h3>
-                <div class="checkbox-row">
-                    <label>Processing Plant:</label> <span class="form-value" style="display:inline-block; width:auto; min-width:60px;">{{ type_processing_plant }}</span>
-                    <label style="margin-left:20px;">Slaughter Place:</label> <span class="form-value" style="display:inline-block; width:auto; min-width:60px;">{{ type_slaughter_place }}</span>
+                <div class="info-box">
+                    <div class="info-label">Owner/Operator</div>
+                    <span>{{ inspection.owner_operator }}</span>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Address and Parish</div>
+                    <span>{{ inspection.address }}</span>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Inspector Name</div>
+                    <span>{{ inspection.inspector_name }}</span>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Establishment No.</div>
+                    <span>{{ inspection.establishment_no }}</span>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Overall Sc.</div>
+                    <span>{{ inspection.overall_score }}</span>
                 </div>
             </div>
-        </div>
 
-        <div class="form-section">
-            <h2>Lab Samples</h2>
-            <table class="pair-table">
-                <tr>
-                    <td><label>Food Contact Surfaces:</label><div class="form-value">{{ food_contact_surfaces }}</div></td>
-                    <td><label>Water Samples:</label><div class="form-value">{{ water_samples }}</div></td>
-                    <td><label>Product Samples:</label><div class="form-value">{{ product_samples }}</div></td>
-                </tr>
-                <tr>
-                    <td><label>Types of Products:</label><div class="form-value">{{ types_of_products }}</div></td>
-                    <td><label>Staff with FHP:</label><div class="form-value">{{ staff_with_fhp }}</div></td>
-                    <td></td>
-                </tr>
-            </table>
-        </div>
-
-        <div class="form-section">
-            <h2>Inspection Details</h2>
-            <table class="pair-table">
-                <tr>
-                    <td><label>Purpose of Visit:</label><div class="form-value">{{ purpose_of_visit }}</div></td>
-                    <td><label>Registration Status:</label><div class="form-value">{{ registration_status }}</div></td>
-                    <td><label>Result:</label><div class="form-value">{{ result }}</div></td>
-                </tr>
-                <tr>
-                    <td colspan="3"><label>Action:</label><div class="form-value">{{ action }}</div></td>
-                </tr>
-            </table>
-        </div>
-
-        <div class="form-section">
-            <h2>Inspection Checklist</h2>
-            <table>
-                <tr>
-                    <th>Item #</th>
-                    <th>Description</th>
-                    <th>Weight</th>
-                    <th>Score</th>
-                </tr>
-                <tr class="category-header"><td colspan="4">LOCATION AND DESIGN (1-4)</td></tr>
-                {% for item in checklist if 1 <= item.id <= 4 %}
-                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td>{{ item.wt }}</td>
-                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
-                </tr>
-                {% endfor %}
-                <tr class="category-header"><td colspan="4">CONSTRUCTION (5-11)</td></tr>
-                {% for item in checklist if 5 <= item.id <= 11 %}
-                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td>{{ item.wt }}</td>
-                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
-                </tr>
-                {% endfor %}
-                <tr class="category-header"><td colspan="4">WATER SUPPLY (12-13)</td></tr>
-                {% for item in checklist if 12 <= item.id <= 13 %}
-                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td>{{ item.wt }}</td>
-                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
-                </tr>
-                {% endfor %}
-                <tr class="category-header"><td colspan="4">SEWAGE AND WASTE WATER DISPOSAL (14-15)</td></tr>
-                {% for item in checklist if 14 <= item.id <= 15 %}
-                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td>{{ item.wt }}</td>
-                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
-                </tr>
-                {% endfor %}
-                <tr class="category-header"><td colspan="4">WASHING AND SANITATION FACILITIES (16-19)</td></tr>
-                {% for item in checklist if 16 <= item.id <= 19 %}
-                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td>{{ item.wt }}</td>
-                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
-                </tr>
-                {% endfor %}
-                <tr class="category-header"><td colspan="4">SOLID WASTE STORAGE (20)</td></tr>
-                {% for item in checklist if item.id == 20 %}
-                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td>{{ item.wt }}</td>
-                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
-                </tr>
-                {% endfor %}
-                <tr class="category-header"><td colspan="4">HEALTH AND HYGIENE OF PERSONNEL (21-25)</td></tr>
-                {% for item in checklist if 21 <= item.id <= 25 %}
-                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td>{{ item.wt }}</td>
-                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
-                </tr>
-                {% endfor %}
-                <tr class="category-header"><td colspan="4">RAW MATERIAL HANDLING (26-28)</td></tr>
-                {% for item in checklist if 26 <= item.id <= 28 %}
-                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td>{{ item.wt }}</td>
-                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
-                </tr>
-                {% endfor %}
-                <tr class="category-header"><td colspan="4">PRODUCTION OPERATIONS (29-35)</td></tr>
-                {% for item in checklist if 29 <= item.id <= 35 %}
-                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td>{{ item.wt }}</td>
-                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
-                </tr>
-                {% endfor %}
-                <tr class="category-header"><td colspan="4">PACKAGING AND STORAGE (36-40)</td></tr>
-                {% for item in checklist if 36 <= item.id <= 40 %}
-                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td>{{ item.wt }}</td>
-                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
-                </tr>
-                {% endfor %}
-                <tr class="category-header"><td colspan="4">TRANSPORTATION (41-42)</td></tr>
-                {% for item in checklist if 41 <= item.id <= 42 %}
-                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td>{{ item.wt }}</td>
-                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
-                </tr>
-                {% endfor %}
-                <tr class="category-header"><td colspan="4">PEST CONTROL (43-44)</td></tr>
-                {% for item in checklist if 43 <= item.id <= 44 %}
-                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td>{{ item.wt }}</td>
-                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
-                </tr>
-                {% endfor %}
-                <tr class="category-header"><td colspan="4">LABORATORY FACILITIES (45-48)</td></tr>
-                {% for item in checklist if 45 <= item.id <= 48 %}
-                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td>{{ item.wt }}</td>
-                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
-                </tr>
-                {% endfor %}
-                <tr class="category-header"><td colspan="4">GENERAL (49-51)</td></tr>
-                {% for item in checklist if 49 <= item.id <= 51 %}
-                <tr class="{% if item.wt|float >= 4 %}important-weight{% endif %}">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td>{{ item.wt }}</td>
-                    <td><div class="form-value">{{ checklist_scores.get(item.id, '0') }}</div></td>
-                </tr>
-                {% endfor %}
-            </table>
-        </div>
-
-        <div class="form-section">
-            <h2>Comments and Signatures</h2>
-            <div class="signature-row">
-                <div class="comments-area">
-                    <label>Comments:</label><div class="form-value">{{ comments }}</div>
+            <div class="institutional-details">
+                <div>
+                    <strong>Lab Samples Taken:</strong>
                 </div>
                 <div>
-                    <label>Inspector's Signature:</label><div class="form-value">{{ inspector_signature }}</div>
-                    <label>Received By:</label><div class="form-value">{{ received_by }}</div>
+                    <strong>Food Contact Surfaces:</strong>
+                    <span>{{ inspection.food_contact_surfaces or 'N/A' }}</span>
+                </div>
+                <div>
+                    <strong>Water:</strong>
+                    <span>{{ inspection.water_samples or 'N/A' }}</span>
                 </div>
             </div>
-        </div>
 
-        <div class="action-buttons">
-            <button onclick="window.print()">Print</button>
-            <button onclick="downloadPDF()">Download PDF</button>
-            <button onclick="shareForm()">Share</button>
-            <button onclick="window.location.href='/dashboard'">Back to Dashboard</button>
+            <div class="building-details">
+                <div>
+                    <strong>Product Samples:</strong>
+                    <span>{{ inspection.product_samples or 'N/A' }}</span>
+                </div>
+                <div>
+                    <strong>Types of Products:</strong>
+                    <span>{{ inspection.types_of_products or 'N/A' }}</span>
+                </div>
+                <div>
+                    <strong>Staff with FHP:</strong>
+                    <span>{{ inspection.staff_fhp or 'N/A' }}</span>
+                </div>
+            </div>
+
+            <div class="checkbox-row">
+                <strong>Water Source:</strong>
+                <span>{{ inspection.water_source or 'N/A' }}</span>
+            </div>
+
+            <div class="checkbox-row">
+                <strong>Type of Establishment:</strong>
+                <span>{{ inspection.establishment_type or 'N/A' }}</span>
+            </div>
+
+            <div class="checkbox-row">
+                <strong>Purpose of Visit:</strong>
+                <span>{{ inspection.purpose_of_visit or 'N/A' }}</span>
+            </div>
+
+            <div class="compliance-section">
+                <div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>Inspection Date:</strong>
+                        <span>{{ inspection.inspection_date }}</span>
+                    </div>
+                    <div>
+                        <strong>Inspector code:</strong>
+                        <span>{{ inspection.inspector_code or 'N/A' }}</span>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <strong>Compliance Result:</strong>
+                        <span>{{ inspection.result or 'N/A' }}</span>
+                    </div>
+                </div>
+                <div>
+                    <div>
+                        <strong>Telephone No.:</strong>
+                        <span>{{ inspection.telephone_no or 'N/A' }}</span>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <strong>Registration Status:</strong>
+                        <span>{{ inspection.registration_status or 'N/A' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="checkbox-row">
+                <strong>Action:</strong>
+                <span>{{ inspection.action or 'NAI' }}</span>
+            </div>
+
+            <table class="inspection-table">
+                <thead>
+                    <tr>
+                        <th style="width: 35px;">#</th>
+                        <th>Item</th>
+                        <th>Wt</th>
+                        <th>Sc</th>
+                        <th style="width: 35px;">#</th>
+                        <th>Item</th>
+                        <th>Wt</th>
+                        <th>Sc</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="4" class="section-header">PREMISES</td>
+                        <td colspan="4" class="section-header">EQUIPMENT</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number">01</td>
+                        <td class="item-text">Free of improperly stored equipment, litter, waste refuse, and unused weeds or grass</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('01', 0) }}</td>
+                        <td class="item-number critical-item">23</td>
+                        <td class="item-text critical-item">Viscera table, skinning cradle, hooks, saw, knives, rails, slicers, tenderizers, etc. in good repair; made from cleanable & non-corrosive material; no excess accumulation of blood, meat, fat, feaces, & odour</td>
+                        <td class="score-cell critical-item">3</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('23', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number">02</td>
+                        <td class="item-text">Clean, accessible roads, yards, and parking</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('02', 0) }}</td>
+                        <td class="item-number critical-item">24</td>
+                        <td class="item-text critical-item">Properly maintained, cleaned, & sanitized after each use with approved chemicals or sanitizing agents; procedure and frequency of use written; pre-operational and post-operational activity located to prevent contamination and adequately spaced for operation, inspection, & maintenance</td>
+                        <td class="score-cell critical-item">3</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('24', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number">03</td>
+                        <td class="item-text">Proper drainage</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('03', 0) }}</td>
+                        <td colspan="4" class="section-header">CHILL ROOM</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number">04</td>
+                        <td class="item-text">Effective control of birds, stray animals, pests, & filth from entering the plant</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('04', 0) }}</td>
+                        <td class="item-number critical-item">25</td>
+                        <td class="item-text critical-item">Chill room maintained at required temperature (4° C)</td>
+                        <td class="score-cell critical-item">2</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('25', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="section-header">ANTEMORTEM</td>
+                        <td class="item-number">26</td>
+                        <td class="item-text">Carcass stored to facilitate air flow</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('26', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number">05</td>
+                        <td class="item-text">Animals subject to antemortem inspection</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('05', 0) }}</td>
+                        <td class="item-number">27</td>
+                        <td class="item-text">Absence of condensation, mold, etc. and properly maintained and operated</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('27', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number critical-item">06</td>
+                        <td class="item-text critical-item">Slaughter free from infectious disease</td>
+                        <td class="score-cell critical-item">2</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('06', 0) }}</td>
+                        <td class="item-number">28</td>
+                        <td class="item-text">Chill room fitted with functional thermometer</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('28', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number critical-item">07</td>
+                        <td class="item-text critical-item">Source & origin of animal records in place</td>
+                        <td class="score-cell critical-item">2</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('07', 0) }}</td>
+                        <td colspan="4" class="section-header">FREEZER ROOM</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number">08</td>
+                        <td class="item-text">Holding pen - clean, access to potable water</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('08', 0) }}</td>
+                        <td class="item-number critical-item">29</td>
+                        <td class="item-text critical-item">Meat held at -18°C; functional thermometers installed and displayed</td>
+                        <td class="score-cell critical-item">3</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('29', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number">09</td>
+                        <td class="item-text">Holding pen - rails strong state of good repair</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('09', 0) }}</td>
+                        <td class="item-number critical-item">30</td>
+                        <td class="item-text critical-item">Meat products stored on pallets under proper maintenance, operation, & packaging</td>
+                        <td class="score-cell critical-item">3</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('30', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number">10</td>
+                        <td class="item-text">Holding pen - floor rugged, sloped for drainage</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('10', 0) }}</td>
+                        <td colspan="4" class="section-header">PEST CONTROL</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="section-header">STUNNING</td>
+                        <td class="item-number">31</td>
+                        <td class="item-text">No evidence of vermin/pests; effective pest control program in place</td>
+                        <td class="score-cell">3</td>
+                        <td class="score-cell">{{ inspection.scores.get('31', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number">11</td>
+                        <td class="item-text">Animal restrained adequately; proper stunning effected</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('11', 0) }}</td>
+                        <td colspan="4" class="section-header">PERSONNEL</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="section-header">KILL FLOOR</td>
+                        <td class="item-number critical-item">32</td>
+                        <td class="item-text critical-item">All staff trained in hygiene with valid food handlers permit</td>
+                        <td class="score-cell critical-item">2</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('32', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number critical-item">13</td>
+                        <td class="item-text critical-item">Floor/walls/ceiling easy to clean, free from accumulation of fat, blood, feaces, odour; sloped to drain</td>
+                        <td class="score-cell critical-item">2</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('13', 0) }}</td>
+                        <td class="item-number">33</td>
+                        <td class="item-text">Protective & sanitary clothing used where required and otherwise appropriately attired</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('33', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number">14</td>
+                        <td class="item-text">Made of impervious, durable material & sanitary</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('14', 0) }}</td>
+                        <td class="item-number">34</td>
+                        <td class="item-text">Staff take necessary precaution to prevent contamination of meat</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('34', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number critical-item">15</td>
+                        <td class="item-text critical-item">Handwashing stations; foot operated; adequate number</td>
+                        <td class="score-cell critical-item">3</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('15', 0) }}</td>
+                        <td class="item-number">35</td>
+                        <td class="item-text">Valid butcher's license</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('35', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number">16</td>
+                        <td class="item-text">Edible product containers made of stainless steel</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('16', 0) }}</td>
+                        <td class="item-number">36</td>
+                        <td class="item-text">Habits, i.e. smoking, spitting not observed; no uncovered cuts or sores; no evidence of communicable disease or injuries</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('36', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number critical-item">17</td>
+                        <td class="item-text critical-item">Adequate space provided for activities such as skinning, evisceration, carcass splitting; so as to avoid cross contamination</td>
+                        <td class="score-cell critical-item">3</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('17', 0) }}</td>
+                        <td colspan="4" class="section-header">WASTE</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number critical-item">18</td>
+                        <td class="item-text critical-item">Area free of slime that promote microbial multiplication</td>
+                        <td class="score-cell critical-item">2</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('18', 0) }}</td>
+                        <td class="item-number">37</td>
+                        <td class="item-text">Drains clear, equipped with traps & vents</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('37', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="section-header">LIGHTING</td>
+                        <td class="item-number">38</td>
+                        <td class="item-text">Proper arrangement for wastewater disposal; waste containers clearly identified & emptied at frequent intervals; and in a sanitary manner</td>
+                        <td class="score-cell">3</td>
+                        <td class="score-cell">{{ inspection.scores.get('38', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number">19</td>
+                        <td class="item-text">Lighting permits effective dressing of carcass and performing inspection</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('19', 0) }}</td>
+                        <td class="item-number">39</td>
+                        <td class="item-text">Waste storage adequate; waste does not pose cross contamination risk</td>
+                        <td class="score-cell">3</td>
+                        <td class="score-cell">{{ inspection.scores.get('39', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number">20</td>
+                        <td class="item-text">Light shielded to prevent contamination</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('20', 0) }}</td>
+                        <td colspan="4" class="section-header">VENTILATION</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="section-header">STORAGE OF RAW MATERIALS</td>
+                        <td class="item-number">40</td>
+                        <td class="item-text">Lack of condensates, contaminants, or mold in processing areas</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('40', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number">21</td>
+                        <td class="item-text">Room/area used for storing raw materials, maintained in a clean & sanitary manner</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('21', 0) }}</td>
+                        <td class="item-number">41</td>
+                        <td class="item-text">Absence of objectionable odours</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('41', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number">22</td>
+                        <td class="item-text">Items in storage properly labeled and packed</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('22', 0) }}</td>
+                        <td class="item-number">42</td>
+                        <td class="item-text">Air filters/dust collectors, checked, cleaned/replaced regularly</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('42', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="section-header">SANITARY FACILITIES</td>
+                        <td colspan="4" class="section-header">WATER, ICE</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number">43</td>
+                        <td class="item-text">Adequate handwashing facilities properly placed with directing signs and hot/cold running taps</td>
+                        <td class="score-cell">2</td>
+                        <td class="score-cell">{{ inspection.scores.get('43', 0) }}</td>
+                        <td class="item-number critical-item">46</td>
+                        <td class="item-text critical-item">Ice in adequate quantity & generated from potable water</td>
+                        <td class="score-cell critical-item">2</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('46', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number">44</td>
+                        <td class="item-text">Toilets do not open directly into processing area & adequately operated & maintained</td>
+                        <td class="score-cell">1</td>
+                        <td class="score-cell">{{ inspection.scores.get('44', 0) }}</td>
+                        <td class="item-number critical-item">47</td>
+                        <td class="item-text critical-item">Record of water treatment maintained; adequate quantity/pressure for all operations</td>
+                        <td class="score-cell critical-item">3</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('47', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number critical-item">45</td>
+                        <td class="item-text critical-item">Adequate soap, sanitizer & sanitary drying equipment or paper/towels; availability of potable water</td>
+                        <td class="score-cell critical-item">2</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('45', 0) }}</td>
+                        <td colspan="4" class="section-header">TRANSPORTATION</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="section-header">STORAGE OF CHEMICALS</td>
+                        <td class="item-number critical-item">48</td>
+                        <td class="item-text critical-item">Constructed and operated to protect meat and meat products from contamination and deterioration</td>
+                        <td class="score-cell critical-item">3</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('48', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-number critical-item">50</td>
+                        <td class="item-text critical-item">Insecticides, rodenticides, & cleaning agents properly labeled and stored to avoid cross contamination</td>
+                        <td class="score-cell critical-item">3</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('50', 0) }}</td>
+                        <td class="item-number critical-item">49</td>
+                        <td class="item-text critical-item">Capable of maintaining 4° C for chilled products; capable of maintaining -18° C for frozen products</td>
+                        <td class="score-cell critical-item">3</td>
+                        <td class="score-cell critical-item">{{ inspection.scores.get('49', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="section-header">DOCUMENTATION</td>
+                        <td colspan="4"></td>
+                    </tr>
+                    <tr>
+                        <td class="item-number">51</td>
+                        <td class="item-text">Processing plant quality assurance records; analytical results, cleaning and sanitation manuals; and sampling plans in place</td>
+                        <td class="score-cell">3</td>
+                        <td class="score-cell">{{ inspection.scores.get('51', 0) }}</td>
+                        <td colspan="4"></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="margin-top: 20px;">
+                <strong>Inspector's Comments:</strong>
+                <div style="border: 1px solid black; min-height: 60px; width: 100%; padding: 5px; font-size: 14px;">
+                    {{ inspection.comments or 'N/A' }}
+                </div>
+            </div>
+
+            <div class="signature-section">
+                <div>
+                    <strong>Inspector's Signature:</strong>
+                    <span class="signature-line">{{ inspection.inspector_signature or 'N/A' }}</span>
+                </div>
+                <div>
+                    <strong>Rec'd By:</strong>
+                    <span class="signature-line">{{ inspection.received_by or 'N/A' }}</span>
+                </div>
+            </div>
+
+            <div class="footnotes">
+                <p><strong>EHU (Rev. Jan. 2001)</strong></p>
+            </div>
+
+            <div class="button-container">
+                <a href="{{ url_for('dashboard') }}" class="action-button back-button">Back to Dashboard</a>
+                <button onclick="window.print()" class="action-button" style="background: #2196F3; cursor: pointer; border: none;">Print</button>
+                <a href="{{ url_for('download_meat_processing_pdf', form_id=inspection.id) }}" class="action-button">Download PDF</a>
+            </div>
         </div>
-        </div>
-        <!-- End Form Container -->
     </div>
-    <!-- End Main Content Wrapper -->
+
+    <!-- Full-size photo modal -->
+    <div class="photo-fullsize-modal" id="photoFullsizeModal">
+        <span class="photo-fullsize-close" onclick="closeFullsizePhoto()">&times;</span>
+        <img id="fullsizePhotoImg" src="" alt="Full size photo">
+    </div>
 
     <script>
-        function downloadPDF() {
-            window.location.href = '/download_meat_processing_pdf/' + {{ form_id }};
-        }
+        // Display photos in sidebar with enhanced error handling
+        function displayPhotos() {
+            console.log('=== PHOTO DISPLAY DEBUG ===');
 
-        function shareForm() {
-            alert('Share functionality to be implemented. Copy link: ' + window.location.href);
-        }
+            // Get photo data from backend
+            const photoDataRaw = {{ photo_data|tojson|safe }};
+            console.log('Raw photo data:', photoDataRaw);
+            console.log('Type:', typeof photoDataRaw);
 
-        // Load and display photos
-        function loadPhotos() {
-            const photoData = {{ photo_data|tojson|safe }};
             const container = document.getElementById('photosSidebarContainer');
+            const countBadge = document.getElementById('photoCountDisplay');
 
-            if (!photoData || photoData === '[]' || photoData.length === 0) {
-                container.innerHTML = '<div class="no-photos">No photos attached to this inspection.</div>';
+            // Handle null, undefined, or empty string
+            if (!photoDataRaw || photoDataRaw === '' || photoDataRaw === 'null') {
+                console.log('No photo data available');
+                container.innerHTML = `
+                    <div class="no-photos">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <div>No photos attached to this inspection.</div>
+                    </div>
+                `;
+                countBadge.textContent = '0';
                 return;
             }
 
             let photos = [];
+
             try {
-                photos = typeof photoData === 'string' ? JSON.parse(photoData) : photoData;
+                // Parse if it's a string
+                if (typeof photoDataRaw === 'string') {
+                    // Handle empty array string
+                    if (photoDataRaw === '[]') {
+                        console.log('Empty array string');
+                        throw new Error('Empty photos array');
+                    }
+                    photos = JSON.parse(photoDataRaw);
+                } else if (Array.isArray(photoDataRaw)) {
+                    photos = photoDataRaw;
+                } else {
+                    console.error('Unexpected data type:', typeof photoDataRaw);
+                    throw new Error('Invalid photo data format');
+                }
+
+                console.log('Parsed photos:', photos);
+                console.log('Number of photos:', photos.length);
+
+                // Check if array is empty
+                if (!Array.isArray(photos) || photos.length === 0) {
+                    throw new Error('No photos in array');
+                }
+
+                // Build HTML for photos
+                const photosHtml = photos.map((photo, index) => {
+                    console.log(`Photo ${index}:`, {
+                        hasNumber: !!photo.number,
+                        hasData: !!photo.data,
+                        hasComment: !!photo.comment,
+                        dataLength: photo.data ? photo.data.length : 0
+                    });
+
+                    const photoNumber = photo.number || `Photo ${index + 1}`;
+                    const photoComment = photo.comment || '';
+                    const timestamp = photo.timestamp ? new Date(photo.timestamp).toLocaleString() : '';
+
+                    return `
+                        <div class="photo-item">
+                            <div class="photo-item-number">📷 ${photoNumber}</div>
+                            <img src="${photo.data}"
+                                 alt="${photoNumber}"
+                                 onclick="viewPhotoFullSize('${photo.data}')"
+                                 onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22>Image Error</text></svg>'">
+                            ${photoComment ? `<div class="photo-item-comment">${photoComment}</div>` : ''}
+                            ${timestamp ? `<div class="photo-item-timestamp">📅 ${timestamp}</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = photosHtml;
+                countBadge.textContent = photos.length;
+                console.log('✅ Photos displayed successfully');
+
             } catch (e) {
-                console.error('Error parsing photo data:', e);
-                container.innerHTML = '<div class="no-photos">Error loading photos.</div>';
-                return;
+                console.error('❌ Error displaying photos:', e);
+                container.innerHTML = `
+                    <div class="no-photos">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <div>No photos attached to this inspection.</div>
+                    </div>
+                `;
+                countBadge.textContent = '0';
             }
-
-            if (!Array.isArray(photos) || photos.length === 0) {
-                container.innerHTML = '<div class="no-photos">No photos attached to this inspection.</div>';
-                return;
-            }
-
-            container.innerHTML = photos.map((photo, index) => `
-                <div class="photo-item">
-                    <div class="photo-item-number">📷 ${photo.number || 'Photo ' + (index + 1)}</div>
-                    <img src="${photo.data}" alt="${photo.number}" onclick="viewPhotoFullSize('${photo.data}')">
-                    ${photo.comment ? `<div class="photo-item-comment">${photo.comment}</div>` : ''}
-                </div>
-            `).join('');
         }
 
         function viewPhotoFullSize(dataUrl) {
-            window.open(dataUrl, '_blank');
+            const modal = document.getElementById('photoFullsizeModal');
+            const img = document.getElementById('fullsizePhotoImg');
+            img.src = dataUrl;
+            modal.classList.add('active');
         }
 
-        // Load photos when page loads
-        document.addEventListener('DOMContentLoaded', loadPhotos);
+        function closeFullsizePhoto() {
+            const modal = document.getElementById('photoFullsizeModal');
+            modal.classList.remove('active');
+        }
+
+        // Close modal on click outside image
+        document.getElementById('photoFullsizeModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeFullsizePhoto();
+            }
+        });
+
+        // Close modal on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeFullsizePhoto();
+            }
+        });
+
+        // Display photos on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, displaying photos...');
+            displayPhotos();
+        });
     </script>
+
     {% include 'zozi_badge.html' %}
 </body>
 </html>
