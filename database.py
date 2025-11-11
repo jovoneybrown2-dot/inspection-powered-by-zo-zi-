@@ -141,7 +141,9 @@ def init_db():
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   username TEXT NOT NULL UNIQUE,
                   password TEXT NOT NULL,
-                  role TEXT NOT NULL)''')
+                  role TEXT NOT NULL,
+                  email TEXT,
+                  is_flagged INTEGER DEFAULT 0)''')
 
     # Insert users
     users = [
@@ -154,6 +156,17 @@ def init_db():
         ('admin', 'Admin901!secure', 'admin')
     ]
     c.executemany("INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)", users)
+
+    # Login history table (required by login route)
+    c.execute('''CREATE TABLE IF NOT EXISTS login_history
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  user_id INTEGER NOT NULL,
+                  username TEXT NOT NULL,
+                  email TEXT,
+                  role TEXT NOT NULL,
+                  login_time TEXT NOT NULL,
+                  ip_address TEXT,
+                  FOREIGN KEY (user_id) REFERENCES users(id))''')
 
     # Contacts table
     c.execute('''CREATE TABLE IF NOT EXISTS contacts
