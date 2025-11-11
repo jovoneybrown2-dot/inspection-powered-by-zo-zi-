@@ -435,27 +435,27 @@
             <div class="info-section">
                 <div class="info-box">
                     <div class="info-label">Name of Establishment</div>
-                    <span>{{ inspection.establishment_name }}</span>
+                    <span>{{ establishment_name }}</span>
                 </div>
                 <div class="info-box">
                     <div class="info-label">Owner/Operator</div>
-                    <span>{{ inspection.owner_operator }}</span>
+                    <span>{{ owner_operator }}</span>
                 </div>
                 <div class="info-box">
                     <div class="info-label">Address and Parish</div>
-                    <span>{{ inspection.address }}</span>
+                    <span>{{ address }}</span>
                 </div>
                 <div class="info-box">
                     <div class="info-label">Inspector Name</div>
-                    <span>{{ inspection.inspector_name }}</span>
+                    <span>{{ inspector_name }}</span>
                 </div>
                 <div class="info-box">
                     <div class="info-label">Establishment No.</div>
-                    <span>{{ inspection.establishment_no }}</span>
+                    <span>{{ establishment_no }}</span>
                 </div>
                 <div class="info-box">
                     <div class="info-label">Overall Sc.</div>
-                    <span>{{ inspection.overall_score }}</span>
+                    <span>{{ overall_score }}</span>
                 </div>
             </div>
 
@@ -465,74 +465,74 @@
                 </div>
                 <div>
                     <strong>Food Contact Surfaces:</strong>
-                    <span>{{ inspection.food_contact_surfaces or 'N/A' }}</span>
+                    <span>{{ food_contact_surfaces or 'N/A' }}</span>
                 </div>
                 <div>
                     <strong>Water:</strong>
-                    <span>{{ inspection.water_samples or 'N/A' }}</span>
+                    <span>{{ water_samples or 'N/A' }}</span>
                 </div>
             </div>
 
             <div class="building-details">
                 <div>
                     <strong>Product Samples:</strong>
-                    <span>{{ inspection.product_samples or 'N/A' }}</span>
+                    <span>{{ product_samples or 'N/A' }}</span>
                 </div>
                 <div>
                     <strong>Types of Products:</strong>
-                    <span>{{ inspection.types_of_products or 'N/A' }}</span>
+                    <span>{{ types_of_products or 'N/A' }}</span>
                 </div>
                 <div>
                     <strong>Staff with FHP:</strong>
-                    <span>{{ inspection.staff_fhp or 'N/A' }}</span>
+                    <span>{{ staff_fhp or 'N/A' }}</span>
                 </div>
             </div>
 
             <div class="checkbox-row">
                 <strong>Water Source:</strong>
-                <span>{{ inspection.water_source or 'N/A' }}</span>
+                <span>{% if water_public %}Public{% endif %}{% if water_public and water_private %}, {% endif %}{% if water_private %}Private{% endif %}{% if not water_public and not water_private %}N/A{% endif %}</span>
             </div>
 
             <div class="checkbox-row">
                 <strong>Type of Establishment:</strong>
-                <span>{{ inspection.establishment_type or 'N/A' }}</span>
+                <span>{% if type_processing %}Processing Plant{% endif %}{% if type_processing and type_slaughter %}, {% endif %}{% if type_slaughter %}Slaughter Place{% endif %}{% if not type_processing and not type_slaughter %}N/A{% endif %}</span>
             </div>
 
             <div class="checkbox-row">
                 <strong>Purpose of Visit:</strong>
-                <span>{{ inspection.purpose_of_visit or 'N/A' }}</span>
+                <span>{{ purpose_of_visit or 'N/A' }}</span>
             </div>
 
             <div class="compliance-section">
                 <div>
                     <div style="margin-bottom: 10px;">
                         <strong>Inspection Date:</strong>
-                        <span>{{ inspection.inspection_date }}</span>
+                        <span>{{ inspection_date }}</span>
                     </div>
                     <div>
                         <strong>Inspector code:</strong>
-                        <span>{{ inspection.inspector_code or 'N/A' }}</span>
+                        <span>{{ inspector_code or 'N/A' }}</span>
                     </div>
                     <div style="margin-top: 10px;">
                         <strong>Compliance Result:</strong>
-                        <span>{{ inspection.result or 'N/A' }}</span>
+                        <span>{{ result or 'N/A' }}</span>
                     </div>
                 </div>
                 <div>
                     <div>
                         <strong>Telephone No.:</strong>
-                        <span>{{ inspection.telephone_no or 'N/A' }}</span>
+                        <span>{{ telephone_no or 'N/A' }}</span>
                     </div>
                     <div style="margin-top: 10px;">
                         <strong>Registration Status:</strong>
-                        <span>{{ inspection.registration_status or 'N/A' }}</span>
+                        <span>{{ registration_status or 'N/A' }}</span>
                     </div>
                 </div>
             </div>
 
             <div class="checkbox-row">
                 <strong>Action:</strong>
-                <span>{{ inspection.action or 'NAI' }}</span>
+                <span>{{ action or 'NAI' }}</span>
             </div>
 
             <table class="inspection-table">
@@ -557,98 +557,98 @@
                         <td class="item-number">01</td>
                         <td class="item-text">Free of improperly stored equipment, litter, waste refuse, and unused weeds or grass</td>
                         <td class="score-cell">1</td>
-                        <td class="score-cell">{{ inspection.scores.get('01', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('01', 0) }}</td>
                         <td class="item-number critical-item">23</td>
                         <td class="item-text critical-item">Viscera table, skinning cradle, hooks, saw, knives, rails, slicers, tenderizers, etc. in good repair; made from cleanable & non-corrosive material; no excess accumulation of blood, meat, fat, feaces, & odour</td>
                         <td class="score-cell critical-item">3</td>
-                        <td class="score-cell critical-item">{{ inspection.scores.get('23', 0) }}</td>
+                        <td class="score-cell critical-item">{{ checklist_scores.get('23', 0) }}</td>
                     </tr>
                     <tr>
                         <td class="item-number">02</td>
                         <td class="item-text">Clean, accessible roads, yards, and parking</td>
                         <td class="score-cell">1</td>
-                        <td class="score-cell">{{ inspection.scores.get('02', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('02', 0) }}</td>
                         <td class="item-number critical-item">24</td>
                         <td class="item-text critical-item">Properly maintained, cleaned, & sanitized after each use with approved chemicals or sanitizing agents; procedure and frequency of use written; pre-operational and post-operational activity located to prevent contamination and adequately spaced for operation, inspection, & maintenance</td>
                         <td class="score-cell critical-item">3</td>
-                        <td class="score-cell critical-item">{{ inspection.scores.get('24', 0) }}</td>
+                        <td class="score-cell critical-item">{{ checklist_scores.get('24', 0) }}</td>
                     </tr>
                     <tr>
                         <td class="item-number">03</td>
                         <td class="item-text">Proper drainage</td>
                         <td class="score-cell">1</td>
-                        <td class="score-cell">{{ inspection.scores.get('03', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('03', 0) }}</td>
                         <td colspan="4" class="section-header">CHILL ROOM</td>
                     </tr>
                     <tr>
                         <td class="item-number">04</td>
                         <td class="item-text">Effective control of birds, stray animals, pests, & filth from entering the plant</td>
                         <td class="score-cell">2</td>
-                        <td class="score-cell">{{ inspection.scores.get('04', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('04', 0) }}</td>
                         <td class="item-number critical-item">25</td>
                         <td class="item-text critical-item">Chill room maintained at required temperature (4° C)</td>
                         <td class="score-cell critical-item">2</td>
-                        <td class="score-cell critical-item">{{ inspection.scores.get('25', 0) }}</td>
+                        <td class="score-cell critical-item">{{ checklist_scores.get('25', 0) }}</td>
                     </tr>
                     <tr>
                         <td colspan="4" class="section-header">ANTEMORTEM</td>
                         <td class="item-number">26</td>
                         <td class="item-text">Carcass stored to facilitate air flow</td>
                         <td class="score-cell">2</td>
-                        <td class="score-cell">{{ inspection.scores.get('26', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('26', 0) }}</td>
                     </tr>
                     <tr>
                         <td class="item-number">05</td>
                         <td class="item-text">Animals subject to antemortem inspection</td>
                         <td class="score-cell">1</td>
-                        <td class="score-cell">{{ inspection.scores.get('05', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('05', 0) }}</td>
                         <td class="item-number">27</td>
                         <td class="item-text">Absence of condensation, mold, etc. and properly maintained and operated</td>
                         <td class="score-cell">2</td>
-                        <td class="score-cell">{{ inspection.scores.get('27', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('27', 0) }}</td>
                     </tr>
                     <tr>
                         <td class="item-number critical-item">06</td>
                         <td class="item-text critical-item">Slaughter free from infectious disease</td>
                         <td class="score-cell critical-item">2</td>
-                        <td class="score-cell critical-item">{{ inspection.scores.get('06', 0) }}</td>
+                        <td class="score-cell critical-item">{{ checklist_scores.get('06', 0) }}</td>
                         <td class="item-number">28</td>
                         <td class="item-text">Chill room fitted with functional thermometer</td>
                         <td class="score-cell">1</td>
-                        <td class="score-cell">{{ inspection.scores.get('28', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('28', 0) }}</td>
                     </tr>
                     <tr>
                         <td class="item-number critical-item">07</td>
                         <td class="item-text critical-item">Source & origin of animal records in place</td>
                         <td class="score-cell critical-item">2</td>
-                        <td class="score-cell critical-item">{{ inspection.scores.get('07', 0) }}</td>
+                        <td class="score-cell critical-item">{{ checklist_scores.get('07', 0) }}</td>
                         <td colspan="4" class="section-header">FREEZER ROOM</td>
                     </tr>
                     <tr>
                         <td class="item-number">08</td>
                         <td class="item-text">Holding pen - clean, access to potable water</td>
                         <td class="score-cell">1</td>
-                        <td class="score-cell">{{ inspection.scores.get('08', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('08', 0) }}</td>
                         <td class="item-number critical-item">29</td>
                         <td class="item-text critical-item">Meat held at -18°C; functional thermometers installed and displayed</td>
                         <td class="score-cell critical-item">3</td>
-                        <td class="score-cell critical-item">{{ inspection.scores.get('29', 0) }}</td>
+                        <td class="score-cell critical-item">{{ checklist_scores.get('29', 0) }}</td>
                     </tr>
                     <tr>
                         <td class="item-number">09</td>
                         <td class="item-text">Holding pen - rails strong state of good repair</td>
                         <td class="score-cell">1</td>
-                        <td class="score-cell">{{ inspection.scores.get('09', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('09', 0) }}</td>
                         <td class="item-number critical-item">30</td>
                         <td class="item-text critical-item">Meat products stored on pallets under proper maintenance, operation, & packaging</td>
                         <td class="score-cell critical-item">3</td>
-                        <td class="score-cell critical-item">{{ inspection.scores.get('30', 0) }}</td>
+                        <td class="score-cell critical-item">{{ checklist_scores.get('30', 0) }}</td>
                     </tr>
                     <tr>
                         <td class="item-number">10</td>
                         <td class="item-text">Holding pen - floor rugged, sloped for drainage</td>
                         <td class="score-cell">1</td>
-                        <td class="score-cell">{{ inspection.scores.get('10', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('10', 0) }}</td>
                         <td colspan="4" class="section-header">PEST CONTROL</td>
                     </tr>
                     <tr>
@@ -656,13 +656,13 @@
                         <td class="item-number">31</td>
                         <td class="item-text">No evidence of vermin/pests; effective pest control program in place</td>
                         <td class="score-cell">3</td>
-                        <td class="score-cell">{{ inspection.scores.get('31', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('31', 0) }}</td>
                     </tr>
                     <tr>
                         <td class="item-number">11</td>
                         <td class="item-text">Animal restrained adequately; proper stunning effected</td>
                         <td class="score-cell">2</td>
-                        <td class="score-cell">{{ inspection.scores.get('11', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('11', 0) }}</td>
                         <td colspan="4" class="section-header">PERSONNEL</td>
                     </tr>
                     <tr>
@@ -670,87 +670,87 @@
                         <td class="item-number critical-item">32</td>
                         <td class="item-text critical-item">All staff trained in hygiene with valid food handlers permit</td>
                         <td class="score-cell critical-item">2</td>
-                        <td class="score-cell critical-item">{{ inspection.scores.get('32', 0) }}</td>
+                        <td class="score-cell critical-item">{{ checklist_scores.get('32', 0) }}</td>
                     </tr>
                     <tr>
                         <td class="item-number critical-item">13</td>
                         <td class="item-text critical-item">Floor/walls/ceiling easy to clean, free from accumulation of fat, blood, feaces, odour; sloped to drain</td>
                         <td class="score-cell critical-item">2</td>
-                        <td class="score-cell critical-item">{{ inspection.scores.get('13', 0) }}</td>
+                        <td class="score-cell critical-item">{{ checklist_scores.get('13', 0) }}</td>
                         <td class="item-number">33</td>
                         <td class="item-text">Protective & sanitary clothing used where required and otherwise appropriately attired</td>
                         <td class="score-cell">1</td>
-                        <td class="score-cell">{{ inspection.scores.get('33', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('33', 0) }}</td>
                     </tr>
                     <tr>
                         <td class="item-number">14</td>
                         <td class="item-text">Made of impervious, durable material & sanitary</td>
                         <td class="score-cell">1</td>
-                        <td class="score-cell">{{ inspection.scores.get('14', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('14', 0) }}</td>
                         <td class="item-number">34</td>
                         <td class="item-text">Staff take necessary precaution to prevent contamination of meat</td>
                         <td class="score-cell">1</td>
-                        <td class="score-cell">{{ inspection.scores.get('34', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('34', 0) }}</td>
                     </tr>
                     <tr>
                         <td class="item-number critical-item">15</td>
                         <td class="item-text critical-item">Handwashing stations; foot operated; adequate number</td>
                         <td class="score-cell critical-item">3</td>
-                        <td class="score-cell critical-item">{{ inspection.scores.get('15', 0) }}</td>
+                        <td class="score-cell critical-item">{{ checklist_scores.get('15', 0) }}</td>
                         <td class="item-number">35</td>
                         <td class="item-text">Valid butcher's license</td>
                         <td class="score-cell">1</td>
-                        <td class="score-cell">{{ inspection.scores.get('35', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('35', 0) }}</td>
                     </tr>
                     <tr>
                         <td class="item-number">16</td>
                         <td class="item-text">Edible product containers made of stainless steel</td>
                         <td class="score-cell">1</td>
-                        <td class="score-cell">{{ inspection.scores.get('16', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('16', 0) }}</td>
                         <td class="item-number">36</td>
                         <td class="item-text">Habits, i.e. smoking, spitting not observed; no uncovered cuts or sores; no evidence of communicable disease or injuries</td>
                         <td class="score-cell">2</td>
-                        <td class="score-cell">{{ inspection.scores.get('36', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('36', 0) }}</td>
                     </tr>
                     <tr>
                         <td class="item-number critical-item">17</td>
                         <td class="item-text critical-item">Adequate space provided for activities such as skinning, evisceration, carcass splitting; so as to avoid cross contamination</td>
                         <td class="score-cell critical-item">3</td>
-                        <td class="score-cell critical-item">{{ inspection.scores.get('17', 0) }}</td>
+                        <td class="score-cell critical-item">{{ checklist_scores.get('17', 0) }}</td>
                         <td colspan="4" class="section-header">WASTE</td>
                     </tr>
                     <tr>
                         <td class="item-number critical-item">18</td>
                         <td class="item-text critical-item">Area free of slime that promote microbial multiplication</td>
                         <td class="score-cell critical-item">2</td>
-                        <td class="score-cell critical-item">{{ inspection.scores.get('18', 0) }}</td>
+                        <td class="score-cell critical-item">{{ checklist_scores.get('18', 0) }}</td>
                         <td class="item-number">37</td>
                         <td class="item-text">Drains clear, equipped with traps & vents</td>
                         <td class="score-cell">2</td>
-                        <td class="score-cell">{{ inspection.scores.get('37', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('37', 0) }}</td>
                     </tr>
                     <tr>
                         <td colspan="4" class="section-header">LIGHTING</td>
                         <td class="item-number">38</td>
                         <td class="item-text">Proper arrangement for wastewater disposal; waste containers clearly identified & emptied at frequent intervals; and in a sanitary manner</td>
                         <td class="score-cell">3</td>
-                        <td class="score-cell">{{ inspection.scores.get('38', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('38', 0) }}</td>
                     </tr>
                     <tr>
                         <td class="item-number">19</td>
                         <td class="item-text">Lighting permits effective dressing of carcass and performing inspection</td>
                         <td class="score-cell">1</td>
-                        <td class="score-cell">{{ inspection.scores.get('19', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('19', 0) }}</td>
                         <td class="item-number">39</td>
                         <td class="item-text">Waste storage adequate; waste does not pose cross contamination risk</td>
                         <td class="score-cell">3</td>
-                        <td class="score-cell">{{ inspection.scores.get('39', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('39', 0) }}</td>
                     </tr>
                     <tr>
                         <td class="item-number">20</td>
                         <td class="item-text">Light shielded to prevent contamination</td>
                         <td class="score-cell">1</td>
-                        <td class="score-cell">{{ inspection.scores.get('20', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('20', 0) }}</td>
                         <td colspan="4" class="section-header">VENTILATION</td>
                     </tr>
                     <tr>
@@ -758,27 +758,27 @@
                         <td class="item-number">40</td>
                         <td class="item-text">Lack of condensates, contaminants, or mold in processing areas</td>
                         <td class="score-cell">1</td>
-                        <td class="score-cell">{{ inspection.scores.get('40', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('40', 0) }}</td>
                     </tr>
                     <tr>
                         <td class="item-number">21</td>
                         <td class="item-text">Room/area used for storing raw materials, maintained in a clean & sanitary manner</td>
                         <td class="score-cell">1</td>
-                        <td class="score-cell">{{ inspection.scores.get('21', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('21', 0) }}</td>
                         <td class="item-number">41</td>
                         <td class="item-text">Absence of objectionable odours</td>
                         <td class="score-cell">2</td>
-                        <td class="score-cell">{{ inspection.scores.get('41', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('41', 0) }}</td>
                     </tr>
                     <tr>
                         <td class="item-number">22</td>
                         <td class="item-text">Items in storage properly labeled and packed</td>
                         <td class="score-cell">2</td>
-                        <td class="score-cell">{{ inspection.scores.get('22', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('22', 0) }}</td>
                         <td class="item-number">42</td>
                         <td class="item-text">Air filters/dust collectors, checked, cleaned/replaced regularly</td>
                         <td class="score-cell">2</td>
-                        <td class="score-cell">{{ inspection.scores.get('42', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('42', 0) }}</td>
                     </tr>
                     <tr>
                         <td colspan="4" class="section-header">SANITARY FACILITIES</td>
@@ -788,27 +788,27 @@
                         <td class="item-number">43</td>
                         <td class="item-text">Adequate handwashing facilities properly placed with directing signs and hot/cold running taps</td>
                         <td class="score-cell">2</td>
-                        <td class="score-cell">{{ inspection.scores.get('43', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('43', 0) }}</td>
                         <td class="item-number critical-item">46</td>
                         <td class="item-text critical-item">Ice in adequate quantity & generated from potable water</td>
                         <td class="score-cell critical-item">2</td>
-                        <td class="score-cell critical-item">{{ inspection.scores.get('46', 0) }}</td>
+                        <td class="score-cell critical-item">{{ checklist_scores.get('46', 0) }}</td>
                     </tr>
                     <tr>
                         <td class="item-number">44</td>
                         <td class="item-text">Toilets do not open directly into processing area & adequately operated & maintained</td>
                         <td class="score-cell">1</td>
-                        <td class="score-cell">{{ inspection.scores.get('44', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('44', 0) }}</td>
                         <td class="item-number critical-item">47</td>
                         <td class="item-text critical-item">Record of water treatment maintained; adequate quantity/pressure for all operations</td>
                         <td class="score-cell critical-item">3</td>
-                        <td class="score-cell critical-item">{{ inspection.scores.get('47', 0) }}</td>
+                        <td class="score-cell critical-item">{{ checklist_scores.get('47', 0) }}</td>
                     </tr>
                     <tr>
                         <td class="item-number critical-item">45</td>
                         <td class="item-text critical-item">Adequate soap, sanitizer & sanitary drying equipment or paper/towels; availability of potable water</td>
                         <td class="score-cell critical-item">2</td>
-                        <td class="score-cell critical-item">{{ inspection.scores.get('45', 0) }}</td>
+                        <td class="score-cell critical-item">{{ checklist_scores.get('45', 0) }}</td>
                         <td colspan="4" class="section-header">TRANSPORTATION</td>
                     </tr>
                     <tr>
@@ -816,17 +816,17 @@
                         <td class="item-number critical-item">48</td>
                         <td class="item-text critical-item">Constructed and operated to protect meat and meat products from contamination and deterioration</td>
                         <td class="score-cell critical-item">3</td>
-                        <td class="score-cell critical-item">{{ inspection.scores.get('48', 0) }}</td>
+                        <td class="score-cell critical-item">{{ checklist_scores.get('48', 0) }}</td>
                     </tr>
                     <tr>
                         <td class="item-number critical-item">50</td>
                         <td class="item-text critical-item">Insecticides, rodenticides, & cleaning agents properly labeled and stored to avoid cross contamination</td>
                         <td class="score-cell critical-item">3</td>
-                        <td class="score-cell critical-item">{{ inspection.scores.get('50', 0) }}</td>
+                        <td class="score-cell critical-item">{{ checklist_scores.get('50', 0) }}</td>
                         <td class="item-number critical-item">49</td>
                         <td class="item-text critical-item">Capable of maintaining 4° C for chilled products; capable of maintaining -18° C for frozen products</td>
                         <td class="score-cell critical-item">3</td>
-                        <td class="score-cell critical-item">{{ inspection.scores.get('49', 0) }}</td>
+                        <td class="score-cell critical-item">{{ checklist_scores.get('49', 0) }}</td>
                     </tr>
                     <tr>
                         <td colspan="4" class="section-header">DOCUMENTATION</td>
@@ -836,7 +836,7 @@
                         <td class="item-number">51</td>
                         <td class="item-text">Processing plant quality assurance records; analytical results, cleaning and sanitation manuals; and sampling plans in place</td>
                         <td class="score-cell">3</td>
-                        <td class="score-cell">{{ inspection.scores.get('51', 0) }}</td>
+                        <td class="score-cell">{{ checklist_scores.get('51', 0) }}</td>
                         <td colspan="4"></td>
                     </tr>
                 </tbody>
@@ -845,18 +845,18 @@
             <div style="margin-top: 20px;">
                 <strong>Inspector's Comments:</strong>
                 <div style="border: 1px solid black; min-height: 60px; width: 100%; padding: 5px; font-size: 14px;">
-                    {{ inspection.comments or 'N/A' }}
+                    {{ comments or 'N/A' }}
                 </div>
             </div>
 
             <div class="signature-section">
                 <div>
                     <strong>Inspector's Signature:</strong>
-                    <span class="signature-line">{{ inspection.inspector_signature or 'N/A' }}</span>
+                    <span class="signature-line">{{ inspector_signature or 'N/A' }}</span>
                 </div>
                 <div>
                     <strong>Rec'd By:</strong>
-                    <span class="signature-line">{{ inspection.received_by or 'N/A' }}</span>
+                    <span class="signature-line">{{ received_by or 'N/A' }}</span>
                 </div>
             </div>
 
@@ -867,7 +867,7 @@
             <div class="button-container">
                 <a href="{{ url_for('dashboard') }}" class="action-button back-button">Back to Dashboard</a>
                 <button onclick="window.print()" class="action-button" style="background: #2196F3; cursor: pointer; border: none;">Print</button>
-                <a href="{{ url_for('download_meat_processing_pdf', form_id=inspection.id) }}" class="action-button">Download PDF</a>
+                <a href="{{ url_for('download_meat_processing_pdf', form_id=form_id) }}" class="action-button">Download PDF</a>
             </div>
         </div>
     </div>
