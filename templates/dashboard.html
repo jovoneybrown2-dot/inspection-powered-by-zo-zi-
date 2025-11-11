@@ -3259,14 +3259,14 @@ window.onclick = function(event) {
         function navigateToInspection(id, formType) {
             const urls = {
                 'food': `/inspection/${id}`,
-                'residential': `/residential/${id}`,
-                'burial': `/burial_inspection/${id}`,
-                'spirit_licence': `/spirit_licence_inspection/${id}`,
-                'swimming_pool': `/swimming_pool/${id}`,
-                'small_hotels': `/small_hotels_inspection/${id}`,
-                'barbershop': `/barbershop_inspection/${id}`,
-                'institutional': `/institutional_inspection/${id}`,
-                'meat_processing': `/meat_processing_inspection/${id}`
+                'residential': `/residential/inspection/${id}`,
+                'burial': `/burial/inspection/${id}`,
+                'spirit_licence': `/spirit_licence/inspection/${id}`,
+                'swimming_pool': `/swimming_pool/inspection/${id}`,
+                'small_hotels': `/small_hotels/inspection/${id}`,
+                'barbershop': `/barbershop/inspection/${id}`,
+                'institutional': `/institutional/inspection/${id}`,
+                'meat_processing': `/meat_processing/inspection/${id}`
             };
             window.location.href = urls[formType] || `/inspection/${id}`;
         }
