@@ -1,68 +1,54 @@
-<!-- Zo-Zi Watermark Badge -->
+<!-- Zo-Zi Powered By Badge -->
 <style>
     .zozi-badge {
         position: fixed;
-        bottom: 15px;
-        left: 15px;
-        display: block;
-        background: rgba(255, 255, 255, 0.95);
-        padding: 10px 14px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        bottom: 10px;
+        left: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.85);
+        padding: 5px 10px;
+        border-radius: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         z-index: 9999;
         transition: all 0.3s ease;
         backdrop-filter: blur(10px);
-        text-decoration: none;
-        border: 2px solid rgba(255, 107, 53, 0.2);
     }
 
     .zozi-badge:hover {
-        background: rgba(255, 255, 255, 1);
-        box-shadow: 0 6px 20px rgba(255, 107, 53, 0.3);
-        transform: translateY(-3px) scale(1.05);
-        border-color: rgba(255, 107, 53, 0.4);
-    }
-
-    .zozi-badge-content {
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        transform: translateY(-2px);
     }
 
     .zozi-badge img {
-        height: 35px;
+        height: 20px;
         width: auto;
         object-fit: contain;
-        display: block;
-        opacity: 0.9;
-    }
-
-    .zozi-badge:hover img {
-        opacity: 1;
     }
 
     .zozi-badge-text {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
+        font-size: 10px;
+        font-weight: 600;
+        color: #333;
+        letter-spacing: 0.3px;
     }
 
     .zozi-badge-text .powered-by {
-        font-size: 9px;
+        font-size: 8px;
         font-weight: 400;
         color: #666;
-        line-height: 1.2;
+        display: block;
+        line-height: 1;
         margin-bottom: 1px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
 
     .zozi-badge-text .brand {
-        font-size: 13px;
+        font-size: 11px;
         font-weight: 700;
         color: #FF6B35;
-        line-height: 1.2;
-        letter-spacing: 0.3px;
+        line-height: 1;
     }
 
     /* Hide on print */
@@ -75,60 +61,29 @@
     /* Responsive - smaller on mobile */
     @media (max-width: 768px) {
         .zozi-badge {
-            bottom: 12px;
-            left: 12px;
-            padding: 8px 12px;
-        }
-
-        .zozi-badge-content {
-            gap: 6px;
-        }
-
-        .zozi-badge img {
-            height: 30px;
-        }
-
-        .zozi-badge-text .powered-by {
-            font-size: 8px;
-        }
-
-        .zozi-badge-text .brand {
-            font-size: 11px;
-        }
-    }
-
-    /* Extra small screens */
-    @media (max-width: 480px) {
-        .zozi-badge {
             bottom: 10px;
             left: 10px;
-            padding: 6px 10px;
-        }
-
-        .zozi-badge-content {
-            gap: 6px;
+            padding: 6px 12px;
         }
 
         .zozi-badge img {
-            height: 28px;
+            height: 24px;
         }
 
         .zozi-badge-text .powered-by {
-            font-size: 7px;
+            font-size: 9px;
         }
 
         .zozi-badge-text .brand {
-            font-size: 10px;
+            font-size: 12px;
         }
     }
 </style>
 
-<a href="https://www.zo-zi.com" target="_blank" class="zozi-badge">
-    <div class="zozi-badge-content">
-        <img src="{{ url_for('static', filename='z.png') }}" alt="Zo-Zi Logo">
-        <div class="zozi-badge-text">
-            <span class="powered-by">Powered by</span>
-            <span class="brand">Zo-Zi Technologies</span>
-        </div>
+<div class="zozi-badge">
+    <img src="{{ url_for('static', filename='z.png') }}" alt="Zo-Zi Logo">
+    <div class="zozi-badge-text">
+        <span class="powered-by">Powered by</span>
+        <span class="brand">Zo-Zi</span>
     </div>
-</a>
+</div>

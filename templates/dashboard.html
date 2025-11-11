@@ -264,6 +264,64 @@
             transform: translateY(-2px);
         }
 
+        /* Global Search Bar Styles */
+        .global-search-container {
+            position: relative;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+
+        .global-search-input {
+            width: 100%;
+            padding: 14px 20px;
+            font-size: 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .global-search-input:focus {
+            outline: none;
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .global-search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .global-search-suggestions.active {
+            display: block;
+        }
+
+        .global-suggestion-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .global-suggestion-item:hover {
+            background: #f9fafb;
+        }
+
+        .global-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
         .task-notification-badge {
             position: absolute;
             top: -5px;
@@ -1463,6 +1521,19 @@
         </div>
 
         <div class="welcome-message"><h1 class="welcome-text" id="welcomeTitle">Inspector Dashboard</h1></div>
+
+        <!-- Global Search Bar -->
+        <div class="global-search-container">
+            <input
+                type="text"
+                id="globalSearchInput"
+                placeholder="🔍 Search by establishment name, owner, or license holder..."
+                class="global-search-input"
+                autocomplete="off"
+            >
+            <div id="globalSearchSuggestions" class="global-search-suggestions"></div>
+        </div>
+
         <div class="form-select">
             <select id="form-type">
                 <option value="" selected>Select a Form</option>
@@ -3004,6 +3075,7 @@
                     const response = await fetch(`/search_forms?query=&type=${tab}`);
                     const data = await response.json();
                     allFormsData[tab] = data.forms || [];
+                    cachedFormsData[tab] = data.forms || []; // Also cache for global search
                     displaySearchResults(allFormsData[tab], tab);
                 } catch (error) {
                     console.error(`Error loading ${tab} forms:`, error);
@@ -3032,12 +3104,164 @@ window.onclick = function(event) {
             }
         });
 
+        // Global Search Functionality
+        let globalSearchDebounceTimer;
+        let cachedFormsData = {
+            food: [],
+            residential: [],
+            burial: [],
+            spirit_licence: [],
+            swimming_pool: [],
+            small_hotels: [],
+            barbershop: [],
+            institutional: [],
+            meat_processing: []
+        };
+
+        function initializeGlobalSearch() {
+            const searchInput = document.getElementById('globalSearchInput');
+            const suggestions = document.getElementById('globalSearchSuggestions');
+
+            if (!searchInput || !suggestions) return;
+
+            searchInput.addEventListener('input', function(e) {
+                clearTimeout(globalSearchDebounceTimer);
+                const query = e.target.value.trim();
+
+                if (query.length < 2) {
+                    suggestions.classList.remove('active');
+                    suggestions.innerHTML = '';
+                    return;
+                }
+
+                globalSearchDebounceTimer = setTimeout(() => {
+                    performGlobalSearch(query);
+                }, 300);
+            });
+
+            searchInput.addEventListener('focus', function() {
+                if (this.value.length >= 2) {
+                    suggestions.classList.add('active');
+                }
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !suggestions.contains(e.target)) {
+                    suggestions.classList.remove('active');
+                }
+            });
+        }
+
+        async function performGlobalSearch(query) {
+            const results = [];
+            const lowerQuery = query.toLowerCase();
+
+            // Search across all cached form types
+            for (const [formType, forms] of Object.entries(cachedFormsData)) {
+                forms.forEach(form => {
+                    const searchableText = getGlobalSearchableText(form, formType);
+                    if (searchableText.toLowerCase().includes(lowerQuery)) {
+                        results.push({
+                            ...form,
+                            formType: formType,
+                            score: calculateSearchScore(searchableText, lowerQuery)
+                        });
+                    }
+                });
+            }
+
+            // Sort by relevance score
+            results.sort((a, b) => b.score - a.score);
+            displayGlobalSearchResults(results.slice(0, 10));
+        }
+
+        function getGlobalSearchableText(form, formType) {
+            const fields = [];
+            fields.push(form.establishment_name || form.premises_name || form.applicant_name || '');
+            fields.push(form.owner || form.owner_operator || '');
+            fields.push(form.address || '');
+            fields.push(form.license_no || form.establishment_no || '');
+            return fields.join(' ');
+        }
+
+        function calculateSearchScore(text, query) {
+            const lowerText = text.toLowerCase();
+            const lowerQuery = query.toLowerCase();
+            let score = 0;
+
+            if (lowerText.startsWith(lowerQuery)) score += 100;
+            if (lowerText.includes(' ' + lowerQuery)) score += 50;
+            score += (lowerText.match(new RegExp(lowerQuery, 'g')) || []).length * 10;
+
+            return score;
+        }
+
+        function displayGlobalSearchResults(results) {
+            const suggestions = document.getElementById('globalSearchSuggestions');
+
+            if (results.length === 0) {
+                suggestions.innerHTML = '<div class="global-suggestion-item">No results found</div>';
+                suggestions.classList.add('active');
+                return;
+            }
+
+            suggestions.innerHTML = results.map(result => {
+                const name = result.establishment_name || result.premises_name || result.applicant_name || 'Unnamed';
+                const owner = result.owner || result.owner_operator || '';
+                const formTypeLabel = getFormTypeLabel(result.formType);
+                const date = result.inspection_date || result.created_at || '';
+
+                return `
+                    <div class="global-suggestion-item" onclick="navigateToInspection(${result.id}, '${result.formType}')">
+                        <div style="font-weight: 600; color: #111;">${name}</div>
+                        <div style="font-size: 13px; color: #666; margin-top: 4px;">
+                            ${owner ? `Owner: ${owner} • ` : ''}
+                            ${formTypeLabel} • ${date}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            suggestions.classList.add('active');
+        }
+
+        function getFormTypeLabel(formType) {
+            const labels = {
+                'food': 'Food Establishment',
+                'residential': 'Residential',
+                'burial': 'Burial Site',
+                'spirit_licence': 'Spirit Licence',
+                'swimming_pool': 'Swimming Pool',
+                'small_hotels': 'Small Hotels',
+                'barbershop': 'Barbershop',
+                'institutional': 'Institutional Health',
+                'meat_processing': 'Meat Processing'
+            };
+            return labels[formType] || formType;
+        }
+
+        function navigateToInspection(id, formType) {
+            const urls = {
+                'food': `/inspection/${id}`,
+                'residential': `/residential/${id}`,
+                'burial': `/burial_inspection/${id}`,
+                'spirit_licence': `/spirit_licence_inspection/${id}`,
+                'swimming_pool': `/swimming_pool/${id}`,
+                'small_hotels': `/small_hotels_inspection/${id}`,
+                'barbershop': `/barbershop_inspection/${id}`,
+                'institutional': `/institutional_inspection/${id}`,
+                'meat_processing': `/meat_processing_inspection/${id}`
+            };
+            window.location.href = urls[formType] || `/inspection/${id}`;
+        }
+
         // Initialize everything
         document.addEventListener('DOMContentLoaded', () => {
             loadStats();
             loadForms('overview');
             updateTaskNotificationBadge();
             startTaskPolling();
+            initializeGlobalSearch();
             console.log('Inspector Dashboard initialized successfully!');
         });
 
