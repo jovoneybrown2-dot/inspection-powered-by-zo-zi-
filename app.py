@@ -49,15 +49,41 @@ else:
         conn = sqlite3.connect('inspections.db')
         c = conn.cursor()
 
-        # Check if photo_data column exists
+        # Migrate inspections table
         c.execute("PRAGMA table_info(inspections)")
         columns = [column[1] for column in c.fetchall()]
-
         if 'photo_data' not in columns:
             print("Adding photo_data column to inspections table...")
             c.execute("ALTER TABLE inspections ADD COLUMN photo_data TEXT")
             conn.commit()
-            print("Migration completed: photo_data column added")
+            print("Migration completed: photo_data column added to inspections")
+
+        # Migrate burial_site_inspections table
+        c.execute("PRAGMA table_info(burial_site_inspections)")
+        columns = [column[1] for column in c.fetchall()]
+        if 'photo_data' not in columns:
+            print("Adding photo_data column to burial_site_inspections table...")
+            c.execute("ALTER TABLE burial_site_inspections ADD COLUMN photo_data TEXT")
+            conn.commit()
+            print("Migration completed: photo_data column added to burial_site_inspections")
+
+        # Migrate residential_inspections table
+        c.execute("PRAGMA table_info(residential_inspections)")
+        columns = [column[1] for column in c.fetchall()]
+        if 'photo_data' not in columns:
+            print("Adding photo_data column to residential_inspections table...")
+            c.execute("ALTER TABLE residential_inspections ADD COLUMN photo_data TEXT")
+            conn.commit()
+            print("Migration completed: photo_data column added to residential_inspections")
+
+        # Migrate meat_processing_inspections table
+        c.execute("PRAGMA table_info(meat_processing_inspections)")
+        columns = [column[1] for column in c.fetchall()]
+        if 'photo_data' not in columns:
+            print("Adding photo_data column to meat_processing_inspections table...")
+            c.execute("ALTER TABLE meat_processing_inspections ADD COLUMN photo_data TEXT")
+            conn.commit()
+            print("Migration completed: photo_data column added to meat_processing_inspections")
 
         conn.close()
     except Exception as e:

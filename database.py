@@ -63,7 +63,8 @@ def init_db():
                   general_remarks TEXT,
                   inspector_signature TEXT,
                   received_by TEXT,
-                  created_at TEXT DEFAULT CURRENT_TIMESTAMP)''')
+                  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                  photo_data TEXT)''')
 
     # Residential inspections table
     c.execute('''CREATE TABLE IF NOT EXISTS residential_inspections
@@ -88,7 +89,8 @@ def init_db():
                   comments TEXT,
                   inspector_signature TEXT,
                   received_by TEXT,
-                  created_at TEXT DEFAULT CURRENT_TIMESTAMP)''')
+                  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                  photo_data TEXT)''')
 
     # Residential checklist scores table
     c.execute('''CREATE TABLE IF NOT EXISTS residential_checklist_scores
@@ -126,7 +128,8 @@ def init_db():
                   comments TEXT,
                   inspector_signature TEXT,
                   received_by TEXT,
-                  created_at TEXT DEFAULT CURRENT_TIMESTAMP)''')
+                  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                  photo_data TEXT)''')
 
     # Meat processing checklist scores table
     c.execute('''CREATE TABLE IF NOT EXISTS meat_processing_checklist_scores
