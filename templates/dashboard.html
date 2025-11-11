@@ -3153,26 +3153,42 @@ window.onclick = function(event) {
         }
 
         async function performGlobalSearch(query) {
-            const results = [];
-            const lowerQuery = query.toLowerCase();
+            try {
+                // Search across all form types using the API
+                const formTypes = ['food', 'residential', 'burial', 'spirit_licence', 'swimming_pool', 'small_hotels', 'barbershop', 'institutional', 'meat_processing'];
+                const searchPromises = formTypes.map(type =>
+                    fetch(`/search_forms?query=${encodeURIComponent(query)}&type=${type}`)
+                        .then(res => res.json())
+                        .then(data => ({
+                            type: type,
+                            forms: data.forms || []
+                        }))
+                        .catch(err => {
+                            console.error(`Error searching ${type}:`, err);
+                            return { type: type, forms: [] };
+                        })
+                );
 
-            // Search across all cached form types
-            for (const [formType, forms] of Object.entries(cachedFormsData)) {
-                forms.forEach(form => {
-                    const searchableText = getGlobalSearchableText(form, formType);
-                    if (searchableText.toLowerCase().includes(lowerQuery)) {
-                        results.push({
+                const allResults = await Promise.all(searchPromises);
+
+                // Combine all results
+                const combinedResults = [];
+                allResults.forEach(({ type, forms }) => {
+                    forms.forEach(form => {
+                        combinedResults.push({
                             ...form,
-                            formType: formType,
-                            score: calculateSearchScore(searchableText, lowerQuery)
+                            formType: type
                         });
-                    }
+                    });
                 });
-            }
 
-            // Sort by relevance score
-            results.sort((a, b) => b.score - a.score);
-            displayGlobalSearchResults(results.slice(0, 10));
+                displayGlobalSearchResults(combinedResults.slice(0, 10));
+            } catch (error) {
+                console.error('Global search error:', error);
+                const suggestions = document.getElementById('globalSearchSuggestions');
+                suggestions.innerHTML = '<div class="global-suggestion-item">Search error occurred</div>';
+                suggestions.classList.add('active');
+            }
         }
 
         function getGlobalSearchableText(form, formType) {
