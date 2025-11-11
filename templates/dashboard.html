@@ -395,11 +395,11 @@
             margin-top: 0;
             color: #333;
         }
-        .search-container, .residential-search-container, .burial-search-container, .spirit-licence-search-container, .swimming-pool-search-container, .small-hotels-search-container, .barbershop-search-container {
+        .search-container, .residential-search-container, .burial-search-container, .spirit-licence-search-container, .swimming-pool-search-container, .small-hotels-search-container, .barbershop-search-container, .institutional-search-container, .meat-processing-search-container {
             position: relative;
             margin-bottom: 20px;
         }
-        #search, #residential-search, #burial-search, #spirit-licence-search, #swimming-pool-search, #small-hotels-search, #barbershop-search {
+        #search, #residential-search, #burial-search, #spirit-licence-search, #swimming-pool-search, #small-hotels-search, #barbershop-search, #institutional-search, #meat-processing-search {
             width: 60%;
             max-width: 400px;
             padding: 10px 40px 10px 10px;
@@ -407,7 +407,7 @@
             border: 1px solid #ccc;
             border-radius: 5px;
         }
-        .search-icon, .residential-search-icon, .burial-search-icon, .spirit-licence-search-icon, .swimming-pool-search-icon, .small-hotels-search-icon, .barbershop-search-icon {
+        .search-icon, .residential-search-icon, .burial-search-icon, .spirit-licence-search-icon, .swimming-pool-search-icon, .small-hotels-search-icon, .barbershop-search-icon, .institutional-search-icon, .meat-processing-search-icon {
             position: absolute;
             right: 10px;
             top: 50%;
@@ -1443,7 +1443,8 @@
         [data-theme="dark"] .swimming-pool-search-container,
         [data-theme="dark"] .small-hotels-search-container,
         [data-theme="dark"] .barbershop-search-container,
-        [data-theme="dark"] .institutional-search-container {
+        [data-theme="dark"] .institutional-search-container,
+        [data-theme="dark"] .meat-processing-search-container {
             background: var(--card-bg) !important;
             color: var(--text-color) !important;
         }
@@ -2130,6 +2131,13 @@
                 const filteredForms = predictiveSearch(query, 'institutional');
                 displaySearchResults(filteredForms, 'institutional');
             });
+
+            // Meat processing search
+            document.querySelector('#meat-processing-search').addEventListener('input', function() {
+                const query = this.value.trim();
+                const filteredForms = predictiveSearch(query, 'meat_processing');
+                displaySearchResults(filteredForms, 'meat_processing');
+            });
         }
 
         // Display search results function
@@ -2159,6 +2167,9 @@
                     break;
                 case 'institutional':
                     tbody = document.querySelector('#institutional-results-body');
+                    break;
+                case 'meat_processing':
+                    tbody = document.querySelector('#meat-processing-results-body');
                     break;
                 default:
                     return;
