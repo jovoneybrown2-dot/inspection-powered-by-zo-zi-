@@ -4621,9 +4621,9 @@ def spirit_licence_inspection_detail(id):
         # Parse photos from JSON string to Python list
         import json
         photos = []
-        if inspection_data.get('photo_data'):
+        if safe_get(inspection, 'photo_data'):
             try:
-                photos = json.loads(inspection_data.get('photo_data', '[]'))
+                photos = json.loads(safe_get(inspection, 'photo_data', '[]'))
             except:
                 photos = []
 
