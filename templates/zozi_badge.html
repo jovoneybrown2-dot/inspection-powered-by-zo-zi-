@@ -2,13 +2,13 @@
 <style>
     .zozi-badge {
         position: fixed;
-        bottom: 20px;
-        right: 20px;
+        bottom: 15px;
+        left: 15px;
         display: block;
         background: rgba(255, 255, 255, 0.95);
-        padding: 15px 20px;
-        border-radius: 15px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        padding: 10px 14px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
         z-index: 9999;
         transition: all 0.3s ease;
         backdrop-filter: blur(10px);
@@ -26,11 +26,11 @@
     .zozi-badge-content {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 8px;
     }
 
     .zozi-badge img {
-        height: 50px;
+        height: 35px;
         width: auto;
         object-fit: contain;
         display: block;
@@ -48,17 +48,17 @@
     }
 
     .zozi-badge-text .powered-by {
-        font-size: 11px;
+        font-size: 9px;
         font-weight: 400;
         color: #666;
         line-height: 1.2;
-        margin-bottom: 2px;
+        margin-bottom: 1px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
 
     .zozi-badge-text .brand {
-        font-size: 16px;
+        font-size: 13px;
         font-weight: 700;
         color: #FF6B35;
         line-height: 1.2;
@@ -75,25 +75,25 @@
     /* Responsive - smaller on mobile */
     @media (max-width: 768px) {
         .zozi-badge {
-            bottom: 15px;
-            right: 15px;
-            padding: 10px 14px;
+            bottom: 12px;
+            left: 12px;
+            padding: 8px 12px;
         }
 
         .zozi-badge-content {
-            gap: 10px;
+            gap: 6px;
         }
 
         .zozi-badge img {
-            height: 40px;
+            height: 30px;
         }
 
         .zozi-badge-text .powered-by {
-            font-size: 10px;
+            font-size: 8px;
         }
 
         .zozi-badge-text .brand {
-            font-size: 14px;
+            font-size: 11px;
         }
     }
 
@@ -101,24 +101,24 @@
     @media (max-width: 480px) {
         .zozi-badge {
             bottom: 10px;
-            right: 10px;
-            padding: 8px 12px;
+            left: 10px;
+            padding: 6px 10px;
         }
 
         .zozi-badge-content {
-            gap: 8px;
+            gap: 6px;
         }
 
         .zozi-badge img {
-            height: 35px;
+            height: 28px;
         }
 
         .zozi-badge-text .powered-by {
-            font-size: 9px;
+            font-size: 7px;
         }
 
         .zozi-badge-text .brand {
-            font-size: 12px;
+            font-size: 10px;
         }
     }
 </style>
