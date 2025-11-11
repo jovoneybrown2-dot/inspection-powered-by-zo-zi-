@@ -33,7 +33,8 @@ def init_db():
                   received_by TEXT,
                   form_type TEXT,
                   scores TEXT,
-                  inspector_code TEXT)''')
+                  inspector_code TEXT,
+                  photo_data TEXT)''')
 
     # Inspection items table
     c.execute('''CREATE TABLE IF NOT EXISTS inspection_items
