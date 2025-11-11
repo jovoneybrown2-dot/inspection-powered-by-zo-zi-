@@ -1939,9 +1939,11 @@ def get_stats():
     barbershop = c.fetchone()[0]
     c.execute("SELECT COUNT(*) FROM inspections WHERE form_type = 'Institutional Health'")
     institutional = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM meat_processing_inspections")
+    meat_processing = c.fetchone()[0]
     conn.close()
     return jsonify({
-        'total': total + residential + burial,  # Include all in total
+        'total': total + residential + burial + meat_processing,  # Include all in total
         'food': food,
         'residential': residential,
         'burial': burial,
@@ -1949,7 +1951,8 @@ def get_stats():
         'swimming_pool': swimming_pool,
         'small_hotels': small_hotels,
         'barbershop': barbershop,
-        'institutional': institutional
+        'institutional': institutional,
+        'meat_processing': meat_processing
     })
 
 @app.route('/search', methods=['GET'])

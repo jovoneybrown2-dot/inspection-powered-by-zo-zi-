@@ -1600,6 +1600,10 @@
     <h3>Institutional Health Inspections</h3>
     <p id="institutional-inspections">0</p>
 </div>
+                <div class="stat-card">
+    <h3>Meat Processing Inspections</h3>
+    <p id="meat-processing-inspections">0</p>
+</div>
             </div>
         </div>
 
@@ -3011,7 +3015,7 @@
                 const data = await response.json();
                 const totalCount = (data.food || 0) + (data.residential || 0) + (data.burial || 0) +
                                   (data.spirit_licence || 0) + (data.swimming_pool || 0) + (data.small_hotels || 0) +
-                                  (data.barbershop || 0) + (data.institutional || 0);
+                                  (data.barbershop || 0) + (data.institutional || 0) + (data.meat_processing || 0);
                 document.querySelector('#total-inspections').textContent = totalCount || 0;
                 document.querySelector('#food-inspections').textContent = data.food || 0;
                 document.querySelector('#residential-inspections').textContent = data.residential || 0;
@@ -3021,6 +3025,7 @@
                 document.querySelector('#small-hotels-inspections').textContent = data.small_hotels || 0;
                 document.querySelector('#barbershop-inspections').textContent = data.barbershop || 0;
                 document.querySelector('#institutional-inspections').textContent = data.institutional || 0;
+                document.querySelector('#meat-processing-inspections').textContent = data.meat_processing || 0;
             } catch (error) {
                 console.error('Error loading stats:', error);
                 document.querySelector('#total-inspections').textContent = '0';
@@ -3031,6 +3036,8 @@
                 document.querySelector('#swimming-pool-inspections').textContent = '0';
                 document.querySelector('#small-hotels-inspections').textContent = '0';
                 document.querySelector('#barbershop-inspections').textContent = '0';
+                document.querySelector('#institutional-inspections').textContent = '0';
+                document.querySelector('#meat-processing-inspections').textContent = '0';
             }
         }
 
