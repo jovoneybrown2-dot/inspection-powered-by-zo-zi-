@@ -2274,6 +2274,16 @@
                         row.addEventListener('click', () => {
                             window.location.href = `/institutional/inspection/${form.id}`;
                         });
+                    } else if (formType === 'meat_processing') {
+                        row.innerHTML = `
+                            <td>${form.id}</td>
+                            <td>${form.establishment_name || 'N/A'}</td>
+                            <td>${form.created_at || 'N/A'}</td>
+                            <td>${getStyledStatus(form.status || form.result)}</td>
+                        `;
+                        row.addEventListener('click', () => {
+                            window.location.href = `/meat_processing/inspection/${form.id}`;
+                        });
                     } else {
                         // This is the food establishment case
                         row.innerHTML = `
@@ -3438,6 +3448,9 @@ function viewInspection(type, id) {
             break;
         case 'institutional':
             url = `/institutional/inspection/${id}`;
+            break;
+        case 'meat_processing':
+            url = `/meat_processing/inspection/${id}`;
             break;
         default:
             url = `/inspection/${id}`;
