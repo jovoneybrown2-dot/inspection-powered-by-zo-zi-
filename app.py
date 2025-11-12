@@ -2077,7 +2077,7 @@ def inspection_detail(id):
     conn.close()
 
     if inspection:
-        scores = [int(x) for x in inspection[12].split(',')] if inspection[12] else [0] * 45
+        scores = [int(float(x)) for x in inspection[12].split(',')] if inspection[12] else [0] * 45
         inspection_data = {
             'id': inspection[0],
             'establishment_name': inspection[1] or '',
@@ -4593,7 +4593,7 @@ def spirit_licence_inspection_detail(id):
         scores_str = inspection['scores'] if inspection['scores'] else ''
         if scores_str:
             try:
-                scores = [int(x) for x in scores_str.split(',')]
+                scores = [int(float(x)) for x in scores_str.split(',')]
                 while len(scores) < 25:
                     scores.append(0)
             except ValueError:
