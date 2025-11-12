@@ -35,6 +35,9 @@ from database import (
     get_meat_processing_inspection_details
 )
 
+# Database Config Import
+from db_config import get_db_connection
+
 app = Flask(__name__, template_folder='templates')
 app.secret_key = os.urandom(24)
 
@@ -46,7 +49,7 @@ if not os.path.exists('inspections.db'):
 else:
     # Run migrations for existing databases
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
 
         # Migrate inspections table
@@ -521,7 +524,7 @@ def debug_stats():
     if 'admin' not in session and 'inspector' not in session:
         return "Access denied"
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     # Check what form_types exist
@@ -552,7 +555,7 @@ def debug_stats():
     </ul>
     """
 def get_establishment_data():
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute("SELECT establishment_name, owner, license_no, id FROM inspections")
     data = c.fetchall()
@@ -570,7 +573,7 @@ def login():
 def admin():
     if 'admin' not in session:
         return redirect(url_for('login'))
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute("""
         SELECT id, form_type, inspector_name, created_at, establishment_name, result, owner
@@ -596,7 +599,7 @@ def admin():
 def admin_form_scores():
     form_type = request.args.get('form_type', 'all')
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
@@ -634,7 +637,7 @@ def get_table_name_for_form_type(form_type):
 def admin_metrics():
     form_type = request.args.get('form_type', 'all')
     time_frame = request.args.get('time_frame', 'daily')
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     if form_type == 'all':
@@ -713,7 +716,7 @@ def generate_report():
         return jsonify({'error': 'Unauthorized'}), 401
     metric = request.args.get('metric', 'inspections')
     timeframe = request.args.get('timeframe', 'daily')
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
     if metric == 'inspections':
         query = """
@@ -770,7 +773,7 @@ def new_burial_form():
         return redirect(url_for('login'))
     inspection_id = request.args.get('id')
     if inspection_id:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
         c.execute("SELECT * FROM burial_site_inspections WHERE id = ?", (inspection_id,))
         inspection = c.fetchone()
@@ -942,7 +945,7 @@ def submit_institutional():
         print(f"Overall Score: {overall_score}")
         print(f"Critical Score: {critical_score}")
 
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         # Check if columns exist and add them if needed
@@ -1031,7 +1034,7 @@ def fix_institutional_status():
     if 'admin' not in session and 'inspector' not in session:
         return "Access denied"
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Get all institutional records
@@ -1092,7 +1095,7 @@ def institutional_inspection_detail(id):
     if 'inspector' not in session and 'admin' not in session:
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
@@ -1190,7 +1193,7 @@ def submit_spirit_licence():
     data['critical_score'] = critical_score
     try:
         inspection_id = save_inspection(data)
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
         for item in SPIRIT_LICENCE_CHECKLIST_ITEMS:
             score = request.form.get(f"score_{item['id']}", '0')
@@ -1245,7 +1248,7 @@ def submit_form(form_type):
             }
             inspection_id = save_inspection(data)
 
-            conn = sqlite3.connect('inspections.db')
+            conn = get_db_connection()
             c = conn.cursor()
             for item in FOOD_CHECKLIST_ITEMS:
                 score = request.form.get(f'score_{item["id"]}', '0')
@@ -1307,7 +1310,7 @@ def submit_residential():
     }
     inspection_id = save_residential_inspection(data)
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
     for item in RESIDENTIAL_CHECKLIST_ITEMS:
         score = request.form.get(f'score_{item["id"]}', '0')
@@ -1424,7 +1427,7 @@ def submit_meat_processing():
         inspection_id = save_meat_processing_inspection(data)
 
         # Save checklist scores
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
         for item in MEAT_PROCESSING_CHECKLIST_ITEMS:
             score = request.form.get(f'score_{item["id"]:02d}', '0')
@@ -1445,7 +1448,7 @@ def submit_swimming_pools():
     if 'inspector' not in session:
         return jsonify({'status': 'error', 'message': 'Please log in.'}), 401
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Auto-fix database columns if needed
@@ -1589,7 +1592,7 @@ def update_database_schema():
     if 'admin' not in session:
         return "Admin access required"
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Add columns that might be missing
@@ -1623,7 +1626,7 @@ def fix_swimming_pool_db():
     if 'admin' not in session:
         return "Admin access required"
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Add score columns for each checklist item
@@ -1684,7 +1687,7 @@ def submit_small_hotels():
         return jsonify({"status": "error", "message": "Unauthorized"}), 401
 
     data = request.form
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     # Updated critical items list based on your corrected form
@@ -1827,7 +1830,7 @@ def dashboard():
 
 def get_inspections_with_status():
     """Get inspections with calculated Pass/Fail status"""
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     # Get all inspections and calculate status based on scores
@@ -1921,7 +1924,7 @@ def fix_inspection_results():
     if 'admin' not in session and 'inspector' not in session:
         return "Access denied"
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     # Get all inspections that need status updates
@@ -1970,7 +1973,7 @@ def fix_inspection_results():
 
 @app.route('/stats')
 def get_stats():
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute("SELECT COUNT(*) FROM inspections")
     total = c.fetchone()[0]
@@ -2012,7 +2015,7 @@ def search():
         return redirect(url_for('login'))
     query = request.args.get('q', '').lower()
     data = get_establishment_data()
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute("SELECT id, applicant_name, deceased_name FROM burial_site_inspections WHERE LOWER(applicant_name) LIKE ? OR LOWER(deceased_name) LIKE ?", (f'%{query}%', f'%{query}%'))
     burial_records = c.fetchall()
@@ -2037,7 +2040,7 @@ def search_residential():
     if 'inspector' not in session:
         return redirect(url_for('login'))
     query = request.args.get('term', '').lower()
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute("""
         SELECT id, premises_name, owner, created_at, result 
@@ -2053,7 +2056,7 @@ def search_residential():
 def inspection_detail(id):
     if 'inspector' not in session and 'admin' not in session:
         return redirect(url_for('login'))
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute("SELECT id, establishment_name, owner, address, license_no, inspector_name, inspection_date, inspection_time, type_of_establishment, purpose_of_visit, action, result, scores, comments, created_at, form_type, inspector_code, no_of_employees, food_inspected, food_condemned FROM inspections WHERE id = ?", (id,))
     inspection = c.fetchone()
@@ -2950,7 +2953,7 @@ def download_swimming_pool_pdf(form_id):
     if 'inspector' not in session and 'admin' not in session:
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
@@ -3347,7 +3350,7 @@ def download_institutional_pdf(form_id):
     if 'inspector' not in session and 'admin' not in session:
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
     c.execute("""SELECT * FROM inspections WHERE id = ? AND form_type = 'Institutional Health'""", (form_id,))
@@ -3707,7 +3710,7 @@ def download_small_hotels_pdf(form_id):
         return redirect(url_for('login'))
 
     # Get the inspection data directly from database instead of calling the detail function
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
@@ -4561,7 +4564,7 @@ def spirit_licence_inspection_detail(id):
     if 'inspector' not in session and 'admin' not in session:
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     conn.row_factory = sqlite3.Row  # This allows column access by name
     c = conn.cursor()
 
@@ -4621,9 +4624,9 @@ def spirit_licence_inspection_detail(id):
         # Parse photos from JSON string to Python list
         import json
         photos = []
-        if safe_get(inspection, 'photo_data'):
+        if inspection_data.get('photo_data'):
             try:
-                photos = json.loads(safe_get(inspection, 'photo_data', '[]'))
+                photos = json.loads(inspection_data.get('photo_data', '[]'))
             except:
                 photos = []
 
@@ -4911,7 +4914,7 @@ def swimming_pool_inspection_detail(id):
     if 'inspector' not in session and 'admin' not in session:
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     conn.row_factory = sqlite3.Row  # This allows access by column name
     cursor = conn.cursor()
 
@@ -5018,7 +5021,7 @@ def search_forms():
 
     query = request.args.get('query', '').lower()
     form_type = request.args.get('type', '')
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
     forms = []
 
@@ -5244,7 +5247,7 @@ def search_forms():
 
 # Database schema update for barbershop inspections
 def update_barbershop_db_schema():
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     columns_added = 0
     for item in BARBERSHOP_CHECKLIST_ITEMS:
@@ -5317,7 +5320,7 @@ def submit_barbershop():
     if 'inspector' not in session:
         return jsonify({'status': 'error', 'message': 'Please log in.'}), 401
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Ensure score columns exist
@@ -5450,7 +5453,7 @@ def barbershop_inspection_detail(id):
     if 'inspector' not in session and 'admin' not in session:
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
@@ -5512,7 +5515,7 @@ def download_barbershop_pdf(form_id):
     if 'inspector' not in session and 'admin' not in session:
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
     c.execute("SELECT * FROM inspections WHERE id = ? AND form_type = 'Barbershop'", (form_id,))
@@ -5842,7 +5845,7 @@ def fix_all_forms_to_pass_fail():
     if 'admin' not in session and 'inspector' not in session:
         return "Access denied"
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     total_updated = 0
@@ -5933,7 +5936,7 @@ def get_inspections_with_status():
     if 'inspector' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     # Get all inspections and calculate status based on scores
@@ -6010,16 +6013,10 @@ def fix_barbershop_db():
     return f"Database updated! Added {columns_added} new columns."
 
 
-def get_db_connection():
-    conn = sqlite3.connect('inspections.db', timeout=10)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
 # Initialize messages table (add this to your init_db function or run separately)
 def init_messages_db():
     """Initialize the messages table"""
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     # Create messages table
@@ -6176,7 +6173,7 @@ def get_parish_stats():
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     # Get parish statistics
@@ -6243,7 +6240,7 @@ def get_audit_log():
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         # Create audit_log table if it doesn't exist
@@ -6325,7 +6322,7 @@ def search_inspections():
         return jsonify([])
 
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         results = []
@@ -6409,7 +6406,7 @@ def get_inspector_tasks():
 
     try:
         user_id = session.get('user_id')
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         # Get tasks assigned to this inspector
@@ -6448,7 +6445,7 @@ def update_task_status(task_id):  # Fixed parameter name to match route
         new_status = data.get('status')
         user_id = session.get('user_id')
 
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         # Update task status (only if assigned to this inspector)
@@ -6480,7 +6477,7 @@ def respond_to_task(task_id):
         response = data.get('response')  # 'accept' or 'decline'
         user_id = session.get('user_id')
 
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         # Update task status based on response
@@ -6517,7 +6514,7 @@ def get_unread_task_count():
 
     try:
         user_id = session.get('user_id')
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         # Count unread tasks (status = 'Pending')
@@ -6540,7 +6537,7 @@ def get_inspector_performance():
         return jsonify({'error': 'Unauthorized'}), 401
     try:
         time_frame = request.args.get('time_frame', 'monthly')
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         # Get inspector performance from your existing tables
@@ -6584,7 +6581,7 @@ def get_alerts():
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         alerts = []
@@ -6654,7 +6651,7 @@ def get_inspection_locations():
         return jsonify({'error': 'Unauthorized'}), 401
     try:
         filter_type = request.args.get('filter', 'all')
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         locations = []
@@ -6720,7 +6717,7 @@ def get_reports():
         metric = request.args.get('metric', 'inspections')
         timeframe = request.args.get('timeframe', 'monthly')
 
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         if metric == 'inspections':
@@ -6782,7 +6779,7 @@ def get_system_health():
         return jsonify({'error': 'Unauthorized'}), 401
     try:
         # Get actual system metrics from your database
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         # Calculate some real metrics
@@ -6823,7 +6820,7 @@ def handle_tasks():
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         # Create tasks table if it doesn't exist - updated with notification field
@@ -6901,7 +6898,7 @@ def get_inspectors():
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         # Get inspectors from users table
@@ -6930,7 +6927,7 @@ def get_security_metrics():
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         # Get user counts for MFA metrics (simulated)
@@ -7058,7 +7055,7 @@ def get_security_metrics():
         if 'inspector' not in session and 'admin' not in session:
             return redirect(url_for('login'))
 
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
@@ -7255,7 +7252,7 @@ def get_security_metrics():
             return "Admin access required"
 
         try:
-            conn = sqlite3.connect('inspections.db')
+            conn = get_db_connection()
             c = conn.cursor()
 
             # Create messages table if it doesn't exist
@@ -7361,7 +7358,7 @@ def get_security_metrics():
         if 'admin' not in session:
             return "Admin access required"
 
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
 
         # Check users
@@ -7467,13 +7464,6 @@ def get_security_metrics():
 
         return html
 
-    # Fix for your existing get_db_connection function if it doesn't exist
-    def get_db_connection():
-        """Get database connection with row factory"""
-        conn = sqlite3.connect('inspections.db', timeout=10)
-        conn.row_factory = sqlite3.Row
-        return conn
-
     # 3. Setup messages table
     @app.route('/setup_messaging')
     def setup_messaging():
@@ -7482,7 +7472,7 @@ def get_security_metrics():
             return "Admin access required"
 
         try:
-            conn = sqlite3.connect('inspections.db')
+            conn = get_db_connection()
             c = conn.cursor()
 
             # Create messages table
@@ -7545,7 +7535,7 @@ def send_message():
 def log_audit_event(user, action, ip_address=None, details=None):
     """Log an audit event"""
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         # Create table if it doesn't exist
@@ -7600,7 +7590,7 @@ def test_users():
     if 'admin' not in session:
         return "Access denied"
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute('SELECT id, username, email, role, is_flagged FROM users')
     users = c.fetchall()
@@ -7716,7 +7706,7 @@ def get_unread_messages():
             return "Admin access required"
 
         try:
-            conn = sqlite3.connect('inspections.db')
+            conn = get_db_connection()
             c = conn.cursor()
 
             # Create messages table
@@ -7913,7 +7903,7 @@ from datetime import datetime
 
 def init_form_management_db():
     """Initialize form management tables"""
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     # Form Templates Table - Different types of inspection forms
@@ -7993,7 +7983,7 @@ def form_management():
     if 'admin' not in session:
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     # Get all form templates with item counts
@@ -8018,7 +8008,7 @@ def edit_form(form_id):
     if 'admin' not in session:
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     # Get form template
@@ -8097,7 +8087,7 @@ def create_form():
     if 'admin' not in session:
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     # Get categories
@@ -8127,7 +8117,7 @@ def save_form():
         form_type = data.get('form_type')
         items = data.get('items', [])
 
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
 
         if form_id:  # Update existing form
@@ -8172,7 +8162,7 @@ def delete_form(form_id):
         return jsonify({'success': False, 'error': 'Unauthorized'}), 401
 
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
 
         # Soft delete - just mark as inactive
@@ -8195,7 +8185,7 @@ def clone_form(form_id):
         return jsonify({'success': False, 'error': 'Unauthorized'}), 401
 
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
 
         # Get original form
@@ -8237,7 +8227,7 @@ def preview_form(form_id):
     if 'admin' not in session:
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     # Get form template
@@ -8280,7 +8270,7 @@ def get_inspection_counts():
         return jsonify({'error': 'Unauthorized'}), 401
 
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
 
         # Get counts from main inspections table
@@ -8344,7 +8334,7 @@ def get_active_forms():
     if 'inspector' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     c.execute('''
@@ -8379,7 +8369,7 @@ def debug_forms():
     if 'admin' not in session:
         return "Admin access required"
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     # Check templates
@@ -8401,7 +8391,7 @@ def migrate_all_checklists():
     if 'admin' not in session:
         return "Admin access required"
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     results = []
@@ -8659,7 +8649,7 @@ def reset_database():
     if 'admin' not in session:
         return "Admin access required"
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     # Clear existing data
@@ -8681,7 +8671,7 @@ def reset_database():
 
 def get_form_items(form_template_id):
     """Get form items for a specific template"""
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     c.execute('''
@@ -8710,7 +8700,7 @@ def get_form_items(form_template_id):
 
 def get_form_template_by_type(form_type):
     """Get form template by type"""
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     c.execute('SELECT id FROM form_templates WHERE form_type = ? AND active = 1', (form_type,))
@@ -8770,7 +8760,7 @@ def debug_forms_check():
     if 'admin' not in session:
         return "Admin access required"
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     # Check templates
@@ -8800,7 +8790,7 @@ def migrate_food_checklist():
     if 'admin' not in session:
         return "Admin access required"
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     # Get Food Establishment template ID
@@ -8860,7 +8850,7 @@ def migrate_remaining_fixed():
     if 'admin' not in session:
         return "Admin access required"
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
     results = []
 
@@ -8948,7 +8938,7 @@ def small_hotels_inspection_detail(id):
     if 'inspector' not in session and 'admin' not in session:
         return redirect(url_for('login'))
 
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
@@ -9075,7 +9065,7 @@ def generate_admin_report():
 def check_and_create_alert(inspection_id, inspector_name, form_type, score):
     """Check if inspection score is below threshold and create alert if needed"""
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
 
         # Get global threshold
@@ -9110,7 +9100,7 @@ def save_threshold():
         threshold_value = data.get('threshold_value')
         enabled = data.get('enabled', 1)
 
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
 
         # Upsert threshold setting
@@ -9140,7 +9130,7 @@ def save_threshold():
 def get_thresholds():
     """Get all threshold settings"""
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
 
         c.execute('''
@@ -9177,7 +9167,7 @@ def create_threshold_alert():
         score = data.get('score')
         threshold_value = data.get('threshold_value')
 
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
 
         c.execute('''
@@ -9204,7 +9194,7 @@ def acknowledge_alert(alert_id):
         data = request.json
         acknowledged_by = data.get('acknowledged_by', session.get('username', 'admin'))
 
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
 
         c.execute('''
@@ -9230,7 +9220,7 @@ def acknowledge_alert(alert_id):
 def list_threshold_alerts():
     """List all threshold alerts"""
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
 
         c.execute('''
@@ -9269,7 +9259,7 @@ def list_threshold_alerts():
 def clear_acknowledged_alerts():
     """Clear all acknowledged alerts"""
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
 
         c.execute('DELETE FROM threshold_alerts WHERE acknowledged = 1')
@@ -9291,7 +9281,7 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
     try:
         print(f"DEBUG: Generating comprehensive report for {inspection_type} from {start_date} to {end_date}")
 
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
 
         # 1. OVERALL SUMMARY with Pass/Fail Rates
@@ -9494,7 +9484,7 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
 
 def generate_trend_analysis_report(inspection_type, start_date, end_date):
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
 
         # Get weekly trend data
@@ -9564,7 +9554,7 @@ def generate_trend_analysis_report(inspection_type, start_date, end_date):
 
 def generate_failure_breakdown_report(inspection_type, start_date, end_date):
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
 
         # Get total failed inspections count
@@ -9648,7 +9638,7 @@ def generate_failure_breakdown_report(inspection_type, start_date, end_date):
 
 def generate_inspector_performance_report(inspection_type, start_date, end_date):
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
 
         # Get inspector performance data
@@ -9714,7 +9704,7 @@ def generate_inspector_performance_report(inspection_type, start_date, end_date)
 
 def generate_scores_by_type_report(inspection_type, start_date, end_date):
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
 
         # Get scores by form type from all tables
@@ -9792,7 +9782,7 @@ def generate_scores_by_type_report(inspection_type, start_date, end_date):
 
 def generate_monthly_trends_report(inspection_type, start_date, end_date):
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
 
         # Get monthly trends from all tables
@@ -9893,7 +9883,7 @@ def generate_monthly_trends_report(inspection_type, start_date, end_date):
 
 def generate_establishment_ranking_report(inspection_type, start_date, end_date):
     try:
-        conn = sqlite3.connect('inspections.db')
+        conn = get_db_connection()
         c = conn.cursor()
 
         # Get top performing establishments
@@ -10070,7 +10060,7 @@ def generate_comprehensive_multi_dimensional_analysis(inspection_type, start_dat
 
 def get_advanced_statistical_overview(inspection_type, start_date, end_date):
     """Enhanced statistical overview with advanced metrics"""
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     # Multi-source data aggregation
@@ -10164,7 +10154,7 @@ def calculate_performance_grade(pass_rate, avg_score):
 
 def calculate_trend_indicator(inspection_type, start_date, end_date):
     """Calculate performance trend over time"""
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     # Get scores by week for trend analysis
@@ -10210,7 +10200,7 @@ def calculate_trend_indicator(inspection_type, start_date, end_date):
 
 def assess_data_quality(inspection_type, start_date, end_date):
     """Assess the quality and completeness of inspection data"""
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     # Count total records and missing data
@@ -10273,7 +10263,7 @@ def generate_data_quality_recommendations(completeness, missing_scores, missing_
 
 def generate_checklist_failure_analysis(inspection_type, start_date, end_date):
     """Analyze which checklist items fail most frequently"""
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     # Get inspection items with failures
@@ -10324,7 +10314,7 @@ def generate_checklist_failure_analysis(inspection_type, start_date, end_date):
 
 def generate_inspector_performance(inspection_type, start_date, end_date):
     """Generate inspector performance statistics"""
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     query = """
@@ -10364,7 +10354,7 @@ def generate_inspector_performance(inspection_type, start_date, end_date):
 
 def generate_score_analysis(inspection_type, start_date, end_date):
     """Generate detailed score analysis and trends"""
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     query = """
@@ -10422,7 +10412,7 @@ def analyze_score_trends(scores):
 
 def generate_recommendations(inspection_type, start_date, end_date):
     """Generate actionable recommendations based on data"""
-    conn = sqlite3.connect('inspections.db')
+    conn = get_db_connection()
     c = conn.cursor()
 
     recommendations = []
