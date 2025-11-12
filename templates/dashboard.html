@@ -1942,12 +1942,13 @@
             swimming_pool: [],
             small_hotels: [],
             barbershop: [],
-            institutional: []
+            institutional: [],
+            meat_processing: []
         };
 
         // Enhanced Search System - Load all data once and filter locally
         async function loadAllFormsData() {
-            const formTypes = ['food', 'residential', 'burial', 'spirit_licence', 'swimming_pool', 'small_hotels', 'barbershop', 'institutional'];
+            const formTypes = ['food', 'residential', 'burial', 'spirit_licence', 'swimming_pool', 'small_hotels', 'barbershop', 'institutional', 'meat_processing'];
 
             for (const formType of formTypes) {
                 try {
@@ -3084,6 +3085,12 @@
                         break;
                     case 'barbershop':
                         tbody = document.querySelector('#barbershop-results-body');
+                        break;
+                    case 'institutional':
+                        tbody = document.querySelector('#institutional-results-body');
+                        break;
+                    case 'meat_processing':
+                        tbody = document.querySelector('#meat-processing-results-body');
                         break;
                     default:
                         return;

@@ -608,10 +608,13 @@ def admin_form_scores():
     try:
         if form_type == 'all':
             cursor.execute("""
-                SELECT overall_score FROM inspections 
+                SELECT overall_score FROM inspections
                 WHERE overall_score IS NOT NULL AND overall_score > 0
                 UNION ALL
-                SELECT overall_score FROM residential_inspections 
+                SELECT overall_score FROM residential_inspections
+                WHERE overall_score IS NOT NULL AND overall_score > 0
+                UNION ALL
+                SELECT overall_score FROM meat_processing_inspections
                 WHERE overall_score IS NOT NULL AND overall_score > 0
             """)
             scores = cursor.fetchall()
@@ -653,6 +656,8 @@ def admin_metrics():
                 SELECT created_at, result FROM residential_inspections
                 UNION
                 SELECT created_at, 'Completed' AS result FROM burial_site_inspections
+                UNION
+                SELECT created_at, result FROM meat_processing_inspections
             )
             GROUP BY date, result
         """
@@ -667,6 +672,12 @@ def admin_metrics():
             query = """
                 SELECT strftime('%Y-%m-%d', created_at) AS date, 'Completed' AS result, COUNT(*) AS count
                 FROM burial_site_inspections
+                GROUP BY date, result
+            """
+        elif form_type == 'Meat Processing':
+            query = """
+                SELECT strftime('%Y-%m-%d', created_at) AS date, result, COUNT(*) AS count
+                FROM meat_processing_inspections
                 GROUP BY date, result
             """
         else:
@@ -5048,6 +5059,8 @@ def search_forms():
             return 'Pass' if overall_score >= 70 and critical_score >= 70 else 'Fail'
         elif form_type_val == 'Residential':
             return 'Pass' if overall_score >= 70 and critical_score >= 61 else 'Fail'
+        elif form_type_val == 'Meat Processing':
+            return 'Pass' if overall_score >= 80 else 'Fail'
         else:
             return 'Pass' if overall_score >= 70 else 'Fail'
 
@@ -5072,7 +5085,11 @@ def search_forms():
             SELECT id, premises_name AS establishment_name, created_at, result, 'Residential' AS form_type, overall_score, critical_score
             FROM residential_inspections
             WHERE LOWER(premises_name) LIKE ? OR LOWER(owner) LIKE ?
-        """, (f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%'))
+            UNION
+            SELECT id, establishment_name, created_at, result, 'Meat Processing' AS form_type, overall_score, 0 AS critical_score
+            FROM meat_processing_inspections
+            WHERE LOWER(establishment_name) LIKE ? OR LOWER(owner_operator) LIKE ?
+        """, (f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%'))
 
         records = c.fetchall()
         for record in records:
@@ -6392,6 +6409,27 @@ def search_inspections():
                 'inspector': 'N/A',
                 'name': row[1] or 'N/A',  # Add name field for consistency
                 'owner': row[2] or 'N/A'   # Add owner field for consistency
+            })
+
+        # Search in meat processing inspections
+        cursor.execute("""
+            SELECT id, establishment_name, owner_operator, establishment_no, inspector_name
+            FROM meat_processing_inspections
+            WHERE LOWER(establishment_name) LIKE ?
+               OR LOWER(owner_operator) LIKE ?
+               OR LOWER(establishment_no) LIKE ?
+               OR LOWER(inspector_name) LIKE ?
+            LIMIT 10
+        """, (f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%'))
+
+        for row in cursor.fetchall():
+            results.append({
+                'id': row[0],
+                'formType': 'Meat Processing',
+                'name': row[1] or 'N/A',
+                'owner': row[2] or 'N/A',
+                'license': row[3] or 'N/A',
+                'inspector': row[4] or 'N/A'
             })
 
         conn.close()
