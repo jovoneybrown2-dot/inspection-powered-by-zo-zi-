@@ -1193,7 +1193,8 @@
                 <button data-tab="swimming_pool" class="tab px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100">Swimming Pool</button>
                 <button data-tab="small_hotels" class="tab px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100">Small Hotels</button>
                 <button data-tab="barbershop" class="tab px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100">Barbershop</button>
-                <button data-tab="institutional" class="tab px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 rounded-r-lg hover:bg-gray-100">Institutional</button>
+                <button data-tab="institutional" class="tab px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100">Institutional</button>
+                <button data-tab="meat_processing" class="tab px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 rounded-r-lg hover:bg-gray-100">Meat Processing</button>
             </div>
             <button id="adminToolsButton" class="ml-auto px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-100">Admin Tools</button>
         </div>
@@ -1342,6 +1343,8 @@
                                         {{ form[4] if form[4] else 'Swimming Pool Facility' }}
                                     {% elif form[1] == 'Small Hotel' %}
                                         {{ form[4] if form[4] else 'Small Hotel' }}
+                                    {% elif form[1] == 'Meat Processing' %}
+                                        {{ form[4] if form[4] else 'Meat Processing Facility' }}
                                     {% else %}
                                         {{ form[4] if form[4] else form[1] }}
                                     {% endif %}
@@ -1376,7 +1379,7 @@
         </div>
 
         <!-- Individual Tabs for each inspection type -->
-        {% for tab in ['food', 'residential', 'burial', 'spirit_licence', 'swimming_pool', 'small_hotels', 'barbershop', 'institutional'] %}
+        {% for tab in ['food', 'residential', 'burial', 'spirit_licence', 'swimming_pool', 'small_hotels', 'barbershop', 'institutional', 'meat_processing'] %}
         <div id="{{ tab }}" class="tab-content">
             <h2 class="text-2xl font-bold mb-4 black-bold">{{ tab.replace('_', ' ').title() }} Inspections</h2>
 
@@ -1459,6 +1462,7 @@
     or (tab == 'small_hotels' and form[1] == 'Small Hotel')
     or (tab == 'barbershop' and form[1] == 'Barbershop')
     or (tab == 'institutional' and form[1] == 'Institutional Health')
+    or (tab == 'meat_processing' and form[1] == 'Meat Processing')
 %}
 
                         {% set counter.value = counter.value + 1 %}
@@ -3356,6 +3360,7 @@
                 case 'Barbershop': endpoint = `/barbershop/inspection/${formId}`; break;
                 case 'Institutional Health': endpoint = `/institutional/inspection/${formId}`; break;
                 case 'Institutional': endpoint = `/institutional/inspection/${formId}`; break;
+                case 'Meat Processing': endpoint = `/meat_processing/inspection/${formId}`; break;
                 default: endpoint = `/inspection/${formId}`;
             }
             window.location.href = endpoint;

@@ -579,7 +579,7 @@ def admin():
         SELECT id, form_type, inspector_name, created_at, establishment_name, result, owner
         FROM inspections
         WHERE form_type IN (
-            'Food Establishment', 'Spirit Licence Premises', 'Swimming Pool', 
+            'Food Establishment', 'Spirit Licence Premises', 'Swimming Pool',
             'Small Hotel', 'Barbershop', 'Institutional Health'
         )
         UNION
@@ -588,6 +588,9 @@ def admin():
         UNION
         SELECT id, 'Burial' AS form_type, '' AS inspector_name, created_at, applicant_name, 'Completed' AS result, deceased_name
         FROM burial_site_inspections
+        UNION
+        SELECT id, 'Meat Processing' AS form_type, inspector_name, created_at, establishment_name, result, owner_operator
+        FROM meat_processing_inspections
         ORDER BY created_at DESC
     """)
     forms = c.fetchall()
@@ -2249,7 +2252,8 @@ def burial_inspection_detail(id):
         'general_remarks': inspection['general_remarks'],
         'inspector_signature': inspection['inspector_signature'],
         'received_by': inspection['received_by'],
-        'created_at': inspection['created_at']
+        'created_at': inspection['created_at'],
+        'photo_data': inspection.get('photo_data', '[]')
     }
     logging.debug(f"Rendering burial inspection detail for id: {id}")
 

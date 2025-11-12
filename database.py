@@ -380,14 +380,41 @@ def get_inspections_by_inspector(inspector_name, inspection_type='all'):
     c = conn.cursor()
 
     if inspection_type == 'all':
-        c.execute("""SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment,
-                     created_at, result, form_type FROM inspections
-                     WHERE inspector_name = ? ORDER BY inspection_date DESC""", (inspector_name,))
+        # Get all inspection types for this inspector
+        c.execute("""
+            SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment,
+                   created_at, result, form_type
+            FROM inspections
+            WHERE inspector_name = ?
+            UNION
+            SELECT id, premises_name as establishment_name, inspector_name, inspection_date,
+                   'Residential' as type_of_establishment, created_at, result, 'Residential' as form_type
+            FROM residential_inspections
+            WHERE inspector_name = ?
+            UNION
+            SELECT id, establishment_name, inspector_name, inspection_date,
+                   'Meat Processing' as type_of_establishment, created_at, result, 'Meat Processing' as form_type
+            FROM meat_processing_inspections
+            WHERE inspector_name = ?
+            ORDER BY inspection_date DESC
+        """, (inspector_name, inspector_name, inspector_name))
     else:
-        c.execute("""SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment,
-                     created_at, result, form_type FROM inspections
-                     WHERE inspector_name = ? AND (form_type = ? OR type_of_establishment = ?)
-                     ORDER BY inspection_date DESC""", (inspector_name, inspection_type, inspection_type))
+        # Filter by inspection type
+        if inspection_type == 'Residential':
+            c.execute("""SELECT id, premises_name as establishment_name, inspector_name, inspection_date,
+                         'Residential' as type_of_establishment, created_at, result, 'Residential' as form_type
+                         FROM residential_inspections
+                         WHERE inspector_name = ? ORDER BY inspection_date DESC""", (inspector_name,))
+        elif inspection_type == 'Meat Processing':
+            c.execute("""SELECT id, establishment_name, inspector_name, inspection_date,
+                         'Meat Processing' as type_of_establishment, created_at, result, 'Meat Processing' as form_type
+                         FROM meat_processing_inspections
+                         WHERE inspector_name = ? ORDER BY inspection_date DESC""", (inspector_name,))
+        else:
+            c.execute("""SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment,
+                         created_at, result, form_type FROM inspections
+                         WHERE inspector_name = ? AND (form_type = ? OR type_of_establishment = ?)
+                         ORDER BY inspection_date DESC""", (inspector_name, inspection_type, inspection_type))
 
     inspections = c.fetchall()
     conn.close()
