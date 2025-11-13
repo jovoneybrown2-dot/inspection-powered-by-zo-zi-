@@ -1290,66 +1290,64 @@ def submit_form(form_type):
 @app.route('/submit_residential', methods=['POST'])
 def submit_residential():
     if 'inspector' not in session:
-        return redirect(url_for('login'))
+        return jsonify({'message': 'Unauthorized: Please log in'}), 401
 
-    # Helper function to safely convert to int
-    def safe_int_convert(value, default=0):
-        try:
-            return int(float(value)) if value else default
-        except (ValueError, TypeError):
-            return default
+    try:
+        # Helper function to safely convert to int
+        def safe_int_convert(value, default=0):
+            try:
+                return int(float(value)) if value else default
+            except (ValueError, TypeError):
+                return default
 
-    data = {
-        'premises_name': request.form['premises_name'],
-        'owner': request.form['owner'],
-        'address': request.form['address'],
-        'inspector_name': request.form['inspector_name'],
-        'inspection_date': request.form['inspection_date'],
-        'inspector_code': request.form['inspector_code'],
-        'treatment_facility': request.form['treatment_facility'],
-        'vector': request.form['vector'],
-        'result': request.form['result'],
-        'onsite_system': request.form['onsite_system'],
-        'building_construction_type': request.form.get('building_construction_type', ''),
-        'purpose_of_visit': request.form['purpose_of_visit'],
-        'action': request.form['action'],
-        'no_of_bedrooms': request.form.get('no_of_bedrooms', ''),
-        'total_population': request.form.get('total_population', ''),
-        'critical_score': safe_int_convert(request.form['critical_score']),
-        'overall_score': safe_int_convert(request.form['overall_score']),
-        'comments': request.form.get('comments', ''),
-        'inspector_signature': request.form['inspector_signature'],
-        'received_by': request.form.get('received_by', ''),
-        'photo_data': request.form.get('photos', '[]'),
-        'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    }
-    inspection_id = save_residential_inspection(data)
+        data = {
+            'premises_name': request.form['premises_name'],
+            'owner': request.form['owner'],
+            'address': request.form['address'],
+            'inspector_name': request.form['inspector_name'],
+            'inspection_date': request.form['inspection_date'],
+            'inspector_code': request.form['inspector_code'],
+            'treatment_facility': request.form['treatment_facility'],
+            'vector': request.form['vector'],
+            'result': request.form['result'],
+            'onsite_system': request.form['onsite_system'],
+            'building_construction_type': request.form.get('building_construction_type', ''),
+            'purpose_of_visit': request.form['purpose_of_visit'],
+            'action': request.form['action'],
+            'no_of_bedrooms': request.form.get('no_of_bedrooms', ''),
+            'total_population': request.form.get('total_population', ''),
+            'critical_score': safe_int_convert(request.form['critical_score']),
+            'overall_score': safe_int_convert(request.form['overall_score']),
+            'comments': request.form.get('comments', ''),
+            'inspector_signature': request.form['inspector_signature'],
+            'received_by': request.form.get('received_by', ''),
+            'photo_data': request.form.get('photos', '[]'),
+            'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        inspection_id = save_residential_inspection(data)
 
-    conn = get_db_connection()
-    c = conn.cursor()
-    for item in RESIDENTIAL_CHECKLIST_ITEMS:
-        score = request.form.get(f'score_{item["id"]}', '0')
-        # Also apply safe conversion to checklist scores
-        safe_score = safe_int_convert(score, 0)
-        c.execute("INSERT INTO residential_checklist_scores (form_id, item_id, score) VALUES (?, ?, ?)",
-                  (inspection_id, item["id"], safe_score))
-    conn.commit()
-    conn.close()
+        conn = get_db_connection()
+        c = conn.cursor()
+        for item in RESIDENTIAL_CHECKLIST_ITEMS:
+            score = request.form.get(f'score_{item["id"]}', '0')
+            # Also apply safe conversion to checklist scores
+            safe_score = safe_int_convert(score, 0)
+            c.execute("INSERT INTO residential_checklist_scores (form_id, item_id, score) VALUES (?, ?, ?)",
+                      (inspection_id, item["id"], safe_score))
+        conn.commit()
+        conn.close()
 
-    # Check and create alert if score below threshold
-    check_and_create_alert(
-        inspection_id,
-        data['inspector_name'],
-        'Residential',
-        data['overall_score']
-    )
+        # Check and create alert if score below threshold
+        check_and_create_alert(
+            inspection_id,
+            data['inspector_name'],
+            'Residential',
+            data['overall_score']
+        )
 
-    return render_template('residential_form.html',
-                           checklist=RESIDENTIAL_CHECKLIST_ITEMS,
-                           inspections=get_residential_inspections(),
-                           show_form=True,
-                           establishment_data=get_establishment_data(),
-                           success=True)
+        return jsonify({'message': 'Submit successfully', 'inspection_id': inspection_id})
+    except Exception as e:
+        return jsonify({'message': f'Error: {str(e)}'}), 500
 
 
 @app.route('/submit_burial', methods=['POST'])
