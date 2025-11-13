@@ -519,6 +519,74 @@ INSTITUTIONAL_CHECKLIST_ITEMS = [
 ]
 
 
+# ============================================================================
+# DYNAMIC FORM LOADING - Load forms from database
+# ============================================================================
+
+def get_form_checklist_items(form_type, fallback_list=None):
+    """
+    Load form checklist items from database dynamically.
+    Falls back to hardcoded list if database is empty.
+
+    Args:
+        form_type: Form type name (e.g., 'Food Establishment', 'Residential')
+        fallback_list: Hardcoded checklist to use if database is empty
+
+    Returns:
+        List of checklist items in the format expected by forms
+    """
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+
+        # Get template ID for this form type
+        c.execute('SELECT id FROM form_templates WHERE form_type = ? AND active = 1', (form_type,))
+        template = c.fetchone()
+
+        if not template:
+            print(f"⚠️  No template found for {form_type}, using hardcoded list")
+            conn.close()
+            return fallback_list if fallback_list else []
+
+        template_id = template[0]
+
+        # Get all active items for this template, ordered
+        c.execute('''
+            SELECT id, item_order, category, description, weight, is_critical
+            FROM form_items
+            WHERE form_template_id = ? AND active = 1
+            ORDER BY item_order
+        ''', (template_id,))
+
+        items = []
+        for row in c.fetchall():
+            # Convert to format expected by forms
+            item = {
+                'id': row[1],  # item_order becomes the ID for compatibility
+                'desc': row[3],  # description
+                'description': row[3],  # alternative key
+                'wt': row[4],  # weight
+                'category': row[2],  # category
+                'is_critical': row[5]  # critical flag
+            }
+            items.append(item)
+
+        conn.close()
+
+        # If database has items, use them; otherwise use fallback
+        if items:
+            print(f"✓ Loaded {len(items)} items from database for {form_type}")
+            return items
+        else:
+            print(f"⚠️  No items in database for {form_type}, using hardcoded list")
+            return fallback_list if fallback_list else []
+
+    except Exception as e:
+        print(f"❌ Error loading form items for {form_type}: {str(e)}")
+        # Return fallback on any error
+        return fallback_list if fallback_list else []
+
+
 @app.route('/debug/stats')
 def debug_stats():
     if 'admin' not in session and 'inspector' not in session:
@@ -779,7 +847,9 @@ def logout():
 def new_residential_form():
     if 'inspector' not in session:
         return redirect(url_for('login'))
-    return render_template('residential_form.html', checklist=RESIDENTIAL_CHECKLIST_ITEMS, inspections=get_residential_inspections(), show_form=True, establishment_data=get_establishment_data())
+    # Load checklist from database (falls back to hardcoded if empty)
+    checklist = get_form_checklist_items('Residential', RESIDENTIAL_CHECKLIST_ITEMS)
+    return render_template('residential_form.html', checklist=checklist, inspections=get_residential_inspections(), show_form=True, establishment_data=get_establishment_data())
 
 @app.route('/new_burial_form')
 def new_burial_form():
@@ -850,7 +920,9 @@ def new_spirit_licence_form():
         'scores': {},
         'created_at': ''
     }
-    return render_template('spirit_licence_form.html', checklist=SPIRIT_LICENCE_CHECKLIST_ITEMS, inspections=get_inspections(), show_form=True, establishment_data=get_establishment_data(), read_only=False, inspection=inspection)
+    # Load checklist from database (falls back to hardcoded if empty)
+    checklist = get_form_checklist_items('Spirit Licence Premises', SPIRIT_LICENCE_CHECKLIST_ITEMS)
+    return render_template('spirit_licence_form.html', checklist=checklist, inspections=get_inspections(), show_form=True, establishment_data=get_establishment_data(), read_only=False, inspection=inspection)
 
 @app.route('/new_swimming_pool_form')
 def new_swimming_pool_form():
@@ -875,14 +947,18 @@ def new_swimming_pool_form():
         'manager_date': '',
         'scores': {}
     }
-    return render_template('swimming_pool_form.html', checklist=SWIMMING_POOL_CHECKLIST_ITEMS, inspections=get_inspections(), inspection=inspection)
+    # Load checklist from database (falls back to hardcoded if empty)
+    checklist = get_form_checklist_items('Swimming Pool', SWIMMING_POOL_CHECKLIST_ITEMS)
+    return render_template('swimming_pool_form.html', checklist=checklist, inspections=get_inspections(), inspection=inspection)
 
 @app.route('/new_small_hotels_form')
 def new_small_hotels_form():
     if 'inspector' not in session:
         return redirect(url_for('login'))
     today = datetime.now().strftime('%Y-%m-%d')
-    return render_template('small_hotels_form.html', checklist_items=SMALL_HOTELS_CHECKLIST_ITEMS, today=today)
+    # Load checklist from database (falls back to hardcoded if empty)
+    checklist_items = get_form_checklist_items('Small Hotel', SMALL_HOTELS_CHECKLIST_ITEMS)
+    return render_template('small_hotels_form.html', checklist_items=checklist_items, today=today)
 
 
 @app.route('/submit_institutional', methods=['POST'])
@@ -1663,6 +1739,9 @@ def new_institutional_form():
     if 'inspector' not in session:
         return redirect(url_for('login'))
 
+    # Load checklist from database (falls back to hardcoded if empty)
+    checklist = get_form_checklist_items('Institutional', INSTITUTIONAL_CHECKLIST_ITEMS)
+
     inspection = {
         'id': '',
         'establishment_name': '',
@@ -1691,7 +1770,7 @@ def new_institutional_form():
         'received_by': '',
         'scores': {}
     }
-    return render_template('institutional_form.html', inspection=inspection)
+    return render_template('institutional_form.html', inspection=inspection, checklist=checklist)
 
 
 @app.route('/submit_small_hotels', methods=['POST'])
@@ -5294,6 +5373,10 @@ def update_barbershop_db_schema():
 def new_barbershop_form():
     if 'inspector' not in session:
         return redirect(url_for('login'))
+
+    # Load checklist from database (falls back to hardcoded if empty)
+    checklist = get_form_checklist_items('Barbershop', BARBERSHOP_CHECKLIST_ITEMS)
+
     inspection = {
         'id': '',
         'establishment_name': '',
@@ -5319,7 +5402,7 @@ def new_barbershop_form():
         'action': '',
         'registration_status': ''
     }
-    return render_template('barbershop_form.html', checklist=BARBERSHOP_CHECKLIST_ITEMS, inspections=get_inspections(),
+    return render_template('barbershop_form.html', checklist=checklist, inspections=get_inspections(),
                            show_form=True, establishment_data=get_establishment_data(), read_only=False,
                            inspection=inspection)
 
@@ -5329,7 +5412,11 @@ def new_barbershop_form():
 def new_meat_processing_form():
     if 'inspector' not in session:
         return redirect(url_for('login'))
-    return render_template('meat_processing_form.html')
+
+    # Load checklist from database (falls back to hardcoded if empty)
+    checklist = get_form_checklist_items('Meat Processing', MEAT_PROCESSING_CHECKLIST_ITEMS)
+
+    return render_template('meat_processing_form.html', checklist=checklist)
 
 
 @app.route('/submit_barbershop', methods=['POST'])
@@ -8753,8 +8840,8 @@ def new_form():
     if 'inspector' not in session:
         return redirect(url_for('login'))
 
-    # Force use static checklist (bypassing database)
-    checklist = FOOD_CHECKLIST_ITEMS
+    # Load checklist from database (falls back to hardcoded if empty)
+    checklist = get_form_checklist_items('Food Establishment', FOOD_CHECKLIST_ITEMS)
 
     # Default inspection data for new form (your existing code)
     inspection = {
