@@ -76,6 +76,8 @@
         .btn-danger {
             background: #dc3545;
             color: white;
+            padding: 8px 16px;
+            font-size: 12px;
         }
 
         .btn-danger:hover {
@@ -85,6 +87,8 @@
         .btn-warning {
             background: #ffc107;
             color: #000;
+            padding: 8px 16px;
+            font-size: 12px;
         }
 
         .content {
@@ -114,159 +118,101 @@
             background: white;
         }
 
-        .form-info {
-            background: #e8f5e9;
-            padding: 15px 20px;
-            border-radius: 8px;
+        .tabs {
+            display: flex;
+            gap: 10px;
+            border-bottom: 2px solid #ddd;
             margin-bottom: 30px;
-            border-left: 4px solid #4CAF50;
-            display: none;
         }
 
-        .form-info.active {
-            display: block;
-        }
-
-        .form-info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 10px;
-        }
-
-        .form-info-item {
-            font-size: 14px;
-        }
-
-        .form-info-label {
+        .tab {
+            padding: 15px 30px;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-size: 16px;
             font-weight: 600;
-            color: #2e7d32;
+            color: #666;
+            transition: all 0.3s;
         }
 
-        .items-container {
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
             display: none;
         }
 
-        .items-container.active {
+        .tab-content.active {
             display: block;
         }
 
-        .items-header {
+        .version-badge {
+            background: #ffc107;
+            color: #000;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .item-list, .field-list {
+            margin-top: 20px;
+        }
+
+        .item, .field-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .item.editing, .field-item.editing {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+
+        .item-header, .field-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 3px solid #667eea;
+            margin-bottom: 10px;
         }
 
-        .items-header h2 {
-            color: #333;
+        .item-info, .field-info {
+            flex: 1;
         }
 
-        .item-card {
-            background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 15px;
-            transition: all 0.3s;
-            cursor: move;
-        }
-
-        .item-card:hover {
-            border-color: #667eea;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-        }
-
-        .item-card.editing {
-            border-color: #4CAF50;
-            background: #f1f8f4;
-        }
-
-        .item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 15px;
-        }
-
-        .item-number {
-            display: inline-block;
-            background: #667eea;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .item-category {
-            display: inline-block;
-            background: #ffc107;
-            color: #000;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-left: 10px;
-        }
-
-        .item-critical {
-            display: inline-block;
-            background: #dc3545;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-left: 10px;
-        }
-
-        .item-actions {
+        .item-actions, .field-actions {
             display: flex;
             gap: 10px;
         }
 
-        .item-actions button {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .item-description {
-            color: #333;
-            font-size: 15px;
-            line-height: 1.6;
-            margin: 10px 0;
-        }
-
-        .item-meta {
-            display: flex;
-            gap: 20px;
-            font-size: 13px;
-            color: #666;
-            margin-top: 10px;
-        }
-
-        .item-weight {
-            font-weight: 600;
-            color: #667eea;
-        }
-
-        .edit-form {
-            display: none;
-            background: #f8f9fa;
-            padding: 20px;
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
             border-radius: 6px;
-            margin-top: 15px;
+            font-size: 14px;
+            margin-bottom: 10px;
         }
 
-        .edit-form.active {
-            display: block;
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
         }
 
         .form-group {
@@ -280,295 +226,287 @@
             color: #333;
         }
 
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        .form-group textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
-
-        .form-actions {
+        .checkbox-group {
             display: flex;
+            align-items: center;
             gap: 10px;
-            margin-top: 15px;
         }
 
-        .add-item-form {
-            background: #e3f2fd;
-            padding: 20px;
+        .message {
+            padding: 15px 20px;
             border-radius: 8px;
             margin-bottom: 20px;
-            border-left: 4px solid #2196F3;
             display: none;
         }
 
-        .add-item-form.active {
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.show {
             display: block;
         }
 
-        .no-items {
+        .add-new-section {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 2px dashed #667eea;
+        }
+
+        .add-new-section h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .empty-state {
             text-align: center;
             padding: 60px 20px;
             color: #999;
         }
 
-        .no-items-icon {
+        .empty-state-icon {
             font-size: 64px;
             margin-bottom: 20px;
-        }
-
-        .success-message,
-        .error-message {
-            padding: 15px 20px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-weight: 600;
-            display: none;
-        }
-
-        .success-message {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-        }
-
-        .error-message {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-        }
-
-        .success-message.active,
-        .error-message.active {
-            display: block;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-            width: auto;
-            margin: 0;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>
-                <span>🔧</span>
-                Form Builder
-            </h1>
-            <a href="/admin" class="btn btn-secondary">← Back to Admin</a>
+            <h1>🔧 Form Builder</h1>
+            <a href="/admin" class="btn btn-secondary">← Back to Dashboard</a>
         </div>
 
         <div class="content">
-            <div class="success-message" id="successMessage"></div>
-            <div class="error-message" id="errorMessage"></div>
+            <!-- Messages -->
+            <div id="successMessage" class="message success"></div>
+            <div id="errorMessage" class="message error"></div>
 
             <!-- Form Selector -->
             <div class="form-selector">
-                <label for="formSelect">Select Form Template to Edit:</label>
-                <select id="formSelect" onchange="loadFormItems()">
-                    <option value="">-- Select a Form --</option>
+                <label for="formType">Select Form Type to Edit:</label>
+                <select id="formType" onchange="selectForm()">
+                    <option value="">-- Choose a Form --</option>
                     {% for template in templates %}
-                    <option value="{{ template[0] }}"
-                            data-name="{{ template[1] }}"
-                            data-description="{{ template[2] }}"
-                            data-type="{{ template[3] }}"
-                            data-version="{{ template[6] }}">
-                        {{ template[1] }} (v{{ template[6] }})
-                    </option>
+                    <option value="{{ template[0] }}" data-version="{{ template[6] }}">{{ template[1] }}</option>
                     {% endfor %}
                 </select>
             </div>
 
-            <!-- Form Info -->
-            <div class="form-info" id="formInfo">
-                <h3>📋 Form Information</h3>
-                <div class="form-info-grid">
-                    <div class="form-info-item">
-                        <span class="form-info-label">Name:</span> <span id="infoName"></span>
-                    </div>
-                    <div class="form-info-item">
-                        <span class="form-info-label">Type:</span> <span id="infoType"></span>
-                    </div>
-                    <div class="form-info-item">
-                        <span class="form-info-label">Version:</span> <span id="infoVersion"></span>
-                    </div>
-                    <div class="form-info-item">
-                        <span class="form-info-label">Total Items:</span> <span id="infoCount">0</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Items Container -->
-            <div class="items-container" id="itemsContainer">
-                <div class="items-header">
-                    <h2>📝 Form Items</h2>
-                    <button class="btn btn-primary" onclick="showAddItemForm()">
-                        + Add New Item
-                    </button>
+            <!-- Form Editor (shows after selecting a form) -->
+            <div id="formEditor" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h2 id="formTitle">Editing Form</h2>
+                    <span class="version-badge">Version: <span id="formVersion">1.0</span></span>
                 </div>
 
-                <!-- Add New Item Form -->
-                <div class="add-item-form" id="addItemForm">
-                    <h3>Add New Checklist Item</h3>
-                    <div class="form-group">
-                        <label>Category:</label>
-                        <input type="text" id="newCategory" placeholder="e.g., FOOD PROTECTION" value="GENERAL">
-                    </div>
-                    <div class="form-group">
-                        <label>Description/Question:</label>
-                        <textarea id="newDescription" placeholder="Enter the inspection checklist item description..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Weight/Score Value:</label>
-                        <input type="number" id="newWeight" value="1" min="1" max="10">
-                    </div>
-                    <div class="form-group">
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('items')">📋 Checklist Items</button>
+                    <button class="tab" onclick="switchTab('fields')">📝 Form Fields</button>
+                </div>
+
+                <!-- TAB 1: Checklist Items -->
+                <div id="items-tab" class="tab-content active">
+                    <!-- Add New Item -->
+                    <div class="add-new-section">
+                        <h3>➕ Add New Checklist Item</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Category</label>
+                                <input type="text" id="newCategory" placeholder="e.g., FOOD, SAFETY" />
+                            </div>
+                            <div class="form-group">
+                                <label>Weight</label>
+                                <input type="number" id="newWeight" value="1" min="1" max="10" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="newDescription" placeholder="Enter checklist item description"></textarea>
+                        </div>
                         <div class="checkbox-group">
-                            <input type="checkbox" id="newCritical">
+                            <input type="checkbox" id="newCritical" />
                             <label for="newCritical">Mark as Critical Item</label>
                         </div>
+                        <button class="btn btn-primary" onclick="createItem()" style="margin-top:15px;">Add Item</button>
                     </div>
-                    <div class="form-actions">
-                        <button class="btn btn-primary" onclick="createItem()">Save Item</button>
-                        <button class="btn btn-secondary" onclick="hideAddItemForm()">Cancel</button>
-                    </div>
+
+                    <!-- Items List -->
+                    <div id="itemsList" class="item-list"></div>
                 </div>
 
-                <!-- Items List -->
-                <div id="itemsList"></div>
+                <!-- TAB 2: Form Fields -->
+                <div id="fields-tab" class="tab-content">
+                    <!-- Add New Field -->
+                    <div class="add-new-section">
+                        <h3>➕ Add New Form Field</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Field Name (code)</label>
+                                <input type="text" id="newFieldName" placeholder="e.g., telephone_no" />
+                            </div>
+                            <div class="form-group">
+                                <label>Field Label (display)</label>
+                                <input type="text" id="newFieldLabel" placeholder="e.g., Telephone Number" />
+                            </div>
+                            <div class="form-group">
+                                <label>Field Type</label>
+                                <select id="newFieldType">
+                                    <option value="text">Text</option>
+                                    <option value="textarea">Text Area</option>
+                                    <option value="number">Number</option>
+                                    <option value="date">Date</option>
+                                    <option value="time">Time</option>
+                                    <option value="tel">Telephone</option>
+                                    <option value="email">Email</option>
+                                    <option value="select">Dropdown (Select)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Field Group</label>
+                                <select id="newFieldGroup">
+                                    <option value="establishment_info">Establishment Info</option>
+                                    <option value="inspection_details">Inspection Details</option>
+                                    <option value="results">Results</option>
+                                    <option value="main">Main</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Placeholder Text</label>
+                                <input type="text" id="newFieldPlaceholder" placeholder="Enter placeholder..." />
+                            </div>
+                            <div class="form-group">
+                                <label>Options (comma-separated, for dropdown)</label>
+                                <input type="text" id="newFieldOptions" placeholder="Option1,Option2,Option3" />
+                            </div>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="newFieldRequired" />
+                            <label for="newFieldRequired">Required Field</label>
+                        </div>
+                        <button class="btn btn-primary" onclick="createField()" style="margin-top:15px;">Add Field</button>
+                    </div>
+
+                    <!-- Fields List -->
+                    <div id="fieldsList" class="field-list"></div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         let currentTemplateId = null;
+        let currentVersion = '1.0';
         let items = [];
+        let fields = [];
 
-        function loadFormItems() {
-            const select = document.getElementById('formSelect');
+        function selectForm() {
+            const select = document.getElementById('formType');
             const selectedOption = select.options[select.selectedIndex];
+            currentTemplateId = select.value;
+            currentVersion = selectedOption.dataset.version || '1.0';
 
-            if (!select.value) {
-                document.getElementById('itemsContainer').classList.remove('active');
-                document.getElementById('formInfo').classList.remove('active');
+            if (!currentTemplateId) {
+                document.getElementById('formEditor').style.display = 'none';
                 return;
             }
 
-            currentTemplateId = select.value;
+            document.getElementById('formTitle').textContent = 'Editing: ' + selectedOption.text;
+            document.getElementById('formVersion').textContent = currentVersion;
+            document.getElementById('formEditor').style.display = 'block';
 
-            // Update form info
-            document.getElementById('infoName').textContent = selectedOption.dataset.name;
-            document.getElementById('infoType').textContent = selectedOption.dataset.type;
-            document.getElementById('infoVersion').textContent = selectedOption.dataset.version;
-            document.getElementById('formInfo').classList.add('active');
+            // Load both tabs
+            loadFormItems();
+            loadFormFields();
+        }
 
-            // Show loading
-            document.getElementById('itemsList').innerHTML = '<div class="loading"><div class="spinner"></div>Loading form items...</div>';
-            document.getElementById('itemsContainer').classList.add('active');
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
 
-            // Fetch items
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        // ============================================================================
+        // CHECKLIST ITEMS TAB
+        // ============================================================================
+
+        function loadFormItems() {
             fetch(`/api/admin/forms/template/${currentTemplateId}/items`)
                 .then(response => response.json())
                 .then(data => {
                     items = data.items;
                     renderItems();
-                    document.getElementById('infoCount').textContent = items.length;
                 })
                 .catch(error => {
-                    showError('Failed to load form items: ' + error.message);
+                    showError('Failed to load checklist items: ' + error);
                 });
         }
 
         function renderItems() {
             const container = document.getElementById('itemsList');
-
             if (items.length === 0) {
                 container.innerHTML = `
-                    <div class="no-items">
-                        <div class="no-items-icon">📋</div>
-                        <h3>No items in this form yet</h3>
-                        <p>Click "Add New Item" to create the first checklist item.</p>
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <h3>No checklist items yet</h3>
+                        <p>Add your first checklist item above</p>
                     </div>
                 `;
                 return;
             }
 
-            container.innerHTML = items.map((item, index) => `
-                <div class="item-card" id="item-${item.id}">
+            container.innerHTML = items.map(item => `
+                <div class="item" id="item-${item.id}">
                     <div class="item-header">
-                        <div>
-                            <span class="item-number">#${item.item_order}</span>
-                            <span class="item-category">${item.category}</span>
-                            ${item.is_critical ? '<span class="item-critical">CRITICAL</span>' : ''}
+                        <div class="item-info">
+                            <strong>Item #${item.item_order}</strong> -
+                            <span style="color:#667eea;">${item.category}</span> -
+                            Weight: ${item.weight}
+                            ${item.is_critical ? '<span style="background:#dc3545;color:white;padding:2px 8px;border-radius:4px;font-size:11px;margin-left:10px;">CRITICAL</span>' : ''}
                         </div>
                         <div class="item-actions">
                             <button class="btn btn-warning" onclick="editItem(${item.id})">Edit</button>
                             <button class="btn btn-danger" onclick="deleteItem(${item.id})">Delete</button>
                         </div>
                     </div>
-                    <div class="item-description" id="desc-${item.id}">${item.description}</div>
-                    <div class="item-meta">
-                        <div class="item-weight">Weight: ${item.weight}</div>
-                        <div>Created: ${new Date(item.created_date).toLocaleDateString()}</div>
-                    </div>
-
-                    <!-- Edit Form (Hidden by default) -->
-                    <div class="edit-form" id="edit-${item.id}">
-                        <div class="form-group">
-                            <label>Category:</label>
-                            <input type="text" id="edit-category-${item.id}" value="${item.category}">
-                        </div>
-                        <div class="form-group">
-                            <label>Description:</label>
-                            <textarea id="edit-description-${item.id}">${item.description}</textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Weight:</label>
-                            <input type="number" id="edit-weight-${item.id}" value="${item.weight}" min="1" max="10">
-                        </div>
-                        <div class="form-group">
-                            <div class="checkbox-group">
-                                <input type="checkbox" id="edit-critical-${item.id}" ${item.is_critical ? 'checked' : ''}>
-                                <label for="edit-critical-${item.id}">Critical Item</label>
+                    <div style="margin-top:10px;color:#555;">${item.description}</div>
+                    <div id="edit-form-${item.id}" style="display:none;margin-top:15px;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Category</label>
+                                <input type="text" id="edit-category-${item.id}" value="${item.category}" />
+                            </div>
+                            <div class="form-group">
+                                <label>Weight</label>
+                                <input type="number" id="edit-weight-${item.id}" value="${item.weight}" min="1" max="10" />
                             </div>
                         </div>
-                        <div class="form-actions">
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="edit-description-${item.id}">${item.description}</textarea>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="edit-critical-${item.id}" ${item.is_critical ? 'checked' : ''} />
+                            <label>Critical Item</label>
+                        </div>
+                        <div style="margin-top:15px;display:flex;gap:10px;">
                             <button class="btn btn-primary" onclick="saveItem(${item.id})">Save Changes</button>
                             <button class="btn btn-secondary" onclick="cancelEdit(${item.id})">Cancel</button>
                         </div>
@@ -577,31 +515,17 @@
             `).join('');
         }
 
-        function showAddItemForm() {
-            document.getElementById('addItemForm').classList.add('active');
-            document.getElementById('newDescription').focus();
-        }
-
-        function hideAddItemForm() {
-            document.getElementById('addItemForm').classList.remove('active');
-            // Clear form
-            document.getElementById('newCategory').value = 'GENERAL';
-            document.getElementById('newDescription').value = '';
-            document.getElementById('newWeight').value = '1';
-            document.getElementById('newCritical').checked = false;
-        }
-
         function createItem() {
             const data = {
                 form_template_id: parseInt(currentTemplateId),
-                category: document.getElementById('newCategory').value || 'GENERAL',
+                category: document.getElementById('newCategory').value,
                 description: document.getElementById('newDescription').value,
                 weight: parseInt(document.getElementById('newWeight').value),
                 is_critical: document.getElementById('newCritical').checked ? 1 : 0
             };
 
-            if (!data.description.trim()) {
-                showError('Please enter a description');
+            if (!data.category || !data.description) {
+                showError('Please fill in all required fields');
                 return;
             }
 
@@ -612,32 +536,26 @@
             })
             .then(response => response.json())
             .then(result => {
-                if (result.success) {
-                    showSuccess('Item created successfully!');
-                    hideAddItemForm();
-                    loadFormItems(); // Reload
-                    incrementVersion();
-                } else {
-                    showError('Failed to create item');
-                }
+                showSuccess('Checklist item created successfully!');
+                loadFormItems();
+                incrementVersion();
+                // Clear form
+                document.getElementById('newCategory').value = '';
+                document.getElementById('newDescription').value = '';
+                document.getElementById('newWeight').value = '1';
+                document.getElementById('newCritical').checked = false;
             })
-            .catch(error => showError('Error: ' + error.message));
+            .catch(error => showError('Failed to create item: ' + error));
         }
 
         function editItem(itemId) {
-            const card = document.getElementById(`item-${itemId}`);
-            const editForm = document.getElementById(`edit-${itemId}`);
-
-            card.classList.add('editing');
-            editForm.classList.add('active');
+            document.getElementById(`item-${itemId}`).classList.add('editing');
+            document.getElementById(`edit-form-${itemId}`).style.display = 'block';
         }
 
         function cancelEdit(itemId) {
-            const card = document.getElementById(`item-${itemId}`);
-            const editForm = document.getElementById(`edit-${itemId}`);
-
-            card.classList.remove('editing');
-            editForm.classList.remove('active');
+            document.getElementById(`item-${itemId}`).classList.remove('editing');
+            document.getElementById(`edit-form-${itemId}`).style.display = 'none';
         }
 
         function saveItem(itemId) {
@@ -655,19 +573,15 @@
             })
             .then(response => response.json())
             .then(result => {
-                if (result.success) {
-                    showSuccess('Item updated successfully!');
-                    loadFormItems(); // Reload
-                    incrementVersion();
-                } else {
-                    showError('Failed to update item');
-                }
+                showSuccess('Item updated successfully!');
+                loadFormItems();
+                incrementVersion();
             })
-            .catch(error => showError('Error: ' + error.message));
+            .catch(error => showError('Failed to update item: ' + error));
         }
 
         function deleteItem(itemId) {
-            if (!confirm('Are you sure you want to delete this item? It will be removed from future forms but preserved in old completed inspections.')) {
+            if (!confirm('Are you sure you want to delete this item?\n\nIt will be removed from future forms but preserved in completed inspections.')) {
                 return;
             }
 
@@ -676,16 +590,204 @@
             })
             .then(response => response.json())
             .then(result => {
-                if (result.success) {
-                    showSuccess('Item deleted successfully!');
-                    loadFormItems(); // Reload
-                    incrementVersion();
-                } else {
-                    showError('Failed to delete item');
-                }
+                showSuccess('Item deleted successfully!');
+                loadFormItems();
+                incrementVersion();
             })
-            .catch(error => showError('Error: ' + error.message));
+            .catch(error => showError('Failed to delete item: ' + error));
         }
+
+        // ============================================================================
+        // FORM FIELDS TAB
+        // ============================================================================
+
+        function loadFormFields() {
+            fetch(`/api/admin/forms/template/${currentTemplateId}/fields`)
+                .then(response => response.json())
+                .then(data => {
+                    fields = data.fields;
+                    renderFields();
+                })
+                .catch(error => {
+                    showError('Failed to load form fields: ' + error);
+                });
+        }
+
+        function renderFields() {
+            const container = document.getElementById('fieldsList');
+            if (fields.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <h3>No form fields yet</h3>
+                        <p>Add your first form field above</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = fields.map(field => `
+                <div class="field-item" id="field-${field.id}">
+                    <div class="field-header">
+                        <div class="field-info">
+                            <strong>${field.field_label}</strong>
+                            <span style="color:#999;">(${field.field_name})</span> -
+                            <span style="color:#667eea;">${field.field_type}</span>
+                            ${field.required ? '<span style="background:#dc3545;color:white;padding:2px 8px;border-radius:4px;font-size:11px;margin-left:10px;">REQUIRED</span>' : ''}
+                        </div>
+                        <div class="field-actions">
+                            <button class="btn btn-warning" onclick="editField(${field.id})">Edit</button>
+                            <button class="btn btn-danger" onclick="deleteField(${field.id})">Delete</button>
+                        </div>
+                    </div>
+                    <div style="margin-top:10px;color:#555;">
+                        Group: ${field.field_group} |
+                        Placeholder: "${field.placeholder || 'None'}"
+                        ${field.options ? `| Options: ${field.options}` : ''}
+                    </div>
+                    <div id="edit-field-form-${field.id}" style="display:none;margin-top:15px;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Field Label</label>
+                                <input type="text" id="edit-field-label-${field.id}" value="${field.field_label}" />
+                            </div>
+                            <div class="form-group">
+                                <label>Field Type</label>
+                                <select id="edit-field-type-${field.id}">
+                                    <option value="text" ${field.field_type === 'text' ? 'selected' : ''}>Text</option>
+                                    <option value="textarea" ${field.field_type === 'textarea' ? 'selected' : ''}>Text Area</option>
+                                    <option value="number" ${field.field_type === 'number' ? 'selected' : ''}>Number</option>
+                                    <option value="date" ${field.field_type === 'date' ? 'selected' : ''}>Date</option>
+                                    <option value="time" ${field.field_type === 'time' ? 'selected' : ''}>Time</option>
+                                    <option value="tel" ${field.field_type === 'tel' ? 'selected' : ''}>Telephone</option>
+                                    <option value="email" ${field.field_type === 'email' ? 'selected' : ''}>Email</option>
+                                    <option value="select" ${field.field_type === 'select' ? 'selected' : ''}>Dropdown</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Placeholder</label>
+                                <input type="text" id="edit-field-placeholder-${field.id}" value="${field.placeholder || ''}" />
+                            </div>
+                            <div class="form-group">
+                                <label>Field Group</label>
+                                <select id="edit-field-group-${field.id}">
+                                    <option value="establishment_info" ${field.field_group === 'establishment_info' ? 'selected' : ''}>Establishment Info</option>
+                                    <option value="inspection_details" ${field.field_group === 'inspection_details' ? 'selected' : ''}>Inspection Details</option>
+                                    <option value="results" ${field.field_group === 'results' ? 'selected' : ''}>Results</option>
+                                    <option value="main" ${field.field_group === 'main' ? 'selected' : ''}>Main</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Options (comma-separated, for dropdown)</label>
+                            <input type="text" id="edit-field-options-${field.id}" value="${field.options || ''}" />
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="edit-field-required-${field.id}" ${field.required ? 'checked' : ''} />
+                            <label>Required Field</label>
+                        </div>
+                        <div style="margin-top:15px;display:flex;gap:10px;">
+                            <button class="btn btn-primary" onclick="saveField(${field.id})">Save Changes</button>
+                            <button class="btn btn-secondary" onclick="cancelFieldEdit(${field.id})">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function createField() {
+            const data = {
+                form_template_id: parseInt(currentTemplateId),
+                field_name: document.getElementById('newFieldName').value,
+                field_label: document.getElementById('newFieldLabel').value,
+                field_type: document.getElementById('newFieldType').value,
+                field_group: document.getElementById('newFieldGroup').value,
+                placeholder: document.getElementById('newFieldPlaceholder').value,
+                options: document.getElementById('newFieldOptions').value,
+                required: document.getElementById('newFieldRequired').checked ? 1 : 0
+            };
+
+            if (!data.field_name || !data.field_label) {
+                showError('Please fill in field name and label');
+                return;
+            }
+
+            fetch('/api/admin/forms/field', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                showSuccess('Form field created successfully!');
+                loadFormFields();
+                incrementVersion();
+                // Clear form
+                document.getElementById('newFieldName').value = '';
+                document.getElementById('newFieldLabel').value = '';
+                document.getElementById('newFieldPlaceholder').value = '';
+                document.getElementById('newFieldOptions').value = '';
+                document.getElementById('newFieldRequired').checked = false;
+            })
+            .catch(error => showError('Failed to create field: ' + error));
+        }
+
+        function editField(fieldId) {
+            document.getElementById(`field-${fieldId}`).classList.add('editing');
+            document.getElementById(`edit-field-form-${fieldId}`).style.display = 'block';
+        }
+
+        function cancelFieldEdit(fieldId) {
+            document.getElementById(`field-${fieldId}`).classList.remove('editing');
+            document.getElementById(`edit-field-form-${fieldId}`).style.display = 'none';
+        }
+
+        function saveField(fieldId) {
+            const field = fields.find(f => f.id === fieldId);
+            const data = {
+                field_label: document.getElementById(`edit-field-label-${fieldId}`).value,
+                field_type: document.getElementById(`edit-field-type-${fieldId}`).value,
+                field_order: field.field_order,
+                placeholder: document.getElementById(`edit-field-placeholder-${fieldId}`).value,
+                options: document.getElementById(`edit-field-options-${fieldId}`).value,
+                field_group: document.getElementById(`edit-field-group-${fieldId}`).value,
+                required: document.getElementById(`edit-field-required-${fieldId}`).checked ? 1 : 0
+            };
+
+            fetch(`/api/admin/forms/field/${fieldId}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                showSuccess('Field updated successfully!');
+                loadFormFields();
+                incrementVersion();
+            })
+            .catch(error => showError('Failed to update field: ' + error));
+        }
+
+        function deleteField(fieldId) {
+            if (!confirm('Are you sure you want to delete this field?\n\nIt will be removed from future forms but preserved in completed inspections.')) {
+                return;
+            }
+
+            fetch(`/api/admin/forms/field/${fieldId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(result => {
+                showSuccess('Field deleted successfully!');
+                loadFormFields();
+                incrementVersion();
+            })
+            .catch(error => showError('Failed to delete field: ' + error));
+        }
+
+        // ============================================================================
+        // UTILITY FUNCTIONS
+        // ============================================================================
 
         function incrementVersion() {
             fetch(`/api/admin/forms/template/${currentTemplateId}/version`, {
@@ -693,29 +795,23 @@
             })
             .then(response => response.json())
             .then(result => {
-                if (result.success) {
-                    document.getElementById('infoVersion').textContent = result.new_version;
-                    // Update select option text
-                    const select = document.getElementById('formSelect');
-                    const option = select.options[select.selectedIndex];
-                    option.dataset.version = result.new_version;
-                    option.text = option.text.replace(/\(v[\d.]+\)/, `(v${result.new_version})`);
-                }
+                currentVersion = result.new_version;
+                document.getElementById('formVersion').textContent = currentVersion;
             });
         }
 
         function showSuccess(message) {
             const el = document.getElementById('successMessage');
-            el.textContent = '✓ ' + message;
-            el.classList.add('active');
-            setTimeout(() => el.classList.remove('active'), 5000);
+            el.textContent = message;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 5000);
         }
 
         function showError(message) {
             const el = document.getElementById('errorMessage');
-            el.textContent = '✗ ' + message;
-            el.classList.add('active');
-            setTimeout(() => el.classList.remove('active'), 5000);
+            el.textContent = message;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 5000);
         }
     </script>
 </body>

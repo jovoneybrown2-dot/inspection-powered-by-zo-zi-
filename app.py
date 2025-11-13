@@ -587,6 +587,64 @@ def get_form_checklist_items(form_type, fallback_list=None):
         return fallback_list if fallback_list else []
 
 
+def get_form_field_properties(form_type):
+    """
+    Load form field properties from database dynamically.
+    Returns a dictionary mapping field names to their properties (label, type, placeholder, etc.)
+
+    Args:
+        form_type: Form type name (e.g., 'Food Establishment', 'Residential')
+
+    Returns:
+        Dictionary of field properties: {field_name: {label, type, required, placeholder, ...}}
+    """
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+
+        # Get template ID for this form type
+        c.execute('SELECT id FROM form_templates WHERE form_type = ? AND active = 1', (form_type,))
+        template = c.fetchone()
+
+        if not template:
+            print(f"⚠️  No template found for {form_type}")
+            conn.close()
+            return {}
+
+        template_id = template[0]
+
+        # Get all active fields for this template
+        c.execute('''
+            SELECT field_name, field_label, field_type, required,
+                   placeholder, default_value, options, field_group
+            FROM form_fields
+            WHERE form_template_id = ? AND active = 1
+            ORDER BY field_order
+        ''', (template_id,))
+
+        fields = {}
+        for row in c.fetchall():
+            fields[row[0]] = {  # field_name is the key
+                'label': row[1],
+                'type': row[2],
+                'required': bool(row[3]),
+                'placeholder': row[4],
+                'default_value': row[5],
+                'options': row[6].split(',') if row[6] else [],
+                'field_group': row[7]
+            }
+
+        conn.close()
+
+        if fields:
+            print(f"✓ Loaded {len(fields)} field properties from database for {form_type}")
+        return fields
+
+    except Exception as e:
+        print(f"❌ Error loading form fields for {form_type}: {str(e)}")
+        return {}
+
+
 @app.route('/debug/stats')
 def debug_stats():
     if 'admin' not in session and 'inspector' not in session:
@@ -11238,6 +11296,145 @@ def increment_template_version(template_id):
     conn.close()
 
     return jsonify({'success': True, 'new_version': new_version})
+
+
+# ============================================================================
+# FORM FIELDS API - Admin can edit form field labels, types, properties
+# ============================================================================
+
+@app.route('/api/admin/forms/template/<int:template_id>/fields', methods=['GET'])
+def get_form_fields(template_id):
+    """Get all fields for a form template"""
+    if 'admin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    conn = get_db_connection()
+    c = conn.cursor()
+
+    c.execute('''
+        SELECT id, field_name, field_label, field_type, field_order,
+               required, placeholder, default_value, options, field_group
+        FROM form_fields
+        WHERE form_template_id = ? AND active = 1
+        ORDER BY field_order
+    ''', (template_id,))
+
+    fields = []
+    for row in c.fetchall():
+        fields.append({
+            'id': row[0],
+            'field_name': row[1],
+            'field_label': row[2],
+            'field_type': row[3],
+            'field_order': row[4],
+            'required': row[5],
+            'placeholder': row[6],
+            'default_value': row[7],
+            'options': row[8],
+            'field_group': row[9]
+        })
+
+    conn.close()
+    return jsonify({'fields': fields})
+
+
+@app.route('/api/admin/forms/field', methods=['POST'])
+def create_form_field():
+    """Create a new form field"""
+    if 'admin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    data = request.json
+    conn = get_db_connection()
+    c = conn.cursor()
+
+    # Get the next field_order number
+    c.execute('SELECT MAX(field_order) FROM form_fields WHERE form_template_id = ?',
+              (data['form_template_id'],))
+    max_order = c.fetchone()[0]
+    next_order = (max_order + 1) if max_order else 1
+
+    c.execute('''
+        INSERT INTO form_fields (
+            form_template_id, field_name, field_label, field_type, field_order,
+            required, placeholder, default_value, options, field_group, active, created_date
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    ''', (
+        data['form_template_id'],
+        data['field_name'],
+        data['field_label'],
+        data['field_type'],
+        data.get('field_order', next_order),
+        data.get('required', 0),
+        data.get('placeholder', ''),
+        data.get('default_value', ''),
+        data.get('options', ''),
+        data.get('field_group', 'main'),
+        1
+    ))
+
+    field_id = c.lastrowid
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True, 'field_id': field_id})
+
+
+@app.route('/api/admin/forms/field/<int:field_id>', methods=['PUT'])
+def update_form_field(field_id):
+    """Update an existing form field"""
+    if 'admin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    data = request.json
+    conn = get_db_connection()
+    c = conn.cursor()
+
+    c.execute('''
+        UPDATE form_fields SET
+            field_label = ?,
+            field_type = ?,
+            field_order = ?,
+            required = ?,
+            placeholder = ?,
+            default_value = ?,
+            options = ?,
+            field_group = ?
+        WHERE id = ?
+    ''', (
+        data['field_label'],
+        data['field_type'],
+        data['field_order'],
+        data.get('required', 0),
+        data.get('placeholder', ''),
+        data.get('default_value', ''),
+        data.get('options', ''),
+        data.get('field_group', 'main'),
+        field_id
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True})
+
+
+@app.route('/api/admin/forms/field/<int:field_id>', methods=['DELETE'])
+def delete_form_field(field_id):
+    """Soft delete a form field (set active = 0)"""
+    if 'admin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    conn = get_db_connection()
+    c = conn.cursor()
+
+    # Soft delete - preserve for old forms
+    c.execute('UPDATE form_fields SET active = 0 WHERE id = ?', (field_id,))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True})
 
 
 if __name__ == '__main__':
