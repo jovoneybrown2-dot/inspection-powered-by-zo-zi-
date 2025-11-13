@@ -140,6 +140,25 @@ def init_db():
                   score REAL,
                   FOREIGN KEY (form_id) REFERENCES meat_processing_inspections(id))''')
 
+    # Threshold settings table (for alert system)
+    c.execute('''CREATE TABLE IF NOT EXISTS threshold_settings
+                 (chart_type TEXT NOT NULL,
+                  inspection_type TEXT NOT NULL,
+                  threshold_value REAL NOT NULL,
+                  enabled INTEGER DEFAULT 1,
+                  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                  PRIMARY KEY (chart_type, inspection_type))''')
+
+    # Threshold alerts table (for low score notifications)
+    c.execute('''CREATE TABLE IF NOT EXISTS threshold_alerts
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  inspection_id INTEGER NOT NULL,
+                  inspector_name TEXT NOT NULL,
+                  form_type TEXT NOT NULL,
+                  score REAL NOT NULL,
+                  threshold_value REAL NOT NULL,
+                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+
     # Users table
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
