@@ -13,7 +13,12 @@ sys.path.insert(0, '.')
 from app import (
     FOOD_CHECKLIST_ITEMS,
     RESIDENTIAL_CHECKLIST_ITEMS,
-    SPIRIT_LICENCE_CHECKLIST_ITEMS
+    SPIRIT_LICENCE_CHECKLIST_ITEMS,
+    SWIMMING_POOL_CHECKLIST_ITEMS,
+    SMALL_HOTELS_CHECKLIST_ITEMS,
+    BARBERSHOP_CHECKLIST_ITEMS,
+    INSTITUTIONAL_CHECKLIST_ITEMS,
+    MEAT_PROCESSING_CHECKLIST_ITEMS
 )
 
 def migrate_forms():
@@ -76,6 +81,50 @@ def migrate_forms():
                 12: 'CRITICAL ITEMS',
                 25: 'ADDITIONAL REQUIREMENTS'
             }
+        },
+        {
+            'template_id': 5,
+            'form_type': 'Swimming Pool',
+            'checklist': SWIMMING_POOL_CHECKLIST_ITEMS,
+            'categories': {
+                1: 'GENERAL'
+            }
+        },
+        {
+            'template_id': 6,
+            'form_type': 'Small Hotel',
+            'checklist': SMALL_HOTELS_CHECKLIST_ITEMS,
+            'categories': {
+                1: 'GENERAL'
+            }
+        },
+        {
+            'template_id': 493,
+            'form_type': 'Barbershop',
+            'checklist': BARBERSHOP_CHECKLIST_ITEMS,
+            'categories': {
+                1: 'GENERAL'
+            }
+        },
+        {
+            'template_id': 494,
+            'form_type': 'Institutional',
+            'checklist': INSTITUTIONAL_CHECKLIST_ITEMS,
+            'categories': {
+                1: 'GENERAL'
+            }
+        },
+        {
+            'template_id': 495,
+            'form_type': 'Meat Processing',
+            'checklist': MEAT_PROCESSING_CHECKLIST_ITEMS,
+            'categories': {
+                1: 'GROUNDS AND FACILITIES',
+                5: 'BUILDINGS',
+                20: 'EQUIPMENT',
+                35: 'SANITARY OPERATIONS',
+                50: 'GENERAL'
+            }
         }
     ]
 
@@ -93,9 +142,15 @@ def migrate_forms():
         for item in checklist:
             item_id = item['id']
 
+            # Convert item_id to int for comparison (handle both string and int IDs)
+            try:
+                item_id_num = int(str(item_id).strip())
+            except (ValueError, AttributeError):
+                item_id_num = 1  # Default to 1 if can't convert
+
             # Determine category based on item ID
             for cat_id, cat_name in sorted(categories.items(), reverse=True):
-                if item_id >= cat_id:
+                if item_id_num >= cat_id:
                     current_category = cat_name
                     break
 
@@ -133,8 +188,9 @@ def migrate_forms():
         SELECT ft.name, COUNT(fi.id) as item_count
         FROM form_templates ft
         LEFT JOIN form_items fi ON ft.id = fi.form_template_id
-        WHERE ft.id IN (1, 2, 4)
+        WHERE ft.id IN (1, 2, 4, 5, 6, 493, 494, 495)
         GROUP BY ft.name
+        ORDER BY ft.id
     ''')
 
     for row in c.fetchall():
