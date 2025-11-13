@@ -175,7 +175,17 @@
     </style>
 </head>
 <body>
-    <div class="form-container" id="form-content">
+    <div class="main-content-wrapper">
+        <!-- Photos Sidebar -->
+        <div class="photos-sidebar">
+            <h3>📷 Inspection Photos</h3>
+            <div id="photosSidebarContainer">
+                <div class="no-photos">No photos attached to this inspection.</div>
+            </div>
+        </div>
+
+        <!-- Main Form Container -->
+        <div class="form-container" id="form-content">
         <h1>Spirit Licence Premises Inspection Details</h1>
         <table>
             <tr>
@@ -665,6 +675,7 @@
         document.addEventListener('DOMContentLoaded', displayPhotos);
     </script>
 
+    </div> <!-- Close main-content-wrapper -->
 
     {% include 'zozi_badge.html' %}
 </body>

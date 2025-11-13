@@ -4628,7 +4628,8 @@ def spirit_licence_inspection_detail(id):
             'no_with_fhc': safe_get(inspection, 'no_with_fhc', 0),
             'no_wo_fhc': safe_get(inspection, 'no_wo_fhc', 0),
             'status': safe_get(inspection, 'status'),
-            'created_at': safe_get(inspection, 'created_at')
+            'created_at': safe_get(inspection, 'created_at'),
+            'photo_data': safe_get(inspection, 'photo_data', '[]')
         }
 
         # Parse photos from JSON string to Python list
