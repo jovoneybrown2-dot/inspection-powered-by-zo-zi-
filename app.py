@@ -2072,7 +2072,7 @@ def inspection_detail(id):
         return redirect(url_for('login'))
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT id, establishment_name, owner, address, license_no, inspector_name, inspection_date, inspection_time, type_of_establishment, purpose_of_visit, action, result, scores, comments, created_at, form_type, inspector_code, no_of_employees, food_inspected, food_condemned FROM inspections WHERE id = ?", (id,))
+    c.execute("SELECT id, establishment_name, owner, address, license_no, inspector_name, inspection_date, inspection_time, type_of_establishment, purpose_of_visit, action, result, scores, comments, created_at, form_type, inspector_code, no_of_employees, food_inspected, food_condemned, photo_data FROM inspections WHERE id = ?", (id,))
     inspection = c.fetchone()
     conn.close()
 
@@ -2102,7 +2102,8 @@ def inspection_detail(id):
             'food_inspected': float(inspection[18]) if inspection[18] else 0.0,
             'food_condemned': float(inspection[19]) if inspection[19] else 0.0,
             'form_type': inspection[15],
-            'created_at': inspection[14] or ''
+            'created_at': inspection[14] or '',
+            'photo_data': inspection[20] if len(inspection) > 20 else '[]'
         }
 
         # Parse photos from JSON string to Python list
