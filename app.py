@@ -1258,7 +1258,8 @@ def submit_form(form_type):
                 'inspector_signature': request.form.get('inspector_signature'),
                 'received_by': request.form.get('received_by'),
                 'form_type': 'Food Establishment',
-                'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'photo_data': request.form.get('photo_data', '[]')
             }
             inspection_id = save_inspection(data)
 
