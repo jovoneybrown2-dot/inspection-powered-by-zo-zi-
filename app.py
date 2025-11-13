@@ -10936,6 +10936,223 @@ def generate_csv_download(report_data, report_type, inspection_type, start_date,
     response.headers['Content-Disposition'] = f'attachment; filename="inspection_report_{report_type}_{start_date}_to_{end_date}.csv"'
     return response
 
+
+# ============================================================================
+# FORM BUILDER API - Admin Form Management
+# ============================================================================
+
+@app.route('/admin/form_builder')
+def form_builder():
+    """Admin form builder page"""
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute('SELECT * FROM form_templates WHERE active = 1 ORDER BY name')
+    templates = c.fetchall()
+    conn.close()
+
+    return render_template('admin_form_builder.html', templates=templates)
+
+
+@app.route('/api/admin/forms/templates', methods=['GET'])
+def get_form_templates():
+    """Get all form templates"""
+    if 'admin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute('SELECT * FROM form_templates WHERE active = 1 ORDER BY name')
+    templates = []
+    for row in c.fetchall():
+        templates.append({
+            'id': row[0],
+            'name': row[1],
+            'description': row[2],
+            'form_type': row[3],
+            'active': row[4],
+            'created_date': row[5],
+            'version': row[6]
+        })
+    conn.close()
+
+    return jsonify({'templates': templates})
+
+
+@app.route('/api/admin/forms/template/<int:template_id>/items', methods=['GET'])
+def get_form_items(template_id):
+    """Get all items for a form template"""
+    if 'admin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute('''
+        SELECT id, form_template_id, item_order, category, description,
+               weight, is_critical, active, created_date
+        FROM form_items
+        WHERE form_template_id = ? AND active = 1
+        ORDER BY item_order
+    ''', (template_id,))
+
+    items = []
+    for row in c.fetchall():
+        items.append({
+            'id': row[0],
+            'form_template_id': row[1],
+            'item_order': row[2],
+            'category': row[3],
+            'description': row[4],
+            'weight': row[5],
+            'is_critical': row[6],
+            'active': row[7],
+            'created_date': row[8]
+        })
+    conn.close()
+
+    return jsonify({'items': items})
+
+
+@app.route('/api/admin/forms/item', methods=['POST'])
+def create_form_item():
+    """Create a new form item"""
+    if 'admin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    data = request.json
+    conn = get_db_connection()
+    c = conn.cursor()
+
+    # Get the next item_order number
+    c.execute('SELECT MAX(item_order) FROM form_items WHERE form_template_id = ?',
+              (data['form_template_id'],))
+    max_order = c.fetchone()[0]
+    next_order = (max_order + 1) if max_order else 1
+
+    c.execute('''
+        INSERT INTO form_items (
+            form_template_id, item_order, category, description,
+            weight, is_critical, active, created_date
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        data['form_template_id'],
+        next_order,
+        data.get('category', 'GENERAL'),
+        data['description'],
+        data.get('weight', 1),
+        data.get('is_critical', 0),
+        1,
+        datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    ))
+
+    item_id = c.lastrowid
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True, 'item_id': item_id, 'message': 'Item created successfully'})
+
+
+@app.route('/api/admin/forms/item/<int:item_id>', methods=['PUT'])
+def update_form_item(item_id):
+    """Update an existing form item"""
+    if 'admin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    data = request.json
+    conn = get_db_connection()
+    c = conn.cursor()
+
+    c.execute('''
+        UPDATE form_items
+        SET category = ?, description = ?, weight = ?, is_critical = ?
+        WHERE id = ?
+    ''', (
+        data.get('category'),
+        data.get('description'),
+        data.get('weight'),
+        data.get('is_critical'),
+        item_id
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True, 'message': 'Item updated successfully'})
+
+
+@app.route('/api/admin/forms/item/<int:item_id>', methods=['DELETE'])
+def delete_form_item(item_id):
+    """Soft delete a form item (set active = 0)"""
+    if 'admin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    conn = get_db_connection()
+    c = conn.cursor()
+
+    # Soft delete - keep for old forms
+    c.execute('UPDATE form_items SET active = 0 WHERE id = ?', (item_id,))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True, 'message': 'Item deleted successfully'})
+
+
+@app.route('/api/admin/forms/items/reorder', methods=['POST'])
+def reorder_form_items():
+    """Reorder form items"""
+    if 'admin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    data = request.json  # Expected: {'items': [{'id': 1, 'order': 1}, ...]}
+    conn = get_db_connection()
+    c = conn.cursor()
+
+    for item in data['items']:
+        c.execute('UPDATE form_items SET item_order = ? WHERE id = ?',
+                  (item['order'], item['id']))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True, 'message': 'Items reordered successfully'})
+
+
+@app.route('/api/admin/forms/template/<int:template_id>/version', methods=['POST'])
+def increment_template_version(template_id):
+    """Increment form template version when changes are saved"""
+    if 'admin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    conn = get_db_connection()
+    c = conn.cursor()
+
+    # Get current version
+    c.execute('SELECT version FROM form_templates WHERE id = ?', (template_id,))
+    current_version = c.fetchone()[0]
+
+    # Increment version (e.g., '1.0' -> '1.1', '1.9' -> '2.0')
+    try:
+        major, minor = current_version.split('.')
+        minor = int(minor) + 1
+        if minor >= 10:
+            major = str(int(major) + 1)
+            minor = 0
+        new_version = f"{major}.{minor}"
+    except:
+        new_version = '1.1'
+
+    c.execute('UPDATE form_templates SET version = ? WHERE id = ?',
+              (new_version, template_id))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True, 'new_version': new_version})
+
+
 if __name__ == '__main__':
     init_db()
     init_form_management_db()
