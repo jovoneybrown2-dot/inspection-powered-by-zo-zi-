@@ -166,6 +166,7 @@ def init_db():
                   password TEXT NOT NULL,
                   role TEXT NOT NULL,
                   email TEXT,
+                  parish TEXT,
                   is_flagged INTEGER DEFAULT 0)''')
 
     # Insert users
