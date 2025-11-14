@@ -442,7 +442,14 @@
                 </div>
                 <div>
                     <label>Inspector's Signature:</label><div class="form-value">{{ inspection.inspector_signature }}</div>
-                    <label>Received By:</label><div class="form-value">{{ inspection.received_by }}</div>
+                    <label>Received By:</label>
+                    <div class="form-value">
+                        {% if inspection.received_by and inspection.received_by.startswith('data:image/') %}
+                            <img src="{{ inspection.received_by }}" style="max-width: 250px; border: 1px solid #ccc; background: white;" alt="Signature" />
+                        {% else %}
+                            {{ inspection.received_by }}
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>

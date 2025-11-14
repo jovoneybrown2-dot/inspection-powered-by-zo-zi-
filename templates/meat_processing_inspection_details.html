@@ -856,7 +856,13 @@
                 </div>
                 <div>
                     <strong>Rec'd By:</strong>
-                    <span class="signature-line">{{ received_by or 'N/A' }}</span>
+                    <span class="signature-line">
+                        {% if received_by and received_by.startswith('data:image/') %}
+                            <img src="{{ received_by }}" style="max-width: 250px; border: 1px solid #ccc; background: white; display: block; margin-top: 5px;" alt="Signature" />
+                        {% else %}
+                            {{ received_by or 'N/A' }}
+                        {% endif %}
+                    </span>
                 </div>
             </div>
 

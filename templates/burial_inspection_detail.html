@@ -172,7 +172,13 @@
         <p class="failure-notice">Failure to comply with the above or any other instructions given by the Public Health Inspector constitute a breach and is therefore liable for prosecution.</p>
         <div class="signatures">
             <p><strong>Inspector's Signature:</strong> {{ inspection.inspector_signature }}</p>
-            <p><strong>Received by:</strong> {{ inspection.received_by }}</p>
+            <p><strong>Received by:</strong>
+                {% if inspection.received_by and inspection.received_by.startswith('data:image/') %}
+                    <br><img src="{{ inspection.received_by }}" style="max-width: 250px; border: 1px solid #ccc; background: white; margin-top: 5px;" alt="Signature" />
+                {% else %}
+                    {{ inspection.received_by }}
+                {% endif %}
+            </p>
         </div>
         <p><strong>Created At:</strong> {{ inspection.created_at }}</p>
         <div class="buttons">

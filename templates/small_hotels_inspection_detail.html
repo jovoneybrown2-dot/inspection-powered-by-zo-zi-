@@ -971,7 +971,13 @@
             </div>
             <div class="signature-box">
                 <label>Received By</label>
-                <div class="signature-display">{{ inspection.received_by or 'N/A' }}</div>
+                <div class="signature-display">
+                    {% if inspection.received_by and inspection.received_by.startswith('data:image/') %}
+                        <img src="{{ inspection.received_by }}" style="max-width: 250px; border: 1px solid #ccc; background: white;" alt="Signature" />
+                    {% else %}
+                        {{ inspection.received_by or 'N/A' }}
+                    {% endif %}
+                </div>
                 <label style="margin-top: 10px;">Date</label>
                 <div class="signature-display">{{ inspection.received_by_date or 'N/A' }}</div>
             </div>
