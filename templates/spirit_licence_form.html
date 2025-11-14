@@ -782,7 +782,18 @@
                 </tr>
                 <tr>
                     <td>Rec'd By:</td>
-                    <td><input type="text" name="received_by" required></td>
+                    <td>
+                        <button type="button" onclick="openSignaturePad()" style="padding:8px 16px; background:#4CAF50; color:white; border:none; border-radius:5px; cursor:pointer;">
+                            ✍️ Click to Sign
+                        </button>
+                        <div id="signaturePreview" style="margin-top:10px; display:none;">
+                            <img id="signatureImage" style="border:1px solid #ccc; max-width:250px; background:white;" />
+                            <button type="button" onclick="clearSignature()" style="margin-left:10px; padding:4px 8px; background:#dc3545; color:white; border:none; border-radius:3px; cursor:pointer; font-size:12px;">
+                                ❌ Clear
+                            </button>
+                        </div>
+                        <input type="hidden" name="received_by" id="receivedBySignature" />
+                    </td>
                 </tr>
             </table>
             <div class="buttons">
@@ -1023,6 +1034,10 @@
             });
         });
     </script>
+
+    <!-- Signature Pad -->
+    {% include 'signature_pad.html' %}
+
     {% include 'zozi_badge.html' %}
 </body>
 </html>

@@ -1,0 +1,153 @@
+<!-- Signature Pad Component - Include this in all inspection forms -->
+
+<!-- Signature Button and Preview (place where received_by field is) -->
+<label>Received By:</label>
+<div style="margin-top:10px;">
+    <button type="button" onclick="openSignaturePad()" style="padding:10px 20px; background:#4CAF50; color:white; border:none; border-radius:5px; cursor:pointer; font-size:14px;">
+        ✍️ Click to Sign
+    </button>
+    <div id="signaturePreview" style="margin-top:10px; display:none;">
+        <img id="signatureImage" style="border:1px solid #ccc; max-width:300px; background:white;" />
+        <button type="button" onclick="clearSignature()" style="margin-left:10px; padding:5px 10px; background:#dc3545; color:white; border:none; border-radius:3px; cursor:pointer;">
+            ❌ Clear
+        </button>
+    </div>
+    <input type="hidden" name="received_by" id="receivedBySignature" />
+</div>
+
+<!-- Signature Pad Modal -->
+<div id="signatureModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; justify-content:center; align-items:center;">
+    <div style="background:white; padding:30px; border-radius:10px; box-shadow:0 4px 20px rgba(0,0,0,0.3); max-width:600px; width:90%;">
+        <h2 style="margin:0 0 20px 0; text-align:center; color:#333;">Sign Here</h2>
+        <div style="text-align:center; margin-bottom:15px;">
+            <canvas id="signatureCanvas" style="border:2px solid #333; background:white; touch-action:none; cursor:crosshair;"></canvas>
+        </div>
+        <div style="display:flex; gap:10px; justify-content:center;">
+            <button type="button" onclick="clearSignaturePad()" style="padding:12px 24px; background:#ffc107; color:#000; border:none; border-radius:5px; cursor:pointer; font-weight:600;">
+                🗑️ Clear
+            </button>
+            <button type="button" onclick="saveSignature()" style="padding:12px 24px; background:#4CAF50; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:600;">
+                ✅ Save Signature
+            </button>
+            <button type="button" onclick="closeSignaturePad()" style="padding:12px 24px; background:#dc3545; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:600;">
+                ❌ Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Signature Pad Functionality
+    let canvas, ctx, isDrawing = false;
+    let lastX = 0, lastY = 0;
+
+    function openSignaturePad() {
+        const modal = document.getElementById('signatureModal');
+        modal.style.display = 'flex';
+
+        // Initialize canvas
+        canvas = document.getElementById('signatureCanvas');
+        ctx = canvas.getContext('2d');
+
+        // Set canvas size
+        canvas.width = 500;
+        canvas.height = 200;
+
+        // Set drawing style
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // Clear canvas
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Add event listeners for drawing
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        // Touch events for mobile
+        canvas.addEventListener('touchstart', handleTouchStart);
+        canvas.addEventListener('touchmove', handleTouchMove);
+        canvas.addEventListener('touchend', stopDrawing);
+    }
+
+    function startDrawing(e) {
+        isDrawing = true;
+        [lastX, lastY] = [e.offsetX, e.offsetY];
+    }
+
+    function draw(e) {
+        if (!isDrawing) return;
+
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(e.offsetX, e.offsetY);
+        ctx.stroke();
+
+        [lastX, lastY] = [e.offsetX, e.offsetY];
+    }
+
+    function stopDrawing() {
+        isDrawing = false;
+    }
+
+    function handleTouchStart(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        lastX = touch.clientX - rect.left;
+        lastY = touch.clientY - rect.top;
+        isDrawing = true;
+    }
+
+    function handleTouchMove(e) {
+        if (!isDrawing) return;
+        e.preventDefault();
+
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        lastX = x;
+        lastY = y;
+    }
+
+    function clearSignaturePad() {
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function saveSignature() {
+        // Convert canvas to base64 image
+        const signatureData = canvas.toDataURL('image/png');
+
+        // Store in hidden field
+        document.getElementById('receivedBySignature').value = signatureData;
+
+        // Show preview
+        document.getElementById('signatureImage').src = signatureData;
+        document.getElementById('signaturePreview').style.display = 'block';
+
+        // Close modal
+        closeSignaturePad();
+    }
+
+    function closeSignaturePad() {
+        document.getElementById('signatureModal').style.display = 'none';
+    }
+
+    function clearSignature() {
+        document.getElementById('receivedBySignature').value = '';
+        document.getElementById('signaturePreview').style.display = 'none';
+    }
+</script>
