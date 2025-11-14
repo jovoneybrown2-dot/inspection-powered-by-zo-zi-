@@ -11523,12 +11523,17 @@ def get_active_users_map():
     conn = get_db_connection()
     c = conn.cursor()
 
-    # Get all active sessions (logged in within last 24 hours)
+    # Get all active sessions with VALID GPS coordinates (logged in within last 24 hours)
+    # Only show users who have real location data - no nulls, no fake coordinates
     c.execute('''
         SELECT username, user_role, location_lat, location_lng, parish, login_time, last_activity
         FROM user_sessions
         WHERE is_active = 1
         AND datetime(last_activity) > datetime('now', '-24 hours')
+        AND location_lat IS NOT NULL
+        AND location_lng IS NOT NULL
+        AND location_lat != 0
+        AND location_lng != 0
         ORDER BY last_activity DESC
     ''')
 
@@ -11545,6 +11550,7 @@ def get_active_users_map():
         })
 
     conn.close()
+    print(f"📍 Active Users Map API: Returning {len(users)} users with valid GPS coordinates")
     return jsonify({'users': users, 'count': len(users)})
 
 
