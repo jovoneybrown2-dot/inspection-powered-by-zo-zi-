@@ -1149,7 +1149,16 @@
                 </div>
                 <div class="signature-box">
                     <label>Received By</label>
-                    <input type="text" class="signature-input" name="received_by" value="{{ inspection.received_by if inspection else '' }}" required>
+                    <button type="button" onclick="openSignaturePad()" style="padding:10px 20px; background:#4CAF50; color:white; border:none; border-radius:5px; cursor:pointer; margin-bottom:10px;">
+                        ✍️ Click to Sign
+                    </button>
+                    <div id="signaturePreview" style="margin-bottom:10px; display:none;">
+                        <img id="signatureImage" style="border:1px solid #ccc; max-width:300px; background:white;" />
+                        <button type="button" onclick="clearSignature()" style="margin-left:10px; padding:5px 10px; background:#dc3545; color:white; border:none; border-radius:3px; cursor:pointer;">
+                            ❌ Clear
+                        </button>
+                    </div>
+                    <input type="hidden" name="received_by" id="receivedBySignature" value="{{ inspection.received_by if inspection else '' }}" />
                     <label style="margin-top: 10px;">Date</label>
                     <input type="date" class="signature-input" name="received_by_date" value="{{ inspection.received_by_date if inspection else today }}" required>
                 </div>
@@ -1447,6 +1456,11 @@
             }
         }
     </script>
+    <!-- Signature Pad -->
+
+    {% include \'signature_pad.html\' %}
+
+
     {% include 'zozi_badge.html' %}
 </body>
 </html>
