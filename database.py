@@ -169,6 +169,14 @@ def init_db():
                   parish TEXT,
                   is_flagged INTEGER DEFAULT 0)''')
 
+    # Migration: Add parish column if it doesn't exist
+    try:
+        c.execute("ALTER TABLE users ADD COLUMN parish TEXT")
+        print("✓ Added parish column to users table")
+    except sqlite3.OperationalError:
+        # Column already exists
+        pass
+
     # Insert users
     users = [
         ('inspector1', 'Insp123!secure', 'inspector'),
