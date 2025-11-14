@@ -6338,7 +6338,13 @@ def login_post():
         session[login_type] = user['username']  # ✅ FIXED HERE
 
         # Get location coordinates for user's parish
-        parish = user.get('parish') or user.get(5) or 'Kingston'  # Handle both dict and tuple access
+        try:
+            parish = user['parish']
+        except (KeyError, IndexError):
+            parish = 'Kingston'
+
+        # Default to Kingston if parish is None or empty
+        parish = parish or 'Kingston'
         parish_coords = get_parish_coordinates(parish)
 
         # Record login attempt
