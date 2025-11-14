@@ -1,19 +1,6 @@
 <!-- Signature Pad Component - Include this in all inspection forms -->
-
-<!-- Signature Button and Preview (place where received_by field is) -->
-<label>Received By:</label>
-<div style="margin-top:10px;">
-    <button type="button" onclick="openSignaturePad()" style="padding:10px 20px; background:#4CAF50; color:white; border:none; border-radius:5px; cursor:pointer; font-size:14px;">
-        ✍️ Click to Sign
-    </button>
-    <div id="signaturePreview" style="margin-top:10px; display:none;">
-        <img id="signatureImage" style="border:1px solid #ccc; max-width:300px; background:white;" />
-        <button type="button" onclick="clearSignature()" style="margin-left:10px; padding:5px 10px; background:#dc3545; color:white; border:none; border-radius:3px; cursor:pointer;">
-            ❌ Clear
-        </button>
-    </div>
-    <input type="hidden" name="received_by" id="receivedBySignature" />
-</div>
+<!-- This component provides the modal and JavaScript only -->
+<!-- Each form should have its own button and preview structure inline -->
 
 <!-- Signature Pad Modal -->
 <div id="signatureModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; justify-content:center; align-items:center;">
