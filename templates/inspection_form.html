@@ -820,6 +820,11 @@
     <div class="form-container">
         {% if show_form %}
             <h1>Food Establishment Inspection Form</h1>
+            {% if last_edited_info %}
+            <div style="text-align:center; font-size:12px; color:#666; font-style:italic; background:rgba(255,255,255,0.9); padding:8px; border-radius:5px; margin:10px auto; max-width:600px;">
+                📝 Form last edited by <strong>{{ last_edited_info.editor }}</strong> ({{ last_edited_info.role }}) on {{ last_edited_info.date }} • Version {{ last_edited_info.version }}
+            </div>
+            {% endif %}
             <form id="inspectionForm" method="POST" action="{{ url_for('submit_form', form_type='inspection') }}" data-offline-form="true">
                 <div class="form-section">
                     <h2>Establishment Details</h2>

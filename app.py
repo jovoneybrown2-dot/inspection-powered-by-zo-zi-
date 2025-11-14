@@ -8974,6 +8974,26 @@ def new_form():
     # Load checklist from database (falls back to hardcoded if empty)
     checklist = get_form_checklist_items('Food Establishment', FOOD_CHECKLIST_ITEMS)
 
+    # Get last_edited info for this form type
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute('''
+        SELECT last_edited_by, last_edited_date, last_edited_role, version
+        FROM form_templates
+        WHERE form_type = ? AND active = 1
+    ''', ('Food Establishment',))
+    form_info = c.fetchone()
+    conn.close()
+
+    last_edited_info = None
+    if form_info and form_info[0]:  # if last_edited_by exists
+        last_edited_info = {
+            'editor': form_info[0],
+            'date': form_info[1],
+            'role': form_info[2] or 'admin',
+            'version': form_info[3] or '1.0'
+        }
+
     # Default inspection data for new form (your existing code)
     inspection = {
         'id': '',
@@ -9007,7 +9027,8 @@ def new_form():
                            show_form=True,
                            establishment_data=get_establishment_data(),
                            read_only=False,
-                           inspection=inspection)
+                           inspection=inspection,
+                           last_edited_info=last_edited_info)
 
 
 @app.route('/debug/forms_check')
@@ -11266,6 +11287,10 @@ def create_form_item():
     ))
 
     item_id = c.lastrowid
+
+    # Track who edited this form
+    update_form_editor_tracking(data['form_template_id'], conn)
+
     conn.commit()
     conn.close()
 
@@ -11282,6 +11307,11 @@ def update_form_item(item_id):
     conn = get_db_connection()
     c = conn.cursor()
 
+    # Get template_id for this item
+    c.execute('SELECT form_template_id FROM form_items WHERE id = ?', (item_id,))
+    result = c.fetchone()
+    template_id = result[0] if result else None
+
     c.execute('''
         UPDATE form_items
         SET category = ?, description = ?, weight = ?, is_critical = ?
@@ -11293,6 +11323,10 @@ def update_form_item(item_id):
         data.get('is_critical'),
         item_id
     ))
+
+    # Track who edited this form
+    if template_id:
+        update_form_editor_tracking(template_id, conn)
 
     conn.commit()
     conn.close()
@@ -11309,8 +11343,17 @@ def delete_form_item(item_id):
     conn = get_db_connection()
     c = conn.cursor()
 
+    # Get template_id for this item
+    c.execute('SELECT form_template_id FROM form_items WHERE id = ?', (item_id,))
+    result = c.fetchone()
+    template_id = result[0] if result else None
+
     # Soft delete - keep for old forms
     c.execute('UPDATE form_items SET active = 0 WHERE id = ?', (item_id,))
+
+    # Track who edited this form
+    if template_id:
+        update_form_editor_tracking(template_id, conn)
 
     conn.commit()
     conn.close()
@@ -11336,6 +11379,34 @@ def reorder_form_items():
     conn.close()
 
     return jsonify({'success': True, 'message': 'Items reordered successfully'})
+
+
+def update_form_editor_tracking(template_id, conn):
+    """Helper function to track who edited a form and when"""
+    c = conn.cursor()
+
+    # Get admin user info from session
+    admin_username = session.get('admin', 'Unknown Admin')
+
+    # Get admin's full details from database
+    c.execute('SELECT username, role, email FROM users WHERE username = ?', (admin_username,))
+    admin = c.fetchone()
+
+    if admin:
+        editor_name = admin[0]
+        editor_role = admin[1]
+    else:
+        editor_name = admin_username
+        editor_role = 'admin'
+
+    # Update tracking fields
+    c.execute('''
+        UPDATE form_templates
+        SET last_edited_by = ?,
+            last_edited_date = ?,
+            last_edited_role = ?
+        WHERE id = ?
+    ''', (editor_name, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), editor_role, template_id))
 
 
 @app.route('/api/admin/forms/template/<int:template_id>/version', methods=['POST'])
@@ -11365,10 +11436,51 @@ def increment_template_version(template_id):
     c.execute('UPDATE form_templates SET version = ? WHERE id = ?',
               (new_version, template_id))
 
+    # Track who made this edit
+    update_form_editor_tracking(template_id, conn)
+
     conn.commit()
     conn.close()
 
     return jsonify({'success': True, 'new_version': new_version})
+
+
+# ============================================================================
+# FORM TEMPLATE INFO API - Get template details including last edited info
+# ============================================================================
+
+@app.route('/api/admin/forms/template/<int:template_id>/info', methods=['GET'])
+def get_form_template_info(template_id):
+    """Get form template information including last edited details"""
+    if 'admin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    conn = get_db_connection()
+    c = conn.cursor()
+
+    c.execute('''
+        SELECT id, name, description, form_type, version,
+               last_edited_by, last_edited_date, last_edited_role
+        FROM form_templates
+        WHERE id = ? AND active = 1
+    ''', (template_id,))
+
+    row = c.fetchone()
+    conn.close()
+
+    if not row:
+        return jsonify({'error': 'Template not found'}), 404
+
+    return jsonify({
+        'id': row[0],
+        'name': row[1],
+        'description': row[2],
+        'form_type': row[3],
+        'version': row[4],
+        'last_edited_by': row[5],
+        'last_edited_date': row[6],
+        'last_edited_role': row[7]
+    })
 
 
 # ============================================================================
@@ -11447,6 +11559,10 @@ def create_form_field():
     ))
 
     field_id = c.lastrowid
+
+    # Track who edited this form
+    update_form_editor_tracking(data['form_template_id'], conn)
+
     conn.commit()
     conn.close()
 
@@ -11462,6 +11578,11 @@ def update_form_field(field_id):
     data = request.json
     conn = get_db_connection()
     c = conn.cursor()
+
+    # Get template_id for this field
+    c.execute('SELECT form_template_id FROM form_fields WHERE id = ?', (field_id,))
+    result = c.fetchone()
+    template_id = result[0] if result else None
 
     c.execute('''
         UPDATE form_fields SET
@@ -11486,6 +11607,10 @@ def update_form_field(field_id):
         field_id
     ))
 
+    # Track who edited this form
+    if template_id:
+        update_form_editor_tracking(template_id, conn)
+
     conn.commit()
     conn.close()
 
@@ -11501,8 +11626,17 @@ def delete_form_field(field_id):
     conn = get_db_connection()
     c = conn.cursor()
 
+    # Get template_id for this field
+    c.execute('SELECT form_template_id FROM form_fields WHERE id = ?', (field_id,))
+    result = c.fetchone()
+    template_id = result[0] if result else None
+
     # Soft delete - preserve for old forms
     c.execute('UPDATE form_fields SET active = 0 WHERE id = ?', (field_id,))
+
+    # Track who edited this form
+    if template_id:
+        update_form_editor_tracking(template_id, conn)
 
     conn.commit()
     conn.close()
