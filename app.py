@@ -896,6 +896,21 @@ def system_health():
 
 @app.route('/logout', methods=['POST'])
 def logout():
+    # Mark user session as inactive before logging out
+    if 'user_id' in session:
+        try:
+            conn = get_db_connection()
+            c = conn.cursor()
+            # Get username from session
+            username = session.get('inspector') or session.get('admin') or session.get('medical_officer')
+            if username:
+                c.execute("UPDATE user_sessions SET is_active = 0, logout_time = ? WHERE username = ? AND is_active = 1",
+                          (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), username))
+                conn.commit()
+            conn.close()
+        except Exception as e:
+            print(f"Error updating user session on logout: {e}")
+
     session.clear()  # Clear all session data
     return redirect(url_for('login'))  # Redirect to login page
 
@@ -6276,6 +6291,31 @@ def create_form_header(canvas, form_title, form_id, width, height):
     return height-90
 
 
+# ============================================================================
+# USER LOCATION TRACKING - Get parish coordinates for map display
+# ============================================================================
+
+def get_parish_coordinates(parish):
+    """Returns approximate center coordinates for each Jamaican parish"""
+    parish_locations = {
+        'Kingston': {'lat': 18.0179, 'lng': -76.8099},
+        'St. Andrew': {'lat': 18.0323, 'lng': -76.7981},
+        'St. Thomas': {'lat': 17.9833, 'lng': -76.3500},
+        'Portland': {'lat': 18.1089, 'lng': -76.4097},
+        'St. Mary': {'lat': 18.3833, 'lng': -76.9333},
+        'St. Ann': {'lat': 18.4333, 'lng': -77.2000},
+        'Trelawny': {'lat': 18.3833, 'lng': -77.5833},
+        'St. James': {'lat': 18.4762, 'lng': -77.9189},
+        'Hanover': {'lat': 18.4167, 'lng': -78.1333},
+        'Westmoreland': {'lat': 18.2500, 'lng': -78.1333},
+        'St. Elizabeth': {'lat': 18.0833, 'lng': -77.7167},
+        'Manchester': {'lat': 18.0500, 'lng': -77.5000},
+        'Clarendon': {'lat': 18.0000, 'lng': -77.2500},
+        'St. Catherine': {'lat': 18.0000, 'lng': -77.0000}
+    }
+    return parish_locations.get(parish, {'lat': 18.0179, 'lng': -76.8099})  # Default to Kingston
+
+
 @app.route('/login', methods=['POST'])
 def login_post():
     username = request.form['username']
@@ -6285,7 +6325,7 @@ def login_post():
 
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT id, username, password, role, email FROM users WHERE username = ? AND password = ?",
+    c.execute("SELECT id, username, password, role, email, parish FROM users WHERE username = ? AND password = ?",
               (username, password))
     user = c.fetchone()
 
@@ -6297,11 +6337,29 @@ def login_post():
         session['user_id'] = user['id']
         session[login_type] = user['username']  # ✅ FIXED HERE
 
+        # Get location coordinates for user's parish
+        parish = user.get('parish') or user.get(5) or 'Kingston'  # Handle both dict and tuple access
+        parish_coords = get_parish_coordinates(parish)
+
         # Record login attempt
         c.execute(
             "INSERT INTO login_history (user_id, username, email, role, login_time, ip_address) VALUES (?, ?, ?, ?, ?, ?)",
             (user['id'], user['username'], user['email'], user['role'],
              datetime.now().strftime('%Y-%m-%d %H:%M:%S'), ip_address))
+
+        # Mark any old sessions for this user as inactive
+        c.execute("UPDATE user_sessions SET is_active = 0, logout_time = ? WHERE username = ? AND is_active = 1",
+                  (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), user['username']))
+
+        # Track new user session for real-time map
+        c.execute(
+            "INSERT INTO user_sessions (username, user_role, login_time, last_activity, location_lat, location_lng, parish, ip_address, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (user['username'], user['role'],
+             datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+             datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+             parish_coords['lat'], parish_coords['lng'],
+             parish, ip_address, 1))
+
         conn.commit()
         conn.close()
 
@@ -11435,6 +11493,44 @@ def delete_form_field(field_id):
     conn.close()
 
     return jsonify({'success': True})
+
+
+# ============================================================================
+# ACTIVE USERS API - Show logged-in users on admin map
+# ============================================================================
+
+@app.route('/api/admin/active_users_map', methods=['GET'])
+def get_active_users_map():
+    """Get all currently logged-in users with their locations for the map"""
+    if 'admin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    conn = get_db_connection()
+    c = conn.cursor()
+
+    # Get all active sessions (logged in within last 24 hours)
+    c.execute('''
+        SELECT username, user_role, location_lat, location_lng, parish, login_time, last_activity
+        FROM user_sessions
+        WHERE is_active = 1
+        AND datetime(last_activity) > datetime('now', '-24 hours')
+        ORDER BY last_activity DESC
+    ''')
+
+    users = []
+    for row in c.fetchall():
+        users.append({
+            'username': row[0],
+            'role': row[1],
+            'lat': row[2],
+            'lng': row[3],
+            'parish': row[4],
+            'login_time': row[5],
+            'last_activity': row[6]
+        })
+
+    conn.close()
+    return jsonify({'users': users, 'count': len(users)})
 
 
 if __name__ == '__main__':
