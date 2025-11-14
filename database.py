@@ -115,6 +115,7 @@ def init_db():
                   product_samples INTEGER,
                   types_of_products TEXT,
                   staff_fhp INTEGER,
+                  staff_compliment INTEGER,
                   water_public INTEGER,
                   water_private INTEGER,
                   type_processing INTEGER,
@@ -131,6 +132,14 @@ def init_db():
                   received_by TEXT,
                   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                   photo_data TEXT)''')
+
+    # Migration: Add staff_compliment column if it doesn't exist
+    try:
+        c.execute("ALTER TABLE meat_processing_inspections ADD COLUMN staff_compliment INTEGER")
+        print("✓ Added staff_compliment column to meat_processing_inspections table")
+    except sqlite3.OperationalError:
+        # Column already exists
+        pass
 
     # Meat processing checklist scores table
     c.execute('''CREATE TABLE IF NOT EXISTS meat_processing_checklist_scores
@@ -396,7 +405,7 @@ def save_meat_processing_inspection(data):
                 UPDATE meat_processing_inspections
                 SET establishment_name = ?, owner_operator = ?, address = ?, inspector_name = ?,
                     establishment_no = ?, overall_score = ?, food_contact_surfaces = ?, water_samples = ?,
-                    product_samples = ?, types_of_products = ?, staff_fhp = ?, water_public = ?,
+                    product_samples = ?, types_of_products = ?, staff_fhp = ?, staff_compliment = ?, water_public = ?,
                     water_private = ?, type_processing = ?, type_slaughter = ?, purpose_of_visit = ?,
                     inspection_date = ?, inspector_code = ?, result = ?, telephone_no = ?,
                     registration_status = ?, action = ?, comments = ?, inspector_signature = ?,
@@ -405,7 +414,7 @@ def save_meat_processing_inspection(data):
             """, (
                 data['establishment_name'], data['owner_operator'], data['address'], data['inspector_name'],
                 data['establishment_no'], data['overall_score'], data['food_contact_surfaces'], data['water_samples'],
-                data['product_samples'], data['types_of_products'], data['staff_fhp'], data['water_public'],
+                data['product_samples'], data['types_of_products'], data['staff_fhp'], data.get('staff_compliment', 0), data['water_public'],
                 data['water_private'], data['type_processing'], data['type_slaughter'], data['purpose_of_visit'],
                 data['inspection_date'], data['inspector_code'], data['result'], data['telephone_no'],
                 data['registration_status'], data['action'], data['comments'], data['inspector_signature'],
@@ -417,17 +426,17 @@ def save_meat_processing_inspection(data):
                 INSERT INTO meat_processing_inspections (
                     establishment_name, owner_operator, address, inspector_name,
                     establishment_no, overall_score, food_contact_surfaces, water_samples,
-                    product_samples, types_of_products, staff_fhp, water_public,
+                    product_samples, types_of_products, staff_fhp, staff_compliment, water_public,
                     water_private, type_processing, type_slaughter, purpose_of_visit,
                     inspection_date, inspector_code, result, telephone_no,
                     registration_status, action, comments, inspector_signature,
                     received_by, created_at, photo_data
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 data['establishment_name'], data['owner_operator'], data['address'], data['inspector_name'],
                 data['establishment_no'], data['overall_score'], data['food_contact_surfaces'], data['water_samples'],
-                data['product_samples'], data['types_of_products'], data['staff_fhp'], data['water_public'],
+                data['product_samples'], data['types_of_products'], data['staff_fhp'], data.get('staff_compliment', 0), data['water_public'],
                 data['water_private'], data['type_processing'], data['type_slaughter'], data['purpose_of_visit'],
                 data['inspection_date'], data['inspector_code'], data['result'], data['telephone_no'],
                 data['registration_status'], data['action'], data['comments'], data['inspector_signature'],
@@ -687,22 +696,23 @@ def get_meat_processing_inspection_details(inspection_id):
             'product_samples': inspection[9] or 0,
             'types_of_products': inspection[10] or '',
             'staff_fhp': inspection[11] or 0,
-            'water_public': inspection[12] or 0,
-            'water_private': inspection[13] or 0,
-            'type_processing': inspection[14] or 0,
-            'type_slaughter': inspection[15] or 0,
-            'purpose_of_visit': inspection[16] or '',
-            'inspection_date': inspection[17] or '',
-            'inspector_code': inspection[18] or '',
-            'result': inspection[19] or '',
-            'telephone_no': inspection[20] or '',
-            'registration_status': inspection[21] or '',
-            'action': inspection[22] or '',
-            'comments': inspection[23] or '',
-            'inspector_signature': inspection[24] or '',
-            'received_by': inspection[25] or '',
-            'created_at': inspection[26] or '',
-            'photo_data': inspection[27] if len(inspection) > 27 else '[]',
+            'staff_compliment': inspection[12] if len(inspection) > 12 else 0,
+            'water_public': inspection[13] if len(inspection) > 13 else 0,
+            'water_private': inspection[14] if len(inspection) > 14 else 0,
+            'type_processing': inspection[15] if len(inspection) > 15 else 0,
+            'type_slaughter': inspection[16] if len(inspection) > 16 else 0,
+            'purpose_of_visit': inspection[17] if len(inspection) > 17 else '',
+            'inspection_date': inspection[18] if len(inspection) > 18 else '',
+            'inspector_code': inspection[19] if len(inspection) > 19 else '',
+            'result': inspection[20] if len(inspection) > 20 else '',
+            'telephone_no': inspection[21] if len(inspection) > 21 else '',
+            'registration_status': inspection[22] if len(inspection) > 22 else '',
+            'action': inspection[23] if len(inspection) > 23 else '',
+            'comments': inspection[24] if len(inspection) > 24 else '',
+            'inspector_signature': inspection[25] if len(inspection) > 25 else '',
+            'received_by': inspection[26] if len(inspection) > 26 else '',
+            'created_at': inspection[27] if len(inspection) > 27 else '',
+            'photo_data': inspection[28] if len(inspection) > 28 else '[]',
             'checklist_scores': checklist_scores
         }
     conn.close()
