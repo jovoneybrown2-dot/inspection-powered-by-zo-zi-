@@ -6337,15 +6337,15 @@ def login_post():
         session['user_id'] = user['id']
         session[login_type] = user['username']  # ✅ FIXED HERE
 
-        # Get location coordinates for user's parish
+        # Get REAL GPS coordinates from the login form (captured by browser geolocation)
+        latitude = request.form.get('latitude', '')
+        longitude = request.form.get('longitude', '')
+
+        # Get user's parish from database
         try:
             parish = user['parish']
         except (KeyError, IndexError):
-            parish = 'Kingston'
-
-        # Default to Kingston if parish is None or empty
-        parish = parish or 'Kingston'
-        parish_coords = get_parish_coordinates(parish)
+            parish = None
 
         # Record login attempt
         c.execute(
@@ -6357,14 +6357,23 @@ def login_post():
         c.execute("UPDATE user_sessions SET is_active = 0, logout_time = ? WHERE username = ? AND is_active = 1",
                   (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), user['username']))
 
-        # Track new user session for real-time map
-        c.execute(
-            "INSERT INTO user_sessions (username, user_role, login_time, last_activity, location_lat, location_lng, parish, ip_address, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (user['username'], user['role'],
-             datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-             datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-             parish_coords['lat'], parish_coords['lng'],
-             parish, ip_address, 1))
+        # Track new user session with REAL location (only if GPS coordinates were captured)
+        if latitude and longitude:
+            try:
+                lat_float = float(latitude)
+                lng_float = float(longitude)
+                c.execute(
+                    "INSERT INTO user_sessions (username, user_role, login_time, last_activity, location_lat, location_lng, parish, ip_address, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (user['username'], user['role'],
+                     datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                     datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                     lat_float, lng_float,
+                     parish, ip_address, 1))
+                print(f"✅ User session tracked with GPS: {user['username']} at ({lat_float}, {lng_float})")
+            except (ValueError, TypeError) as e:
+                print(f"⚠️ Invalid GPS coordinates, session not tracked: {e}")
+        else:
+            print(f"⚠️ No GPS coordinates provided, user {user['username']} will not appear on map")
 
         conn.commit()
         conn.close()

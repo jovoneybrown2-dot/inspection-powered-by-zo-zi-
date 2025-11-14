@@ -147,6 +147,8 @@
             <input type="text" id="username" name="username" required>
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required>
+            <input type="hidden" id="latitude" name="latitude" value="">
+            <input type="hidden" id="longitude" name="longitude" value="">
             <button type="submit">Login</button>
         </form>
     </div>
@@ -155,6 +157,23 @@
         // Remove flash by showing page when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
             document.documentElement.classList.add('loaded');
+
+            // Capture user's real GPS location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        document.getElementById('latitude').value = position.coords.latitude;
+                        document.getElementById('longitude').value = position.coords.longitude;
+                        console.log('Location captured:', position.coords.latitude, position.coords.longitude);
+                    },
+                    function(error) {
+                        console.warn('Geolocation error:', error.message);
+                        // If geolocation fails, leave fields empty (won't show on map)
+                    }
+                );
+            } else {
+                console.warn('Geolocation not supported by browser');
+            }
         });
     </script>
     {% include 'zozi_badge.html' %}
