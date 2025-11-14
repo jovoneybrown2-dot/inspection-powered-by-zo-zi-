@@ -228,6 +228,54 @@ def init_db():
     # Set existing messages as read
     c.execute("UPDATE messages SET is_read = 1 WHERE is_read IS NULL")
 
+    # User sessions table for tracking active logins
+    c.execute('''CREATE TABLE IF NOT EXISTS user_sessions
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  username TEXT NOT NULL,
+                  user_role TEXT,
+                  login_time TEXT NOT NULL,
+                  logout_time TEXT,
+                  last_activity TEXT,
+                  location_lat REAL,
+                  location_lng REAL,
+                  parish TEXT,
+                  ip_address TEXT,
+                  is_active INTEGER DEFAULT 1)''')
+
+    # Form templates table for dynamic form management
+    c.execute('''CREATE TABLE IF NOT EXISTS form_templates
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  name TEXT NOT NULL UNIQUE,
+                  description TEXT,
+                  form_type TEXT NOT NULL,
+                  active INTEGER DEFAULT 1,
+                  created_date TEXT DEFAULT CURRENT_TIMESTAMP,
+                  version TEXT DEFAULT '1.0',
+                  created_by TEXT,
+                  last_edited_by TEXT,
+                  last_edited_date TEXT,
+                  last_edited_role TEXT)''')
+
+    # Form items table for checklist items
+    c.execute('''CREATE TABLE IF NOT EXISTS form_items
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  form_template_id INTEGER NOT NULL,
+                  item_order INTEGER NOT NULL,
+                  category TEXT NOT NULL,
+                  description TEXT NOT NULL,
+                  weight INTEGER NOT NULL,
+                  is_critical INTEGER DEFAULT 0,
+                  active INTEGER DEFAULT 1,
+                  created_date TEXT DEFAULT CURRENT_TIMESTAMP,
+                  FOREIGN KEY (form_template_id) REFERENCES form_templates(id))''')
+
+    # Form categories table
+    c.execute('''CREATE TABLE IF NOT EXISTS form_categories
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  name TEXT NOT NULL,
+                  description TEXT,
+                  display_order INTEGER DEFAULT 0)''')
+
     conn.commit()
     conn.close()
 
