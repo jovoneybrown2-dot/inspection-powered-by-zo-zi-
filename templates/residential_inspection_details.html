@@ -374,7 +374,14 @@
                 </div>
                 <div>
                     <label>Inspector's Signature:</label><div class="form-value">{{ inspector_signature }}</div>
-                    <label>Rec'd By:</label><div class="form-value">{{ received_by }}</div>
+                    <label>Rec'd By:</label>
+                    <div class="form-value">
+                        {% if received_by and received_by.startswith('data:image/') %}
+                            <img src="{{ received_by }}" style="max-width: 250px; border: 1px solid #ccc; background: white;" alt="Signature" />
+                        {% else %}
+                            {{ received_by }}
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>

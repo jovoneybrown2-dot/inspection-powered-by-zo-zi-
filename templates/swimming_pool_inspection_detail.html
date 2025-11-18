@@ -712,7 +712,14 @@
             </tr>
             <tr>
                 <td>Manager's Signature</td>
-                <td><span class="input-field">{{ inspection.manager_signature|default(inspection.received_by|default('')) }}</span></td>
+                <td>
+                    {% set sig = inspection.manager_signature|default(inspection.received_by|default('')) %}
+                    {% if sig and sig.startswith('data:image/') %}
+                        <img src="{{ sig }}" style="max-width: 250px; border: 1px solid #ccc; background: white;" alt="Signature" />
+                    {% else %}
+                        <span class="input-field">{{ sig }}</span>
+                    {% endif %}
+                </td>
                 <td>Date</td>
                 <td><span class="input-field">{{ inspection.manager_date|default('') }}</span></td>
             </tr>
