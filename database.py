@@ -12,6 +12,11 @@ def get_timestamp_default():
 
 def init_db():
     conn = get_db_connection()
+
+    # Enable autocommit for schema changes (prevents transaction errors on ALTER failures)
+    if get_db_type() == 'postgresql':
+        conn.autocommit = True
+
     c = conn.cursor()
 
     # Get database-specific syntax
@@ -330,7 +335,9 @@ def init_db():
     for template in existing_templates:
         c.execute('INSERT OR IGNORE INTO form_templates (name, description, form_type) VALUES (?, ?, ?)', template)
 
-    conn.commit()
+    # Only commit if not using autocommit (SQLite)
+    if get_db_type() != 'postgresql':
+        conn.commit()
     conn.close()
 
 def save_inspection(data):
