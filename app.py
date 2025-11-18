@@ -6236,78 +6236,120 @@ def fix_barbershop_db():
 # Initialize messages table (add this to your init_db function or run separately)
 def init_messages_db():
     """Initialize the messages table"""
+    from database import get_auto_increment, get_timestamp_default
+    from db_config import get_db_type
+
     conn = get_db_connection()
+
+    if get_db_type() == 'postgresql':
+        conn.autocommit = True
+
     c = conn.cursor()
 
+    auto_inc = get_auto_increment()
+    timestamp = get_timestamp_default()
+
     # Create messages table
-    c.execute('''CREATE TABLE IF NOT EXISTS messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    c.execute(f'''CREATE TABLE IF NOT EXISTS messages (
+        id {auto_inc},
         sender_id INTEGER NOT NULL,
         recipient_id INTEGER NOT NULL,
         content TEXT NOT NULL,
-        timestamp TEXT NOT NULL,
+        timestamp {timestamp},
         is_read INTEGER DEFAULT 0,
         FOREIGN KEY (sender_id) REFERENCES users(id),
         FOREIGN KEY (recipient_id) REFERENCES users(id)
     )''')
 
-    conn.commit()
+    if get_db_type() != 'postgresql':
+        conn.commit()
     conn.close()
     print("Messages table initialized successfully")
 
 
 def init_db():
+    from database import get_auto_increment, get_timestamp_default
+    from db_config import get_db_type
+
     conn = get_db_connection()
+
+    # Enable autocommit for schema changes (prevents transaction errors on ALTER failures)
+    if get_db_type() == 'postgresql':
+        conn.autocommit = True
+
     c = conn.cursor()
 
+    # Get database-specific syntax
+    auto_inc = get_auto_increment()
+    timestamp = get_timestamp_default()
+
     # Create tables
-    c.execute('''CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    c.execute(f'''CREATE TABLE IF NOT EXISTS users (
+        id {auto_inc},
         username TEXT NOT NULL UNIQUE,
         password TEXT NOT NULL,
         role TEXT NOT NULL CHECK(role IN ('inspector', 'admin', 'medical_officer')),
         email TEXT,
         is_flagged INTEGER DEFAULT 0
     )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS login_history (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    c.execute(f'''CREATE TABLE IF NOT EXISTS login_history (
+        id {auto_inc},
         user_id INTEGER NOT NULL,
         username TEXT NOT NULL,
         email TEXT,
         role TEXT NOT NULL,
-        login_time TEXT NOT NULL,
+        login_time {timestamp},
         ip_address TEXT,
         FOREIGN KEY (user_id) REFERENCES users(id)
     )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    c.execute(f'''CREATE TABLE IF NOT EXISTS messages (
+        id {auto_inc},
         sender_id INTEGER NOT NULL,
         recipient_id INTEGER NOT NULL,
         content TEXT NOT NULL,
-        timestamp TEXT NOT NULL,
+        timestamp {timestamp},
         is_read INTEGER DEFAULT 0,
         FOREIGN KEY (sender_id) REFERENCES users(id),
         FOREIGN KEY (recipient_id) REFERENCES users(id)
     )''')
 
     # Check if email column exists in users table and add it if not
-    c.execute("PRAGMA table_info(users)")
-    columns = [info[1] for info in c.fetchall()]
+    if get_db_type() == 'postgresql':
+        c.execute("SELECT column_name FROM information_schema.columns WHERE table_name='users'")
+        columns = [row[0] for row in c.fetchall()]
+    else:
+        c.execute("PRAGMA table_info(users)")
+        columns = [info[1] for info in c.fetchall()]
+
     if 'email' not in columns:
-        c.execute('ALTER TABLE users ADD COLUMN email TEXT')
-        conn.commit()
+        try:
+            c.execute('ALTER TABLE users ADD COLUMN email TEXT')
+            if get_db_type() != 'postgresql':
+                conn.commit()
+        except Exception:
+            pass  # Column might already exist
 
     # Insert default users
     try:
-        c.execute('INSERT OR IGNORE INTO users (username, password, role, email) VALUES (?, ?, ?, ?)',
-                  ('admin', 'adminpass', 'admin', 'admin@example.com'))
-        c.execute('INSERT OR IGNORE INTO users (username, password, role, email) VALUES (?, ?, ?, ?)',
-                  ('medofficer', 'medpass', 'medical_officer', 'medofficer@example.com'))
-        for i in range(1, 7):
+        if get_db_type() == 'postgresql':
+            c.execute('INSERT INTO users (username, password, role, email) VALUES (%s, %s, %s, %s) ON CONFLICT (username) DO NOTHING',
+                      ('admin', 'adminpass', 'admin', 'admin@example.com'))
+            c.execute('INSERT INTO users (username, password, role, email) VALUES (%s, %s, %s, %s) ON CONFLICT (username) DO NOTHING',
+                      ('medofficer', 'medpass', 'medical_officer', 'medofficer@example.com'))
+            for i in range(1, 7):
+                c.execute('INSERT INTO users (username, password, role, email) VALUES (%s, %s, %s, %s) ON CONFLICT (username) DO NOTHING',
+                          (f'inspector{i}', f'pass{i}', 'inspector', f'inspector{i}@example.com'))
+            conn.commit()
+        else:
             c.execute('INSERT OR IGNORE INTO users (username, password, role, email) VALUES (?, ?, ?, ?)',
-                      (f'inspector{i}', f'pass{i}', 'inspector', f'inspector{i}@example.com'))
-        conn.commit()
-    except sqlite3.IntegrityError as e:
+                      ('admin', 'adminpass', 'admin', 'admin@example.com'))
+            c.execute('INSERT OR IGNORE INTO users (username, password, role, email) VALUES (?, ?, ?, ?)',
+                      ('medofficer', 'medpass', 'medical_officer', 'medofficer@example.com'))
+            for i in range(1, 7):
+                c.execute('INSERT OR IGNORE INTO users (username, password, role, email) VALUES (?, ?, ?, ?)',
+                          (f'inspector{i}', f'pass{i}', 'inspector', f'inspector{i}@example.com'))
+            conn.commit()
+    except Exception as e:
         logging.error(f"Database integrity error: {str(e)}")
 
     conn.close()
@@ -6518,14 +6560,20 @@ def get_audit_log():
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
     try:
+        from database import get_auto_increment, get_timestamp_default
+        from db_config import get_db_type
+
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        auto_inc = get_auto_increment()
+        timestamp = get_timestamp_default()
+
         # Create audit_log table if it doesn't exist
-        cursor.execute('''
+        cursor.execute(f'''
             CREATE TABLE IF NOT EXISTS audit_log (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp TEXT NOT NULL,
+                id {auto_inc},
+                timestamp {timestamp},
                 user TEXT NOT NULL,
                 action TEXT NOT NULL,
                 ip_address TEXT,
@@ -7119,20 +7167,26 @@ def handle_tasks():
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
     try:
+        from database import get_auto_increment, get_timestamp_default
+        from db_config import get_db_type
+
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        auto_inc = get_auto_increment()
+        timestamp = get_timestamp_default()
+
         # Create tasks table if it doesn't exist - updated with notification field
-        cursor.execute('''
+        cursor.execute(f'''
             CREATE TABLE IF NOT EXISTS tasks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id {auto_inc},
                 title TEXT NOT NULL,
                 assignee_id INTEGER,
                 assignee_name TEXT,
                 due_date TEXT,
                 details TEXT,
                 status TEXT DEFAULT 'Pending',
-                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                created_at {timestamp},
                 is_notified INTEGER DEFAULT 0
             )
         ''')
@@ -7551,24 +7605,34 @@ def get_security_metrics():
             return "Admin access required"
 
         try:
+            from database import get_auto_increment, get_timestamp_default
+            from db_config import get_db_type
+
             conn = get_db_connection()
             c = conn.cursor()
 
+            auto_inc = get_auto_increment()
+            timestamp = get_timestamp_default()
+
             # Create messages table if it doesn't exist
-            c.execute('''CREATE TABLE IF NOT EXISTS messages (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+            c.execute(f'''CREATE TABLE IF NOT EXISTS messages (
+                id {auto_inc},
                 sender_id INTEGER NOT NULL,
                 recipient_id INTEGER NOT NULL,
                 content TEXT NOT NULL,
-                timestamp TEXT NOT NULL,
+                timestamp {timestamp},
                 is_read INTEGER DEFAULT 0,
                 FOREIGN KEY (sender_id) REFERENCES users(id),
                 FOREIGN KEY (recipient_id) REFERENCES users(id)
             )''')
 
             # Check if users table has required columns
-            c.execute("PRAGMA table_info(users)")
-            columns = [row[1] for row in c.fetchall()]
+            if get_db_type() == 'postgresql':
+                c.execute("SELECT column_name FROM information_schema.columns WHERE table_name='users'")
+                columns = [row[0] for row in c.fetchall()]
+            else:
+                c.execute("PRAGMA table_info(users)")
+                columns = [row[1] for row in c.fetchall()]
 
             if 'email' not in columns:
                 c.execute('ALTER TABLE users ADD COLUMN email TEXT')
@@ -7771,22 +7835,29 @@ def get_security_metrics():
             return "Admin access required"
 
         try:
+            from database import get_auto_increment, get_timestamp_default
+            from db_config import get_db_type
+
             conn = get_db_connection()
             c = conn.cursor()
 
+            auto_inc = get_auto_increment()
+            timestamp = get_timestamp_default()
+
             # Create messages table
-            c.execute('''CREATE TABLE IF NOT EXISTS messages (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+            c.execute(f'''CREATE TABLE IF NOT EXISTS messages (
+                id {auto_inc},
                 sender_id INTEGER NOT NULL,
                 recipient_id INTEGER NOT NULL,
                 content TEXT NOT NULL,
-                timestamp TEXT NOT NULL,
+                timestamp {timestamp},
                 is_read INTEGER DEFAULT 0,
                 FOREIGN KEY (sender_id) REFERENCES users(id),
                 FOREIGN KEY (recipient_id) REFERENCES users(id)
             )''')
 
-            conn.commit()
+            if get_db_type() != 'postgresql':
+                conn.commit()
             conn.close()
 
             return "✅ Messaging system setup complete! <a href='/admin'>Back to Admin Dashboard</a>"
@@ -7834,14 +7905,20 @@ def send_message():
 def log_audit_event(user, action, ip_address=None, details=None):
     """Log an audit event"""
     try:
+        from database import get_auto_increment, get_timestamp_default
+        from db_config import get_db_type
+
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        auto_inc = get_auto_increment()
+        timestamp = get_timestamp_default()
+
         # Create table if it doesn't exist
-        cursor.execute('''
+        cursor.execute(f'''
             CREATE TABLE IF NOT EXISTS audit_log (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp TEXT NOT NULL,
+                id {auto_inc},
+                timestamp {timestamp},
                 user TEXT NOT NULL,
                 action TEXT NOT NULL,
                 ip_address TEXT,
@@ -7849,16 +7926,28 @@ def log_audit_event(user, action, ip_address=None, details=None):
             )
         ''')
 
-        cursor.execute('''
-            INSERT INTO audit_log (timestamp, user, action, ip_address, details)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (
-            datetime.now().isoformat(),
-            user,
-            action,
-            ip_address,
-            details
-        ))
+        if get_db_type() == 'postgresql':
+            cursor.execute('''
+                INSERT INTO audit_log (timestamp, user, action, ip_address, details)
+                VALUES (%s, %s, %s, %s, %s)
+            ''', (
+                datetime.now().isoformat(),
+                user,
+                action,
+                ip_address,
+                details
+            ))
+        else:
+            cursor.execute('''
+                INSERT INTO audit_log (timestamp, user, action, ip_address, details)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (
+                datetime.now().isoformat(),
+                user,
+                action,
+                ip_address,
+                details
+            ))
 
         conn.commit()
         conn.close()
@@ -8005,22 +8094,29 @@ def get_unread_messages():
             return "Admin access required"
 
         try:
+            from database import get_auto_increment, get_timestamp_default
+            from db_config import get_db_type
+
             conn = get_db_connection()
             c = conn.cursor()
 
+            auto_inc = get_auto_increment()
+            timestamp = get_timestamp_default()
+
             # Create messages table
-            c.execute('''CREATE TABLE IF NOT EXISTS messages (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+            c.execute(f'''CREATE TABLE IF NOT EXISTS messages (
+                id {auto_inc},
                 sender_id INTEGER NOT NULL,
                 recipient_id INTEGER NOT NULL,
                 content TEXT NOT NULL,
-                timestamp TEXT NOT NULL,
+                timestamp {timestamp},
                 is_read INTEGER DEFAULT 0,
                 FOREIGN KEY (sender_id) REFERENCES users(id),
                 FOREIGN KEY (recipient_id) REFERENCES users(id)
             )''')
 
-            conn.commit()
+            if get_db_type() != 'postgresql':
+                conn.commit()
             conn.close()
 
             return "✅ Messaging system setup complete! <a href='/admin'>Back to Admin Dashboard</a>"
