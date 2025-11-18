@@ -681,7 +681,8 @@ def get_meat_processing_inspection_details(inspection_id):
     inspection = c.fetchone()
     if inspection:
         c.execute("SELECT item_id, score FROM meat_processing_checklist_scores WHERE form_id = ?", (inspection_id,))
-        checklist_scores = dict(c.fetchall())
+        # Convert integer keys to zero-padded string keys to match template expectations
+        checklist_scores = {str(item_id).zfill(2): score for item_id, score in c.fetchall()}
         conn.close()
         return {
             'id': inspection[0],
