@@ -6644,6 +6644,8 @@ def search_inspections():
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
+    from db_config import execute_query
+
     query = request.args.get('q', '').strip().lower()
 
     if len(query) < 2:
@@ -6651,15 +6653,14 @@ def search_inspections():
 
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
 
         results = []
 
         # Search in main inspections table
-        cursor.execute("""
+        cursor = execute_query(conn, """
             SELECT id, establishment_name, owner, license_no, form_type, inspector_name
             FROM inspections
-            WHERE LOWER(establishment_name) LIKE ? 
+            WHERE LOWER(establishment_name) LIKE ?
                OR LOWER(owner) LIKE ?
                OR LOWER(license_no) LIKE ?
                OR LOWER(inspector_name) LIKE ?
@@ -6669,7 +6670,7 @@ def search_inspections():
         for row in cursor.fetchall():
             results.append({
                 'id': row[0],
-                'formType': row[4] or 'Food Establishment',  # Changed from 'type' to 'formType'
+                'formType': row[4] or 'Food Establishment',
                 'name': row[1] or 'N/A',
                 'owner': row[2] or 'N/A',
                 'license': row[3] or 'N/A',
@@ -6677,7 +6678,7 @@ def search_inspections():
             })
 
         # Search in residential inspections
-        cursor.execute("""
+        cursor = execute_query(conn, """
             SELECT id, premises_name, owner, address, inspector_name
             FROM residential_inspections
             WHERE LOWER(premises_name) LIKE ?
@@ -6689,7 +6690,7 @@ def search_inspections():
         for row in cursor.fetchall():
             results.append({
                 'id': row[0],
-                'formType': 'Residential',  # Changed from 'type' to 'formType'
+                'formType': 'Residential',
                 'name': row[1] or 'N/A',
                 'owner': row[2] or 'N/A',
                 'address': row[3] or 'N/A',
@@ -6697,7 +6698,7 @@ def search_inspections():
             })
 
         # Search in burial inspections
-        cursor.execute("""
+        cursor = execute_query(conn, """
             SELECT id, applicant_name, deceased_name, burial_location
             FROM burial_site_inspections
             WHERE LOWER(applicant_name) LIKE ?
@@ -6709,17 +6710,17 @@ def search_inspections():
         for row in cursor.fetchall():
             results.append({
                 'id': row[0],
-                'formType': 'Burial',  # Changed from 'type' to 'formType'
+                'formType': 'Burial',
                 'applicant': row[1] or 'N/A',
                 'deceased': row[2] or 'N/A',
                 'location': row[3] or 'N/A',
                 'inspector': 'N/A',
-                'name': row[1] or 'N/A',  # Add name field for consistency
-                'owner': row[2] or 'N/A'   # Add owner field for consistency
+                'name': row[1] or 'N/A',
+                'owner': row[2] or 'N/A'
             })
 
         # Search in meat processing inspections
-        cursor.execute("""
+        cursor = execute_query(conn, """
             SELECT id, establishment_name, owner_operator, establishment_no, inspector_name
             FROM meat_processing_inspections
             WHERE LOWER(establishment_name) LIKE ?
