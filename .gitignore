@@ -14,3 +14,13 @@ backups/
 
 # SQLite backup
 database_sqlite_backup.py
+
+# Database files
+*.db
+
+# Backup files
+*.bak
+*.bak2
+*.bak3
+*.bak4
+*.backup-*
