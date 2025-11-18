@@ -540,7 +540,7 @@ def get_form_checklist_items(form_type, fallback_list=None):
         c = conn.cursor()
 
         # Get template ID for this form type
-        c.execute('SELECT id FROM form_templates WHERE form_type = ? AND active = 1', (form_type,))
+        c.execute('SELECT id FROM form_templates WHERE form_type = %s AND active = 1', (form_type,))
         template = c.fetchone()
 
         if not template:
@@ -554,7 +554,7 @@ def get_form_checklist_items(form_type, fallback_list=None):
         c.execute('''
             SELECT id, item_order, category, description, weight, is_critical
             FROM form_items
-            WHERE form_template_id = ? AND active = 1
+            WHERE form_template_id = %s AND active = 1
             ORDER BY item_order
         ''', (template_id,))
 
@@ -603,7 +603,7 @@ def get_form_field_properties(form_type):
         c = conn.cursor()
 
         # Get template ID for this form type
-        c.execute('SELECT id FROM form_templates WHERE form_type = ? AND active = 1', (form_type,))
+        c.execute('SELECT id FROM form_templates WHERE form_type = %s AND active = 1', (form_type,))
         template = c.fetchone()
 
         if not template:
@@ -618,7 +618,7 @@ def get_form_field_properties(form_type):
             SELECT field_name, field_label, field_type, required,
                    placeholder, default_value, options, field_group
             FROM form_fields
-            WHERE form_template_id = ? AND active = 1
+            WHERE form_template_id = %s AND active = 1
             ORDER BY field_order
         ''', (template_id,))
 
@@ -747,7 +747,7 @@ def admin_form_scores():
         else:
             cursor.execute("""
                 SELECT overall_score FROM inspections 
-                WHERE form_type = ? AND overall_score IS NOT NULL AND overall_score > 0
+                WHERE form_type = %s AND overall_score IS NOT NULL AND overall_score > 0
             """, (form_type,))
             scores = cursor.fetchall()
 
@@ -810,7 +810,7 @@ def admin_metrics():
             query = """
                 SELECT strftime('%Y-%m-%d', created_at) AS date, result, COUNT(*) AS count
                 FROM inspections
-                WHERE form_type = ?
+                WHERE form_type = %s
                 GROUP BY date, result
             """
             c.execute(query, (form_type,))
@@ -904,7 +904,7 @@ def logout():
             # Get username from session
             username = session.get('inspector') or session.get('admin') or session.get('medical_officer')
             if username:
-                c.execute("UPDATE user_sessions SET is_active = 0, logout_time = ? WHERE username = ? AND is_active = 1",
+                c.execute("UPDATE user_sessions SET is_active = 0, logout_time = %s WHERE username = %s AND is_active = 1",
                           (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), username))
                 conn.commit()
             conn.close()
@@ -932,7 +932,7 @@ def new_burial_form():
     if inspection_id:
         conn = get_db_connection()
         c = conn.cursor()
-        c.execute("SELECT * FROM burial_site_inspections WHERE id = ?", (inspection_id,))
+        c.execute("SELECT * FROM burial_site_inspections WHERE id = %s", (inspection_id,))
         inspection = c.fetchone()
         conn.close()
         if inspection:
@@ -1140,7 +1140,7 @@ def submit_institutional():
                 overall_score, critical_score, result, license_no,
                 registration_status, purpose_of_visit, action, comments,
                 inspector_signature, received_by, photo_data, form_type, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (
             establishment_name, owner_operator, address, inspector_name,
             staff_complement, num_occupants, institution_type,
@@ -1165,7 +1165,7 @@ def submit_institutional():
 
             if score_value and score_value != '0':
                 cursor.execute(
-                    "INSERT INTO inspection_items (inspection_id, item_id, details) VALUES (?, ?, ?)",
+                    "INSERT INTO inspection_items (inspection_id, item_id, details) VALUES (%s, %s, %s)",
                     (inspection_id, f'{i:02d}', score_value)
                 )
                 scores_saved += 1
@@ -1223,8 +1223,8 @@ def fix_institutional_status():
         # Update the record
         cursor.execute("""
             UPDATE inspections 
-            SET result = ? 
-            WHERE id = ?
+            SET result = %s
+            WHERE id = %s
         """, (result, inspection_id))
         updated_count += 1
         print(
@@ -1262,7 +1262,7 @@ def institutional_inspection_detail(id):
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM inspections WHERE id = ? AND form_type = 'Institutional Health'", (id,))
+    cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Institutional Health'", (id,))
     inspection = cursor.fetchone()
 
     if not inspection:
@@ -1287,7 +1287,7 @@ def institutional_inspection_detail(id):
             print(f"{key}: {value}")
 
     # Get individual scores from inspection_items table
-    cursor.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = ?", (id,))
+    cursor.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = %s", (id,))
     item_scores = {}
     for row in cursor.fetchall():
         item_key = row[0]
@@ -1360,7 +1360,7 @@ def submit_spirit_licence():
         c = conn.cursor()
         for item in SPIRIT_LICENCE_CHECKLIST_ITEMS:
             score = request.form.get(f"score_{item['id']}", '0')
-            c.execute("INSERT INTO inspection_items (inspection_id, item_id, details) VALUES (?, ?, ?)",
+            c.execute("INSERT INTO inspection_items (inspection_id, item_id, details) VALUES (%s, %s, %s)",
                       (inspection_id, item['id'], score))
         conn.commit()
         conn.close()
@@ -1416,7 +1416,7 @@ def submit_form(form_type):
             c = conn.cursor()
             for item in FOOD_CHECKLIST_ITEMS:
                 score = request.form.get(f'score_{item["id"]}', '0')
-                c.execute("INSERT INTO inspection_items (inspection_id, item_id, details) VALUES (?, ?, ?)",
+                c.execute("INSERT INTO inspection_items (inspection_id, item_id, details) VALUES (%s, %s, %s)",
                           (inspection_id, item["id"], score))
             conn.commit()
             conn.close()
@@ -1481,7 +1481,7 @@ def submit_residential():
             score = request.form.get(f'score_{item["id"]}', '0')
             # Also apply safe conversion to checklist scores
             safe_score = safe_int_convert(score, 0)
-            c.execute("INSERT INTO residential_checklist_scores (form_id, item_id, score) VALUES (?, ?, ?)",
+            c.execute("INSERT INTO residential_checklist_scores (form_id, item_id, score) VALUES (%s, %s, %s)",
                       (inspection_id, item["id"], safe_score))
         conn.commit()
         conn.close()
@@ -1595,7 +1595,7 @@ def submit_meat_processing():
         for item in MEAT_PROCESSING_CHECKLIST_ITEMS:
             score = request.form.get(f'score_{item["id"]:02d}', '0')
             safe_score = safe_float_convert(score, 0.0)
-            c.execute("INSERT INTO meat_processing_checklist_scores (form_id, item_id, score) VALUES (?, ?, ?)",
+            c.execute("INSERT INTO meat_processing_checklist_scores (form_id, item_id, score) VALUES (%s, %s, %s)",
                       (inspection_id, item["id"], safe_score))
         conn.commit()
         conn.close()
@@ -1696,8 +1696,8 @@ def submit_swimming_pools():
     score_columns = ', '.join([f"score_{item['id']}" for item in SWIMMING_POOL_CHECKLIST_ITEMS])
     all_columns = f"{base_columns}, {score_columns}"
 
-    base_placeholders = '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?'
-    score_placeholders = ', '.join(['?' for _ in SWIMMING_POOL_CHECKLIST_ITEMS])
+    base_placeholders = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s'
+    score_placeholders = ', '.join(['%s' for _ in SWIMMING_POOL_CHECKLIST_ITEMS])
     all_placeholders = f"{base_placeholders}, {score_placeholders}"
 
     base_values = (
@@ -1728,7 +1728,7 @@ def submit_swimming_pools():
             type_of_establishment, inspector_name, inspection_date, form_type, result, 
             created_at, comments, scores, overall_score, critical_score, inspector_signature, 
             received_by, manager_date)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', base_values)
 
         inspection_id = cursor.lastrowid
@@ -1739,7 +1739,7 @@ def submit_swimming_pools():
         score = float(request.form.get(score_key, 0))
         cursor.execute('''
             INSERT INTO inspection_items (inspection_id, item_id, details)
-            VALUES (?, ?, ?)
+            VALUES (%s, %s, %s)
         ''', (inspection_id, item['id'], str(score)))
 
     conn.commit()
@@ -1917,7 +1917,7 @@ def submit_small_hotels():
             inspector_signature, manager_signature, received_by,
             photo_data, created_at, form_type
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, datetime('now'), %s)
     ''', (
         data.get('establishment_name', ''),
         data.get('address', ''),
@@ -1940,7 +1940,7 @@ def submit_small_hotels():
     for item_id in all_item_ids:
         c.execute('''
             INSERT INTO inspection_items (inspection_id, item_id, obser, error)
-            VALUES (?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s)
         ''', (
             inspection_id,
             item_id,
@@ -2161,7 +2161,7 @@ def fix_inspection_results():
             new_result = 'Pass' if overall_score >= 70 else 'Fail'
 
         # Update the database
-        c.execute("UPDATE inspections SET result = ? WHERE id = ?", (new_result, inspection_id))
+        c.execute("UPDATE inspections SET result = %s WHERE id = %s", (new_result, inspection_id))
         updated_count += 1
         print(
             f"Updated inspection {inspection_id}: {form_type} - Overall: {overall_score}, Critical: {critical_score} → {new_result}")
@@ -2219,9 +2219,9 @@ def search():
     data = get_establishment_data()
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT id, applicant_name, deceased_name FROM burial_site_inspections WHERE LOWER(applicant_name) LIKE ? OR LOWER(deceased_name) LIKE ?", (f'%{query}%', f'%{query}%'))
+    c.execute("SELECT id, applicant_name, deceased_name FROM burial_site_inspections WHERE LOWER(applicant_name) LIKE %s OR LOWER(deceased_name) LIKE %s", (f'%{query}%', f'%{query}%'))
     burial_records = c.fetchall()
-    c.execute("SELECT id, establishment_name, owner, license_no FROM inspections WHERE form_type = 'Barbershop' AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ? OR LOWER(license_no) LIKE ?)", (f'%{query}%', f'%{query}%', f'%{query}%'))
+    c.execute("SELECT id, establishment_name, owner, license_no FROM inspections WHERE form_type = 'Barbershop' AND (LOWER(establishment_name) LIKE %s OR LOWER(owner) LIKE %s OR LOWER(license_no) LIKE %s)", (f'%{query}%', f'%{query}%', f'%{query}%'))
     barbershop_records = c.fetchall()
     conn.close()
     suggestions = []
@@ -2247,7 +2247,7 @@ def search_residential():
     c.execute("""
         SELECT id, premises_name, owner, created_at, result 
         FROM residential_inspections 
-        WHERE LOWER(premises_name) LIKE ? OR LOWER(owner) LIKE ? OR LOWER(created_at) LIKE ?
+        WHERE LOWER(premises_name) LIKE %s OR LOWER(owner) LIKE %s OR LOWER(created_at) LIKE %s
     """, (f'%{query}%', f'%{query}%', f'%{query}%'))
     records = c.fetchall()
     suggestions = [{'id': row[0], 'premises_name': row[1], 'owner': row[2], 'created_at': row[3], 'result': row[4]} for row in records]
@@ -2260,7 +2260,7 @@ def inspection_detail(id):
         return redirect(url_for('login'))
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT id, establishment_name, owner, address, license_no, inspector_name, inspection_date, inspection_time, type_of_establishment, purpose_of_visit, action, result, scores, comments, created_at, form_type, inspector_code, no_of_employees, food_inspected, food_condemned, photo_data, received_by, inspector_signature FROM inspections WHERE id = ?", (id,))
+    c.execute("SELECT id, establishment_name, owner, address, license_no, inspector_name, inspection_date, inspection_time, type_of_establishment, purpose_of_visit, action, result, scores, comments, created_at, form_type, inspector_code, no_of_employees, food_inspected, food_condemned, photo_data, received_by, inspector_signature FROM inspections WHERE id = %s", (id,))
     inspection = c.fetchone()
     conn.close()
 
@@ -3162,7 +3162,7 @@ def download_swimming_pool_pdf(form_id):
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM inspections WHERE id = ? AND form_type = 'Swimming Pool'", (form_id,))
+    cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Swimming Pool'", (form_id,))
     inspection = cursor.fetchone()
 
     if not inspection:
@@ -3172,7 +3172,7 @@ def download_swimming_pool_pdf(form_id):
     inspection_dict = dict(inspection)
 
     # Get individual scores
-    cursor.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = ?", (form_id,))
+    cursor.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = %s", (form_id,))
     item_scores = {row[0]: float(row[1]) if row[1] and str(row[1]).replace('.', '', 1).isdigit() else 0.0
                    for row in cursor.fetchall()}
     conn.close()
@@ -3558,7 +3558,7 @@ def download_institutional_pdf(form_id):
     conn = get_db_connection()
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute("""SELECT * FROM inspections WHERE id = ? AND form_type = 'Institutional Health'""", (form_id,))
+    c.execute("""SELECT * FROM inspections WHERE id = %s AND form_type = 'Institutional Health'""", (form_id,))
     form_data = c.fetchone()
 
     if not form_data:
@@ -3566,7 +3566,7 @@ def download_institutional_pdf(form_id):
         return jsonify({'error': 'Inspection not found'}), 404
 
     # Get individual scores from inspection_items table
-    c.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = ?", (form_id,))
+    c.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = %s", (form_id,))
     checklist_scores = {str(row[0]): float(row[1]) if row[1] and str(row[1]).replace('.', '', 1).isdigit() else 0.0
                         for row in c.fetchall()}
     conn.close()
@@ -3919,7 +3919,7 @@ def download_small_hotels_pdf(form_id):
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM inspections WHERE id = ? AND form_type = 'Small Hotel'", (form_id,))
+    cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Small Hotel'", (form_id,))
     inspection_row = cursor.fetchone()
 
     if not inspection_row:
@@ -3929,7 +3929,7 @@ def download_small_hotels_pdf(form_id):
     inspection_dict = dict(inspection_row)
 
     # Get individual scores from inspection_items table
-    cursor.execute("SELECT item_id, obser, error FROM inspection_items WHERE inspection_id = ?", (form_id,))
+    cursor.execute("SELECT item_id, obser, error FROM inspection_items WHERE inspection_id = %s", (form_id,))
     items = cursor.fetchall()
 
     obser_scores = {}
@@ -4774,7 +4774,7 @@ def spirit_licence_inspection_detail(id):
     c = conn.cursor()
 
     c.execute("""SELECT * FROM inspections 
-                 WHERE id = ? AND form_type = 'Spirit Licence Premises'""", (id,))
+                 WHERE id = %s AND form_type = 'Spirit Licence Premises'""", (id,))
     inspection = c.fetchone()
     conn.close()
 
@@ -5125,7 +5125,7 @@ def swimming_pool_inspection_detail(id):
     cursor = conn.cursor()
 
     # Select ALL columns including the individual score columns
-    cursor.execute("SELECT * FROM inspections WHERE id = ? AND form_type = 'Swimming Pool'", (id,))
+    cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Swimming Pool'", (id,))
     inspection = cursor.fetchone()
 
     if not inspection:
@@ -5174,7 +5174,7 @@ def swimming_pool_inspection_detail(id):
             inspection_dict[score_field] = float(inspection_dict[score_field])
 
     # Also get backup scores from inspection_items table
-    cursor.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = ?", (id,))
+    cursor.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = %s", (id,))
     item_scores = {row[0]: float(row[1]) if row[1] and str(row[1]).replace('.', '', 1).isdigit() else 0.0
                    for row in cursor.fetchall()}
 
@@ -5265,22 +5265,22 @@ def search_forms():
                 'Spirit Licence Premises', 'Swimming Pool', 'Small Hotel', 'Barbershop', 'Institutional Health'
             )
             AND (
-                LOWER(establishment_name) LIKE ?
-                OR LOWER(owner) LIKE ?
-                OR LOWER(address) LIKE ?
+                LOWER(establishment_name) LIKE %s
+                OR LOWER(owner) LIKE %s
+                OR LOWER(address) LIKE %s
             )
             UNION
             SELECT id, applicant_name AS establishment_name, created_at, 'Completed' AS result, 'Burial Site' AS form_type, 0 AS overall_score, 0 AS critical_score
             FROM burial_site_inspections
-            WHERE LOWER(applicant_name) LIKE ? OR LOWER(deceased_name) LIKE ?
+            WHERE LOWER(applicant_name) LIKE %s OR LOWER(deceased_name) LIKE %s
             UNION
             SELECT id, premises_name AS establishment_name, created_at, result, 'Residential' AS form_type, overall_score, critical_score
             FROM residential_inspections
-            WHERE LOWER(premises_name) LIKE ? OR LOWER(owner) LIKE ?
+            WHERE LOWER(premises_name) LIKE %s OR LOWER(owner) LIKE %s
             UNION
             SELECT id, establishment_name, created_at, result, 'Meat Processing' AS form_type, overall_score, 0 AS critical_score
             FROM meat_processing_inspections
-            WHERE LOWER(establishment_name) LIKE ? OR LOWER(owner_operator) LIKE ?
+            WHERE LOWER(establishment_name) LIKE %s OR LOWER(owner_operator) LIKE %s
         """, (f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%'))
 
         records = c.fetchall()
@@ -5317,60 +5317,60 @@ def search_forms():
                 SELECT id, establishment_name, created_at, result, overall_score, critical_score, owner
                 FROM inspections
                 WHERE form_type = 'Food Establishment'
-                AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ?)
+                AND (LOWER(establishment_name) LIKE %s OR LOWER(owner) LIKE %s)
             """, (f'%{query}%', f'%{query}%'))
         elif form_type == 'residential':
             c = execute_query(conn, """
                 SELECT id, premises_name, created_at, result, owner, overall_score, critical_score
                 FROM residential_inspections
-                WHERE (LOWER(premises_name) LIKE ? OR LOWER(owner) LIKE ?)
+                WHERE (LOWER(premises_name) LIKE %s OR LOWER(owner) LIKE %s)
             """, (f'%{query}%', f'%{query}%'))
         elif form_type == 'burial':
             c = execute_query(conn, """
                 SELECT id, applicant_name, deceased_name, created_at
                 FROM burial_site_inspections
-                WHERE LOWER(applicant_name) LIKE ? OR LOWER(deceased_name) LIKE ?
+                WHERE LOWER(applicant_name) LIKE %s OR LOWER(deceased_name) LIKE %s
             """, (f'%{query}%', f'%{query}%'))
         elif form_type == 'spirit_licence':
             c = execute_query(conn, """
                 SELECT id, establishment_name, created_at, result, overall_score, critical_score, owner
                 FROM inspections
                 WHERE form_type = 'Spirit Licence Premises'
-                AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ?)
+                AND (LOWER(establishment_name) LIKE %s OR LOWER(owner) LIKE %s)
             """, (f'%{query}%', f'%{query}%'))
         elif form_type == 'swimming_pool':
             c = execute_query(conn, """
                 SELECT id, establishment_name, created_at, result, overall_score, critical_score, owner
                 FROM inspections
                 WHERE form_type = 'Swimming Pool'
-                AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ? OR LOWER(address) LIKE ?)
+                AND (LOWER(establishment_name) LIKE %s OR LOWER(owner) LIKE %s OR LOWER(address) LIKE %s)
             """, (f'%{query}%', f'%{query}%', f'%{query}%'))
         elif form_type == 'small_hotels':
             c = execute_query(conn, """
                 SELECT id, establishment_name, created_at, result, overall_score, critical_score, owner
                 FROM inspections
                 WHERE form_type = 'Small Hotel'
-                AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ? OR LOWER(address) LIKE ?)
+                AND (LOWER(establishment_name) LIKE %s OR LOWER(owner) LIKE %s OR LOWER(address) LIKE %s)
             """, (f'%{query}%', f'%{query}%', f'%{query}%'))
         elif form_type == 'barbershop':
             c = execute_query(conn, """
                 SELECT id, establishment_name, created_at, result, overall_score, critical_score, owner
                 FROM inspections
                 WHERE form_type = 'Barbershop'
-                AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ?)
+                AND (LOWER(establishment_name) LIKE %s OR LOWER(owner) LIKE %s)
             """, (f'%{query}%', f'%{query}%'))
         elif form_type == 'institutional':
             c = execute_query(conn, """
                 SELECT id, establishment_name, created_at, result, overall_score, critical_score, owner
                 FROM inspections
                 WHERE form_type = 'Institutional Health'
-                AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ?)
+                AND (LOWER(establishment_name) LIKE %s OR LOWER(owner) LIKE %s)
             """, (f'%{query}%', f'%{query}%'))
         elif form_type == 'meat_processing':
             c = execute_query(conn, """
                 SELECT id, establishment_name, inspection_date, result, overall_score
                 FROM meat_processing_inspections
-                WHERE (LOWER(establishment_name) LIKE ? OR LOWER(owner_operator) LIKE ?)
+                WHERE (LOWER(establishment_name) LIKE %s OR LOWER(owner_operator) LIKE %s)
             """, (f'%{query}%', f'%{query}%'))
         else:
             conn.close()
@@ -5644,7 +5644,7 @@ def submit_barbershop():
             score = score_updates[f"score_{item['id']}"]
             cursor.execute('''
                 INSERT INTO inspection_items (inspection_id, item_id, details)
-                VALUES (?, ?, ?)
+                VALUES (%s, %s, %s)
             ''', (inspection_id, item['id'], str(score)))
 
         conn.commit()
@@ -5678,7 +5678,7 @@ def barbershop_inspection_detail(id):
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM inspections WHERE id = ? AND form_type = 'Barbershop'", (id,))
+    cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Barbershop'", (id,))
     inspection = cursor.fetchone()
 
     if not inspection:
@@ -5698,7 +5698,7 @@ def barbershop_inspection_detail(id):
             inspection_dict[score_field] = float(inspection_dict[score_field])
 
     # Get backup scores from inspection_items
-    cursor.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = ?", (id,))
+    cursor.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = %s", (id,))
     item_scores = {row[0]: float(row[1]) if row[1] and str(row[1]).replace('.', '', 1).isdigit() else 0.0 for row in cursor.fetchall()}
 
     for item in BARBERSHOP_CHECKLIST_ITEMS:
@@ -5739,14 +5739,14 @@ def download_barbershop_pdf(form_id):
     conn = get_db_connection()
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute("SELECT * FROM inspections WHERE id = ? AND form_type = 'Barbershop'", (form_id,))
+    c.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Barbershop'", (form_id,))
     form_data = c.fetchone()
 
     if not form_data:
         conn.close()
         return jsonify({'error': 'Inspection not found'}), 404
 
-    c.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = ?", (form_id,))
+    c.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = %s", (form_id,))
     checklist_scores = {str(row[0]): float(row[1]) if row[1] and row[1].replace('.', '', 1).isdigit() else 0.0 for row
                         in c.fetchall()}
     conn.close()
@@ -6089,7 +6089,7 @@ def fix_all_forms_to_pass_fail():
         # Residential: Pass if overall >= 70 and critical >= 61
         new_result = 'Pass' if overall_score >= 70 and critical_score >= 61 else 'Fail'
 
-        c.execute("UPDATE residential_inspections SET result = ? WHERE id = ?", (new_result, inspection_id))
+        c.execute("UPDATE residential_inspections SET result = %s WHERE id = %s", (new_result, inspection_id))
         residential_updated += 1
         print(f"Residential {inspection_id}: Overall: {overall_score}, Critical: {critical_score} → {new_result}")
 
@@ -6125,7 +6125,7 @@ def fix_all_forms_to_pass_fail():
         else:
             new_result = 'Pass' if overall_score >= 70 else 'Fail'
 
-        c.execute("UPDATE inspections SET result = ? WHERE id = ?", (new_result, inspection_id))
+        c.execute("UPDATE inspections SET result = %s WHERE id = %s", (new_result, inspection_id))
         main_updated += 1
         print(f"{form_type} {inspection_id}: Overall: {overall_score}, Critical: {critical_score} → {new_result}")
 
@@ -6342,12 +6342,12 @@ def init_db():
                           (f'inspector{i}', f'pass{i}', 'inspector', f'inspector{i}@example.com'))
             conn.commit()
         else:
-            c.execute('INSERT OR IGNORE INTO users (username, password, role, email) VALUES (?, ?, ?, ?)',
+            c.execute('INSERT OR IGNORE INTO users (username, password, role, email) VALUES (%s, %s, %s, %s)',
                       ('admin', 'adminpass', 'admin', 'admin@example.com'))
-            c.execute('INSERT OR IGNORE INTO users (username, password, role, email) VALUES (?, ?, ?, ?)',
+            c.execute('INSERT OR IGNORE INTO users (username, password, role, email) VALUES (%s, %s, %s, %s)',
                       ('medofficer', 'medpass', 'medical_officer', 'medofficer@example.com'))
             for i in range(1, 7):
-                c.execute('INSERT OR IGNORE INTO users (username, password, role, email) VALUES (?, ?, ?, ?)',
+                c.execute('INSERT OR IGNORE INTO users (username, password, role, email) VALUES (%s, %s, %s, %s)',
                           (f'inspector{i}', f'pass{i}', 'inspector', f'inspector{i}@example.com'))
             conn.commit()
     except Exception as e:
@@ -6412,7 +6412,7 @@ def login_post():
     ip_address = request.remote_addr
 
     conn = get_db_connection()
-    c = execute_query(conn, "SELECT id, username, password, role, email, parish FROM users WHERE username = ? AND password = ?",
+    c = execute_query(conn, "SELECT id, username, password, role, email, parish FROM users WHERE username = %s AND password = %s",
               (username, password))
     user = c.fetchone()
 
@@ -6441,7 +6441,7 @@ def login_post():
              datetime.now().strftime('%Y-%m-%d %H:%M:%S'), ip_address))
 
         # Mark any old sessions for this user as inactive
-        execute_query(conn, "UPDATE user_sessions SET is_active = 0, logout_time = ? WHERE username = ? AND is_active = 1",
+        execute_query(conn, "UPDATE user_sessions SET is_active = 0, logout_time = %s WHERE username = %s AND is_active = 1",
                   (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), user['username']))
 
         # Track new user session with REAL location (only if GPS coordinates were captured)
@@ -6576,7 +6576,7 @@ def get_audit_log():
             CREATE TABLE IF NOT EXISTS audit_log (
                 id {auto_inc},
                 timestamp {timestamp},
-                user TEXT NOT NULL,
+                username TEXT NOT NULL,
                 action TEXT NOT NULL,
                 ip_address TEXT,
                 details TEXT
@@ -6585,9 +6585,9 @@ def get_audit_log():
 
         # Get audit log entries
         cursor.execute('''
-            SELECT timestamp, user, action, ip_address, details 
-            FROM audit_log 
-            ORDER BY timestamp DESC 
+            SELECT timestamp, username, action, ip_address, details
+            FROM audit_log
+            ORDER BY timestamp DESC
             LIMIT 100
         ''')
 
@@ -6660,7 +6660,7 @@ def search_inspections():
         cursor = execute_query(conn, """
             SELECT id, establishment_name, owner, license_no, form_type, inspector_name
             FROM inspections
-            WHERE LOWER(establishment_name) LIKE ?
+            WHERE LOWER(establishment_name) LIKE %s
                OR LOWER(owner) LIKE ?
                OR LOWER(license_no) LIKE ?
                OR LOWER(inspector_name) LIKE ?
@@ -6681,7 +6681,7 @@ def search_inspections():
         cursor = execute_query(conn, """
             SELECT id, premises_name, owner, address, inspector_name
             FROM residential_inspections
-            WHERE LOWER(premises_name) LIKE ?
+            WHERE LOWER(premises_name) LIKE %s
                OR LOWER(owner) LIKE ?
                OR LOWER(inspector_name) LIKE ?
             LIMIT 10
@@ -6701,7 +6701,7 @@ def search_inspections():
         cursor = execute_query(conn, """
             SELECT id, applicant_name, deceased_name, burial_location
             FROM burial_site_inspections
-            WHERE LOWER(applicant_name) LIKE ?
+            WHERE LOWER(applicant_name) LIKE %s
                OR LOWER(deceased_name) LIKE ?
                OR LOWER(burial_location) LIKE ?
             LIMIT 10
@@ -6723,7 +6723,7 @@ def search_inspections():
         cursor = execute_query(conn, """
             SELECT id, establishment_name, owner_operator, establishment_no, inspector_name
             FROM meat_processing_inspections
-            WHERE LOWER(establishment_name) LIKE ?
+            WHERE LOWER(establishment_name) LIKE %s
                OR LOWER(owner_operator) LIKE ?
                OR LOWER(establishment_no) LIKE ?
                OR LOWER(inspector_name) LIKE ?
@@ -6763,7 +6763,7 @@ def get_inspector_tasks():
         cursor.execute('''
             SELECT id, title, due_date, details, status, created_at
             FROM tasks 
-            WHERE assignee_id = ?
+            WHERE assignee_id = %s
             ORDER BY created_at DESC
         ''', (user_id,))
 
@@ -6802,7 +6802,7 @@ def update_task_status(task_id):  # Fixed parameter name to match route
         cursor.execute('''
             UPDATE tasks 
             SET status = ?
-            WHERE id = ? AND assignee_id = ?
+            WHERE id = %s AND assignee_id = %s
         ''', (new_status, task_id, user_id))
 
         if cursor.rowcount == 0:
@@ -6842,7 +6842,7 @@ def respond_to_task(task_id):
         cursor.execute('''
             UPDATE tasks 
             SET status = ?
-            WHERE id = ? AND assignee_id = ?
+            WHERE id = %s AND assignee_id = %s
         ''', (new_status, task_id, user_id))
 
         if cursor.rowcount == 0:
@@ -6872,7 +6872,7 @@ def get_unread_task_count():
         cursor = execute_query(conn, '''
             SELECT COUNT(*)
             FROM tasks
-            WHERE assignee_id = ? AND status = 'Pending'
+            WHERE assignee_id = %s AND status = 'Pending'
         ''', (user_id,))
 
         count = cursor.fetchone()[0]
@@ -7226,13 +7226,13 @@ def handle_tasks():
             # Check if assignee is a username/string or ID
             if assignee and not assignee.isdigit():
                 # It's a username, look up the ID
-                cursor.execute('SELECT id FROM users WHERE username = ?', (assignee,))
+                cursor.execute('SELECT id FROM users WHERE username = %s', (assignee,))
                 user = cursor.fetchone()
                 assignee_id = user[0] if user else None
                 assignee_name = assignee
             elif assignee and assignee.isdigit():
                 # It's a user ID
-                cursor.execute('SELECT username FROM users WHERE id = ?', (int(assignee),))
+                cursor.execute('SELECT username FROM users WHERE id = %s', (int(assignee),))
                 user = cursor.fetchone()
                 assignee_name = user[0] if user else 'Unknown'
                 assignee_id = int(assignee)
@@ -7346,7 +7346,7 @@ def get_security_metrics():
                 FROM messages m
                 JOIN users s ON m.sender_id = s.id
                 JOIN users r ON m.recipient_id = r.id
-                WHERE (m.sender_id = ? AND m.recipient_id = ?) 
+                WHERE (m.sender_id = %s AND m.recipient_id = %s) 
                    OR (m.sender_id = ? AND m.recipient_id = ?)
                 ORDER BY m.timestamp ASC
             ''', (current_user_id, user_id, user_id, current_user_id))
@@ -7416,7 +7416,7 @@ def get_security_metrics():
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM inspections WHERE id = ? AND form_type = 'Small Hotel'", (id,))
+        cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Small Hotel'", (id,))
         inspection = cursor.fetchone()
 
         if not inspection:
@@ -7426,7 +7426,7 @@ def get_security_metrics():
         inspection_dict = dict(inspection)
 
         # Get individual scores from inspection_items table
-        cursor.execute("SELECT item_id, obser, error FROM inspection_items WHERE inspection_id = ?", (id,))
+        cursor.execute("SELECT item_id, obser, error FROM inspection_items WHERE inspection_id = %s", (id,))
         items = cursor.fetchall()
 
         obser_scores = {}
@@ -7471,7 +7471,7 @@ def get_security_metrics():
             c.execute('''
                 SELECT id, username, role 
                 FROM users 
-                WHERE id != ?
+                WHERE id != %s
                 ORDER BY role, username
             ''', (current_user_id,))
 
@@ -7481,7 +7481,7 @@ def get_security_metrics():
                 c.execute('''
                     SELECT COUNT(*) 
                     FROM messages 
-                    WHERE sender_id = ? AND recipient_id = ? AND is_read = 0
+                    WHERE sender_id = %s AND recipient_id = %s AND is_read = 0
                 ''', (row['id'], current_user_id))
 
                 unread_count = c.fetchone()[0]
@@ -7515,7 +7515,7 @@ def get_security_metrics():
             c.execute('''
                 UPDATE messages 
                 SET is_read = 1 
-                WHERE sender_id = ? AND recipient_id = ? AND is_read = 0
+                WHERE sender_id = %s AND recipient_id = %s AND is_read = 0
             ''', (user_id, current_user_id))
 
             conn.commit()
@@ -7543,7 +7543,7 @@ def get_security_metrics():
             c.execute('''
                 SELECT COUNT(*) as total
                 FROM messages 
-                WHERE recipient_id = ? AND is_read = 0
+                WHERE recipient_id = %s AND is_read = 0
             ''', (admin_id,))
 
             result = c.fetchone()
@@ -7577,7 +7577,7 @@ def get_security_metrics():
             c.execute('''
                 UPDATE messages 
                 SET is_read = 1 
-                WHERE sender_id = ? AND recipient_id = ? AND is_read = 0
+                WHERE sender_id = %s AND recipient_id = %s AND is_read = 0
             ''', (user_id, admin_id))
 
             conn.commit()
@@ -7923,7 +7923,7 @@ def log_audit_event(user, action, ip_address=None, details=None):
             CREATE TABLE IF NOT EXISTS audit_log (
                 id {auto_inc},
                 timestamp {timestamp},
-                user TEXT NOT NULL,
+                username TEXT NOT NULL,
                 action TEXT NOT NULL,
                 ip_address TEXT,
                 details TEXT
@@ -7932,7 +7932,7 @@ def log_audit_event(user, action, ip_address=None, details=None):
 
         if get_db_type() == 'postgresql':
             cursor.execute('''
-                INSERT INTO audit_log (timestamp, user, action, ip_address, details)
+                INSERT INTO audit_log (timestamp, username, action, ip_address, details)
                 VALUES (%s, %s, %s, %s, %s)
             ''', (
                 datetime.now().isoformat(),
@@ -7943,7 +7943,7 @@ def log_audit_event(user, action, ip_address=None, details=None):
             ))
         else:
             cursor.execute('''
-                INSERT INTO audit_log (timestamp, user, action, ip_address, details)
+                INSERT INTO audit_log (timestamp, username, action, ip_address, details)
                 VALUES (?, ?, ?, ?, ?)
             ''', (
                 datetime.now().isoformat(),
@@ -8026,12 +8026,12 @@ def add_user():
             c = conn.cursor()
 
             # Check if username already exists
-            c.execute('SELECT id FROM users WHERE username = ?', (username,))
+            c.execute('SELECT id FROM users WHERE username = %s', (username,))
             if c.fetchone():
                 return jsonify({'success': False, 'error': 'Username already exists'}), 400
 
             # Check if email already exists
-            c.execute('SELECT id FROM users WHERE email = ?', (email,))
+            c.execute('SELECT id FROM users WHERE email = %s', (email,))
             if c.fetchone():
                 return jsonify({'success': False, 'error': 'Email already exists'}), 400
 
@@ -8179,13 +8179,13 @@ def update_user(user_id):
             c = conn.cursor()
 
             # Get current user info
-            c.execute('SELECT username, email FROM users WHERE id = ?', (user_id,))
+            c.execute('SELECT username, email FROM users WHERE id = %s', (user_id,))
             current_user = c.fetchone()
             if not current_user:
                 return jsonify({'success': False, 'error': 'User not found'}), 404
 
             # Check if email already exists for another user
-            c.execute('SELECT id FROM users WHERE email = ? AND id != ?', (email, user_id))
+            c.execute('SELECT id FROM users WHERE email = %s AND id != %s', (email, user_id))
             if c.fetchone():
                 return jsonify({'success': False, 'error': 'Email already exists'}), 400
 
@@ -8193,7 +8193,7 @@ def update_user(user_id):
             c.execute('''
                 UPDATE users 
                 SET email = ?, role = ? 
-                WHERE id = ?
+                WHERE id = %s
             ''', (email, role, user_id))
 
             conn.commit()
@@ -8227,13 +8227,13 @@ def flag_user(user_id):
             c = conn.cursor()
 
             # Get user info
-            c.execute('SELECT username FROM users WHERE id = ?', (user_id,))
+            c.execute('SELECT username FROM users WHERE id = %s', (user_id,))
             user = c.fetchone()
             if not user:
                 return jsonify({'success': False, 'error': 'User not found'}), 404
 
             # Update flag status
-            c.execute('UPDATE users SET is_flagged = ? WHERE id = ?', (1 if is_flagged else 0, user_id))
+            c.execute('UPDATE users SET is_flagged = %s WHERE id = %s', (1 if is_flagged else 0, user_id))
             conn.commit()
 
             # Log the action
@@ -8264,7 +8264,7 @@ def delete_user(user_id):
             c = conn.cursor()
 
             # Get user info
-            c.execute('SELECT username, role FROM users WHERE id = ?', (user_id,))
+            c.execute('SELECT username, role FROM users WHERE id = %s', (user_id,))
             user = c.fetchone()
             if not user:
                 return jsonify({'success': False, 'error': 'User not found'}), 404
@@ -8274,7 +8274,7 @@ def delete_user(user_id):
                 return jsonify({'success': False, 'error': 'Cannot delete admin users'}), 403
 
             # Delete user
-            c.execute('DELETE FROM users WHERE id = ?', (user_id,))
+            c.execute('DELETE FROM users WHERE id = %s', (user_id,))
             conn.commit()
 
             # Log the action
@@ -8366,7 +8366,7 @@ def init_form_management_db():
         if get_db_type() == 'postgresql':
             c.execute('INSERT INTO form_categories (name, description, display_order) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING', category)
         else:
-            c.execute('INSERT OR IGNORE INTO form_categories (name, description, display_order) VALUES (?, ?, ?)', category)
+            c.execute('INSERT OR IGNORE INTO form_categories (name, description, display_order) VALUES (%s, %s, %s)', category)
 
     # Insert existing form templates
     existing_templates = [
@@ -8385,7 +8385,7 @@ def init_form_management_db():
         if get_db_type() == 'postgresql':
             c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (%s, %s, %s) ON CONFLICT (name) DO NOTHING', template)
         else:
-            c.execute('INSERT OR IGNORE INTO form_templates (name, description, form_type) VALUES (?, ?, ?)', template)
+            c.execute('INSERT OR IGNORE INTO form_templates (name, description, form_type) VALUES (%s, %s, %s)', template)
 
     # Only commit if not using autocommit (SQLite)
     if get_db_type() != 'postgresql':
@@ -8434,7 +8434,7 @@ def edit_form(form_id):
     c = conn.cursor()
 
     # Get form template
-    c.execute('SELECT * FROM form_templates WHERE id = ?', (form_id,))
+    c.execute('SELECT * FROM form_templates WHERE id = %s', (form_id,))
     form_template = c.fetchone()
 
     if not form_template:
@@ -8445,7 +8445,7 @@ def edit_form(form_id):
     c.execute('''
         SELECT id, item_order, category, description, weight, is_critical
         FROM form_items 
-        WHERE form_template_id = ? AND active = 1
+        WHERE form_template_id = %s AND active = 1
         ORDER BY item_order
     ''', (form_id,))
     items = c.fetchall()
@@ -8546,16 +8546,16 @@ def save_form():
             c.execute('''
                 UPDATE form_templates 
                 SET name = ?, description = ?, form_type = ?, version = ?
-                WHERE id = ?
+                WHERE id = %s
             ''', (form_name, form_description, form_type, '1.1', form_id))
 
             # Deactivate existing items
-            c.execute('UPDATE form_items SET active = 0 WHERE form_template_id = ?', (form_id,))
+            c.execute('UPDATE form_items SET active = 0 WHERE form_template_id = %s', (form_id,))
 
         else:  # Create new form
             c.execute('''
                 INSERT INTO form_templates (name, description, form_type, created_by)
-                VALUES (?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s)
             ''', (form_name, form_description, form_type, session.get('user_id', 'admin')))
             form_id = c.lastrowid
 
@@ -8588,8 +8588,8 @@ def delete_form(form_id):
         c = conn.cursor()
 
         # Soft delete - just mark as inactive
-        c.execute('UPDATE form_templates SET active = 0 WHERE id = ?', (form_id,))
-        c.execute('UPDATE form_items SET active = 0 WHERE form_template_id = ?', (form_id,))
+        c.execute('UPDATE form_templates SET active = 0 WHERE id = %s', (form_id,))
+        c.execute('UPDATE form_items SET active = 0 WHERE form_template_id = %s', (form_id,))
 
         conn.commit()
         conn.close()
@@ -8611,7 +8611,7 @@ def clone_form(form_id):
         c = conn.cursor()
 
         # Get original form
-        c.execute('SELECT name, description, form_type FROM form_templates WHERE id = ?', (form_id,))
+        c.execute('SELECT name, description, form_type FROM form_templates WHERE id = %s', (form_id,))
         original = c.fetchone()
 
         if not original:
@@ -8621,7 +8621,7 @@ def clone_form(form_id):
         clone_name = f"{original[0]} (Copy)"
         c.execute('''
             INSERT INTO form_templates (name, description, form_type, created_by)
-            VALUES (?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s)
         ''', (clone_name, original[1], original[2], session.get('user_id', 'admin')))
 
         new_form_id = c.lastrowid
@@ -8631,7 +8631,7 @@ def clone_form(form_id):
             INSERT INTO form_items 
             (form_template_id, item_order, category, description, weight, is_critical)
             SELECT ?, item_order, category, description, weight, is_critical
-            FROM form_items WHERE form_template_id = ? AND active = 1
+            FROM form_items WHERE form_template_id = %s AND active = 1
         ''', (new_form_id, form_id))
 
         conn.commit()
@@ -8653,14 +8653,14 @@ def preview_form(form_id):
     c = conn.cursor()
 
     # Get form template
-    c.execute('SELECT * FROM form_templates WHERE id = ?', (form_id,))
+    c.execute('SELECT * FROM form_templates WHERE id = %s', (form_id,))
     form_template = c.fetchone()
 
     # Get form items grouped by category
     c.execute('''
         SELECT category, description, weight, is_critical
         FROM form_items 
-        WHERE form_template_id = ? AND active = 1
+        WHERE form_template_id = %s AND active = 1
         ORDER BY item_order
     ''', (form_id,))
 
@@ -8820,14 +8820,14 @@ def migrate_all_checklists():
 
     # 1. Migrate Food Establishment Checklist
     try:
-        c.execute('SELECT id FROM form_templates WHERE form_type = ?', ('Food Establishment',))
+        c.execute('SELECT id FROM form_templates WHERE form_type = %s', ('Food Establishment',))
         result = c.fetchone()
 
         if result:
             template_id = result[0]
 
             # Check if items already exist
-            c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = ?', (template_id,))
+            c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = %s', (template_id,))
             existing_count = c.fetchone()[0]
 
             if existing_count == 0:
@@ -8871,13 +8871,13 @@ def migrate_all_checklists():
 
     # 2. Migrate Residential Checklist
     try:
-        c.execute('SELECT id FROM form_templates WHERE form_type = ?', ('Residential',))
+        c.execute('SELECT id FROM form_templates WHERE form_type = %s', ('Residential',))
         result = c.fetchone()
 
         if result:
             template_id = result[0]
 
-            c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = ?', (template_id,))
+            c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = %s', (template_id,))
             existing_count = c.fetchone()[0]
 
             if existing_count == 0:
@@ -8917,13 +8917,13 @@ def migrate_all_checklists():
 
     # 3. Migrate Spirit Licence Checklist
     try:
-        c.execute('SELECT id FROM form_templates WHERE form_type = ?', ('Spirit Licence Premises',))
+        c.execute('SELECT id FROM form_templates WHERE form_type = %s', ('Spirit Licence Premises',))
         result = c.fetchone()
 
         if result:
             template_id = result[0]
 
-            c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = ?', (template_id,))
+            c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = %s', (template_id,))
             existing_count = c.fetchone()[0]
 
             if existing_count == 0:
@@ -8964,13 +8964,13 @@ def migrate_all_checklists():
 
     # 4. Migrate Swimming Pool Checklist
     try:
-        c.execute('SELECT id FROM form_templates WHERE form_type = ?', ('Swimming Pool',))
+        c.execute('SELECT id FROM form_templates WHERE form_type = %s', ('Swimming Pool',))
         result = c.fetchone()
 
         if result:
             template_id = result[0]
 
-            c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = ?', (template_id,))
+            c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = %s', (template_id,))
             existing_count = c.fetchone()[0]
 
             if existing_count == 0:
@@ -8994,13 +8994,13 @@ def migrate_all_checklists():
 
     # 5. Migrate Small Hotels Checklist
     try:
-        c.execute('SELECT id FROM form_templates WHERE form_type = ?', ('Small Hotel',))
+        c.execute('SELECT id FROM form_templates WHERE form_type = %s', ('Small Hotel',))
         result = c.fetchone()
 
         if result:
             template_id = result[0]
 
-            c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = ?', (template_id,))
+            c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = %s', (template_id,))
             existing_count = c.fetchone()[0]
 
             if existing_count == 0:
@@ -9054,13 +9054,13 @@ def migrate_all_checklists():
 
     # 6. Migrate Barbershop Checklist
     try:
-        c.execute('SELECT id FROM form_templates WHERE form_type = ?', ('Barbershop',))
+        c.execute('SELECT id FROM form_templates WHERE form_type = %s', ('Barbershop',))
         result = c.fetchone()
 
         if result:
             template_id = result[0]
 
-            c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = ?', (template_id,))
+            c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = %s', (template_id,))
             existing_count = c.fetchone()[0]
 
             if existing_count == 0:
@@ -9084,13 +9084,13 @@ def migrate_all_checklists():
 
     # 7. Migrate Institutional Checklist
     try:
-        c.execute('SELECT id FROM form_templates WHERE form_type = ?', ('Institutional',))
+        c.execute('SELECT id FROM form_templates WHERE form_type = %s', ('Institutional',))
         result = c.fetchone()
 
         if result:
             template_id = result[0]
 
-            c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = ?', (template_id,))
+            c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = %s', (template_id,))
             existing_count = c.fetchone()[0]
 
             if existing_count == 0:
@@ -9114,13 +9114,13 @@ def migrate_all_checklists():
 
     # 8. Migrate Meat Processing Checklist
     try:
-        c.execute('SELECT id FROM form_templates WHERE form_type = ?', ('Meat Processing',))
+        c.execute('SELECT id FROM form_templates WHERE form_type = %s', ('Meat Processing',))
         result = c.fetchone()
 
         if result:
             template_id = result[0]
 
-            c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = ?', (template_id,))
+            c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = %s', (template_id,))
             existing_count = c.fetchone()[0]
 
             if existing_count == 0:
@@ -9189,7 +9189,7 @@ def get_form_items(form_template_id):
     c.execute('''
         SELECT id, item_order, category, description, weight, is_critical
         FROM form_items 
-        WHERE form_template_id = ? AND active = 1
+        WHERE form_template_id = %s AND active = 1
         ORDER BY item_order
     ''', (form_template_id,))
 
@@ -9215,7 +9215,7 @@ def get_form_template_by_type(form_type):
     conn = get_db_connection()
     c = conn.cursor()
 
-    c.execute('SELECT id FROM form_templates WHERE form_type = ? AND active = 1', (form_type,))
+    c.execute('SELECT id FROM form_templates WHERE form_type = %s AND active = 1', (form_type,))
     row = c.fetchone()
 
     conn.close()
@@ -9236,7 +9236,7 @@ def new_form():
     c.execute('''
         SELECT last_edited_by, last_edited_date, last_edited_role, version
         FROM form_templates
-        WHERE form_type = ? AND active = 1
+        WHERE form_type = %s AND active = 1
     ''', ('Food Establishment',))
     form_info = c.fetchone()
     conn.close()
@@ -9327,7 +9327,7 @@ def migrate_food_checklist():
     c = conn.cursor()
 
     # Get Food Establishment template ID
-    c.execute('SELECT id FROM form_templates WHERE form_type = ?', ('Food Establishment',))
+    c.execute('SELECT id FROM form_templates WHERE form_type = %s', ('Food Establishment',))
     result = c.fetchone()
 
     if not result:
@@ -9336,7 +9336,7 @@ def migrate_food_checklist():
     template_id = result[0]
 
     # Check if items already exist
-    c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = ?', (template_id,))
+    c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = %s', (template_id,))
     existing_count = c.fetchone()[0]
 
     if existing_count > 0:
@@ -9390,7 +9390,7 @@ def migrate_remaining_fixed():
     # 1. Migrate Residential (Template ID 2)
     try:
         template_id = 2  # From your debug output
-        c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = ?', (template_id,))
+        c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = %s', (template_id,))
         if c.fetchone()[0] == 0:
             residential_categories = {
                 1: "BUILDING", 2: "BUILDING", 3: "BUILDING", 4: "BUILDING", 5: "BUILDING", 6: "BUILDING", 7: "BUILDING",
@@ -9415,7 +9415,7 @@ def migrate_remaining_fixed():
     # 2. Migrate Spirit Licence (Template ID 4)
     try:
         template_id = 4  # From your debug output
-        c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = ?', (template_id,))
+        c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = %s', (template_id,))
         if c.fetchone()[0] == 0:
             for i, item in enumerate(SPIRIT_LICENCE_CHECKLIST_ITEMS):
                 c.execute('''INSERT INTO form_items (form_template_id, item_order, category, description, weight, is_critical)
@@ -9430,7 +9430,7 @@ def migrate_remaining_fixed():
     # 3. Migrate Swimming Pool (Template ID 5)
     try:
         template_id = 5  # From your debug output
-        c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = ?', (template_id,))
+        c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = %s', (template_id,))
         if c.fetchone()[0] == 0:
             for i, item in enumerate(SWIMMING_POOL_CHECKLIST_ITEMS):
                 c.execute('''INSERT INTO form_items (form_template_id, item_order, category, description, weight, is_critical)
@@ -9446,7 +9446,7 @@ def migrate_remaining_fixed():
     # 4. Migrate Small Hotels (Template ID 6)
     try:
         template_id = 6  # From your debug output
-        c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = ?', (template_id,))
+        c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = %s', (template_id,))
         if c.fetchone()[0] == 0:
             for i, item in enumerate(SMALL_HOTELS_CHECKLIST_ITEMS):
                 c.execute('''INSERT INTO form_items (form_template_id, item_order, category, description, weight, is_critical)
@@ -9475,7 +9475,7 @@ def small_hotels_inspection_detail(id):
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM inspections WHERE id = ? AND form_type = 'Small Hotel'", (id,))
+    cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Small Hotel'", (id,))
     inspection = cursor.fetchone()
 
     if not inspection:
@@ -9485,7 +9485,7 @@ def small_hotels_inspection_detail(id):
     inspection_dict = dict(inspection)
 
     # Get individual scores from inspection_items table
-    cursor.execute("SELECT item_id, obser, error FROM inspection_items WHERE inspection_id = ?", (id,))
+    cursor.execute("SELECT item_id, obser, error FROM inspection_items WHERE inspection_id = %s", (id,))
     items = cursor.fetchall()
 
     obser_scores = {}
@@ -9602,7 +9602,7 @@ def check_and_create_alert(inspection_id, inspector_name, form_type, score):
         c = conn.cursor()
 
         # Get global threshold
-        c.execute('SELECT threshold_value FROM threshold_settings WHERE chart_type = ? AND enabled = 1', ('global',))
+        c.execute('SELECT threshold_value FROM threshold_settings WHERE chart_type = %s AND enabled = 1', ('global',))
         result = c.fetchone()
 
         if result:
@@ -9828,7 +9828,7 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
                     MAX(overall_score) as max_score,
                     MIN(overall_score) as min_score
                 FROM inspections
-                WHERE DATE(inspection_date) BETWEEN ? AND ?
+                WHERE DATE(inspection_date) BETWEEN %s AND %s
             """
             params = (start_date, end_date)
         else:
@@ -9841,7 +9841,7 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
                     MAX(overall_score) as max_score,
                     MIN(overall_score) as min_score
                 FROM inspections
-                WHERE DATE(inspection_date) BETWEEN ? AND ?
+                WHERE DATE(inspection_date) BETWEEN %s AND %s
                 AND form_type = ?
             """
             params = (start_date, end_date, inspection_type)
@@ -9870,7 +9870,7 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
                 SUM(CASE WHEN result IN ('Fail', 'Unsatisfactory') OR overall_score < 70 THEN 1 ELSE 0 END) as failed,
                 AVG(overall_score) as avg_score
             FROM inspections
-            WHERE DATE(inspection_date) BETWEEN ? AND ?
+            WHERE DATE(inspection_date) BETWEEN %s AND %s
             {}
             GROUP BY DATE(inspection_date)
             ORDER BY date
@@ -9898,7 +9898,7 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
                 AVG(critical_score) as avg_critical,
                 SUM(CASE WHEN result IN ('Pass', 'Satisfactory') THEN 1 ELSE 0 END) as passes
             FROM inspections i
-            WHERE DATE(inspection_date) BETWEEN ? AND ?
+            WHERE DATE(inspection_date) BETWEEN %s AND %s
             {}
             GROUP BY inspector_name
             HAVING COUNT(*) > 0
@@ -9928,7 +9928,7 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
                 i.form_type
             FROM inspection_items ii
             JOIN inspections i ON ii.inspection_id = i.id
-            WHERE DATE(i.inspection_date) BETWEEN ? AND ?
+            WHERE DATE(i.inspection_date) BETWEEN %s AND %s
             {}
             GROUP BY ii.item_id, i.form_type
             HAVING failures > 0
@@ -9956,7 +9956,7 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
                 MIN(overall_score) as worst_score,
                 SUM(CASE WHEN result IN ('Pass', 'Satisfactory') THEN 1 ELSE 0 END) as passes
             FROM inspections
-            WHERE DATE(inspection_date) BETWEEN ? AND ?
+            WHERE DATE(inspection_date) BETWEEN %s AND %s
             AND establishment_name IS NOT NULL
             AND establishment_name != ''
             {}
@@ -10028,7 +10028,7 @@ def generate_trend_analysis_report(inspection_type, start_date, end_date):
                     COUNT(*) as total,
                     SUM(CASE WHEN overall_score < 70 THEN 1 ELSE 0 END) as failed
                 FROM inspections
-                WHERE inspection_date BETWEEN ? AND ?
+                WHERE inspection_date BETWEEN %s AND %s
                 AND inspection_date IS NOT NULL
                 GROUP BY strftime('%Y-W%W', inspection_date)
                 ORDER BY week
@@ -10041,7 +10041,7 @@ def generate_trend_analysis_report(inspection_type, start_date, end_date):
                     COUNT(*) as total,
                     SUM(CASE WHEN overall_score < 70 THEN 1 ELSE 0 END) as failed
                 FROM inspections
-                WHERE inspection_date BETWEEN ? AND ?
+                WHERE inspection_date BETWEEN %s AND %s
                 AND form_type = ?
                 AND inspection_date IS NOT NULL
                 GROUP BY strftime('%Y-W%W', inspection_date)
@@ -10095,7 +10095,7 @@ def generate_failure_breakdown_report(inspection_type, start_date, end_date):
             failed_query = """
                 SELECT COUNT(*)
                 FROM inspections
-                WHERE inspection_date BETWEEN ? AND ?
+                WHERE inspection_date BETWEEN %s AND %s
                 AND overall_score < 70
                 AND inspection_date IS NOT NULL
             """
@@ -10104,7 +10104,7 @@ def generate_failure_breakdown_report(inspection_type, start_date, end_date):
             failed_query = """
                 SELECT COUNT(*)
                 FROM inspections
-                WHERE inspection_date BETWEEN ? AND ?
+                WHERE inspection_date BETWEEN %s AND %s
                 AND form_type = ?
                 AND overall_score < 70
                 AND inspection_date IS NOT NULL
@@ -10120,7 +10120,7 @@ def generate_failure_breakdown_report(inspection_type, start_date, end_date):
             items_query = """
                 SELECT form_type, COUNT(*) as failure_count
                 FROM inspections
-                WHERE inspection_date BETWEEN ? AND ?
+                WHERE inspection_date BETWEEN %s AND %s
                 AND overall_score < 70
                 AND inspection_date IS NOT NULL
                 GROUP BY form_type
@@ -10139,7 +10139,7 @@ def generate_failure_breakdown_report(inspection_type, start_date, end_date):
                     END as category,
                     COUNT(*) as failure_count
                 FROM inspections
-                WHERE inspection_date BETWEEN ? AND ?
+                WHERE inspection_date BETWEEN %s AND %s
                 AND form_type = ?
                 AND overall_score < 70
                 AND inspection_date IS NOT NULL
@@ -10183,7 +10183,7 @@ def generate_inspector_performance_report(inspection_type, start_date, end_date)
                     SUM(CASE WHEN overall_score >= 70 THEN 1 ELSE 0 END) as passed_inspections,
                     AVG(CASE WHEN overall_score IS NOT NULL THEN overall_score ELSE 0 END) as avg_score
                 FROM inspections
-                WHERE inspection_date BETWEEN ? AND ?
+                WHERE inspection_date BETWEEN %s AND %s
                 AND inspection_date IS NOT NULL
                 AND inspector_name IS NOT NULL
                 GROUP BY inspector_name
@@ -10198,7 +10198,7 @@ def generate_inspector_performance_report(inspection_type, start_date, end_date)
                     SUM(CASE WHEN overall_score >= 70 THEN 1 ELSE 0 END) as passed_inspections,
                     AVG(CASE WHEN overall_score IS NOT NULL THEN overall_score ELSE 0 END) as avg_score
                 FROM inspections
-                WHERE inspection_date BETWEEN ? AND ?
+                WHERE inspection_date BETWEEN %s AND %s
                 AND form_type = ?
                 AND inspection_date IS NOT NULL
                 AND inspector_name IS NOT NULL
@@ -10247,7 +10247,7 @@ def generate_scores_by_type_report(inspection_type, start_date, end_date):
         query = """
             SELECT form_type, AVG(overall_score) as avg_score, COUNT(*) as count
             FROM inspections
-            WHERE inspection_date BETWEEN ? AND ?
+            WHERE inspection_date BETWEEN %s AND %s
             AND inspection_date IS NOT NULL
             AND overall_score IS NOT NULL
             GROUP BY form_type
@@ -10267,7 +10267,7 @@ def generate_scores_by_type_report(inspection_type, start_date, end_date):
         res_query = """
             SELECT 'Residential' as form_type, AVG(overall_score) as avg_score, COUNT(*) as count
             FROM residential_inspections
-            WHERE inspection_date BETWEEN ? AND ?
+            WHERE inspection_date BETWEEN %s AND %s
             AND inspection_date IS NOT NULL
             AND overall_score IS NOT NULL
         """
@@ -10286,7 +10286,7 @@ def generate_scores_by_type_report(inspection_type, start_date, end_date):
         burial_query = """
             SELECT COUNT(*) as count
             FROM burial_site_inspections
-            WHERE inspection_date BETWEEN ? AND ?
+            WHERE inspection_date BETWEEN %s AND %s
             AND inspection_date IS NOT NULL
         """
         c.execute(burial_query, (start_date, end_date))
@@ -10329,7 +10329,7 @@ def generate_monthly_trends_report(inspection_type, start_date, end_date):
                     COUNT(*) as total,
                     SUM(CASE WHEN overall_score >= 70 THEN 1 ELSE 0 END) as passed
                 FROM inspections
-                WHERE inspection_date BETWEEN ? AND ?
+                WHERE inspection_date BETWEEN %s AND %s
                 AND inspection_date IS NOT NULL
                 GROUP BY strftime('%Y-%m', inspection_date)
                 ORDER BY month
@@ -10342,7 +10342,7 @@ def generate_monthly_trends_report(inspection_type, start_date, end_date):
                     COUNT(*) as total,
                     SUM(CASE WHEN overall_score >= 70 THEN 1 ELSE 0 END) as passed
                 FROM inspections
-                WHERE inspection_date BETWEEN ? AND ?
+                WHERE inspection_date BETWEEN %s AND %s
                 AND form_type = ?
                 AND inspection_date IS NOT NULL
                 GROUP BY strftime('%Y-%m', inspection_date)
@@ -10371,7 +10371,7 @@ def generate_monthly_trends_report(inspection_type, start_date, end_date):
                     COUNT(*) as total,
                     SUM(CASE WHEN overall_score >= 70 THEN 1 ELSE 0 END) as passed
                 FROM residential_inspections
-                WHERE inspection_date BETWEEN ? AND ?
+                WHERE inspection_date BETWEEN %s AND %s
                 AND inspection_date IS NOT NULL
                 GROUP BY strftime('%Y-%m', inspection_date)
                 ORDER BY month
@@ -10429,7 +10429,7 @@ def generate_establishment_ranking_report(inspection_type, start_date, end_date)
                     COUNT(*) as inspection_count,
                     form_type
                 FROM inspections
-                WHERE inspection_date BETWEEN ? AND ?
+                WHERE inspection_date BETWEEN %s AND %s
                 AND inspection_date IS NOT NULL
                 AND overall_score IS NOT NULL
                 AND establishment_name IS NOT NULL
@@ -10448,7 +10448,7 @@ def generate_establishment_ranking_report(inspection_type, start_date, end_date)
                     COUNT(*) as inspection_count,
                     form_type
                 FROM inspections
-                WHERE inspection_date BETWEEN ? AND ?
+                WHERE inspection_date BETWEEN %s AND %s
                 AND form_type = ?
                 AND inspection_date IS NOT NULL
                 AND overall_score IS NOT NULL
@@ -10473,7 +10473,7 @@ def generate_establishment_ranking_report(inspection_type, start_date, end_date)
                     COUNT(*) as inspection_count,
                     form_type
                 FROM inspections
-                WHERE inspection_date BETWEEN ? AND ?
+                WHERE inspection_date BETWEEN %s AND %s
                 AND inspection_date IS NOT NULL
                 AND overall_score IS NOT NULL
                 AND establishment_name IS NOT NULL
@@ -10492,7 +10492,7 @@ def generate_establishment_ranking_report(inspection_type, start_date, end_date)
                     COUNT(*) as inspection_count,
                     form_type
                 FROM inspections
-                WHERE inspection_date BETWEEN ? AND ?
+                WHERE inspection_date BETWEEN %s AND %s
                 AND form_type = ?
                 AND inspection_date IS NOT NULL
                 AND overall_score IS NOT NULL
@@ -10604,7 +10604,7 @@ def get_advanced_statistical_overview(inspection_type, start_date, end_date):
     inspection_durations = []
 
     # Query main inspections
-    query = "SELECT result, overall_score, critical_score, created_at, inspection_time FROM inspections WHERE created_at BETWEEN ? AND ?"
+    query = "SELECT result, overall_score, critical_score, created_at, inspection_time FROM inspections WHERE created_at BETWEEN %s AND %s"
     params = [start_date, end_date]
 
     if inspection_type != 'all':
@@ -10694,7 +10694,7 @@ def calculate_trend_indicator(inspection_type, start_date, end_date):
     query = """
         SELECT strftime('%W', created_at) as week, AVG(overall_score) as avg_score
         FROM inspections
-        WHERE created_at BETWEEN ? AND ? AND overall_score IS NOT NULL
+        WHERE created_at BETWEEN %s AND %s AND overall_score IS NOT NULL
     """
     params = [start_date, end_date]
 
@@ -10744,7 +10744,7 @@ def assess_data_quality(inspection_type, start_date, end_date):
             SUM(CASE WHEN inspector_name IS NULL OR inspector_name = '' THEN 1 ELSE 0 END) as missing_inspector,
             SUM(CASE WHEN establishment_name IS NULL OR establishment_name = '' THEN 1 ELSE 0 END) as missing_establishment
         FROM inspections
-        WHERE created_at BETWEEN ? AND ?
+        WHERE created_at BETWEEN %s AND %s
     """
     params = [start_date, end_date]
 
@@ -10805,7 +10805,7 @@ def generate_checklist_failure_analysis(inspection_type, start_date, end_date):
                AVG(CASE WHEN ii.error = 'fail' OR ii.obser = 'fail' THEN 1 ELSE 0 END) as failure_rate
         FROM inspection_items ii
         JOIN inspections i ON ii.inspection_id = i.id
-        WHERE i.created_at BETWEEN ? AND ?
+        WHERE i.created_at BETWEEN %s AND %s
     """
     params = [start_date, end_date]
 
@@ -10857,7 +10857,7 @@ def generate_inspector_performance(inspection_type, start_date, end_date):
                SUM(CASE WHEN result IN ('Pass', 'Satisfactory') THEN 1 ELSE 0 END) as passed,
                SUM(CASE WHEN result IN ('Fail', 'Unsatisfactory') THEN 1 ELSE 0 END) as failed
         FROM inspections
-        WHERE created_at BETWEEN ? AND ?
+        WHERE created_at BETWEEN %s AND %s
     """
     params = [start_date, end_date]
 
@@ -10893,7 +10893,7 @@ def generate_score_analysis(inspection_type, start_date, end_date):
     query = """
         SELECT overall_score, critical_score, created_at
         FROM inspections
-        WHERE created_at BETWEEN ? AND ? AND overall_score IS NOT NULL
+        WHERE created_at BETWEEN %s AND %s AND overall_score IS NOT NULL
     """
     params = [start_date, end_date]
 
@@ -10956,7 +10956,7 @@ def generate_recommendations(inspection_type, start_date, end_date):
             SUM(CASE WHEN result IN ('Pass', 'Satisfactory') THEN 1 ELSE 0 END) as passed,
             COUNT(*) as total
         FROM inspections
-        WHERE created_at BETWEEN ? AND ?
+        WHERE created_at BETWEEN %s AND %s
     """
     params = [start_date, end_date]
 
@@ -11489,7 +11489,7 @@ def get_form_items(template_id):
         SELECT id, form_template_id, item_order, category, description,
                weight, is_critical, active, created_date
         FROM form_items
-        WHERE form_template_id = ? AND active = 1
+        WHERE form_template_id = %s AND active = 1
         ORDER BY item_order
     ''', (template_id,))
 
@@ -11523,7 +11523,7 @@ def create_form_item():
     conn = get_db_connection()
 
     # Get the next item_order number
-    c = execute_query(conn, 'SELECT MAX(item_order) FROM form_items WHERE form_template_id = ?',
+    c = execute_query(conn, 'SELECT MAX(item_order) FROM form_items WHERE form_template_id = %s',
               (data['form_template_id'],))
     max_order = c.fetchone()[0]
     next_order = (max_order + 1) if max_order else 1
@@ -11566,7 +11566,7 @@ def update_form_item(item_id):
     c = conn.cursor()
 
     # Get template_id for this item
-    c.execute('SELECT form_template_id FROM form_items WHERE id = ?', (item_id,))
+    c.execute('SELECT form_template_id FROM form_items WHERE id = %s', (item_id,))
     result = c.fetchone()
     template_id = result[0] if result else None
 
@@ -11602,12 +11602,12 @@ def delete_form_item(item_id):
     c = conn.cursor()
 
     # Get template_id for this item
-    c.execute('SELECT form_template_id FROM form_items WHERE id = ?', (item_id,))
+    c.execute('SELECT form_template_id FROM form_items WHERE id = %s', (item_id,))
     result = c.fetchone()
     template_id = result[0] if result else None
 
     # Soft delete - keep for old forms
-    c.execute('UPDATE form_items SET active = 0 WHERE id = ?', (item_id,))
+    c.execute('UPDATE form_items SET active = 0 WHERE id = %s', (item_id,))
 
     # Track who edited this form
     if template_id:
@@ -11630,7 +11630,7 @@ def reorder_form_items():
     c = conn.cursor()
 
     for item in data['items']:
-        c.execute('UPDATE form_items SET item_order = ? WHERE id = ?',
+        c.execute('UPDATE form_items SET item_order = %s WHERE id = %s',
                   (item['order'], item['id']))
 
     conn.commit()
@@ -11647,7 +11647,7 @@ def update_form_editor_tracking(template_id, conn):
     admin_username = session.get('admin', 'Unknown Admin')
 
     # Get admin's full details from database
-    c.execute('SELECT username, role, email FROM users WHERE username = ?', (admin_username,))
+    c.execute('SELECT username, role, email FROM users WHERE username = %s', (admin_username,))
     admin = c.fetchone()
 
     if admin:
@@ -11677,7 +11677,7 @@ def increment_template_version(template_id):
     c = conn.cursor()
 
     # Get current version
-    c.execute('SELECT version FROM form_templates WHERE id = ?', (template_id,))
+    c.execute('SELECT version FROM form_templates WHERE id = %s', (template_id,))
     current_version = c.fetchone()[0]
 
     # Increment version (e.g., '1.0' -> '1.1', '1.9' -> '2.0')
@@ -11691,7 +11691,7 @@ def increment_template_version(template_id):
     except:
         new_version = '1.1'
 
-    c.execute('UPDATE form_templates SET version = ? WHERE id = ?',
+    c.execute('UPDATE form_templates SET version = %s WHERE id = %s',
               (new_version, template_id))
 
     # Track who made this edit
@@ -11720,7 +11720,7 @@ def get_form_template_info(template_id):
         SELECT id, name, description, form_type, version,
                last_edited_by, last_edited_date, last_edited_role
         FROM form_templates
-        WHERE id = ? AND active = 1
+        WHERE id = %s AND active = 1
     ''', (template_id,))
 
     row = c.fetchone()
@@ -11758,7 +11758,7 @@ def get_form_fields(template_id):
         SELECT id, field_name, field_label, field_type, field_order,
                required, placeholder, default_value, options, field_group
         FROM form_fields
-        WHERE form_template_id = ? AND active = 1
+        WHERE form_template_id = %s AND active = 1
         ORDER BY field_order
     ''', (template_id,))
 
@@ -11792,7 +11792,7 @@ def create_form_field():
     c = conn.cursor()
 
     # Get the next field_order number
-    c.execute('SELECT MAX(field_order) FROM form_fields WHERE form_template_id = ?',
+    c.execute('SELECT MAX(field_order) FROM form_fields WHERE form_template_id = %s',
               (data['form_template_id'],))
     max_order = c.fetchone()[0]
     next_order = (max_order + 1) if max_order else 1
@@ -11838,7 +11838,7 @@ def update_form_field(field_id):
     c = conn.cursor()
 
     # Get template_id for this field
-    c.execute('SELECT form_template_id FROM form_fields WHERE id = ?', (field_id,))
+    c.execute('SELECT form_template_id FROM form_fields WHERE id = %s', (field_id,))
     result = c.fetchone()
     template_id = result[0] if result else None
 
@@ -11885,12 +11885,12 @@ def delete_form_field(field_id):
     c = conn.cursor()
 
     # Get template_id for this field
-    c.execute('SELECT form_template_id FROM form_fields WHERE id = ?', (field_id,))
+    c.execute('SELECT form_template_id FROM form_fields WHERE id = %s', (field_id,))
     result = c.fetchone()
     template_id = result[0] if result else None
 
     # Soft delete - preserve for old forms
-    c.execute('UPDATE form_fields SET active = 0 WHERE id = ?', (field_id,))
+    c.execute('UPDATE form_fields SET active = 0 WHERE id = %s', (field_id,))
 
     # Track who edited this form
     if template_id:
