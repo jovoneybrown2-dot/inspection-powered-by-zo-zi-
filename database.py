@@ -285,6 +285,22 @@ def init_db():
                   description TEXT,
                   display_order INTEGER DEFAULT 0)''')
 
+    # Seed default form templates
+    existing_templates = [
+        ('Food Establishment Inspection', 'Standard food safety inspection form', 'Food Establishment'),
+        ('Residential & Non-Residential Inspection', 'Residential property inspection form', 'Residential'),
+        ('Burial Site Inspection', 'Burial site approval inspection', 'Burial'),
+        ('Spirit Licence Premises Inspection', 'Spirit licence premises inspection', 'Spirit Licence Premises'),
+        ('Swimming Pool Inspection', 'Swimming pool safety inspection', 'Swimming Pool'),
+        ('Small Hotels Inspection', 'Small hotels inspection form', 'Small Hotel'),
+        ('Barbershop Inspection', 'Barbershop and beauty salon inspection form', 'Barbershop'),
+        ('Institutional Inspection', 'Institutional health inspection form', 'Institutional'),
+        ('Meat Processing Inspection', 'Meat processing plant and slaughter place inspection', 'Meat Processing')
+    ]
+
+    for template in existing_templates:
+        c.execute('INSERT OR IGNORE INTO form_templates (name, description, form_type) VALUES (?, ?, ?)', template)
+
     conn.commit()
     conn.close()
 

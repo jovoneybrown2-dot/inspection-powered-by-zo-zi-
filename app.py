@@ -8260,7 +8260,10 @@ def init_form_management_db():
         ('Burial Site Inspection', 'Burial site approval inspection', 'Burial'),
         ('Spirit Licence Premises Inspection', 'Spirit licence premises inspection', 'Spirit Licence Premises'),
         ('Swimming Pool Inspection', 'Swimming pool safety inspection', 'Swimming Pool'),
-        ('Small Hotels Inspection', 'Small hotels inspection form', 'Small Hotel')
+        ('Small Hotels Inspection', 'Small hotels inspection form', 'Small Hotel'),
+        ('Barbershop Inspection', 'Barbershop and beauty salon inspection form', 'Barbershop'),
+        ('Institutional Inspection', 'Institutional health inspection form', 'Institutional'),
+        ('Meat Processing Inspection', 'Meat processing plant and slaughter place inspection', 'Meat Processing')
     ]
 
     for template in existing_templates:
