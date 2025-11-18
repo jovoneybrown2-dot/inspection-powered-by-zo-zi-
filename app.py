@@ -8202,24 +8202,36 @@ from datetime import datetime
 
 def init_form_management_db():
     """Initialize form management tables"""
+    from database import get_auto_increment, get_timestamp_default
+    from db_config import get_db_type
+
     conn = get_db_connection()
+
+    # Enable autocommit for schema changes (prevents transaction errors on ALTER failures)
+    if get_db_type() == 'postgresql':
+        conn.autocommit = True
+
     c = conn.cursor()
 
+    # Get database-specific syntax
+    auto_inc = get_auto_increment()
+    timestamp = get_timestamp_default()
+
     # Form Templates Table - Different types of inspection forms
-    c.execute('''CREATE TABLE IF NOT EXISTS form_templates (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    c.execute(f'''CREATE TABLE IF NOT EXISTS form_templates (
+        id {auto_inc},
         name TEXT NOT NULL UNIQUE,
         description TEXT,
         form_type TEXT NOT NULL,
         active INTEGER DEFAULT 1,
-        created_date TEXT DEFAULT CURRENT_TIMESTAMP,
+        created_date {timestamp},
         version TEXT DEFAULT '1.0',
         created_by TEXT
     )''')
 
     # Form Items Table - Individual checklist items for each form
-    c.execute('''CREATE TABLE IF NOT EXISTS form_items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    c.execute(f'''CREATE TABLE IF NOT EXISTS form_items (
+        id {auto_inc},
         form_template_id INTEGER NOT NULL,
         item_order INTEGER NOT NULL,
         category TEXT NOT NULL,
@@ -8227,13 +8239,13 @@ def init_form_management_db():
         weight INTEGER NOT NULL,
         is_critical INTEGER DEFAULT 0,
         active INTEGER DEFAULT 1,
-        created_date TEXT DEFAULT CURRENT_TIMESTAMP,
+        created_date {timestamp},
         FOREIGN KEY (form_template_id) REFERENCES form_templates(id)
     )''')
 
     # Form Categories Table - For organizing items
-    c.execute('''CREATE TABLE IF NOT EXISTS form_categories (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    c.execute(f'''CREATE TABLE IF NOT EXISTS form_categories (
+        id {auto_inc},
         name TEXT NOT NULL,
         description TEXT,
         display_order INTEGER DEFAULT 0
@@ -8251,7 +8263,10 @@ def init_form_management_db():
     ]
 
     for category in default_categories:
-        c.execute('INSERT OR IGNORE INTO form_categories (name, description, display_order) VALUES (?, ?, ?)', category)
+        if get_db_type() == 'postgresql':
+            c.execute('INSERT INTO form_categories (name, description, display_order) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING', category)
+        else:
+            c.execute('INSERT OR IGNORE INTO form_categories (name, description, display_order) VALUES (?, ?, ?)', category)
 
     # Insert existing form templates
     existing_templates = [
@@ -8267,9 +8282,14 @@ def init_form_management_db():
     ]
 
     for template in existing_templates:
-        c.execute('INSERT OR IGNORE INTO form_templates (name, description, form_type) VALUES (?, ?, ?)', template)
+        if get_db_type() == 'postgresql':
+            c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (%s, %s, %s) ON CONFLICT (name) DO NOTHING', template)
+        else:
+            c.execute('INSERT OR IGNORE INTO form_templates (name, description, form_type) VALUES (?, ?, ?)', template)
 
-    conn.commit()
+    # Only commit if not using autocommit (SQLite)
+    if get_db_type() != 'postgresql':
+        conn.commit()
     conn.close()
 
 
