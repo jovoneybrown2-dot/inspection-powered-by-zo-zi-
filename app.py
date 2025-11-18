@@ -6316,7 +6316,7 @@ def init_db():
     # Check if email column exists in users table and add it if not
     if get_db_type() == 'postgresql':
         c.execute("SELECT column_name FROM information_schema.columns WHERE table_name='users'")
-        columns = [row[0] for row in c.fetchall()]
+        columns = [row['column_name'] for row in c.fetchall()]
     else:
         c.execute("PRAGMA table_info(users)")
         columns = [info[1] for info in c.fetchall()]
@@ -7629,7 +7629,7 @@ def get_security_metrics():
             # Check if users table has required columns
             if get_db_type() == 'postgresql':
                 c.execute("SELECT column_name FROM information_schema.columns WHERE table_name='users'")
-                columns = [row[0] for row in c.fetchall()]
+                columns = [row['column_name'] for row in c.fetchall()]
             else:
                 c.execute("PRAGMA table_info(users)")
                 columns = [row[1] for row in c.fetchall()]

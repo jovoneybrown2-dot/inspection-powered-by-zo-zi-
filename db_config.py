@@ -8,6 +8,40 @@ import sqlite3
 from urllib.parse import urlparse
 
 
+class HybridRow:
+    """Row class that supports both numeric indexing and dictionary access"""
+    def __init__(self, cursor, row):
+        self._row = row
+        self._columns = [desc[0] for desc in cursor.description]
+
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return self._row[key]
+        elif isinstance(key, str):
+            try:
+                index = self._columns.index(key)
+                return self._row[index]
+            except ValueError:
+                raise KeyError(key)
+        else:
+            raise TypeError(f"indices must be integers or strings, not {type(key).__name__}")
+
+    def __len__(self):
+        return len(self._row)
+
+    def keys(self):
+        return self._columns
+
+    def values(self):
+        return list(self._row)
+
+    def items(self):
+        return zip(self._columns, self._row)
+
+    def __iter__(self):
+        return iter(self._row)
+
+
 def get_db_connection():
     """
     Get database connection based on DATABASE_URL environment variable.
@@ -29,7 +63,21 @@ def get_db_connection():
         # Use PostgreSQL
         try:
             import psycopg2
-            from psycopg2.extras import RealDictCursor
+            import psycopg2.extras
+
+            # Custom cursor class that uses HybridRow
+            class HybridCursor(psycopg2.extensions.cursor):
+                def fetchone(self):
+                    row = super().fetchone()
+                    return HybridRow(self, row) if row else None
+
+                def fetchmany(self, size=None):
+                    rows = super().fetchmany(size) if size else super().fetchmany()
+                    return [HybridRow(self, row) for row in rows]
+
+                def fetchall(self):
+                    rows = super().fetchall()
+                    return [HybridRow(self, row) for row in rows]
 
             # Parse the DATABASE_URL
             parsed = urlparse(database_url)
@@ -39,10 +87,11 @@ def get_db_connection():
             if parsed.scheme == 'postgres':
                 database_url = database_url.replace('postgres://', 'postgresql://', 1)
 
-            # Connect to PostgreSQL
+            # Connect to PostgreSQL with custom cursor
             print(f"🔌 Connecting to PostgreSQL: {parsed.hostname}:{parsed.port}/{parsed.path.lstrip('/')}")
-            conn = psycopg2.connect(database_url, cursor_factory=RealDictCursor)
+            conn = psycopg2.connect(database_url, cursor_factory=HybridCursor)
             conn.autocommit = False  # Enable transaction control
+
             print("✅ PostgreSQL connection successful!")
             return conn
 
