@@ -11482,9 +11482,10 @@ def get_form_items(template_id):
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
+    from db_config import execute_query
+
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('''
+    c = execute_query(conn, '''
         SELECT id, form_template_id, item_order, category, description,
                weight, is_critical, active, created_date
         FROM form_items
@@ -11516,17 +11517,18 @@ def create_form_item():
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
+    from db_config import execute_query
+
     data = request.json
     conn = get_db_connection()
-    c = conn.cursor()
 
     # Get the next item_order number
-    c.execute('SELECT MAX(item_order) FROM form_items WHERE form_template_id = ?',
+    c = execute_query(conn, 'SELECT MAX(item_order) FROM form_items WHERE form_template_id = ?',
               (data['form_template_id'],))
     max_order = c.fetchone()[0]
     next_order = (max_order + 1) if max_order else 1
 
-    c.execute('''
+    c = execute_query(conn, '''
         INSERT INTO form_items (
             form_template_id, item_order, category, description,
             weight, is_critical, active, created_date
