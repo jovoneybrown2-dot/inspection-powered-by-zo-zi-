@@ -5225,10 +5225,11 @@ def search_forms():
     if 'inspector' not in session:
         return redirect(url_for('login'))
 
+    from db_config import execute_query
+
     query = request.args.get('query', '').lower()
     form_type = request.args.get('type', '')
     conn = get_db_connection()
-    c = conn.cursor()
     forms = []
 
     def calculate_status(overall_score, critical_score, form_type_val):
@@ -5256,16 +5257,16 @@ def search_forms():
             return 'Pass' if overall_score >= 70 else 'Fail'
 
     if not form_type or form_type == 'all':
-        c.execute("""
-            SELECT id, establishment_name, created_at, result, form_type, overall_score, critical_score 
-            FROM inspections 
+        c = execute_query(conn, """
+            SELECT id, establishment_name, created_at, result, form_type, overall_score, critical_score
+            FROM inspections
             WHERE form_type IN (
-                'Food Establishment', 'Residential & Non-Residential', 'Water Supply', 
+                'Food Establishment', 'Residential & Non-Residential', 'Water Supply',
                 'Spirit Licence Premises', 'Swimming Pool', 'Small Hotel', 'Barbershop', 'Institutional Health'
             )
             AND (
-                LOWER(establishment_name) LIKE ? 
-                OR LOWER(owner) LIKE ? 
+                LOWER(establishment_name) LIKE ?
+                OR LOWER(owner) LIKE ?
                 OR LOWER(address) LIKE ?
             )
             UNION
@@ -5312,61 +5313,61 @@ def search_forms():
     else:
         # Handle specific form types
         if form_type == 'food':
-            c.execute("""
+            c = execute_query(conn, """
                 SELECT id, establishment_name, created_at, result, overall_score, critical_score, owner
                 FROM inspections
                 WHERE form_type = 'Food Establishment'
                 AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ?)
             """, (f'%{query}%', f'%{query}%'))
         elif form_type == 'residential':
-            c.execute("""
+            c = execute_query(conn, """
                 SELECT id, premises_name, created_at, result, owner, overall_score, critical_score
-                FROM residential_inspections 
+                FROM residential_inspections
                 WHERE (LOWER(premises_name) LIKE ? OR LOWER(owner) LIKE ?)
             """, (f'%{query}%', f'%{query}%'))
         elif form_type == 'burial':
-            c.execute("""
+            c = execute_query(conn, """
                 SELECT id, applicant_name, deceased_name, created_at
-                FROM burial_site_inspections 
+                FROM burial_site_inspections
                 WHERE LOWER(applicant_name) LIKE ? OR LOWER(deceased_name) LIKE ?
             """, (f'%{query}%', f'%{query}%'))
         elif form_type == 'spirit_licence':
-            c.execute("""
+            c = execute_query(conn, """
                 SELECT id, establishment_name, created_at, result, overall_score, critical_score, owner
                 FROM inspections
                 WHERE form_type = 'Spirit Licence Premises'
                 AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ?)
             """, (f'%{query}%', f'%{query}%'))
         elif form_type == 'swimming_pool':
-            c.execute("""
+            c = execute_query(conn, """
                 SELECT id, establishment_name, created_at, result, overall_score, critical_score, owner
                 FROM inspections
                 WHERE form_type = 'Swimming Pool'
                 AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ? OR LOWER(address) LIKE ?)
             """, (f'%{query}%', f'%{query}%', f'%{query}%'))
         elif form_type == 'small_hotels':
-            c.execute("""
+            c = execute_query(conn, """
                 SELECT id, establishment_name, created_at, result, overall_score, critical_score, owner
                 FROM inspections
                 WHERE form_type = 'Small Hotel'
                 AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ? OR LOWER(address) LIKE ?)
             """, (f'%{query}%', f'%{query}%', f'%{query}%'))
         elif form_type == 'barbershop':
-            c.execute("""
+            c = execute_query(conn, """
                 SELECT id, establishment_name, created_at, result, overall_score, critical_score, owner
                 FROM inspections
                 WHERE form_type = 'Barbershop'
                 AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ?)
             """, (f'%{query}%', f'%{query}%'))
         elif form_type == 'institutional':
-            c.execute("""
+            c = execute_query(conn, """
                 SELECT id, establishment_name, created_at, result, overall_score, critical_score, owner
                 FROM inspections
                 WHERE form_type = 'Institutional Health'
                 AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ?)
             """, (f'%{query}%', f'%{query}%'))
         elif form_type == 'meat_processing':
-            c.execute("""
+            c = execute_query(conn, """
                 SELECT id, establishment_name, inspection_date, result, overall_score
                 FROM meat_processing_inspections
                 WHERE (LOWER(establishment_name) LIKE ? OR LOWER(owner_operator) LIKE ?)
@@ -6861,14 +6862,15 @@ def get_unread_task_count():
         return jsonify({'error': 'Unauthorized'}), 401
 
     try:
+        from db_config import execute_query
+
         user_id = session.get('user_id')
         conn = get_db_connection()
-        cursor = conn.cursor()
 
         # Count unread tasks (status = 'Pending')
-        cursor.execute('''
-            SELECT COUNT(*) 
-            FROM tasks 
+        cursor = execute_query(conn, '''
+            SELECT COUNT(*)
+            FROM tasks
             WHERE assignee_id = ? AND status = 'Pending'
         ''', (user_id,))
 
