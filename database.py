@@ -285,6 +285,23 @@ def init_db():
                   description TEXT,
                   display_order INTEGER DEFAULT 0)''')
 
+    # Form fields table for dynamic form fields
+    c.execute('''CREATE TABLE IF NOT EXISTS form_fields
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  form_template_id INTEGER NOT NULL,
+                  field_name TEXT NOT NULL,
+                  field_label TEXT NOT NULL,
+                  field_type TEXT NOT NULL DEFAULT 'text',
+                  field_order INTEGER NOT NULL DEFAULT 0,
+                  required INTEGER DEFAULT 0,
+                  placeholder TEXT,
+                  default_value TEXT,
+                  options TEXT,
+                  field_group TEXT DEFAULT 'main',
+                  active INTEGER DEFAULT 1,
+                  created_date TEXT DEFAULT CURRENT_TIMESTAMP,
+                  FOREIGN KEY (form_template_id) REFERENCES form_templates(id))''')
+
     # Seed default form templates
     existing_templates = [
         ('Food Establishment Inspection', 'Standard food safety inspection form', 'Food Establishment'),
