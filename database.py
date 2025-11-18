@@ -1,14 +1,26 @@
 import sqlite3
 from datetime import datetime
-from db_config import get_db_connection
+from db_config import get_db_connection, get_db_type
+
+def get_auto_increment():
+    """Return the correct auto-increment syntax for the current database"""
+    return 'SERIAL PRIMARY KEY' if get_db_type() == 'postgresql' else 'INTEGER PRIMARY KEY AUTOINCREMENT'
+
+def get_timestamp_default():
+    """Return the correct timestamp default for the current database"""
+    return 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP' if get_db_type() == 'postgresql' else 'TEXT DEFAULT CURRENT_TIMESTAMP'
 
 def init_db():
     conn = get_db_connection()
     c = conn.cursor()
 
+    # Get database-specific syntax
+    auto_inc = get_auto_increment()
+    timestamp = get_timestamp_default()
+
     # Inspections table
-    c.execute('''CREATE TABLE IF NOT EXISTS inspections
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+    c.execute(f'''CREATE TABLE IF NOT EXISTS inspections
+                 (id {auto_inc},
                   establishment_name TEXT,
                   address TEXT,
                   inspector_name TEXT,
@@ -19,7 +31,7 @@ def init_db():
                   inspector_signature TEXT,
                   manager_signature TEXT,
                   manager_date TEXT,
-                  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                  created_at {timestamp},
                   physical_location TEXT,
                   owner TEXT,
                   license_no TEXT,
@@ -39,7 +51,7 @@ def init_db():
 
     # Inspection items table
     c.execute('''CREATE TABLE IF NOT EXISTS inspection_items
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 (id {auto_inc},
                   inspection_id INTEGER,
                   item_id TEXT,
                   details TEXT,
@@ -49,7 +61,7 @@ def init_db():
 
     # Burial site inspections table
     c.execute('''CREATE TABLE IF NOT EXISTS burial_site_inspections
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 (id {auto_inc},
                   inspection_date TEXT,
                   applicant_name TEXT,
                   deceased_name TEXT,
@@ -64,12 +76,12 @@ def init_db():
                   general_remarks TEXT,
                   inspector_signature TEXT,
                   received_by TEXT,
-                  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                  created_at {timestamp},
                   photo_data TEXT)''')
 
     # Residential inspections table
     c.execute('''CREATE TABLE IF NOT EXISTS residential_inspections
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 (id {auto_inc},
                   premises_name TEXT,
                   owner TEXT,
                   address TEXT,
@@ -90,12 +102,12 @@ def init_db():
                   comments TEXT,
                   inspector_signature TEXT,
                   received_by TEXT,
-                  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                  created_at {timestamp},
                   photo_data TEXT)''')
 
     # Residential checklist scores table
     c.execute('''CREATE TABLE IF NOT EXISTS residential_checklist_scores
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 (id {auto_inc},
                   form_id INTEGER,
                   item_id INTEGER,
                   score INTEGER,
@@ -103,7 +115,7 @@ def init_db():
 
     # Meat processing inspections table
     c.execute('''CREATE TABLE IF NOT EXISTS meat_processing_inspections
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 (id {auto_inc},
                   establishment_name TEXT,
                   owner_operator TEXT,
                   address TEXT,
@@ -130,7 +142,7 @@ def init_db():
                   comments TEXT,
                   inspector_signature TEXT,
                   received_by TEXT,
-                  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                  created_at {timestamp},
                   photo_data TEXT)''')
 
     # Migration: Add staff_compliment column if it doesn't exist
@@ -143,7 +155,7 @@ def init_db():
 
     # Meat processing checklist scores table
     c.execute('''CREATE TABLE IF NOT EXISTS meat_processing_checklist_scores
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 (id {auto_inc},
                   form_id INTEGER,
                   item_id INTEGER,
                   score REAL,
@@ -155,22 +167,22 @@ def init_db():
                   inspection_type TEXT NOT NULL,
                   threshold_value REAL NOT NULL,
                   enabled INTEGER DEFAULT 1,
-                  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                  updated_at {timestamp},
                   PRIMARY KEY (chart_type, inspection_type))''')
 
     # Threshold alerts table (for low score notifications)
     c.execute('''CREATE TABLE IF NOT EXISTS threshold_alerts
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 (id {auto_inc},
                   inspection_id INTEGER NOT NULL,
                   inspector_name TEXT NOT NULL,
                   form_type TEXT NOT NULL,
                   score REAL NOT NULL,
                   threshold_value REAL NOT NULL,
-                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
+                  created_at {timestamp})''')
 
     # Users table
     c.execute('''CREATE TABLE IF NOT EXISTS users
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 (id {auto_inc},
                   username TEXT NOT NULL UNIQUE,
                   password TEXT NOT NULL,
                   role TEXT NOT NULL,
@@ -200,7 +212,7 @@ def init_db():
 
     # Login history table (required by login route)
     c.execute('''CREATE TABLE IF NOT EXISTS login_history
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 (id {auto_inc},
                   user_id INTEGER NOT NULL,
                   username TEXT NOT NULL,
                   email TEXT,
@@ -219,11 +231,11 @@ def init_db():
 
     # Messages table
     c.execute('''CREATE TABLE IF NOT EXISTS messages
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 (id {auto_inc},
                   sender_id INTEGER NOT NULL,
                   receiver_id INTEGER NOT NULL,
                   content TEXT NOT NULL,
-                  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                  timestamp {timestamp},
                   is_read INTEGER DEFAULT 0,
                   FOREIGN KEY (sender_id) REFERENCES users(id),
                   FOREIGN KEY (receiver_id) REFERENCES users(id))''')
@@ -239,7 +251,7 @@ def init_db():
 
     # User sessions table for tracking active logins
     c.execute('''CREATE TABLE IF NOT EXISTS user_sessions
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 (id {auto_inc},
                   username TEXT NOT NULL,
                   user_role TEXT,
                   login_time TEXT NOT NULL,
@@ -253,12 +265,12 @@ def init_db():
 
     # Form templates table for dynamic form management
     c.execute('''CREATE TABLE IF NOT EXISTS form_templates
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 (id {auto_inc},
                   name TEXT NOT NULL UNIQUE,
                   description TEXT,
                   form_type TEXT NOT NULL,
                   active INTEGER DEFAULT 1,
-                  created_date TEXT DEFAULT CURRENT_TIMESTAMP,
+                  created_date {timestamp},
                   version TEXT DEFAULT '1.0',
                   created_by TEXT,
                   last_edited_by TEXT,
@@ -267,7 +279,7 @@ def init_db():
 
     # Form items table for checklist items
     c.execute('''CREATE TABLE IF NOT EXISTS form_items
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 (id {auto_inc},
                   form_template_id INTEGER NOT NULL,
                   item_order INTEGER NOT NULL,
                   category TEXT NOT NULL,
@@ -275,19 +287,19 @@ def init_db():
                   weight INTEGER NOT NULL,
                   is_critical INTEGER DEFAULT 0,
                   active INTEGER DEFAULT 1,
-                  created_date TEXT DEFAULT CURRENT_TIMESTAMP,
+                  created_date {timestamp},
                   FOREIGN KEY (form_template_id) REFERENCES form_templates(id))''')
 
     # Form categories table
     c.execute('''CREATE TABLE IF NOT EXISTS form_categories
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 (id {auto_inc},
                   name TEXT NOT NULL,
                   description TEXT,
                   display_order INTEGER DEFAULT 0)''')
 
     # Form fields table for dynamic form fields
     c.execute('''CREATE TABLE IF NOT EXISTS form_fields
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 (id {auto_inc},
                   form_template_id INTEGER NOT NULL,
                   field_name TEXT NOT NULL,
                   field_label TEXT NOT NULL,
@@ -299,7 +311,7 @@ def init_db():
                   options TEXT,
                   field_group TEXT DEFAULT 'main',
                   active INTEGER DEFAULT 1,
-                  created_date TEXT DEFAULT CURRENT_TIMESTAMP,
+                  created_date {timestamp},
                   FOREIGN KEY (form_template_id) REFERENCES form_templates(id))''')
 
     # Seed default form templates
