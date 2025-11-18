@@ -8932,6 +8932,96 @@ def migrate_all_checklists():
     except Exception as e:
         results.append(f"❌ Small Hotels migration failed: {str(e)}")
 
+    # 6. Migrate Barbershop Checklist
+    try:
+        c.execute('SELECT id FROM form_templates WHERE form_type = ?', ('Barbershop',))
+        result = c.fetchone()
+
+        if result:
+            template_id = result[0]
+
+            c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = ?', (template_id,))
+            existing_count = c.fetchone()[0]
+
+            if existing_count == 0:
+                for i, item in enumerate(BARBERSHOP_CHECKLIST_ITEMS):
+                    category = item.get('category', 'GENERAL')
+                    is_critical = 1 if item['wt'] >= 5 else 0
+
+                    c.execute('''
+                        INSERT INTO form_items
+                        (form_template_id, item_order, category, description, weight, is_critical)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    ''', (template_id, i + 1, category, item['desc'], item['wt'], is_critical))
+
+                results.append(f"✅ Barbershop: Migrated {len(BARBERSHOP_CHECKLIST_ITEMS)} items")
+            else:
+                results.append(f"⚠️ Barbershop: Already has {existing_count} items")
+        else:
+            results.append("❌ Barbershop template not found")
+    except Exception as e:
+        results.append(f"❌ Barbershop migration failed: {str(e)}")
+
+    # 7. Migrate Institutional Checklist
+    try:
+        c.execute('SELECT id FROM form_templates WHERE form_type = ?', ('Institutional',))
+        result = c.fetchone()
+
+        if result:
+            template_id = result[0]
+
+            c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = ?', (template_id,))
+            existing_count = c.fetchone()[0]
+
+            if existing_count == 0:
+                for i, item in enumerate(INSTITUTIONAL_CHECKLIST_ITEMS):
+                    category = item.get('category', 'GENERAL')
+                    is_critical = 1 if item['wt'] >= 5 else 0
+
+                    c.execute('''
+                        INSERT INTO form_items
+                        (form_template_id, item_order, category, description, weight, is_critical)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    ''', (template_id, i + 1, category, item['desc'], item['wt'], is_critical))
+
+                results.append(f"✅ Institutional: Migrated {len(INSTITUTIONAL_CHECKLIST_ITEMS)} items")
+            else:
+                results.append(f"⚠️ Institutional: Already has {existing_count} items")
+        else:
+            results.append("❌ Institutional template not found")
+    except Exception as e:
+        results.append(f"❌ Institutional migration failed: {str(e)}")
+
+    # 8. Migrate Meat Processing Checklist
+    try:
+        c.execute('SELECT id FROM form_templates WHERE form_type = ?', ('Meat Processing',))
+        result = c.fetchone()
+
+        if result:
+            template_id = result[0]
+
+            c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = ?', (template_id,))
+            existing_count = c.fetchone()[0]
+
+            if existing_count == 0:
+                for i, item in enumerate(MEAT_PROCESSING_CHECKLIST_ITEMS):
+                    category = item.get('category', 'GENERAL')
+                    is_critical = 1 if item['wt'] >= 5 else 0
+
+                    c.execute('''
+                        INSERT INTO form_items
+                        (form_template_id, item_order, category, description, weight, is_critical)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    ''', (template_id, i + 1, category, item['desc'], item['wt'], is_critical))
+
+                results.append(f"✅ Meat Processing: Migrated {len(MEAT_PROCESSING_CHECKLIST_ITEMS)} items")
+            else:
+                results.append(f"⚠️ Meat Processing: Already has {existing_count} items")
+        else:
+            results.append("❌ Meat Processing template not found")
+    except Exception as e:
+        results.append(f"❌ Meat Processing migration failed: {str(e)}")
+
     conn.commit()
     conn.close()
 
@@ -11734,7 +11824,33 @@ def get_active_users_map():
     return jsonify({'users': users, 'count': len(users)})
 
 
+def auto_migrate_checklists():
+    """Automatically migrate checklists if form_items table is empty"""
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+
+        # Check if any items exist
+        c.execute('SELECT COUNT(*) FROM form_items')
+        count = c.fetchone()[0]
+        conn.close()
+
+        if count == 0:
+            print("⚡ No checklist items found. Running automatic migration...")
+            # Call the migration function logic
+            with app.test_request_context():
+                from flask import session
+                session['admin'] = True
+                migrate_all_checklists()
+            print("✅ Automatic migration completed!")
+        else:
+            print(f"✓ Found {count} checklist items in database")
+    except Exception as e:
+        print(f"⚠️  Auto-migration error: {str(e)}")
+
+
 if __name__ == '__main__':
     init_db()
     init_form_management_db()
+    auto_migrate_checklists()
     app.run(debug=True, port=5002)
