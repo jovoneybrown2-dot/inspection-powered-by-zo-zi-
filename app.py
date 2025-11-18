@@ -2219,7 +2219,7 @@ def inspection_detail(id):
         return redirect(url_for('login'))
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT id, establishment_name, owner, address, license_no, inspector_name, inspection_date, inspection_time, type_of_establishment, purpose_of_visit, action, result, scores, comments, created_at, form_type, inspector_code, no_of_employees, food_inspected, food_condemned, photo_data FROM inspections WHERE id = ?", (id,))
+    c.execute("SELECT id, establishment_name, owner, address, license_no, inspector_name, inspection_date, inspection_time, type_of_establishment, purpose_of_visit, action, result, scores, comments, created_at, form_type, inspector_code, no_of_employees, food_inspected, food_condemned, photo_data, received_by, inspector_signature FROM inspections WHERE id = ?", (id,))
     inspection = c.fetchone()
     conn.close()
 
@@ -2240,8 +2240,8 @@ def inspection_detail(id):
             'result': inspection[11] or '',
             'scores': dict(zip(range(1, 46), scores)),
             'comments': inspection[13] or '',
-            'inspector_signature': inspection[5] or '',
-            'received_by': inspection[2] or '',
+            'inspector_signature': inspection[22] if len(inspection) > 22 else inspection[5] or '',
+            'received_by': inspection[21] if len(inspection) > 21 else '',
             'overall_score': sum(score for score in scores if score > 0),
             'critical_score': sum(score for item, score in zip(FOOD_CHECKLIST_ITEMS, scores) if item.get('wt', 0) >= 4 and score > 0),
             'inspector_code': inspection[16] or '',
