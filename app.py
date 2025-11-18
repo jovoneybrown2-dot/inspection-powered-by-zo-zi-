@@ -1996,11 +1996,11 @@ def get_inspections_with_status():
 
     # Get all inspections and calculate status based on scores
     c.execute("""
-        SELECT id, establishment_name, owner, address, license_no, inspector_name, 
-               inspection_date, inspection_time, type_of_establishment, purpose_of_visit, 
-               action, result, scores, comments, created_at, form_type, inspector_code, 
+        SELECT id, establishment_name, owner, address, license_no, inspector_name,
+               inspection_date, inspection_time, type_of_establishment, purpose_of_visit,
+               action, result, scores, comments, created_at, form_type, inspector_code,
                no_of_employees, food_inspected, food_condemned, overall_score, critical_score
-        FROM inspections 
+        FROM inspections
         ORDER BY created_at DESC
     """)
 
@@ -2074,6 +2074,47 @@ def get_inspections_with_status():
                     inspection_data['result'] = 'Fail'
 
         inspections.append(inspection_data)
+
+    # Add meat processing inspections
+    c.execute("""
+        SELECT id, establishment_name, owner_operator, address, establishment_no, inspector_name,
+               inspection_date, '' as inspection_time, '' as type_of_establishment, purpose_of_visit,
+               action, result, '' as scores, comments, created_at, 'Meat Processing' as form_type,
+               inspector_code, 0 as no_of_employees, 0 as food_inspected, 0 as food_condemned,
+               overall_score, 0 as critical_score
+        FROM meat_processing_inspections
+        ORDER BY created_at DESC
+    """)
+
+    for row in c.fetchall():
+        inspection_data = {
+            'id': row[0],
+            'establishment_name': row[1] or '',
+            'owner': row[2] or '',
+            'address': row[3] or '',
+            'license_no': row[4] or '',
+            'inspector_name': row[5] or '',
+            'inspection_date': row[6] or '',
+            'inspection_time': row[7] or '',
+            'type_of_establishment': row[8] or '',
+            'purpose_of_visit': row[9] or '',
+            'action': row[10] or '',
+            'result': row[11] or '',
+            'scores': row[12] or '',
+            'comments': row[13] or '',
+            'created_at': row[14] or '',
+            'form_type': row[15] or '',
+            'inspector_code': row[16] or '',
+            'no_of_employees': row[17] or '',
+            'food_inspected': row[18] or 0,
+            'food_condemned': row[19] or 0,
+            'overall_score': row[20] or 0,
+            'critical_score': row[21] or 0
+        }
+        inspections.append(inspection_data)
+
+    # Sort all inspections by created_at in descending order
+    inspections.sort(key=lambda x: x['created_at'] or '', reverse=True)
 
     conn.close()
     return inspections
