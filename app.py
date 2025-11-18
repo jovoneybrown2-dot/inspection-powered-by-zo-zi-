@@ -6403,14 +6403,15 @@ def get_parish_coordinates(parish):
 
 @app.route('/login', methods=['POST'])
 def login_post():
+    from db_config import execute_query
+
     username = request.form['username']
     password = request.form['password']
     login_type = request.form['login_type']
     ip_address = request.remote_addr
 
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("SELECT id, username, password, role, email, parish FROM users WHERE username = ? AND password = ?",
+    c = execute_query(conn, "SELECT id, username, password, role, email, parish FROM users WHERE username = ? AND password = ?",
               (username, password))
     user = c.fetchone()
 
@@ -6433,13 +6434,13 @@ def login_post():
             parish = None
 
         # Record login attempt
-        c.execute(
+        execute_query(conn,
             "INSERT INTO login_history (user_id, username, email, role, login_time, ip_address) VALUES (?, ?, ?, ?, ?, ?)",
             (user['id'], user['username'], user['email'], user['role'],
              datetime.now().strftime('%Y-%m-%d %H:%M:%S'), ip_address))
 
         # Mark any old sessions for this user as inactive
-        c.execute("UPDATE user_sessions SET is_active = 0, logout_time = ? WHERE username = ? AND is_active = 1",
+        execute_query(conn, "UPDATE user_sessions SET is_active = 0, logout_time = ? WHERE username = ? AND is_active = 1",
                   (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), user['username']))
 
         # Track new user session with REAL location (only if GPS coordinates were captured)
@@ -6447,7 +6448,7 @@ def login_post():
             try:
                 lat_float = float(latitude)
                 lng_float = float(longitude)
-                c.execute(
+                execute_query(conn,
                     "INSERT INTO user_sessions (username, user_role, login_time, last_activity, location_lat, location_lng, parish, ip_address, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (user['username'], user['role'],
                      datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
