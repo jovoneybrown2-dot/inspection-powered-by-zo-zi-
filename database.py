@@ -50,7 +50,7 @@ def init_db():
                   photo_data TEXT)''')
 
     # Inspection items table
-    c.execute('''CREATE TABLE IF NOT EXISTS inspection_items
+    c.execute(f'''CREATE TABLE IF NOT EXISTS inspection_items
                  (id {auto_inc},
                   inspection_id INTEGER,
                   item_id TEXT,
@@ -60,7 +60,7 @@ def init_db():
                   FOREIGN KEY (inspection_id) REFERENCES inspections(id))''')
 
     # Burial site inspections table
-    c.execute('''CREATE TABLE IF NOT EXISTS burial_site_inspections
+    c.execute(f'''CREATE TABLE IF NOT EXISTS burial_site_inspections
                  (id {auto_inc},
                   inspection_date TEXT,
                   applicant_name TEXT,
@@ -80,7 +80,7 @@ def init_db():
                   photo_data TEXT)''')
 
     # Residential inspections table
-    c.execute('''CREATE TABLE IF NOT EXISTS residential_inspections
+    c.execute(f'''CREATE TABLE IF NOT EXISTS residential_inspections
                  (id {auto_inc},
                   premises_name TEXT,
                   owner TEXT,
@@ -106,7 +106,7 @@ def init_db():
                   photo_data TEXT)''')
 
     # Residential checklist scores table
-    c.execute('''CREATE TABLE IF NOT EXISTS residential_checklist_scores
+    c.execute(f'''CREATE TABLE IF NOT EXISTS residential_checklist_scores
                  (id {auto_inc},
                   form_id INTEGER,
                   item_id INTEGER,
@@ -114,7 +114,7 @@ def init_db():
                   FOREIGN KEY (form_id) REFERENCES residential_inspections(id))''')
 
     # Meat processing inspections table
-    c.execute('''CREATE TABLE IF NOT EXISTS meat_processing_inspections
+    c.execute(f'''CREATE TABLE IF NOT EXISTS meat_processing_inspections
                  (id {auto_inc},
                   establishment_name TEXT,
                   owner_operator TEXT,
@@ -154,7 +154,7 @@ def init_db():
         pass
 
     # Meat processing checklist scores table
-    c.execute('''CREATE TABLE IF NOT EXISTS meat_processing_checklist_scores
+    c.execute(f'''CREATE TABLE IF NOT EXISTS meat_processing_checklist_scores
                  (id {auto_inc},
                   form_id INTEGER,
                   item_id INTEGER,
@@ -162,7 +162,7 @@ def init_db():
                   FOREIGN KEY (form_id) REFERENCES meat_processing_inspections(id))''')
 
     # Threshold settings table (for alert system)
-    c.execute('''CREATE TABLE IF NOT EXISTS threshold_settings
+    c.execute(f'''CREATE TABLE IF NOT EXISTS threshold_settings
                  (chart_type TEXT NOT NULL,
                   inspection_type TEXT NOT NULL,
                   threshold_value REAL NOT NULL,
@@ -171,7 +171,7 @@ def init_db():
                   PRIMARY KEY (chart_type, inspection_type))''')
 
     # Threshold alerts table (for low score notifications)
-    c.execute('''CREATE TABLE IF NOT EXISTS threshold_alerts
+    c.execute(f'''CREATE TABLE IF NOT EXISTS threshold_alerts
                  (id {auto_inc},
                   inspection_id INTEGER NOT NULL,
                   inspector_name TEXT NOT NULL,
@@ -181,7 +181,7 @@ def init_db():
                   created_at {timestamp})''')
 
     # Users table
-    c.execute('''CREATE TABLE IF NOT EXISTS users
+    c.execute(f'''CREATE TABLE IF NOT EXISTS users
                  (id {auto_inc},
                   username TEXT NOT NULL UNIQUE,
                   password TEXT NOT NULL,
@@ -211,7 +211,7 @@ def init_db():
     c.executemany("INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)", users)
 
     # Login history table (required by login route)
-    c.execute('''CREATE TABLE IF NOT EXISTS login_history
+    c.execute(f'''CREATE TABLE IF NOT EXISTS login_history
                  (id {auto_inc},
                   user_id INTEGER NOT NULL,
                   username TEXT NOT NULL,
@@ -222,7 +222,7 @@ def init_db():
                   FOREIGN KEY (user_id) REFERENCES users(id))''')
 
     # Contacts table
-    c.execute('''CREATE TABLE IF NOT EXISTS contacts
+    c.execute(f'''CREATE TABLE IF NOT EXISTS contacts
                  (user_id INTEGER,
                   contact_id INTEGER,
                   PRIMARY KEY (user_id, contact_id),
@@ -230,7 +230,7 @@ def init_db():
                   FOREIGN KEY (contact_id) REFERENCES users(id))''')
 
     # Messages table
-    c.execute('''CREATE TABLE IF NOT EXISTS messages
+    c.execute(f'''CREATE TABLE IF NOT EXISTS messages
                  (id {auto_inc},
                   sender_id INTEGER NOT NULL,
                   receiver_id INTEGER NOT NULL,
@@ -250,7 +250,7 @@ def init_db():
     c.execute("UPDATE messages SET is_read = 1 WHERE is_read IS NULL")
 
     # User sessions table for tracking active logins
-    c.execute('''CREATE TABLE IF NOT EXISTS user_sessions
+    c.execute(f'''CREATE TABLE IF NOT EXISTS user_sessions
                  (id {auto_inc},
                   username TEXT NOT NULL,
                   user_role TEXT,
@@ -264,7 +264,7 @@ def init_db():
                   is_active INTEGER DEFAULT 1)''')
 
     # Form templates table for dynamic form management
-    c.execute('''CREATE TABLE IF NOT EXISTS form_templates
+    c.execute(f'''CREATE TABLE IF NOT EXISTS form_templates
                  (id {auto_inc},
                   name TEXT NOT NULL UNIQUE,
                   description TEXT,
@@ -278,7 +278,7 @@ def init_db():
                   last_edited_role TEXT)''')
 
     # Form items table for checklist items
-    c.execute('''CREATE TABLE IF NOT EXISTS form_items
+    c.execute(f'''CREATE TABLE IF NOT EXISTS form_items
                  (id {auto_inc},
                   form_template_id INTEGER NOT NULL,
                   item_order INTEGER NOT NULL,
@@ -291,14 +291,14 @@ def init_db():
                   FOREIGN KEY (form_template_id) REFERENCES form_templates(id))''')
 
     # Form categories table
-    c.execute('''CREATE TABLE IF NOT EXISTS form_categories
+    c.execute(f'''CREATE TABLE IF NOT EXISTS form_categories
                  (id {auto_inc},
                   name TEXT NOT NULL,
                   description TEXT,
                   display_order INTEGER DEFAULT 0)''')
 
     # Form fields table for dynamic form fields
-    c.execute('''CREATE TABLE IF NOT EXISTS form_fields
+    c.execute(f'''CREATE TABLE IF NOT EXISTS form_fields
                  (id {auto_inc},
                   form_template_id INTEGER NOT NULL,
                   field_name TEXT NOT NULL,
@@ -336,7 +336,7 @@ def init_db():
 def save_inspection(data):
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute('''INSERT INTO inspections (establishment_name, address, inspector_name, inspection_date, inspection_time,
+    c.execute(f'''INSERT INTO inspections (establishment_name, address, inspector_name, inspection_date, inspection_time,
                  type_of_establishment, no_of_employees, purpose_of_visit, action, result, food_inspected, food_condemned,
                  critical_score, overall_score, comments, inspector_signature, received_by, form_type, scores, created_at,
                  inspector_code, license_no, owner, photo_data)
@@ -358,7 +358,7 @@ def save_burial_inspection(data):
     c = conn.cursor()
     try:
         if data.get('id'):
-            c.execute('''UPDATE burial_site_inspections SET
+            c.execute(f'''UPDATE burial_site_inspections SET
                          inspection_date = ?, applicant_name = ?, deceased_name = ?, burial_location = ?,
                          site_description = ?, proximity_water_source = ?, proximity_perimeter_boundaries = ?,
                          proximity_road_pathway = ?, proximity_trees = ?, proximity_houses_buildings = ?,
@@ -373,7 +373,7 @@ def save_burial_inspection(data):
                        data.get('created_at', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
                        data['id']))
         else:
-            c.execute('''INSERT INTO burial_site_inspections (inspection_date, applicant_name, deceased_name, burial_location,
+            c.execute(f'''INSERT INTO burial_site_inspections (inspection_date, applicant_name, deceased_name, burial_location,
                         site_description, proximity_water_source, proximity_perimeter_boundaries, proximity_road_pathway,
                         proximity_trees, proximity_houses_buildings, proposed_grave_type, general_remarks,
                         inspector_signature, received_by, photo_data, created_at)
