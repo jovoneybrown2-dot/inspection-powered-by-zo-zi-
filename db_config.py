@@ -40,15 +40,18 @@ def get_db_connection():
                 database_url = database_url.replace('postgres://', 'postgresql://', 1)
 
             # Connect to PostgreSQL
-            conn = psycopg2.connect(database_url)
-            conn.row_factory = dict_factory  # Make rows return as dictionaries
+            print(f"🔌 Connecting to PostgreSQL: {parsed.hostname}:{parsed.port}/{parsed.path.lstrip('/')}")
+            conn = psycopg2.connect(database_url, cursor_factory=RealDictCursor)
+            conn.autocommit = False  # Enable transaction control
+            print("✅ PostgreSQL connection successful!")
             return conn
 
-        except ImportError:
-            print("⚠️  PostgreSQL requested but psycopg2 not installed. Falling back to SQLite.")
-            print("   Install with: pip install psycopg2-binary")
+        except ImportError as e:
+            print(f"⚠️  PostgreSQL import failed: {e}")
+            print("   Falling back to SQLite.")
         except Exception as e:
             print(f"⚠️  PostgreSQL connection failed: {e}")
+            print(f"   Database URL format: {parsed.hostname if 'parsed' in locals() else 'Could not parse'}")
             print("   Falling back to SQLite.")
 
     # Use SQLite (default)
