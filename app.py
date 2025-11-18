@@ -11849,8 +11849,11 @@ def auto_migrate_checklists():
         print(f"⚠️  Auto-migration error: {str(e)}")
 
 
+# Initialize database and migrate checklists on app startup (works with Gunicorn)
+init_db()
+init_form_management_db()
+auto_migrate_checklists()
+
+
 if __name__ == '__main__':
-    init_db()
-    init_form_management_db()
-    auto_migrate_checklists()
     app.run(debug=True, port=5002)
