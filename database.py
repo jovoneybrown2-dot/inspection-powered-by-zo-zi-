@@ -149,8 +149,8 @@ def init_db():
     try:
         c.execute("ALTER TABLE meat_processing_inspections ADD COLUMN staff_compliment INTEGER")
         print("✓ Added staff_compliment column to meat_processing_inspections table")
-    except sqlite3.OperationalError:
-        # Column already exists
+    except Exception:
+        # Column already exists (catches both SQLite and PostgreSQL errors)
         pass
 
     # Meat processing checklist scores table
@@ -194,7 +194,7 @@ def init_db():
     try:
         c.execute("ALTER TABLE users ADD COLUMN parish TEXT")
         print("✓ Added parish column to users table")
-    except sqlite3.OperationalError:
+    except Exception:  # Catches both SQLite and PostgreSQL errors
         # Column already exists
         pass
 
@@ -243,7 +243,7 @@ def init_db():
     # Add is_read column if it doesn't exist
     try:
         c.execute("ALTER TABLE messages ADD COLUMN is_read INTEGER DEFAULT 0")
-    except sqlite3.OperationalError:
+    except Exception:  # Catches both SQLite and PostgreSQL errors
         pass  # Column already exists
 
     # Set existing messages as read
@@ -864,14 +864,14 @@ def update_database_schema():
     # Add missing columns for residential_inspections
     try:
         c.execute("ALTER TABLE residential_inspections ADD COLUMN parish TEXT")
-    except sqlite3.OperationalError:
+    except Exception:  # Catches both SQLite and PostgreSQL errors
         pass
 
     # Add missing swimming pool score columns
     for item in SWIMMING_POOL_CHECKLIST_ITEMS:
         try:
             c.execute(f'ALTER TABLE inspections ADD COLUMN score_{item["id"]} REAL DEFAULT 0')
-        except sqlite3.OperationalError:
+        except Exception:  # Catches both SQLite and PostgreSQL errors
             pass
 
     # Create indexes for better performance
@@ -886,7 +886,7 @@ def update_database_schema():
     for index in indexes:
         try:
             c.execute(index)
-        except sqlite3.OperationalError:
+        except Exception:  # Catches both SQLite and PostgreSQL errors
             pass
 
     conn.commit()
