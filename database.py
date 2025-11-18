@@ -10,6 +10,10 @@ def get_timestamp_default():
     """Return the correct timestamp default for the current database"""
     return 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP' if get_db_type() == 'postgresql' else 'TEXT DEFAULT CURRENT_TIMESTAMP'
 
+def get_insert_ignore():
+    """Return the correct INSERT IGNORE syntax for the current database"""
+    return 'ON CONFLICT DO NOTHING' if get_db_type() == 'postgresql' else 'OR IGNORE'
+
 def init_db():
     conn = get_db_connection()
 
@@ -22,6 +26,7 @@ def init_db():
     # Get database-specific syntax
     auto_inc = get_auto_increment()
     timestamp = get_timestamp_default()
+    insert_ignore = get_insert_ignore()
 
     # Inspections table
     c.execute(f'''CREATE TABLE IF NOT EXISTS inspections
@@ -213,7 +218,10 @@ def init_db():
         ('inspector6', 'Insp678!secure', 'inspector'),
         ('admin', 'Admin901!secure', 'admin')
     ]
-    c.executemany("INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)", users)
+    if get_db_type() == 'postgresql':
+        c.executemany(f"INSERT INTO users (username, password, role) VALUES (%s, %s, %s) ON CONFLICT (username) DO NOTHING", users)
+    else:
+        c.executemany("INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)", users)
 
     # Login history table (required by login route)
     c.execute(f'''CREATE TABLE IF NOT EXISTS login_history
@@ -333,7 +341,10 @@ def init_db():
     ]
 
     for template in existing_templates:
-        c.execute('INSERT OR IGNORE INTO form_templates (name, description, form_type) VALUES (?, ?, ?)', template)
+        if get_db_type() == 'postgresql':
+            c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (%s, %s, %s) ON CONFLICT (name) DO NOTHING', template)
+        else:
+            c.execute('INSERT OR IGNORE INTO form_templates (name, description, form_type) VALUES (?, ?, ?)', template)
 
     # Only commit if not using autocommit (SQLite)
     if get_db_type() != 'postgresql':
