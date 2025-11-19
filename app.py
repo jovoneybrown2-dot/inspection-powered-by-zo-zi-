@@ -36,7 +36,20 @@ from database import (
 )
 
 # Database Config Import
-from db_config import get_db_connection
+from db_config import get_db_connection, get_db_type
+
+def get_table_columns(cursor, table_name):
+    """Get list of column names for a table (works with both SQLite and PostgreSQL)"""
+    if get_db_type() == 'postgresql':
+        cursor.execute("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = %s AND table_schema = 'public'
+        """, (table_name,))
+        return [row[0] for row in cursor.fetchall()]
+    else:
+        cursor.execute(f"PRAGMA table_info({table_name})")
+        return [column[1] for column in cursor.fetchall()]
 
 app = Flask(__name__, template_folder='templates')
 app.secret_key = os.urandom(24)
@@ -53,8 +66,7 @@ else:
         c = conn.cursor()
 
         # Migrate inspections table
-        c.execute("PRAGMA table_info(inspections)")
-        columns = [column[1] for column in c.fetchall()]
+        columns = get_table_columns(c, 'inspections')
         if 'photo_data' not in columns:
             print("Adding photo_data column to inspections table...")
             c.execute("ALTER TABLE inspections ADD COLUMN photo_data TEXT")
@@ -62,8 +74,7 @@ else:
             print("Migration completed: photo_data column added to inspections")
 
         # Migrate burial_site_inspections table
-        c.execute("PRAGMA table_info(burial_site_inspections)")
-        columns = [column[1] for column in c.fetchall()]
+        columns = get_table_columns(c, 'burial_site_inspections')
         if 'photo_data' not in columns:
             print("Adding photo_data column to burial_site_inspections table...")
             c.execute("ALTER TABLE burial_site_inspections ADD COLUMN photo_data TEXT")
@@ -71,8 +82,7 @@ else:
             print("Migration completed: photo_data column added to burial_site_inspections")
 
         # Migrate residential_inspections table
-        c.execute("PRAGMA table_info(residential_inspections)")
-        columns = [column[1] for column in c.fetchall()]
+        columns = get_table_columns(c, 'residential_inspections')
         if 'photo_data' not in columns:
             print("Adding photo_data column to residential_inspections table...")
             c.execute("ALTER TABLE residential_inspections ADD COLUMN photo_data TEXT")
@@ -80,8 +90,7 @@ else:
             print("Migration completed: photo_data column added to residential_inspections")
 
         # Migrate meat_processing_inspections table
-        c.execute("PRAGMA table_info(meat_processing_inspections)")
-        columns = [column[1] for column in c.fetchall()]
+        columns = get_table_columns(c, 'meat_processing_inspections')
         if 'photo_data' not in columns:
             print("Adding photo_data column to meat_processing_inspections table...")
             c.execute("ALTER TABLE meat_processing_inspections ADD COLUMN photo_data TEXT")
@@ -1112,8 +1121,7 @@ def submit_institutional():
         cursor = conn.cursor()
 
         # Check if columns exist and add them if needed
-        cursor.execute("PRAGMA table_info(inspections)")
-        existing_columns = [row[1] for row in cursor.fetchall()]
+        existing_columns = get_table_columns(cursor, 'inspections')
 
         required_columns = [
             'staff_complement', 'num_occupants', 'institution_type',
@@ -1766,8 +1774,7 @@ def update_database_schema():
         'registration_status', 'purpose_of_visit', 'action'
     ]
 
-    cursor.execute("PRAGMA table_info(inspections)")
-    existing_columns = [row[1] for row in cursor.fetchall()]
+    existing_columns = get_table_columns(cursor, 'inspections')
 
     for column in new_columns:
         if column not in existing_columns:
@@ -6315,12 +6322,7 @@ def init_db():
     )''')
 
     # Check if email column exists in users table and add it if not
-    if get_db_type() == 'postgresql':
-        c.execute("SELECT column_name FROM information_schema.columns WHERE table_name='users'")
-        columns = [row['column_name'] for row in c.fetchall()]
-    else:
-        c.execute("PRAGMA table_info(users)")
-        columns = [info[1] for info in c.fetchall()]
+    columns = get_table_columns(c, 'users')
 
     if 'email' not in columns:
         try:
@@ -7631,12 +7633,7 @@ def get_security_metrics():
             )''')
 
             # Check if users table has required columns
-            if get_db_type() == 'postgresql':
-                c.execute("SELECT column_name FROM information_schema.columns WHERE table_name='users'")
-                columns = [row['column_name'] for row in c.fetchall()]
-            else:
-                c.execute("PRAGMA table_info(users)")
-                columns = [row[1] for row in c.fetchall()]
+            columns = get_table_columns(c, 'users')
 
             if 'email' not in columns:
                 c.execute('ALTER TABLE users ADD COLUMN email TEXT')
