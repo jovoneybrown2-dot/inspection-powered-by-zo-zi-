@@ -8644,10 +8644,10 @@ def save_form():
 
         # Insert/update items
         for item in items:
-            c.execute('''
+            c.execute(f'''
                 INSERT INTO form_items 
                 (form_template_id, item_order, category, description, weight, is_critical)
-                VALUES (?, ?, ?, ?, ?, ?)
+                VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})
             ''', (form_id, item['order'], item['category'], item['description'],
                   item['weight'], 1 if item.get('critical') else 0))
 
@@ -8987,10 +8987,10 @@ def migrate_all_checklists():
                     category = residential_categories.get(item_id, "GENERAL")
                     is_critical = 1 if item['wt'] >= 5 else 0
 
-                    c.execute('''
-                        INSERT INTO form_items 
+                    c.execute(f'''
+                        INSERT INTO form_items
                         (form_template_id, item_order, category, description, weight, is_critical)
-                        VALUES (?, ?, ?, ?, ?, ?)
+                        VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})
                     ''', (template_id, item_id, category, item['desc'], item['wt'], is_critical))
 
                 results.append(f"✅ Residential: Migrated {len(RESIDENTIAL_CHECKLIST_ITEMS)} items")
@@ -9034,10 +9034,10 @@ def migrate_all_checklists():
                     category = spirit_categories.get(item_id, "GENERAL")
                     is_critical = 1 if item['wt'] >= 5 else 0
 
-                    c.execute('''
-                        INSERT INTO form_items 
+                    c.execute(f'''
+                        INSERT INTO form_items
                         (form_template_id, item_order, category, description, weight, is_critical)
-                        VALUES (?, ?, ?, ?, ?, ?)
+                        VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})
                     ''', (template_id, item_id, category, item['description'], item['wt'], is_critical))
 
                 results.append(f"✅ Spirit Licence: Migrated {len(SPIRIT_LICENCE_CHECKLIST_ITEMS)} items")
@@ -9064,10 +9064,10 @@ def migrate_all_checklists():
                     category = item.get('category', 'GENERAL')
                     is_critical = 1 if item['wt'] >= 5 else 0
 
-                    c.execute('''
+                    c.execute(f'''
                         INSERT INTO form_items 
                         (form_template_id, item_order, category, description, weight, is_critical)
-                        VALUES (?, ?, ?, ?, ?, ?)
+                        VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})
                     ''', (template_id, i + 1, category, item['desc'], item['wt'], is_critical))
 
                 results.append(f"✅ Swimming Pool: Migrated {len(SWIMMING_POOL_CHECKLIST_ITEMS)} items")
@@ -9124,10 +9124,10 @@ def migrate_all_checklists():
 
                     is_critical = 1 if item.get('critical', False) else 0
 
-                    c.execute('''
+                    c.execute(f'''
                         INSERT INTO form_items 
                         (form_template_id, item_order, category, description, weight, is_critical)
-                        VALUES (?, ?, ?, ?, ?, ?)
+                        VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})
                     ''', (template_id, i + 1, category, item['description'], 2.5, is_critical))
 
                 results.append(f"✅ Small Hotels: Migrated {len(SMALL_HOTELS_CHECKLIST_ITEMS)} items")
@@ -9154,10 +9154,10 @@ def migrate_all_checklists():
                     category = item.get('category', 'GENERAL')
                     is_critical = 1 if item['wt'] >= 5 else 0
 
-                    c.execute('''
+                    c.execute(f'''
                         INSERT INTO form_items
                         (form_template_id, item_order, category, description, weight, is_critical)
-                        VALUES (?, ?, ?, ?, ?, ?)
+                        VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})
                     ''', (template_id, i + 1, category, item['desc'], item['wt'], is_critical))
 
                 results.append(f"✅ Barbershop: Migrated {len(BARBERSHOP_CHECKLIST_ITEMS)} items")
@@ -9184,10 +9184,10 @@ def migrate_all_checklists():
                     category = item.get('category', 'GENERAL')
                     is_critical = 1 if item['wt'] >= 5 else 0
 
-                    c.execute('''
+                    c.execute(f'''
                         INSERT INTO form_items
                         (form_template_id, item_order, category, description, weight, is_critical)
-                        VALUES (?, ?, ?, ?, ?, ?)
+                        VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})
                     ''', (template_id, i + 1, category, item['desc'], item['wt'], is_critical))
 
                 results.append(f"✅ Institutional: Migrated {len(INSTITUTIONAL_CHECKLIST_ITEMS)} items")
@@ -9214,10 +9214,10 @@ def migrate_all_checklists():
                     category = item.get('category', 'GENERAL')
                     is_critical = 1 if item['wt'] >= 5 else 0
 
-                    c.execute('''
+                    c.execute(f'''
                         INSERT INTO form_items
                         (form_template_id, item_order, category, description, weight, is_critical)
-                        VALUES (?, ?, ?, ?, ?, ?)
+                        VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})
                     ''', (template_id, i + 1, category, item['desc'], item['wt'], is_critical))
 
                 results.append(f"✅ Meat Processing: Migrated {len(MEAT_PROCESSING_CHECKLIST_ITEMS)} items")
@@ -9452,10 +9452,10 @@ def migrate_food_checklist():
         category = categories.get(item_id, "GENERAL")
         is_critical = 1 if item['wt'] >= 4 else 0
 
-        c.execute('''
+        c.execute(f'''
             INSERT INTO form_items 
             (form_template_id, item_order, category, description, weight, is_critical)
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})
         ''', (template_id, item_id, category, item['desc'], item['wt'], is_critical))
 
     conn.commit()
@@ -9488,8 +9488,8 @@ def migrate_remaining_fixed():
                 23: "SOLID WASTE", 24: "SOLID WASTE", 25: "GENERAL"
             }
             for item in RESIDENTIAL_CHECKLIST_ITEMS:
-                c.execute('''INSERT INTO form_items (form_template_id, item_order, category, description, weight, is_critical)
-                            VALUES (?, ?, ?, ?, ?, ?)''',
+                c.execute(f'''INSERT INTO form_items (form_template_id, item_order, category, description, weight, is_critical)
+                            VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})''',
                           (template_id, item['id'], residential_categories.get(item['id'], "GENERAL"),
                            item['desc'], item['wt'], 1 if item['wt'] >= 5 else 0))
             results.append(f"✅ Residential: {len(RESIDENTIAL_CHECKLIST_ITEMS)} items")
@@ -9504,8 +9504,8 @@ def migrate_remaining_fixed():
         c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = %s', (template_id,))
         if c.fetchone()[0] == 0:
             for i, item in enumerate(SPIRIT_LICENCE_CHECKLIST_ITEMS):
-                c.execute('''INSERT INTO form_items (form_template_id, item_order, category, description, weight, is_critical)
-                            VALUES (?, ?, ?, ?, ?, ?)''',
+                c.execute(f'''INSERT INTO form_items (form_template_id, item_order, category, description, weight, is_critical)
+                            VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})''',
                           (template_id, i + 1, "GENERAL", item['description'], item['wt'], 1 if item['wt'] >= 5 else 0))
             results.append(f"✅ Spirit Licence: {len(SPIRIT_LICENCE_CHECKLIST_ITEMS)} items")
         else:
@@ -9519,8 +9519,8 @@ def migrate_remaining_fixed():
         c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = %s', (template_id,))
         if c.fetchone()[0] == 0:
             for i, item in enumerate(SWIMMING_POOL_CHECKLIST_ITEMS):
-                c.execute('''INSERT INTO form_items (form_template_id, item_order, category, description, weight, is_critical)
-                            VALUES (?, ?, ?, ?, ?, ?)''',
+                c.execute(f'''INSERT INTO form_items (form_template_id, item_order, category, description, weight, is_critical)
+                            VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})''',
                           (template_id, i + 1, item.get('category', 'GENERAL'), item['desc'], item['wt'],
                            1 if item['wt'] >= 5 else 0))
             results.append(f"✅ Swimming Pool: {len(SWIMMING_POOL_CHECKLIST_ITEMS)} items")
@@ -9535,8 +9535,8 @@ def migrate_remaining_fixed():
         c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = %s', (template_id,))
         if c.fetchone()[0] == 0:
             for i, item in enumerate(SMALL_HOTELS_CHECKLIST_ITEMS):
-                c.execute('''INSERT INTO form_items (form_template_id, item_order, category, description, weight, is_critical)
-                            VALUES (?, ?, ?, ?, ?, ?)''',
+                c.execute(f'''INSERT INTO form_items (form_template_id, item_order, category, description, weight, is_critical)
+                            VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})''',
                           (template_id, i + 1, "GENERAL", item['description'], 2.5,
                            1 if item.get('critical', False) else 0))
             results.append(f"✅ Small Hotels: {len(SMALL_HOTELS_CHECKLIST_ITEMS)} items")
@@ -11619,7 +11619,7 @@ def create_form_item():
         INSERT INTO form_items (
             form_template_id, item_order, category, description,
             weight, is_critical, active, created_date
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph})
     ''', (
         data['form_template_id'],
         next_order,
