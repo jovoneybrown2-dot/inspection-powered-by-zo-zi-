@@ -12065,6 +12065,7 @@ def auto_migrate_checklists():
 def auto_migrate_form_fields():
     """Automatically migrate form fields if form_fields table is empty"""
     try:
+        from db_config import get_placeholder
         conn = get_db_connection()
         c = conn.cursor()
         ph = get_placeholder()
