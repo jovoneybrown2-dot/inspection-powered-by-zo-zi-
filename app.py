@@ -1646,18 +1646,17 @@ def submit_swimming_pools():
     cursor = conn.cursor()
 
     # Auto-fix database columns if needed
-    try:
-        cursor.execute("SELECT score_1A FROM inspections LIMIT 1")
-    except sqlite3.OperationalError:
-        # Columns don't exist, add them
-        print("Adding missing swimming pool score columns...")
-        for item in SWIMMING_POOL_CHECKLIST_ITEMS:
-            try:
-                cursor.execute(f'ALTER TABLE inspections ADD COLUMN score_{item["id"]} REAL DEFAULT 0')
-                print(f"Added column score_{item['id']}")
-            except sqlite3.OperationalError:
-                pass  # Column already exists
-        conn.commit()
+    # Add columns - exceptions for duplicates are handled gracefully
+    for item in SWIMMING_POOL_CHECKLIST_ITEMS:
+        try:
+            cursor.execute(f'ALTER TABLE inspections ADD COLUMN score_{item["id"]} REAL DEFAULT 0')
+            print(f"Added column score_{item['id']}")
+        except Exception as e:
+            # Column already exists - silently skip
+            error_msg = str(e).lower()
+            if "duplicate" not in error_msg and "already exists" not in error_msg:
+                print(f"Error adding score_{item['id']}: {e}")
+    conn.commit()
 
     # Extract form data
     operator = request.form.get('operator')
@@ -5521,21 +5520,23 @@ def update_barbershop_db_schema():
             cursor.execute(f'ALTER TABLE inspections ADD COLUMN score_{item["id"]} REAL DEFAULT 0')
             columns_added += 1
             logging.info(f"Added column score_{item['id']}")
-        except sqlite3.OperationalError as e:
-            if "duplicate column name" not in str(e):
+        except Exception as e:
+            # Column already exists or other error - check if it's about duplication
+            error_msg = str(e).lower()
+            if "duplicate" not in error_msg and "already exists" not in error_msg:
                 logging.error(f"Error adding score_{item['id']}: {e}")
     for column in ['telephone_no', 'inspector_code', 'purpose_of_visit', 'action', 'registration_status']:
         try:
             cursor.execute(f'ALTER TABLE inspections ADD COLUMN {column} TEXT')
             columns_added += 1
             logging.info(f"Added column {column}")
-        except sqlite3.OperationalError as e:
-            if "duplicate column name" not in str(e):
+        except Exception as e:
+            # Column already exists or other error - check if it's about duplication
+            error_msg = str(e).lower()
+            if "duplicate" not in error_msg and "already exists" not in error_msg:
                 logging.error(f"Error adding {column}: {e}")
     conn.commit()
     conn.close()
-
-
     return columns_added
 
 # Route to render new barbershop inspection form
@@ -5597,11 +5598,8 @@ def submit_barbershop():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Ensure score columns exist
-    try:
-        cursor.execute("SELECT score_01 FROM inspections LIMIT 1")
-    except Exception:
-        update_barbershop_db_schema()
+    # Ensure score columns exist - just call the schema update, it handles duplicates
+    update_barbershop_db_schema()
 
     # Extract form data
     data = {
