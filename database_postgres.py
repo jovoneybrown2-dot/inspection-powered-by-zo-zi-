@@ -172,14 +172,51 @@ def get_inspections_by_inspector(inspector_name, inspection_type='all'):
     cursor = conn.cursor()
 
     if inspection_type == 'all':
-        cursor.execute("""SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment,
-                     created_at, result, form_type FROM inspections
-                     WHERE inspector_name = %s ORDER BY inspection_date DESC""", (inspector_name,))
+        # Get all inspection types for this inspector
+        cursor.execute("""
+            SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment,
+                   created_at, result, form_type
+            FROM inspections
+            WHERE inspector_name = %s
+            UNION
+            SELECT id, premises_name as establishment_name, inspector_name, inspection_date,
+                   'Residential' as type_of_establishment, created_at, result, 'Residential' as form_type
+            FROM residential_inspections
+            WHERE inspector_name = %s
+            UNION
+            SELECT id, establishment_name, inspector_name, inspection_date,
+                   'Meat Processing' as type_of_establishment, created_at, result, 'Meat Processing' as form_type
+            FROM meat_processing_inspections
+            WHERE inspector_name = %s
+            UNION
+            SELECT id, deceased_name as establishment_name, inspector_name, inspection_date,
+                   'Burial' as type_of_establishment, created_at, 'Completed' as result, 'Burial' as form_type
+            FROM burial_site_inspections
+            WHERE inspector_name = %s
+            ORDER BY created_at DESC
+        """, (inspector_name, inspector_name, inspector_name, inspector_name))
     else:
-        cursor.execute("""SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment,
-                     created_at, result, form_type FROM inspections
-                     WHERE inspector_name = %s AND (form_type = %s OR type_of_establishment = %s)
-                     ORDER BY inspection_date DESC""", (inspector_name, inspection_type, inspection_type))
+        # Filter by inspection type
+        if inspection_type == 'Residential':
+            cursor.execute("""SELECT id, premises_name as establishment_name, inspector_name, inspection_date,
+                         'Residential' as type_of_establishment, created_at, result, 'Residential' as form_type
+                         FROM residential_inspections
+                         WHERE inspector_name = %s ORDER BY inspection_date DESC""", (inspector_name,))
+        elif inspection_type == 'Meat Processing':
+            cursor.execute("""SELECT id, establishment_name, inspector_name, inspection_date,
+                         'Meat Processing' as type_of_establishment, created_at, result, 'Meat Processing' as form_type
+                         FROM meat_processing_inspections
+                         WHERE inspector_name = %s ORDER BY inspection_date DESC""", (inspector_name,))
+        elif inspection_type == 'Burial':
+            cursor.execute("""SELECT id, deceased_name as establishment_name, inspector_name, inspection_date,
+                         'Burial' as type_of_establishment, created_at, 'Completed' as result, 'Burial' as form_type
+                         FROM burial_site_inspections
+                         WHERE inspector_name = %s ORDER BY inspection_date DESC""", (inspector_name,))
+        else:
+            cursor.execute("""SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment,
+                         created_at, result, form_type FROM inspections
+                         WHERE inspector_name = %s AND (form_type = %s OR type_of_establishment = %s)
+                         ORDER BY inspection_date DESC""", (inspector_name, inspection_type, inspection_type))
 
     inspections = cursor.fetchall()
     cursor.close()
