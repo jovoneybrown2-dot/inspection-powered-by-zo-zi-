@@ -221,7 +221,7 @@ def init_db():
     if get_db_type() == 'postgresql':
         c.executemany(f"INSERT INTO users (username, password, role) VALUES (%s, %s, %s) ON CONFLICT (username) DO NOTHING", users)
     else:
-        c.executemany("INSERT OR IGNORE INTO users (username, password, role) VALUES (%s, %s, %s)", users)
+        c.executemany("INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)", users)
 
     # Login history table (required by login route)
     c.execute(f'''CREATE TABLE IF NOT EXISTS login_history
