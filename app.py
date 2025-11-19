@@ -1964,7 +1964,7 @@ def submit_small_hotels():
             inspector_signature, manager_signature, received_by,
             photo_data, created_at, form_type
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, datetime('now'), %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)
     ''', (
         data.get('establishment_name', ''),
         data.get('address', ''),
@@ -5600,7 +5600,7 @@ def submit_barbershop():
     # Ensure score columns exist
     try:
         cursor.execute("SELECT score_01 FROM inspections LIMIT 1")
-    except sqlite3.OperationalError:
+    except Exception:
         update_barbershop_db_schema()
 
     # Extract form data
@@ -5668,8 +5668,10 @@ def submit_barbershop():
     score_columns = ', '.join([f"score_{item['id']}" for item in BARBERSHOP_CHECKLIST_ITEMS])
     all_columns = f"{base_columns}, {score_columns}"
 
-    base_placeholders = '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?'
-    score_placeholders = ', '.join(['?' for _ in BARBERSHOP_CHECKLIST_ITEMS])
+    # Use correct placeholder based on database type
+    placeholder = '%s' if get_db_type() == 'postgresql' else '?'
+    base_placeholders = ', '.join([placeholder] * 24)  # 24 base columns
+    score_placeholders = ', '.join([placeholder] * len(BARBERSHOP_CHECKLIST_ITEMS))
     all_placeholders = f"{base_placeholders}, {score_placeholders}"
 
     base_values = (
@@ -6857,8 +6859,8 @@ def update_task_status(task_id):  # Fixed parameter name to match route
 
         # Update task status (only if assigned to this inspector)
         cursor.execute('''
-            UPDATE tasks 
-            SET status = ?
+            UPDATE tasks
+            SET status = %s
             WHERE id = %s AND assignee_id = %s
         ''', (new_status, task_id, user_id))
 
@@ -6897,8 +6899,8 @@ def respond_to_task(task_id):
             return jsonify({'error': 'Invalid response'}), 400
 
         cursor.execute('''
-            UPDATE tasks 
-            SET status = ?
+            UPDATE tasks
+            SET status = %s
             WHERE id = %s AND assignee_id = %s
         ''', (new_status, task_id, user_id))
 
@@ -11854,7 +11856,7 @@ def create_form_field():
         INSERT INTO form_fields (
             form_template_id, field_name, field_label, field_type, field_order,
             required, placeholder, default_value, options, field_group, active, created_date
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
     ''', (
         data['form_template_id'],
         data['field_name'],
@@ -11869,7 +11871,11 @@ def create_form_field():
         1
     ))
 
-    field_id = c.lastrowid
+    if get_db_type() == 'postgresql':
+        c.execute('SELECT lastval()')
+        field_id = c.fetchone()[0]
+    else:
+        field_id = c.lastrowid
 
     # Track who edited this form
     update_form_editor_tracking(data['form_template_id'], conn)
@@ -11974,7 +11980,7 @@ def get_active_users_map():
         SELECT username, user_role, location_lat, location_lng, parish, login_time, last_activity
         FROM user_sessions
         WHERE is_active = 1
-        AND datetime(last_activity) > datetime('now', '-24 hours')
+        AND last_activity > (NOW() - INTERVAL '24 hours')
         AND location_lat IS NOT NULL
         AND location_lng IS NOT NULL
         AND location_lat != 0
