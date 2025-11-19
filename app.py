@@ -12055,6 +12055,39 @@ def auto_migrate_checklists():
         print(f"⚠️  Auto-migration error: {str(e)}")
 
 
+# Universal PDF download route
+@app.route('/api/download_inspection/<inspection_type>/<int:inspection_id>')
+def api_download_inspection(inspection_type, inspection_id):
+    """Universal download route for all inspection types - generates PDF without photos"""
+    if 'inspector' not in session and 'admin' not in session:
+        return redirect(url_for('login'))
+
+    # Route to the appropriate PDF download function based on inspection type
+    type_lower = inspection_type.lower().replace(' ', '_').replace('-', '_')
+
+    if type_lower in ['food', 'food_establishment']:
+        return download_inspection_pdf(inspection_id)
+    elif type_lower == 'residential':
+        return download_residential_pdf(inspection_id)
+    elif type_lower in ['burial', 'burial_site']:
+        return download_burial_pdf(inspection_id)
+    elif type_lower in ['spirit_licence', 'spirit_licence_premises']:
+        return download_spirit_licence_pdf(inspection_id)
+    elif type_lower in ['swimming_pool']:
+        return download_swimming_pool_pdf(inspection_id)
+    elif type_lower in ['small_hotels', 'small_hotel']:
+        return download_small_hotels_pdf(inspection_id)
+    elif type_lower == 'barbershop':
+        return download_barbershop_pdf(inspection_id)
+    elif type_lower in ['institutional', 'institutional_health']:
+        return download_institutional_pdf(inspection_id)
+    elif type_lower == 'meat_processing':
+        return download_meat_processing_pdf(inspection_id)
+    else:
+        # Default to food inspection
+        return download_inspection_pdf(inspection_id)
+
+
 # Initialize database and migrate checklists on app startup (works with Gunicorn)
 init_db()
 init_form_management_db()
