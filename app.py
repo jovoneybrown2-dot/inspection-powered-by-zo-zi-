@@ -12062,6 +12062,73 @@ def auto_migrate_checklists():
         print(f"⚠️  Auto-migration error: {str(e)}")
 
 
+def auto_migrate_form_fields():
+    """Automatically migrate form fields if form_fields table is empty"""
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        ph = get_placeholder()
+
+        # Check if any fields exist
+        c.execute('SELECT COUNT(*) FROM form_fields')
+        count = c.fetchone()[0]
+
+        if count == 0:
+            print("⚡ No form fields found. Running automatic migration...")
+
+            # Common fields for all forms
+            common_fields = [
+                ('establishment_name', 'Establishment Name', 'text', 1, 1, 'Enter establishment name', '', '', 'establishment_info'),
+                ('owner', 'Owner/Operator', 'text', 2, 1, 'Enter owner or operator name', '', '', 'establishment_info'),
+                ('address', 'Address', 'textarea', 3, 1, 'Enter full address', '', '', 'establishment_info'),
+                ('license_no', 'License Number', 'text', 4, 0, 'Enter license number', '', '', 'establishment_info'),
+                ('telephone_no', 'Telephone', 'tel', 5, 0, 'Enter telephone number', '', '', 'establishment_info'),
+                ('parish', 'Parish', 'select', 6, 1, '', '', 'Kingston,St. Andrew,St. Catherine,Clarendon,Manchester,St. Elizabeth,Westmoreland,Hanover,St. James,Trelawny,St. Ann,St. Mary,Portland,St. Thomas', 'establishment_info'),
+                ('inspection_date', 'Inspection Date', 'date', 10, 1, '', '', '', 'inspection_details'),
+                ('inspection_time', 'Inspection Time', 'time', 11, 0, '', '', '', 'inspection_details'),
+                ('inspector_name', 'Inspector Name', 'text', 12, 1, 'Inspector name', '', '', 'inspection_details'),
+                ('inspector_code', 'Inspector Code', 'text', 13, 0, 'Enter inspector code', '', '', 'inspection_details'),
+                ('purpose_of_visit', 'Purpose of Visit', 'select', 14, 0, '', '', 'Routine Inspection,Follow-up,Complaint Investigation,License Renewal,Other', 'inspection_details'),
+                ('comments', 'Comments/Recommendations', 'textarea', 20, 0, 'Enter any comments or recommendations', '', '', 'results'),
+                ('result', 'Result', 'select', 21, 1, '', '', 'Pass,Fail,Conditional Pass', 'results'),
+                ('action', 'Action Taken', 'textarea', 22, 0, 'Describe action taken', '', '', 'results'),
+                ('received_by', 'Received By', 'text', 25, 0, 'Name of person receiving report', '', '', 'signatures')
+            ]
+
+            # Get all templates
+            c.execute('SELECT id, form_type FROM form_templates WHERE active = 1')
+            templates = c.fetchall()
+
+            total_fields = 0
+            for row in templates:
+                template_id = row[0]
+                form_type = row[1] if hasattr(row, '__getitem__') and len(row) > 1 else row['form_type']
+
+                # Insert common fields for this template
+                for field in common_fields:
+                    c.execute(f'''
+                        INSERT INTO form_fields (
+                            form_template_id, field_name, field_label, field_type,
+                            field_order, required, placeholder, default_value, options,
+                            field_group, active, created_date
+                        ) VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph})
+                    ''', (
+                        template_id, field[0], field[1], field[2], field[3], field[4],
+                        field[5], field[6], field[7], field[8], 1,
+                        datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    ))
+                    total_fields += 1
+
+            conn.commit()
+            conn.close()
+            print(f"✅ Automatic form fields migration completed! Migrated {total_fields} fields")
+        else:
+            print(f"✓ Found {count} form fields in database")
+            conn.close()
+    except Exception as e:
+        print(f"⚠️  Form fields auto-migration error: {str(e)}")
+
+
 # Universal PDF download route
 @app.route('/api/download_inspection/<inspection_type>/<int:inspection_id>')
 def api_download_inspection(inspection_type, inspection_id):
@@ -12099,6 +12166,7 @@ def api_download_inspection(inspection_type, inspection_id):
 init_db()
 init_form_management_db()
 auto_migrate_checklists()
+auto_migrate_form_fields()
 
 
 if __name__ == '__main__':
