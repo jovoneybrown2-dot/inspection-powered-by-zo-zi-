@@ -841,8 +841,18 @@ def process_metrics(results, time_frame):
     data = {'dates': [], 'pass': [], 'fail': []}
     date_format = '%Y-%m-%d' if time_frame == 'daily' else '%Y-%m' if time_frame == 'monthly' else '%Y'
 
-    for date, result, count in results:
-        formatted_date = datetime.strptime(date, '%Y-%m-%d').strftime(date_format)
+    for row in results:
+        date = row[0]
+        result = row[1]
+        count = row[2]
+
+        # Handle both string dates (SQLite) and date objects (PostgreSQL)
+        if isinstance(date, str):
+            formatted_date = datetime.strptime(date, '%Y-%m-%d').strftime(date_format)
+        else:
+            # It's already a date object from PostgreSQL
+            formatted_date = date.strftime(date_format)
+
         if formatted_date not in data['dates']:
             data['dates'].append(formatted_date)
             data['pass'].append(0)
@@ -856,6 +866,95 @@ def process_metrics(results, time_frame):
             data['fail'][idx] += count
 
     return data
+
+
+@app.route('/api/admin/form_distribution', methods=['GET'])
+def admin_form_distribution():
+    """Get form type distribution and pass/fail rates for pie charts"""
+    if 'admin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    conn = get_db_connection()
+    c = conn.cursor()
+
+    try:
+        # Get form type distribution with pass/fail counts
+        query = """
+            SELECT form_type, result, COUNT(*) as count
+            FROM (
+                SELECT form_type, result FROM inspections
+                WHERE form_type IN ('Food Establishment', 'Spirit Licence Premises', 'Swimming Pool', 'Small Hotel', 'Barbershop', 'Institutional Health')
+                UNION ALL
+                SELECT 'Residential' as form_type, result FROM residential_inspections
+                UNION ALL
+                SELECT 'Burial' as form_type, 'Completed' as result FROM burial_site_inspections
+                UNION ALL
+                SELECT 'Meat Processing' as form_type, result FROM meat_processing_inspections
+            ) AS all_forms
+            GROUP BY form_type, result
+            ORDER BY form_type, result
+        """
+
+        c.execute(query)
+        results = c.fetchall()
+        conn.close()
+
+        # Process results into pie chart format
+        form_totals = {}
+        form_pass_fail = {}
+
+        for row in results:
+            form_type = row[0]
+            result = row[1]
+            count = row[2]
+
+            # Count total per form type
+            if form_type not in form_totals:
+                form_totals[form_type] = 0
+                form_pass_fail[form_type] = {'pass': 0, 'fail': 0}
+
+            form_totals[form_type] += count
+
+            # Count pass/fail
+            if result in ['Pass', 'Completed', 'Satisfactory']:
+                form_pass_fail[form_type]['pass'] += count
+            else:
+                form_pass_fail[form_type]['fail'] += count
+
+        # Calculate percentages
+        total_inspections = sum(form_totals.values())
+
+        distribution_data = []
+        pass_fail_data = []
+
+        for form_type, total in form_totals.items():
+            # Form type distribution
+            distribution_data.append({
+                'form_type': form_type,
+                'count': total,
+                'percentage': round((total / total_inspections * 100), 1) if total_inspections > 0 else 0
+            })
+
+            # Pass/fail for this form type
+            pass_count = form_pass_fail[form_type]['pass']
+            fail_count = form_pass_fail[form_type]['fail']
+            pass_fail_data.append({
+                'form_type': form_type,
+                'pass': pass_count,
+                'fail': fail_count,
+                'pass_rate': round((pass_count / total * 100), 1) if total > 0 else 0
+            })
+
+        return jsonify({
+            'distribution': distribution_data,
+            'pass_fail': pass_fail_data,
+            'total_inspections': total_inspections
+        })
+
+    except Exception as e:
+        print(f"Error in form distribution: {e}")
+        return jsonify({'error': str(e)}), 500
+
 
 @app.route('/view_institutional/<int:form_id>')
 def view_institutional(form_id):
