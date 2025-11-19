@@ -1645,18 +1645,29 @@ def submit_swimming_pools():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Auto-fix database columns if needed
-    # Add columns - exceptions for duplicates are handled gracefully
+    # Auto-fix database columns if needed - check if columns exist first
+    # Check existing columns
+    if get_db_type() == 'postgresql':
+        cursor.execute("""
+            SELECT column_name FROM information_schema.columns
+            WHERE table_name = 'inspections' AND table_schema = 'public'
+        """)
+        existing_columns = {row[0] for row in cursor.fetchall()}
+    else:
+        cursor.execute("PRAGMA table_info(inspections)")
+        existing_columns = {row[1] for row in cursor.fetchall()}
+
+    # Add columns only if they don't exist
     for item in SWIMMING_POOL_CHECKLIST_ITEMS:
-        try:
-            cursor.execute(f'ALTER TABLE inspections ADD COLUMN score_{item["id"]} REAL DEFAULT 0')
-            print(f"Added column score_{item['id']}")
-        except Exception as e:
-            # Column already exists - silently skip
-            error_msg = str(e).lower()
-            if "duplicate" not in error_msg and "already exists" not in error_msg:
-                print(f"Error adding score_{item['id']}: {e}")
-    conn.commit()
+        col_name = f"score_{item['id']}"
+        if col_name not in existing_columns:
+            try:
+                cursor.execute(f'ALTER TABLE inspections ADD COLUMN {col_name} REAL DEFAULT 0')
+                print(f"Added column {col_name}")
+                conn.commit()  # Commit each column addition
+            except Exception as e:
+                conn.rollback()  # Rollback on error
+                print(f"Error adding {col_name}: {e}")
 
     # Extract form data
     operator = request.form.get('operator')
@@ -5515,27 +5526,43 @@ def update_barbershop_db_schema():
     conn = get_db_connection()
     cursor = conn.cursor()
     columns_added = 0
+
+    # Check existing columns
+    if get_db_type() == 'postgresql':
+        cursor.execute("""
+            SELECT column_name FROM information_schema.columns
+            WHERE table_name = 'inspections' AND table_schema = 'public'
+        """)
+        existing_columns = {row[0] for row in cursor.fetchall()}
+    else:
+        cursor.execute("PRAGMA table_info(inspections)")
+        existing_columns = {row[1] for row in cursor.fetchall()}
+
+    # Add score columns if they don't exist
     for item in BARBERSHOP_CHECKLIST_ITEMS:
-        try:
-            cursor.execute(f'ALTER TABLE inspections ADD COLUMN score_{item["id"]} REAL DEFAULT 0')
-            columns_added += 1
-            logging.info(f"Added column score_{item['id']}")
-        except Exception as e:
-            # Column already exists or other error - check if it's about duplication
-            error_msg = str(e).lower()
-            if "duplicate" not in error_msg and "already exists" not in error_msg:
-                logging.error(f"Error adding score_{item['id']}: {e}")
+        col_name = f"score_{item['id']}"
+        if col_name not in existing_columns:
+            try:
+                cursor.execute(f'ALTER TABLE inspections ADD COLUMN {col_name} REAL DEFAULT 0')
+                columns_added += 1
+                logging.info(f"Added column {col_name}")
+                conn.commit()  # Commit each column addition
+            except Exception as e:
+                conn.rollback()  # Rollback on error
+                logging.error(f"Error adding {col_name}: {e}")
+
+    # Add text columns if they don't exist
     for column in ['telephone_no', 'inspector_code', 'purpose_of_visit', 'action', 'registration_status']:
-        try:
-            cursor.execute(f'ALTER TABLE inspections ADD COLUMN {column} TEXT')
-            columns_added += 1
-            logging.info(f"Added column {column}")
-        except Exception as e:
-            # Column already exists or other error - check if it's about duplication
-            error_msg = str(e).lower()
-            if "duplicate" not in error_msg and "already exists" not in error_msg:
+        if column not in existing_columns:
+            try:
+                cursor.execute(f'ALTER TABLE inspections ADD COLUMN {column} TEXT')
+                columns_added += 1
+                logging.info(f"Added column {column}")
+                conn.commit()  # Commit each column addition
+            except Exception as e:
+                conn.rollback()  # Rollback on error
                 logging.error(f"Error adding {column}: {e}")
-    conn.commit()
+
     conn.close()
     return columns_added
 
