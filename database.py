@@ -344,7 +344,7 @@ def init_db():
         if get_db_type() == 'postgresql':
             c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (%s, %s, %s) ON CONFLICT (name) DO NOTHING', template)
         else:
-            c.execute('INSERT OR IGNORE INTO form_templates (name, description, form_type) VALUES (%s, %s, %s)', template)
+            c.execute('INSERT OR IGNORE INTO form_templates (name, description, form_type) VALUES (?, ?, ?)', template)
 
     # Only commit if not using autocommit (SQLite)
     if get_db_type() != 'postgresql':
