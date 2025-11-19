@@ -841,6 +841,10 @@ def process_metrics(results, time_frame):
     data = {'dates': [], 'pass': [], 'fail': []}
     date_format = '%Y-%m-%d' if time_frame == 'daily' else '%Y-%m' if time_frame == 'monthly' else '%Y'
 
+    # Track totals
+    total_pass = 0
+    total_fail = 0
+
     for row in results:
         date = row[0]
         result = row[1]
@@ -862,8 +866,16 @@ def process_metrics(results, time_frame):
         # Updated to include 'Satisfactory' as a passing result
         if result in ['Pass', 'Completed', 'Satisfactory']:
             data['pass'][idx] += count
+            total_pass += count
         else:
             data['fail'][idx] += count
+            total_fail += count
+
+    # Add summary statistics
+    data['total_inspections'] = total_pass + total_fail
+    data['total_pass'] = total_pass
+    data['total_fail'] = total_fail
+    data['pass_rate'] = round((total_pass / (total_pass + total_fail) * 100), 1) if (total_pass + total_fail) > 0 else 0
 
     return data
 

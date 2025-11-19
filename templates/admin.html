@@ -3069,11 +3069,19 @@
             let totalPass = 0;
             let totalFail = 0;
 
-            if (data.pass && Array.isArray(data.pass)) {
-                totalPass = data.pass.reduce((sum, count) => sum + (count || 0), 0);
-            }
-            if (data.fail && Array.isArray(data.fail)) {
-                totalFail = data.fail.reduce((sum, count) => sum + (count || 0), 0);
+            // Use totals from API if available, otherwise calculate
+            if (data.total_pass !== undefined && data.total_fail !== undefined) {
+                totalPass = data.total_pass;
+                totalFail = data.total_fail;
+                console.log(`Using API totals for ${tab}: Pass=${totalPass}, Fail=${totalFail}, Total=${totalPass + totalFail}`);
+            } else {
+                if (data.pass && Array.isArray(data.pass)) {
+                    totalPass = data.pass.reduce((sum, count) => sum + (count || 0), 0);
+                }
+                if (data.fail && Array.isArray(data.fail)) {
+                    totalFail = data.fail.reduce((sum, count) => sum + (count || 0), 0);
+                }
+                console.log(`Calculated totals for ${tab}: Pass=${totalPass}, Fail=${totalFail}, Total=${totalPass + totalFail}`);
             }
 
             // Enhanced candlestick generation for pattern analysis
