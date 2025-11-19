@@ -11761,19 +11761,22 @@ def update_form_item(item_id):
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
+    from db_config import get_placeholder
+
     data = request.json
     conn = get_db_connection()
     c = conn.cursor()
+    ph = get_placeholder()
 
     # Get template_id for this item
-    c.execute('SELECT form_template_id FROM form_items WHERE id = %s', (item_id,))
+    c.execute(f'SELECT form_template_id FROM form_items WHERE id = {ph}', (item_id,))
     result = c.fetchone()
     template_id = result[0] if result else None
 
-    c.execute('''
+    c.execute(f'''
         UPDATE form_items
-        SET category = ?, description = ?, weight = ?, is_critical = ?
-        WHERE id = ?
+        SET category = {ph}, description = {ph}, weight = {ph}, is_critical = {ph}
+        WHERE id = {ph}
     ''', (
         data.get('category'),
         data.get('description'),
@@ -11841,13 +11844,16 @@ def reorder_form_items():
 
 def update_form_editor_tracking(template_id, conn):
     """Helper function to track who edited a form and when"""
+    from db_config import get_placeholder
+
     c = conn.cursor()
+    ph = get_placeholder()
 
     # Get admin user info from session
     admin_username = session.get('admin', 'Unknown Admin')
 
     # Get admin's full details from database
-    c.execute('SELECT username, role, email FROM users WHERE username = %s', (admin_username,))
+    c.execute(f'SELECT username, role, email FROM users WHERE username = {ph}', (admin_username,))
     admin = c.fetchone()
 
     if admin:
@@ -11858,12 +11864,12 @@ def update_form_editor_tracking(template_id, conn):
         editor_role = 'admin'
 
     # Update tracking fields
-    c.execute('''
+    c.execute(f'''
         UPDATE form_templates
-        SET last_edited_by = ?,
-            last_edited_date = ?,
-            last_edited_role = ?
-        WHERE id = ?
+        SET last_edited_by = {ph},
+            last_edited_date = {ph},
+            last_edited_role = {ph}
+        WHERE id = {ph}
     ''', (editor_name, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), editor_role, template_id))
 
 

@@ -562,6 +562,7 @@
             .then(result => {
                 showSuccess('Checklist item created successfully!');
                 loadFormItems();
+                loadTemplateInfo();  // Refresh last edited info
                 incrementVersion();
                 // Clear form
                 document.getElementById('newCategory').value = '';
@@ -599,6 +600,7 @@
             .then(result => {
                 showSuccess('Item updated successfully!');
                 loadFormItems();
+                loadTemplateInfo();  // Refresh last edited info
                 incrementVersion();
             })
             .catch(error => showError('Failed to update item: ' + error));
@@ -616,6 +618,7 @@
             .then(result => {
                 showSuccess('Item deleted successfully!');
                 loadFormItems();
+                loadTemplateInfo();  // Refresh last edited info
                 incrementVersion();
             })
             .catch(error => showError('Failed to delete item: ' + error));
@@ -745,6 +748,7 @@
             .then(result => {
                 showSuccess('Form field created successfully!');
                 loadFormFields();
+                loadTemplateInfo();  // Refresh last edited info
                 incrementVersion();
                 // Clear form
                 document.getElementById('newFieldName').value = '';
@@ -787,6 +791,7 @@
             .then(result => {
                 showSuccess('Field updated successfully!');
                 loadFormFields();
+                loadTemplateInfo();  // Refresh last edited info
                 incrementVersion();
             })
             .catch(error => showError('Failed to update field: ' + error));
@@ -804,6 +809,7 @@
             .then(result => {
                 showSuccess('Field deleted successfully!');
                 loadFormFields();
+                loadTemplateInfo();  // Refresh last edited info
                 incrementVersion();
             })
             .catch(error => showError('Failed to delete field: ' + error));
