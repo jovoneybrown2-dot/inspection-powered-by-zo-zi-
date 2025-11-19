@@ -1267,7 +1267,8 @@ def institutional_inspection_detail(id):
         return redirect(url_for('login'))
 
     conn = get_db_connection()
-    conn.row_factory = sqlite3.Row
+    if get_db_type() == 'sqlite':
+        conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Institutional Health'", (id,))
@@ -3166,7 +3167,8 @@ def download_swimming_pool_pdf(form_id):
         return redirect(url_for('login'))
 
     conn = get_db_connection()
-    conn.row_factory = sqlite3.Row
+    if get_db_type() == 'sqlite':
+        conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Swimming Pool'", (form_id,))
@@ -3923,7 +3925,8 @@ def download_small_hotels_pdf(form_id):
 
     # Get the inspection data directly from database instead of calling the detail function
     conn = get_db_connection()
-    conn.row_factory = sqlite3.Row
+    if get_db_type() == 'sqlite':
+        conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Small Hotel'", (form_id,))
@@ -5682,7 +5685,8 @@ def barbershop_inspection_detail(id):
         return redirect(url_for('login'))
 
     conn = get_db_connection()
-    conn.row_factory = sqlite3.Row
+    if get_db_type() == 'sqlite':
+        conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Barbershop'", (id,))
@@ -9469,7 +9473,8 @@ def small_hotels_inspection_detail(id):
         return redirect(url_for('login'))
 
     conn = get_db_connection()
-    conn.row_factory = sqlite3.Row
+    if get_db_type() == 'sqlite':
+        conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Small Hotel'", (id,))
