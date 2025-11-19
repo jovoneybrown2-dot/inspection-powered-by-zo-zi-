@@ -561,8 +561,13 @@ def get_inspections_by_inspector(inspector_name, inspection_type='all'):
                    'Meat Processing' as type_of_establishment, created_at, result, 'Meat Processing' as form_type
             FROM meat_processing_inspections
             WHERE inspector_name = %s
-            ORDER BY inspection_date DESC
-        """, (inspector_name, inspector_name, inspector_name))
+            UNION
+            SELECT id, deceased_name as establishment_name, inspector_name, inspection_date,
+                   'Burial' as type_of_establishment, created_at, 'Completed' as result, 'Burial' as form_type
+            FROM burial_site_inspections
+            WHERE inspector_name = %s
+            ORDER BY created_at DESC
+        """, (inspector_name, inspector_name, inspector_name, inspector_name))
     else:
         # Filter by inspection type
         if inspection_type == 'Residential':
@@ -575,10 +580,16 @@ def get_inspections_by_inspector(inspector_name, inspection_type='all'):
                          'Meat Processing' as type_of_establishment, created_at, result, 'Meat Processing' as form_type
                          FROM meat_processing_inspections
                          WHERE inspector_name = %s ORDER BY inspection_date DESC""", (inspector_name,))
+        elif inspection_type == 'Burial':
+            c.execute("""SELECT id, deceased_name as establishment_name, inspector_name, inspection_date,
+                         'Burial' as type_of_establishment, created_at, 'Completed' as result, 'Burial' as form_type
+                         FROM burial_site_inspections
+                         WHERE inspector_name = %s ORDER BY inspection_date DESC""", (inspector_name,))
         else:
+            # Fixed: Use %s for all placeholders
             c.execute("""SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment,
                          created_at, result, form_type FROM inspections
-                         WHERE inspector_name = %s AND (form_type = ? OR type_of_establishment = ?)
+                         WHERE inspector_name = %s AND (form_type = %s OR type_of_establishment = %s)
                          ORDER BY inspection_date DESC""", (inspector_name, inspection_type, inspection_type))
 
     inspections = c.fetchall()

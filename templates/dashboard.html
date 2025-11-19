@@ -3380,7 +3380,7 @@ async function loadMyInspections(type = 'all') {
                         <th>Establishment/Premises</th>
                         <th>Date</th>
                         <th>Status</th>
-                        <th>Action</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -3396,7 +3396,11 @@ async function loadMyInspections(type = 'all') {
                     <td>${inspection.establishment_name || inspection.premises_name || 'N/A'}</td>
                     <td>${new Date(inspection.created_at).toLocaleDateString()}</td>
                     <td><span class="status-${inspection.result ? inspection.result.toLowerCase() : 'unknown'}">${inspection.result || 'N/A'}</span></td>
-                    <td><button onclick="viewInspection('${inspection.type}', ${inspection.id})" class="task-btn" style="background: #007bff;">View</button></td>
+                    <td>
+                        <button onclick="viewInspection('${inspection.type}', ${inspection.id})" class="task-btn" style="background: #007bff; margin-right: 5px;">View</button>
+                        <button onclick="printInspection('${inspection.type}', ${inspection.id})" class="task-btn" style="background: #28a745; margin-right: 5px;">Print</button>
+                        <button onclick="downloadInspection('${inspection.type}', ${inspection.id})" class="task-btn" style="background: #17a2b8;">Download</button>
+                    </td>
                 `;
                 tbody.appendChild(row);
             });
@@ -3424,38 +3428,95 @@ async function loadMyInspections(type = 'all') {
 
 function viewInspection(type, id) {
     let url;
-    switch(type) {
+    switch(type.toLowerCase()) {
         case 'food':
+        case 'food establishment':
             url = `/inspection/${id}`;
             break;
         case 'residential':
             url = `/residential/inspection/${id}`;
             break;
         case 'burial':
+        case 'burial site':
             url = `/burial/inspection/${id}`;
             break;
         case 'spirit_licence':
+        case 'spirit licence premises':
             url = `/spirit_licence/inspection/${id}`;
             break;
         case 'swimming_pool':
+        case 'swimming pool':
             url = `/swimming_pool/inspection/${id}`;
             break;
         case 'small_hotels':
+        case 'small hotel':
             url = `/small_hotels/inspection/${id}`;
             break;
         case 'barbershop':
             url = `/barbershop/inspection/${id}`;
             break;
         case 'institutional':
+        case 'institutional health':
             url = `/institutional/inspection/${id}`;
             break;
         case 'meat_processing':
+        case 'meat processing':
             url = `/meat_processing/inspection/${id}`;
             break;
         default:
             url = `/inspection/${id}`;
     }
     window.open(url, '_blank');
+}
+
+function printInspection(type, id) {
+    // Open the inspection in a new window and trigger print dialog
+    const viewUrl = getInspectionUrl(type, id);
+    const printWindow = window.open(viewUrl, '_blank');
+    if (printWindow) {
+        printWindow.addEventListener('load', function() {
+            printWindow.print();
+        });
+    }
+}
+
+function downloadInspection(type, id) {
+    // Download PDF version (without photos)
+    const downloadUrl = `/api/download_inspection/${type}/${id}`;
+    window.location.href = downloadUrl;
+}
+
+function getInspectionUrl(type, id) {
+    // Helper function to get inspection URL
+    switch(type.toLowerCase()) {
+        case 'food':
+        case 'food establishment':
+            return `/inspection/${id}`;
+        case 'residential':
+            return `/residential/inspection/${id}`;
+        case 'burial':
+        case 'burial site':
+            return `/burial/inspection/${id}`;
+        case 'spirit_licence':
+        case 'spirit licence premises':
+            return `/spirit_licence/inspection/${id}`;
+        case 'swimming_pool':
+        case 'swimming pool':
+            return `/swimming_pool/inspection/${id}`;
+        case 'small_hotels':
+        case 'small hotel':
+            return `/small_hotels/inspection/${id}`;
+        case 'barbershop':
+            return `/barbershop/inspection/${id}`;
+        case 'institutional':
+        case 'institutional health':
+            return `/institutional/inspection/${id}`;
+        case 'meat_processing':
+        case 'meat processing':
+            return `/meat_processing/inspection/${id}`;
+        default:
+            return `/inspection/${id}`;
+    }
 }
 
 // Update the DOMContentLoaded event listener to include welcome message
