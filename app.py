@@ -781,9 +781,13 @@ def admin_metrics():
     conn = get_db_connection()
     c = conn.cursor()
 
+    # Use database-appropriate date function
+    date_func = "created_at::date" if get_db_type() == 'postgresql' else "strftime('%Y-%m-%d', created_at)"
+    ph = get_placeholder()
+
     if form_type == 'all':
-        query = """
-            SELECT strftime('%Y-%m-%d', created_at) AS date, result, COUNT(*) AS count
+        query = f"""
+            SELECT {date_func} AS date, result, COUNT(*) AS count
             FROM (
                 SELECT created_at, result FROM inspections
                 WHERE form_type IN ('Food Establishment', 'Spirit Licence Premises', 'Swimming Pool', 'Small Hotel', 'Barbershop', 'Institutional Health')
@@ -793,33 +797,33 @@ def admin_metrics():
                 SELECT created_at, 'Completed' AS result FROM burial_site_inspections
                 UNION
                 SELECT created_at, result FROM meat_processing_inspections
-            )
+            ) AS all_inspections
             GROUP BY date, result
         """
     else:
         if form_type == 'Residential':
-            query = """
-                SELECT strftime('%Y-%m-%d', created_at) AS date, result, COUNT(*) AS count
+            query = f"""
+                SELECT {date_func} AS date, result, COUNT(*) AS count
                 FROM residential_inspections
                 GROUP BY date, result
             """
         elif form_type == 'Burial':
-            query = """
-                SELECT strftime('%Y-%m-%d', created_at) AS date, 'Completed' AS result, COUNT(*) AS count
+            query = f"""
+                SELECT {date_func} AS date, 'Completed' AS result, COUNT(*) AS count
                 FROM burial_site_inspections
                 GROUP BY date, result
             """
         elif form_type == 'Meat Processing':
-            query = """
-                SELECT strftime('%Y-%m-%d', created_at) AS date, result, COUNT(*) AS count
+            query = f"""
+                SELECT {date_func} AS date, result, COUNT(*) AS count
                 FROM meat_processing_inspections
                 GROUP BY date, result
             """
         else:
-            query = """
-                SELECT strftime('%Y-%m-%d', created_at) AS date, result, COUNT(*) AS count
+            query = f"""
+                SELECT {date_func} AS date, result, COUNT(*) AS count
                 FROM inspections
-                WHERE form_type = %s
+                WHERE form_type = {ph}
                 GROUP BY date, result
             """
             c.execute(query, (form_type,))
