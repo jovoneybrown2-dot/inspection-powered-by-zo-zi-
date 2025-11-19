@@ -1139,27 +1139,49 @@ def submit_institutional():
                     print(f"Error adding column {column}: {e}")
 
         # Insert the inspection with ALL the data
-        cursor.execute("""
-            INSERT INTO inspections (
-                establishment_name, owner, address, inspector_name,
+        if get_db_type() == 'postgresql':
+            cursor.execute("""
+                INSERT INTO inspections (
+                    establishment_name, owner, address, inspector_name,
+                    staff_complement, num_occupants, institution_type,
+                    building_size_ft2, building_size_m2, building_size_value,
+                    telephone_no, num_buildings, inspection_date, inspector_code,
+                    overall_score, critical_score, result, license_no,
+                    registration_status, purpose_of_visit, action, comments,
+                    inspector_signature, received_by, photo_data, form_type, created_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            """, (
+                establishment_name, owner_operator, address, inspector_name,
                 staff_complement, num_occupants, institution_type,
                 building_size_ft2, building_size_m2, building_size_value,
                 telephone_no, num_buildings, inspection_date, inspector_code,
                 overall_score, critical_score, result, license_no,
                 registration_status, purpose_of_visit, action, comments,
-                inspector_signature, received_by, photo_data, form_type, created_at
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (
-            establishment_name, owner_operator, address, inspector_name,
-            staff_complement, num_occupants, institution_type,
-            building_size_ft2, building_size_m2, building_size_value,
-            telephone_no, num_buildings, inspection_date, inspector_code,
-            overall_score, critical_score, result, license_no,
-            registration_status, purpose_of_visit, action, comments,
-            inspector_signature, received_by, photo_data, 'Institutional Health', datetime.now()
-        ))
-
-        inspection_id = cursor.lastrowid
+                inspector_signature, received_by, photo_data, 'Institutional Health', datetime.now()
+            ))
+            inspection_id = cursor.fetchone()[0]
+        else:
+            cursor.execute("""
+                INSERT INTO inspections (
+                    establishment_name, owner, address, inspector_name,
+                    staff_complement, num_occupants, institution_type,
+                    building_size_ft2, building_size_m2, building_size_value,
+                    telephone_no, num_buildings, inspection_date, inspector_code,
+                    overall_score, critical_score, result, license_no,
+                    registration_status, purpose_of_visit, action, comments,
+                    inspector_signature, received_by, photo_data, form_type, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                establishment_name, owner_operator, address, inspector_name,
+                staff_complement, num_occupants, institution_type,
+                building_size_ft2, building_size_m2, building_size_value,
+                telephone_no, num_buildings, inspection_date, inspector_code,
+                overall_score, critical_score, result, license_no,
+                registration_status, purpose_of_visit, action, comments,
+                inspector_signature, received_by, photo_data, 'Institutional Health', datetime.now()
+            ))
+            inspection_id = cursor.lastrowid
         print(f"Created inspection record with ID: {inspection_id}")
 
         # Save individual scores - Debug each one
@@ -1721,26 +1743,43 @@ def submit_swimming_pools():
 
     # Insert inspection into main table with all scores
     try:
-        cursor.execute(f'''
-            INSERT INTO inspections ({all_columns})
-            VALUES ({all_placeholders})
-        ''', all_values)
-
-        inspection_id = cursor.lastrowid
+        if get_db_type() == 'postgresql':
+            cursor.execute(f'''
+                INSERT INTO inspections ({all_columns})
+                VALUES ({all_placeholders})
+                RETURNING id
+            ''', all_values)
+            inspection_id = cursor.fetchone()[0]
+        else:
+            cursor.execute(f'''
+                INSERT INTO inspections ({all_columns})
+                VALUES ({all_placeholders})
+            ''', all_values)
+            inspection_id = cursor.lastrowid
         print(f"=== SUCCESS: Inspection {inspection_id} saved with all scores ===")
 
     except sqlite3.OperationalError as e:
         print(f"Error inserting with score columns: {e}")
         # Fallback to basic insert
-        cursor.execute('''
-            INSERT INTO inspections (establishment_name, owner, address, physical_location, 
-            type_of_establishment, inspector_name, inspection_date, form_type, result, 
-            created_at, comments, scores, overall_score, critical_score, inspector_signature, 
-            received_by, manager_date)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ''', base_values)
-
-        inspection_id = cursor.lastrowid
+        if get_db_type() == 'postgresql':
+            cursor.execute('''
+                INSERT INTO inspections (establishment_name, owner, address, physical_location,
+                type_of_establishment, inspector_name, inspection_date, form_type, result,
+                created_at, comments, scores, overall_score, critical_score, inspector_signature,
+                received_by, manager_date)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            ''', base_values)
+            inspection_id = cursor.fetchone()[0]
+        else:
+            cursor.execute('''
+                INSERT INTO inspections (establishment_name, owner, address, physical_location,
+                type_of_establishment, inspector_name, inspection_date, form_type, result,
+                created_at, comments, scores, overall_score, critical_score, inspector_signature,
+                received_by, manager_date)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', base_values)
+            inspection_id = cursor.lastrowid
 
     # Insert inspection items
     for item in SWIMMING_POOL_CHECKLIST_ITEMS:
@@ -1942,7 +1981,11 @@ def submit_small_hotels():
         data.get('photos', '[]'),
         'Small Hotel'
     ))
-    inspection_id = c.lastrowid
+    if get_db_type() == 'postgresql':
+        c.execute('SELECT lastval()')
+        inspection_id = c.fetchone()[0]
+    else:
+        inspection_id = c.lastrowid
 
     # Insert ALL checklist items to preserve form data
     for item_id in all_item_ids:
@@ -5643,11 +5686,19 @@ def submit_barbershop():
 
     try:
         # Insert inspection
-        cursor.execute(f'''
-            INSERT INTO inspections ({all_columns})
-            VALUES ({all_placeholders})
-        ''', all_values)
-        inspection_id = cursor.lastrowid
+        if get_db_type() == 'postgresql':
+            cursor.execute(f'''
+                INSERT INTO inspections ({all_columns})
+                VALUES ({all_placeholders})
+                RETURNING id
+            ''', all_values)
+            inspection_id = cursor.fetchone()[0]
+        else:
+            cursor.execute(f'''
+                INSERT INTO inspections ({all_columns})
+                VALUES ({all_placeholders})
+            ''', all_values)
+            inspection_id = cursor.lastrowid
 
         # Insert inspection items
         for item in BARBERSHOP_CHECKLIST_ITEMS:

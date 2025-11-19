@@ -367,7 +367,11 @@ def save_inspection(data):
                data['created_at'], data['inspector_code'], data['license_no'], data['owner'],
                data.get('photo_data', '[]')))
     conn.commit()
-    inspection_id = c.lastrowid
+    if get_db_type() == 'postgresql':
+        c.execute('SELECT lastval()')
+        inspection_id = c.fetchone()[0]
+    else:
+        inspection_id = c.lastrowid
     conn.close()
     return inspection_id
 
@@ -451,7 +455,13 @@ def save_residential_inspection(data):
             ))
             conn.commit()
 
-        inspection_id = c.lastrowid if not data.get('id') else data['id']
+        if data.get('id'):
+            inspection_id = data['id']
+        elif get_db_type() == 'postgresql':
+            c.execute('SELECT lastval()')
+            inspection_id = c.fetchone()[0]
+        else:
+            inspection_id = c.lastrowid
     except sqlite3.Error as e:
         print(f"Database error: {e}")
         inspection_id = None
@@ -508,7 +518,13 @@ def save_meat_processing_inspection(data):
             ))
             conn.commit()
 
-        inspection_id = c.lastrowid if not data.get('id') else data['id']
+        if data.get('id'):
+            inspection_id = data['id']
+        elif get_db_type() == 'postgresql':
+            c.execute('SELECT lastval()')
+            inspection_id = c.fetchone()[0]
+        else:
+            inspection_id = c.lastrowid
     except sqlite3.Error as e:
         print(f"Database error: {e}")
         inspection_id = None
