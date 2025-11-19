@@ -9879,6 +9879,7 @@ def get_thresholds():
 def create_threshold_alert():
     """Create threshold alert when inspection falls below threshold"""
     try:
+        from db_config import get_placeholder
         data = request.json
         inspection_id = data.get('inspection_id')
         inspector_name = data.get('inspector_name')
@@ -9888,11 +9889,12 @@ def create_threshold_alert():
 
         conn = get_db_connection()
         c = conn.cursor()
+        ph = get_placeholder()
 
-        c.execute('''
+        c.execute(f'''
             INSERT INTO threshold_alerts
             (inspection_id, inspector_name, form_type, score, threshold_value, created_at)
-            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, CURRENT_TIMESTAMP)
         ''', (inspection_id, inspector_name, form_type, score, threshold_value))
 
         conn.commit()
