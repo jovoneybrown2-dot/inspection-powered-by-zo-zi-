@@ -8898,15 +8898,18 @@ def migrate_all_checklists():
     results = []
 
     # 1. Migrate Food Establishment Checklist
+    from db_config import get_placeholder
+    ph = get_placeholder()
+
     try:
-        c.execute('SELECT id FROM form_templates WHERE form_type = %s', ('Food Establishment',))
+        c.execute(f'SELECT id FROM form_templates WHERE form_type = {ph}', ('Food Establishment',))
         result = c.fetchone()
 
         if result:
             template_id = result[0]
 
             # Check if items already exist
-            c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = %s', (template_id,))
+            c.execute(f'SELECT COUNT(*) FROM form_items WHERE form_template_id = {ph}', (template_id,))
             existing_count = c.fetchone()[0]
 
             if existing_count == 0:
@@ -8934,10 +8937,10 @@ def migrate_all_checklists():
                     category = categories.get(item_id, "GENERAL")
                     is_critical = 1 if item['wt'] >= 4 else 0
 
-                    c.execute('''
-                        INSERT INTO form_items 
+                    c.execute(f'''
+                        INSERT INTO form_items
                         (form_template_id, item_order, category, description, weight, is_critical)
-                        VALUES (?, ?, ?, ?, ?, ?)
+                        VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})
                     ''', (template_id, item_id, category, item['desc'], item['wt'], is_critical))
 
                 results.append(f"✅ Food Establishment: Migrated {len(FOOD_CHECKLIST_ITEMS)} items")
