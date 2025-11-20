@@ -9826,6 +9826,8 @@ def check_and_create_alert(inspection_id, inspector_name, form_type, score):
 def save_threshold():
     """Save threshold settings for chart alerts"""
     try:
+        from db_config import get_placeholder, get_db_type
+
         data = request.json
         chart_type = data.get('chart_type')
         threshold_value = data.get('threshold_value')
@@ -9833,16 +9835,28 @@ def save_threshold():
 
         conn = get_db_connection()
         c = conn.cursor()
+        ph = get_placeholder()
 
-        # Upsert threshold setting
-        c.execute('''
-            INSERT INTO threshold_settings (chart_type, inspection_type, threshold_value, enabled, updated_at)
-            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
-            ON CONFLICT(chart_type, inspection_type) DO UPDATE SET
-                threshold_value = excluded.threshold_value,
-                enabled = excluded.enabled,
-                updated_at = CURRENT_TIMESTAMP
-        ''', (chart_type, chart_type, threshold_value, enabled))
+        # Upsert threshold setting - different syntax for SQLite vs PostgreSQL
+        if get_db_type() == 'postgresql':
+            c.execute(f'''
+                INSERT INTO threshold_settings (chart_type, inspection_type, threshold_value, enabled, updated_at)
+                VALUES ({ph}, {ph}, {ph}, {ph}, CURRENT_TIMESTAMP)
+                ON CONFLICT (chart_type, inspection_type) DO UPDATE SET
+                    threshold_value = EXCLUDED.threshold_value,
+                    enabled = EXCLUDED.enabled,
+                    updated_at = CURRENT_TIMESTAMP
+            ''', (chart_type, chart_type, threshold_value, enabled))
+        else:
+            # SQLite
+            c.execute(f'''
+                INSERT INTO threshold_settings (chart_type, inspection_type, threshold_value, enabled, updated_at)
+                VALUES ({ph}, {ph}, {ph}, {ph}, CURRENT_TIMESTAMP)
+                ON CONFLICT(chart_type, inspection_type) DO UPDATE SET
+                    threshold_value = excluded.threshold_value,
+                    enabled = excluded.enabled,
+                    updated_at = CURRENT_TIMESTAMP
+            ''', (chart_type, chart_type, threshold_value, enabled))
 
         conn.commit()
         conn.close()

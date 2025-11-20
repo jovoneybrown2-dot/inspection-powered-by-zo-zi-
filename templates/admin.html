@@ -1211,16 +1211,22 @@
             <!-- Alert Threshold Settings -->
             <div style="padding: 16px 20px; border-bottom: 1px solid #2a2e39; background: #1a1e2a;">
                 <div style="margin-bottom: 8px; color: #787b86; font-size: 12px;">Alert Threshold Setting</div>
-                <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                     <label style="color: #d1d4dc; font-size: 14px;">Alert when score below:</label>
                     <input type="number" id="globalThreshold" value="70" min="0" max="100" step="1"
                            style="width: 70px; padding: 6px 10px; background: #2a2e39; border: 1px solid #363a45;
-                                  border-radius: 4px; color: #d1d4dc; font-size: 14px; text-align: center;"
-                           onchange="updateGlobalThreshold(this.value)">
+                                  border-radius: 4px; color: #d1d4dc; font-size: 14px; text-align: center;">
                     <span style="color: #d1d4dc; font-size: 14px;">%</span>
+                    <button onclick="saveThresholdSetting()"
+                            style="padding: 6px 16px; background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+                                   color: white; border: none; border-radius: 4px; font-size: 12px; font-weight: 600;
+                                   cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                        💾 Save
+                    </button>
+                    <span id="thresholdSaveStatus" style="color: #4CAF50; font-size: 11px; display: none;">✓ Saved</span>
                 </div>
                 <div style="margin-top: 8px; color: #787b86; font-size: 11px; font-style: italic;">
-                    This sets the threshold for all inspection types
+                    This sets the threshold for all inspection types. Click Save to persist your changes.
                 </div>
             </div>
 
@@ -3548,6 +3554,9 @@
             // Initialize alert sidebar
             loadAlertSidebar();
 
+            // Load saved threshold setting
+            loadGlobalThreshold();
+
             // Setup alert sidebar toggle
             document.getElementById('alertSidebarToggle').addEventListener('click', toggleAlertSidebar);
 
@@ -3605,6 +3614,40 @@
             })
             .catch(error => {
                 console.error('Error loading threshold:', error);
+            });
+        }
+
+        function saveThresholdSetting() {
+            const value = document.getElementById('globalThreshold').value;
+            const statusEl = document.getElementById('thresholdSaveStatus');
+
+            fetch('/api/admin/save_threshold', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    chart_type: 'global',
+                    threshold_value: parseFloat(value),
+                    enabled: 1
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Global threshold saved to:', value);
+
+                    // Show saved status
+                    statusEl.style.display = 'inline';
+                    setTimeout(() => {
+                        statusEl.style.display = 'none';
+                    }, 3000);
+
+                    // Show notification
+                    showNotification(`Threshold saved: ${value}%`, 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving threshold:', error);
+                showNotification('Failed to save threshold', 'error');
             });
         }
 
