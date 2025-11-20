@@ -87,8 +87,18 @@ if not os.path.exists('inspections.db'):
     print("Database not found. Initializing...")
     init_db()
     print("Database initialized successfully!")
-else:
-    # Run migrations for existing databases
+
+# Run PostgreSQL migrations if using PostgreSQL
+if get_db_type() == 'postgresql':
+    try:
+        print("Running PostgreSQL migrations...")
+        from migrate_postgres_schema import run_migration
+        run_migration()
+    except Exception as e:
+        print(f"Migration warning: {e}")
+
+# Run SQLite migrations for existing databases
+if os.path.exists('inspections.db'):
     try:
         conn = get_db_connection()
         c = conn.cursor()
@@ -7516,7 +7526,7 @@ def get_security_metrics():
         cursor = conn.cursor()
 
         # Get user counts for MFA metrics (simulated)
-        cursor.execute('SELECT COUNT(*) FROM users WHERE role = "inspector"')
+        cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'inspector'")
         total_users = cursor.fetchone()[0]
 
         # Simulate MFA adoption (you'd track this in your users table)
