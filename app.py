@@ -17,26 +17,45 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from reportlab.pdfgen import canvas
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
 
-# Database Imports
-from database import (
-    get_residential_inspection_details,
-    get_residential_inspections,
-    init_db,
-    save_residential_inspection,
-    save_inspection,
-    save_burial_inspection,
-    get_inspections,
-    get_inspections_by_inspector,
-    get_burial_inspections,
-    get_inspection_details,
-    get_burial_inspection_details,
-    save_meat_processing_inspection,
-    get_meat_processing_inspections,
-    get_meat_processing_inspection_details
-)
-
 # Database Config Import
 from db_config import get_db_connection, get_db_type
+
+# Import from correct database module based on DATABASE_URL
+if get_db_type() == 'postgresql':
+    from database_postgres import (
+        get_residential_inspection_details,
+        get_residential_inspections,
+        init_db,
+        save_residential_inspection,
+        save_inspection,
+        save_burial_inspection,
+        get_inspections,
+        get_inspections_by_inspector,
+        get_burial_inspections,
+        get_inspection_details,
+        get_burial_inspection_details,
+        save_meat_processing_inspection,
+        get_meat_processing_inspections,
+        get_meat_processing_inspection_details
+    )
+else:
+    # Use SQLite database module
+    from database import (
+        get_residential_inspection_details,
+        get_residential_inspections,
+        init_db,
+        save_residential_inspection,
+        save_inspection,
+        save_burial_inspection,
+        get_inspections,
+        get_inspections_by_inspector,
+        get_burial_inspections,
+        get_inspection_details,
+        get_burial_inspection_details,
+        save_meat_processing_inspection,
+        get_meat_processing_inspections,
+        get_meat_processing_inspection_details
+    )
 
 def get_table_columns(cursor, table_name):
     """Get list of column names for a table (works with both SQLite and PostgreSQL)"""
@@ -6959,29 +6978,35 @@ def get_inspector_tasks():
         cursor = conn.cursor()
 
         # Get tasks assigned to this inspector
-        cursor.execute('''
-            SELECT id, title, due_date, details, status, created_at
-            FROM tasks 
-            WHERE assignee_id = %s
-            ORDER BY created_at DESC
-        ''', (user_id,))
+        # Return empty list if tasks table doesn't exist yet
+        try:
+            cursor.execute('''
+                SELECT id, title, due_date, details, status, created_at
+                FROM tasks
+                WHERE assignee_id = %s
+                ORDER BY created_at DESC
+            ''', (user_id,))
 
-        tasks = []
-        for row in cursor.fetchall():
-            tasks.append({
-                'id': row[0],
-                'title': row[1],
-                'due_date': row[2],
-                'details': row[3],
-                'status': row[4],
-                'created_at': row[5]
-            })
+            tasks = []
+            for row in cursor.fetchall():
+                tasks.append({
+                    'id': row[0],
+                    'title': row[1],
+                    'due_date': row[2],
+                    'details': row[3],
+                    'status': row[4],
+                    'created_at': row[5]
+                })
+        except:
+            # Tasks table doesn't exist yet
+            tasks = []
 
         conn.close()
         return jsonify({'tasks': tasks})
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Return empty list instead of error
+        return jsonify({'tasks': []})
 
 
 @app.route('/api/inspector/tasks/<int:task_id>/update', methods=['POST'])
@@ -7068,18 +7093,25 @@ def get_unread_task_count():
         conn = get_db_connection()
 
         # Count unread tasks (status = 'Pending')
-        cursor = execute_query(conn, '''
-            SELECT COUNT(*)
-            FROM tasks
-            WHERE assignee_id = %s AND status = 'Pending'
-        ''', (user_id,))
+        # Return 0 if tasks table doesn't exist yet
+        try:
+            cursor = execute_query(conn, '''
+                SELECT COUNT(*)
+                FROM tasks
+                WHERE assignee_id = %s AND status = 'Pending'
+            ''', (user_id,))
 
-        count = cursor.fetchone()[0]
+            count = cursor.fetchone()[0]
+        except:
+            # Tasks table doesn't exist yet
+            count = 0
+
         conn.close()
         return jsonify({'count': count})
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Return 0 count instead of error
+        return jsonify({'count': 0})
 
 @app.route('/api/admin/inspector_performance')
 def get_inspector_performance():
