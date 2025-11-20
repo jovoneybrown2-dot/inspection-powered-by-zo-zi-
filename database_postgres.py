@@ -3,21 +3,14 @@ from psycopg2.extras import RealDictCursor
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+from db_config import get_db_connection
 
 load_dotenv()
 
-# Database configuration
-DB_CONFIG = {
-    'host': os.getenv('DB_HOST', 'localhost'),
-    'database': os.getenv('DB_NAME', 'inspections_db'),
-    'user': os.getenv('DB_USER', 'inspector_app'),
-    'password': os.getenv('DB_PASSWORD', 'your_secure_password'),
-    'port': os.getenv('DB_PORT', '5432')
-}
-
+# Alias for compatibility with existing code
 def get_connection():
-    """Get PostgreSQL database connection"""
-    return psycopg2.connect(**DB_CONFIG)
+    """Get PostgreSQL database connection - uses db_config for proper Render support"""
+    return get_db_connection()
 
 def init_db():
     """Initialize database - schema should already be created via schema_postgres.sql"""
