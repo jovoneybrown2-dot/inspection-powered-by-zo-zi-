@@ -167,68 +167,119 @@ def get_inspections():
     return inspections
 
 def get_inspections_by_inspector(inspector_name, inspection_type='all'):
-    """Get inspections by inspector name"""
+    """Get inspections by inspector name - safely handles missing tables"""
     conn = get_connection()
     cursor = conn.cursor()
+    all_inspections = []
 
     if inspection_type == 'all':
-        # Get all inspection types for this inspector
-        cursor.execute("""
-            SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment,
-                   created_at, result, form_type
-            FROM inspections
-            WHERE inspector_name = %s
-            UNION
-            SELECT id, premises_name as establishment_name, inspector_name, inspection_date,
-                   'Residential' as type_of_establishment, created_at, result, 'Residential' as form_type
-            FROM residential_inspections
-            WHERE inspector_name = %s
-            UNION
-            SELECT id, establishment_name, inspector_name, inspection_date,
-                   'Meat Processing' as type_of_establishment, created_at, result, 'Meat Processing' as form_type
-            FROM meat_processing_inspections
-            WHERE inspector_name = %s
-            UNION
-            SELECT id, deceased_name as establishment_name, inspector_name, inspection_date,
-                   'Burial' as type_of_establishment, created_at, 'Completed' as result, 'Burial' as form_type
-            FROM burial_site_inspections
-            WHERE inspector_name = %s
-            ORDER BY created_at DESC
-        """, (inspector_name, inspector_name, inspector_name, inspector_name))
+        # Try to get from each table individually to handle missing tables gracefully
+
+        # Regular inspections
+        try:
+            cursor.execute("""
+                SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment,
+                       created_at, result, form_type
+                FROM inspections
+                WHERE inspector_name = %s
+                ORDER BY created_at DESC
+            """, (inspector_name,))
+            all_inspections.extend(cursor.fetchall())
+        except Exception as e:
+            print(f"Error fetching regular inspections: {e}")
+
+        # Residential inspections
+        try:
+            cursor.execute("""
+                SELECT id, premises_name as establishment_name, inspector_name, inspection_date,
+                       'Residential' as type_of_establishment, created_at, result, 'Residential' as form_type
+                FROM residential_inspections
+                WHERE inspector_name = %s
+                ORDER BY created_at DESC
+            """, (inspector_name,))
+            all_inspections.extend(cursor.fetchall())
+        except Exception as e:
+            print(f"Error fetching residential inspections: {e}")
+
+        # Meat processing inspections
+        try:
+            cursor.execute("""
+                SELECT id, establishment_name, inspector_name, inspection_date,
+                       'Meat Processing' as type_of_establishment, created_at, result, 'Meat Processing' as form_type
+                FROM meat_processing_inspections
+                WHERE inspector_name = %s
+                ORDER BY created_at DESC
+            """, (inspector_name,))
+            all_inspections.extend(cursor.fetchall())
+        except Exception as e:
+            print(f"Error fetching meat processing inspections: {e}")
+
+        # Burial site inspections
+        try:
+            cursor.execute("""
+                SELECT id, deceased_name as establishment_name, '' as inspector_name, inspection_date,
+                       'Burial' as type_of_establishment, created_at, 'Completed' as result, 'Burial' as form_type
+                FROM burial_site_inspections
+                WHERE inspection_date IS NOT NULL
+                ORDER BY created_at DESC
+            """)
+            all_inspections.extend(cursor.fetchall())
+        except Exception as e:
+            print(f"Error fetching burial inspections: {e}")
+
+        # Sort all inspections by created_at (index 5)
+        all_inspections.sort(key=lambda x: x[5] if x[5] else '', reverse=True)
+
     else:
         # Filter by inspection type
-        if inspection_type == 'Residential':
-            cursor.execute("""SELECT id, premises_name as establishment_name, inspector_name, inspection_date,
-                         'Residential' as type_of_establishment, created_at, result, 'Residential' as form_type
-                         FROM residential_inspections
-                         WHERE inspector_name = %s ORDER BY inspection_date DESC""", (inspector_name,))
-        elif inspection_type == 'Meat Processing':
-            cursor.execute("""SELECT id, establishment_name, inspector_name, inspection_date,
-                         'Meat Processing' as type_of_establishment, created_at, result, 'Meat Processing' as form_type
-                         FROM meat_processing_inspections
-                         WHERE inspector_name = %s ORDER BY inspection_date DESC""", (inspector_name,))
-        elif inspection_type == 'Burial':
-            cursor.execute("""SELECT id, deceased_name as establishment_name, inspector_name, inspection_date,
-                         'Burial' as type_of_establishment, created_at, 'Completed' as result, 'Burial' as form_type
-                         FROM burial_site_inspections
-                         WHERE inspector_name = %s ORDER BY inspection_date DESC""", (inspector_name,))
-        else:
-            cursor.execute("""SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment,
-                         created_at, result, form_type FROM inspections
-                         WHERE inspector_name = %s AND (form_type = %s OR type_of_establishment = %s)
-                         ORDER BY inspection_date DESC""", (inspector_name, inspection_type, inspection_type))
+        try:
+            if inspection_type == 'Residential':
+                cursor.execute("""
+                    SELECT id, premises_name as establishment_name, inspector_name, inspection_date,
+                           'Residential' as type_of_establishment, created_at, result, 'Residential' as form_type
+                    FROM residential_inspections
+                    WHERE inspector_name = %s ORDER BY inspection_date DESC
+                """, (inspector_name,))
+            elif inspection_type == 'Meat Processing':
+                cursor.execute("""
+                    SELECT id, establishment_name, inspector_name, inspection_date,
+                           'Meat Processing' as type_of_establishment, created_at, result, 'Meat Processing' as form_type
+                    FROM meat_processing_inspections
+                    WHERE inspector_name = %s ORDER BY inspection_date DESC
+                """, (inspector_name,))
+            elif inspection_type == 'Burial':
+                cursor.execute("""
+                    SELECT id, deceased_name as establishment_name, '' as inspector_name, inspection_date,
+                           'Burial' as type_of_establishment, created_at, 'Completed' as result, 'Burial' as form_type
+                    FROM burial_site_inspections
+                    ORDER BY inspection_date DESC
+                """)
+            else:
+                cursor.execute("""
+                    SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment,
+                           created_at, result, form_type FROM inspections
+                    WHERE inspector_name = %s AND (form_type = %s OR type_of_establishment = %s)
+                    ORDER BY inspection_date DESC
+                """, (inspector_name, inspection_type, inspection_type))
 
-    inspections = cursor.fetchall()
+            all_inspections = cursor.fetchall()
+        except Exception as e:
+            print(f"Error fetching {inspection_type} inspections: {e}")
+
     cursor.close()
     conn.close()
-    return inspections
+    return all_inspections
 
 def get_burial_inspections():
-    """Get all burial inspections"""
+    """Get all burial inspections - safely handles missing table"""
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, applicant_name, deceased_name, created_at, 'Completed' AS status FROM burial_site_inspections ORDER BY created_at DESC")
-    inspections = cursor.fetchall()
+    try:
+        cursor.execute("SELECT id, applicant_name, deceased_name, created_at, 'Completed' AS status FROM burial_site_inspections ORDER BY created_at DESC")
+        inspections = cursor.fetchall()
+    except Exception as e:
+        print(f"Error fetching burial inspections: {e}")
+        inspections = []
     cursor.close()
     conn.close()
     return inspections
