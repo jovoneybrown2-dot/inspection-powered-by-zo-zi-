@@ -8989,7 +8989,7 @@ def get_inspection_counts():
             'Food Establishment', 'Small Hotel', 'Swimming Pool',
             'Institutional Health', 'Spirit Licence Premises', 'Barbershop'
         ]
-        placeholders = ','.join(['?' for _ in existing_form_types])
+        placeholders = ','.join(['%s' for _ in existing_form_types])
         c.execute(f'''
             SELECT ft.form_type, COUNT(i.id) as count
             FROM form_templates ft
