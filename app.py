@@ -1314,7 +1314,7 @@ def submit_institutional():
                     overall_score, critical_score, result, license_no,
                     registration_status, purpose_of_visit, action, comments,
                     inspector_signature, received_by, photo_data, form_type, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 establishment_name, owner_operator, address, inspector_name,
                 staff_complement, num_occupants, institution_type,
@@ -1928,7 +1928,7 @@ def submit_swimming_pools():
                 type_of_establishment, inspector_name, inspection_date, form_type, result,
                 created_at, comments, scores, overall_score, critical_score, inspector_signature,
                 received_by, manager_date)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ''', base_values)
             inspection_id = cursor.lastrowid
 
@@ -6557,12 +6557,12 @@ def init_db():
                           (f'inspector{i}', f'pass{i}', 'inspector', f'inspector{i}@example.com'))
             conn.commit()
         else:
-            c.execute('INSERT OR IGNORE INTO users (username, password, role, email) VALUES (%s, %s, %s, %s)',
+            c.execute('INSERT INTO users (username, password, role, email) VALUES (%s, %s, %s, %s)',
                       ('admin', 'adminpass', 'admin', 'admin@example.com'))
-            c.execute('INSERT OR IGNORE INTO users (username, password, role, email) VALUES (%s, %s, %s, %s)',
+            c.execute('INSERT INTO users (username, password, role, email) VALUES (%s, %s, %s, %s)',
                       ('medofficer', 'medpass', 'medical_officer', 'medofficer@example.com'))
             for i in range(1, 7):
-                c.execute('INSERT OR IGNORE INTO users (username, password, role, email) VALUES (%s, %s, %s, %s)',
+                c.execute('INSERT INTO users (username, password, role, email) VALUES (%s, %s, %s, %s)',
                           (f'inspector{i}', f'pass{i}', 'inspector', f'inspector{i}@example.com'))
             conn.commit()
     except Exception as e:
@@ -6651,7 +6651,7 @@ def login_post():
 
         # Record login attempt
         execute_query(conn,
-            "INSERT INTO login_history (user_id, username, email, role, login_time, ip_address) VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO login_history (user_id, username, email, role, login_time, ip_address) VALUES (%s, %s, %s, %s, %s, %s)",
             (user['id'], user['username'], user['email'], user['role'],
              datetime.now().strftime('%Y-%m-%d %H:%M:%S'), ip_address))
 
@@ -6665,7 +6665,7 @@ def login_post():
                 lat_float = float(latitude)
                 lng_float = float(longitude)
                 execute_query(conn,
-                    "INSERT INTO user_sessions (username, user_role, login_time, last_activity, location_lat, location_lng, parish, ip_address, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO user_sessions (username, user_role, login_time, last_activity, location_lat, location_lng, parish, ip_address, is_active) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
                     (user['username'], user['role'],
                      datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                      datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -7467,7 +7467,7 @@ def handle_tasks():
 
             cursor.execute('''
                 INSERT INTO tasks (title, assignee_id, assignee_name, due_date, details, status)
-                VALUES (?, ?, ?, ?, ?, 'Pending')
+                VALUES (%s, %s, %s, %s, %s, 'Pending')
             ''', (data['title'], assignee_id, assignee_name, data['due_date'], data.get('description', '')))
 
             conn.commit()
@@ -7575,7 +7575,7 @@ def get_security_metrics():
                 JOIN users s ON m.sender_id = s.id
                 JOIN users r ON m.recipient_id = r.id
                 WHERE (m.sender_id = %s AND m.recipient_id = %s) 
-                   OR (m.sender_id = ? AND m.recipient_id = ?)
+                   OR (m.sender_id = %s AND m.recipient_id = %s)
                 ORDER BY m.timestamp ASC
             ''', (current_user_id, user_id, user_id, current_user_id))
 
@@ -7623,7 +7623,7 @@ def get_security_metrics():
             # Insert message
             c.execute('''
                 INSERT INTO messages (sender_id, recipient_id, content, timestamp, is_read)
-                VALUES (?, ?, ?, ?, 0)
+                VALUES (%s, %s, %s, %s, 0)
             ''', (sender_id, recipient_id, content, datetime.now().isoformat()))
 
             conn.commit()
@@ -7904,7 +7904,7 @@ def get_security_metrics():
                     for message in sample_messages:
                         c.execute('''
                             INSERT INTO messages (sender_id, recipient_id, content, timestamp, is_read)
-                            VALUES (?, ?, ?, ?, ?)
+                            VALUES (%s, %s, %s, %s, %s)
                         ''', message)
 
                     print("Sample messages created!")
@@ -8113,7 +8113,7 @@ def send_message():
         # Insert message
         c.execute('''
             INSERT INTO messages (sender_id, recipient_id, content, timestamp, is_read)
-            VALUES (?, ?, ?, ?, 0)
+            VALUES (%s, %s, %s, %s, 0)
         ''', (sender_id, recipient_id, content, datetime.now().isoformat()))
 
         conn.commit()
@@ -8166,7 +8166,7 @@ def log_audit_event(user, action, ip_address=None, details=None):
         else:
             cursor.execute('''
                 INSERT INTO audit_log (timestamp, username, action, ip_address, details)
-                VALUES (?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s)
             ''', (
                 datetime.now().isoformat(),
                 user,
@@ -8260,7 +8260,7 @@ def add_user():
             # Insert new user
             c.execute('''
                 INSERT INTO users (username, email, password, role, is_flagged) 
-                VALUES (?, ?, ?, ?, 0)
+                VALUES (%s, %s, %s, %s, 0)
             ''', (username, email, password, role))
 
             conn.commit()
@@ -8295,7 +8295,7 @@ def get_unread_messages():
         c.execute('''
             SELECT COUNT(*) as total
             FROM messages 
-            WHERE recipient_id = ? AND is_read = 0
+            WHERE recipient_id = %s AND is_read = 0
         ''', (admin_id,))
 
         result = c.fetchone()
@@ -8364,7 +8364,7 @@ def mark_messages_read(user_id):
         c.execute('''
             UPDATE messages 
             SET is_read = 1 
-            WHERE sender_id = ? AND recipient_id = ? AND is_read = 0
+            WHERE sender_id = %s AND recipient_id = %s AND is_read = 0
         ''', (user_id, admin_id))
 
         conn.commit()
@@ -8414,7 +8414,7 @@ def update_user(user_id):
             # Update user
             c.execute('''
                 UPDATE users 
-                SET email = ?, role = ? 
+                SET email = %s, role = %s 
                 WHERE id = %s
             ''', (email, role, user_id))
 
@@ -8588,7 +8588,7 @@ def init_form_management_db():
         if get_db_type() == 'postgresql':
             c.execute('INSERT INTO form_categories (name, description, display_order) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING', category)
         else:
-            c.execute('INSERT OR IGNORE INTO form_categories (name, description, display_order) VALUES (?, ?, ?)', category)
+            c.execute('INSERT INTO form_categories (name, description, display_order) VALUES (%s, %s, %s)', category)
 
     # Insert existing form templates
     existing_templates = [
@@ -8607,7 +8607,7 @@ def init_form_management_db():
         if get_db_type() == 'postgresql':
             c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (%s, %s, %s) ON CONFLICT (name) DO NOTHING', template)
         else:
-            c.execute('INSERT OR IGNORE INTO form_templates (name, description, form_type) VALUES (?, ?, ?)', template)
+            c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (%s, %s, %s)', template)
 
     # Only commit if not using autocommit (SQLite)
     if get_db_type() != 'postgresql':
@@ -8767,7 +8767,7 @@ def save_form():
         if form_id:  # Update existing form
             c.execute('''
                 UPDATE form_templates 
-                SET name = ?, description = ?, form_type = ?, version = ?
+                SET name = %s, description = %s, form_type = %s, version = %s
                 WHERE id = %s
             ''', (form_name, form_description, form_type, '1.1', form_id))
 
@@ -9838,7 +9838,7 @@ def check_and_create_alert(inspection_id, inspector_name, form_type, score):
                 c.execute('''
                     INSERT INTO threshold_alerts
                     (inspection_id, inspector_name, form_type, score, threshold_value, created_at)
-                    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    VALUES (%s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
                 ''', (inspection_id, inspector_name, form_type, score, threshold_value))
 
                 conn.commit()
@@ -9973,9 +9973,9 @@ def acknowledge_alert(alert_id):
         c.execute('''
             UPDATE threshold_alerts
             SET acknowledged = 1,
-                acknowledged_by = ?,
+                acknowledged_by = %s,
                 acknowledged_at = CURRENT_TIMESTAMP
-            WHERE id = ?
+            WHERE id = %s
         ''', (acknowledged_by, alert_id))
 
         conn.commit()
@@ -10082,7 +10082,7 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
                     MIN(overall_score) as min_score
                 FROM inspections
                 WHERE DATE(inspection_date) BETWEEN %s AND %s
-                AND form_type = ?
+                AND form_type = %s
             """
             params = (start_date, end_date, inspection_type)
 
@@ -10282,7 +10282,7 @@ def generate_trend_analysis_report(inspection_type, start_date, end_date):
                     SUM(CASE WHEN overall_score < 70 THEN 1 ELSE 0 END) as failed
                 FROM inspections
                 WHERE inspection_date BETWEEN %s AND %s
-                AND form_type = ?
+                AND form_type = %s
                 AND inspection_date IS NOT NULL
                 GROUP BY strftime('%Y-W%W', inspection_date)
                 ORDER BY week
@@ -10345,7 +10345,7 @@ def generate_failure_breakdown_report(inspection_type, start_date, end_date):
                 SELECT COUNT(*)
                 FROM inspections
                 WHERE inspection_date BETWEEN %s AND %s
-                AND form_type = ?
+                AND form_type = %s
                 AND overall_score < 70
                 AND inspection_date IS NOT NULL
             """
@@ -10380,7 +10380,7 @@ def generate_failure_breakdown_report(inspection_type, start_date, end_date):
                     COUNT(*) as failure_count
                 FROM inspections
                 WHERE inspection_date BETWEEN %s AND %s
-                AND form_type = ?
+                AND form_type = %s
                 AND overall_score < 70
                 AND inspection_date IS NOT NULL
                 GROUP BY category
@@ -10439,7 +10439,7 @@ def generate_inspector_performance_report(inspection_type, start_date, end_date)
                     AVG(CASE WHEN overall_score IS NOT NULL THEN overall_score ELSE 0 END) as avg_score
                 FROM inspections
                 WHERE inspection_date BETWEEN %s AND %s
-                AND form_type = ?
+                AND form_type = %s
                 AND inspection_date IS NOT NULL
                 AND inspector_name IS NOT NULL
                 GROUP BY inspector_name
@@ -10583,7 +10583,7 @@ def generate_monthly_trends_report(inspection_type, start_date, end_date):
                     SUM(CASE WHEN overall_score >= 70 THEN 1 ELSE 0 END) as passed
                 FROM inspections
                 WHERE inspection_date BETWEEN %s AND %s
-                AND form_type = ?
+                AND form_type = %s
                 AND inspection_date IS NOT NULL
                 GROUP BY strftime('%Y-%m', inspection_date)
                 ORDER BY month
@@ -10689,7 +10689,7 @@ def generate_establishment_ranking_report(inspection_type, start_date, end_date)
                     form_type
                 FROM inspections
                 WHERE inspection_date BETWEEN %s AND %s
-                AND form_type = ?
+                AND form_type = %s
                 AND inspection_date IS NOT NULL
                 AND overall_score IS NOT NULL
                 AND establishment_name IS NOT NULL
@@ -10733,7 +10733,7 @@ def generate_establishment_ranking_report(inspection_type, start_date, end_date)
                     form_type
                 FROM inspections
                 WHERE inspection_date BETWEEN %s AND %s
-                AND form_type = ?
+                AND form_type = %s
                 AND inspection_date IS NOT NULL
                 AND overall_score IS NOT NULL
                 AND establishment_name IS NOT NULL
@@ -12094,15 +12094,15 @@ def update_form_field(field_id):
 
     c.execute('''
         UPDATE form_fields SET
-            field_label = ?,
-            field_type = ?,
-            field_order = ?,
-            required = ?,
-            placeholder = ?,
-            default_value = ?,
-            options = ?,
-            field_group = ?
-        WHERE id = ?
+            field_label = %s,
+            field_type = %s,
+            field_order = %s,
+            required = %s,
+            placeholder = %s,
+            default_value = %s,
+            options = %s,
+            field_group = %s
+        WHERE id = %s
     ''', (
         data['field_label'],
         data['field_type'],
