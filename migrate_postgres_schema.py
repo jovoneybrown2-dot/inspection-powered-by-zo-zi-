@@ -41,20 +41,46 @@ def run_migration():
         conn.commit()
         print("✅ threshold_alerts table updated successfully")
 
-        # Ensure tasks table has all required columns
+        # Ensure tasks table exists
         print("Checking tasks table...")
         cursor.execute("""
-            SELECT column_name FROM information_schema.columns
-            WHERE table_name='tasks'
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables
+                WHERE table_name = 'tasks'
+            )
         """)
-        task_columns = [row[0] for row in cursor.fetchall()]
+        tasks_exists = cursor.fetchone()[0]
 
-        if 'status' not in task_columns:
-            print("Adding status column to tasks...")
-            cursor.execute("ALTER TABLE tasks ADD COLUMN status TEXT DEFAULT 'Pending'")
+        if not tasks_exists:
+            print("Creating tasks table...")
+            cursor.execute('''
+                CREATE TABLE tasks (
+                    id SERIAL PRIMARY KEY,
+                    title TEXT NOT NULL,
+                    assignee_id INTEGER,
+                    assignee_name TEXT,
+                    due_date TIMESTAMP,
+                    details TEXT,
+                    status TEXT DEFAULT 'Pending',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
             conn.commit()
+            print("✅ tasks table created successfully")
+        else:
+            # Check if status column exists
+            cursor.execute("""
+                SELECT column_name FROM information_schema.columns
+                WHERE table_name='tasks'
+            """)
+            task_columns = [row[0] for row in cursor.fetchall()]
 
-        print("✅ tasks table updated successfully")
+            if 'status' not in task_columns:
+                print("Adding status column to tasks...")
+                cursor.execute("ALTER TABLE tasks ADD COLUMN status TEXT DEFAULT 'Pending'")
+                conn.commit()
+
+            print("✅ tasks table updated successfully")
 
         # Ensure users table has is_flagged column
         print("Checking users table...")

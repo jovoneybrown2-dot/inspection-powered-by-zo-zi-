@@ -821,7 +821,6 @@ def admin_metrics():
 
     # Use database-appropriate date function
     date_func = "created_at::date" if get_db_type() == 'postgresql' else "strftime('%Y-%m-%d', created_at)"
-    ph = get_placeholder()
 
     if form_type == 'all':
         query = f"""
@@ -7195,10 +7194,16 @@ def get_alerts():
             })
 
         # Check for recent inspections
-        cursor.execute('''
-            SELECT COUNT(*) FROM inspections 
-            WHERE date(created_at) = date('now')
-        ''')
+        if get_db_type() == 'postgresql':
+            cursor.execute('''
+                SELECT COUNT(*) FROM inspections
+                WHERE created_at::date = CURRENT_DATE
+            ''')
+        else:
+            cursor.execute('''
+                SELECT COUNT(*) FROM inspections
+                WHERE date(created_at) = date('now')
+            ''')
 
         today_count = cursor.fetchone()[0]
 
@@ -7211,13 +7216,22 @@ def get_alerts():
             })
 
         # Check for inspectors with high workload today
-        cursor.execute('''
-            SELECT inspector_name, COUNT(*) as count 
-            FROM inspections 
-            WHERE date(created_at) = date('now') AND inspector_name IS NOT NULL
-            GROUP BY inspector_name 
-            HAVING count > 5
-        ''')
+        if get_db_type() == 'postgresql':
+            cursor.execute('''
+                SELECT inspector_name, COUNT(*) as count
+                FROM inspections
+                WHERE created_at::date = CURRENT_DATE AND inspector_name IS NOT NULL
+                GROUP BY inspector_name
+                HAVING count > 5
+            ''')
+        else:
+            cursor.execute('''
+                SELECT inspector_name, COUNT(*) as count
+                FROM inspections
+                WHERE date(created_at) = date('now') AND inspector_name IS NOT NULL
+                GROUP BY inspector_name
+                HAVING count > 5
+            ''')
 
         for row in cursor.fetchall():
             alerts.append({
@@ -8934,15 +8948,28 @@ def get_inspection_counts():
             WHERE form_type IS NOT NULL
             GROUP BY form_type
         ''')
-        main_counts = dict(c.fetchall())
+        main_counts = {row[0]: row[1] for row in c.fetchall()}
 
         # Get residential inspection counts
-        c.execute('SELECT COUNT(*) FROM residential_inspections')
-        residential_count = c.fetchone()[0]
+        try:
+            c.execute('SELECT COUNT(*) FROM residential_inspections')
+            residential_count = c.fetchone()[0]
+        except:
+            residential_count = 0
 
         # Get burial inspection counts
-        c.execute('SELECT COUNT(*) FROM burial_site_inspections')
-        burial_count = c.fetchone()[0]
+        try:
+            c.execute('SELECT COUNT(*) FROM burial_site_inspections')
+            burial_count = c.fetchone()[0]
+        except:
+            burial_count = 0
+
+        # Get meat processing inspection counts
+        try:
+            c.execute('SELECT COUNT(*) FROM meat_processing_inspections')
+            meat_count = c.fetchone()[0]
+        except:
+            meat_count = 0
 
         # Combine all counts
         counts = {
@@ -8953,7 +8980,8 @@ def get_inspection_counts():
             'spirit_licence': main_counts.get('Spirit Licence Premises', 0),
             'barbershop': main_counts.get('Barbershop', 0),
             'residential': residential_count,
-            'burial': burial_count
+            'burial': burial_count,
+            'meat_processing': meat_count
         }
 
         # Add any custom form types from form_templates
@@ -12177,17 +12205,30 @@ def get_active_users_map():
 
     # Get all active sessions with VALID GPS coordinates (logged in within last 24 hours)
     # Only show users who have real location data - no nulls, no fake coordinates
-    c.execute('''
-        SELECT username, user_role, location_lat, location_lng, parish, login_time, last_activity
-        FROM user_sessions
-        WHERE is_active = 1
-        AND last_activity > (NOW() - INTERVAL '24 hours')
-        AND location_lat IS NOT NULL
-        AND location_lng IS NOT NULL
-        AND location_lat != 0
-        AND location_lng != 0
-        ORDER BY last_activity DESC
-    ''')
+    if get_db_type() == 'postgresql':
+        c.execute('''
+            SELECT username, user_role, location_lat, location_lng, parish, login_time, last_activity
+            FROM user_sessions
+            WHERE is_active = 1
+            AND last_activity::timestamp > (NOW() - INTERVAL '24 hours')
+            AND location_lat IS NOT NULL
+            AND location_lng IS NOT NULL
+            AND location_lat != 0
+            AND location_lng != 0
+            ORDER BY last_activity DESC
+        ''')
+    else:
+        c.execute('''
+            SELECT username, user_role, location_lat, location_lng, parish, login_time, last_activity
+            FROM user_sessions
+            WHERE is_active = 1
+            AND datetime(last_activity) > datetime('now', '-24 hours')
+            AND location_lat IS NOT NULL
+            AND location_lng IS NOT NULL
+            AND location_lat != 0
+            AND location_lng != 0
+            ORDER BY last_activity DESC
+        ''')
 
     users = []
     for row in c.fetchall():
