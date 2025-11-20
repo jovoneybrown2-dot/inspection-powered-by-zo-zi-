@@ -22,6 +22,7 @@ from db_config import get_db_connection, get_db_type
 
 # Import from correct database module based on DATABASE_URL
 if get_db_type() == 'postgresql':
+    from psycopg2.extras import RealDictCursor
     from database_postgres import (
         get_residential_inspection_details,
         get_residential_inspections,
@@ -72,6 +73,14 @@ def get_table_columns(cursor, table_name):
 
 app = Flask(__name__, template_folder='templates')
 app.secret_key = os.urandom(24)
+
+def get_dict_cursor(conn):
+    """Get a cursor that returns dictionary-like rows for both SQLite and PostgreSQL"""
+    if get_db_type() == 'postgresql':
+        return conn.cursor(cursor_factory=RealDictCursor)
+    else:
+        conn.row_factory = sqlite3.Row
+        return conn.cursor()
 
 # Auto-initialize database if it doesn't exist (for Gunicorn/Render deployment)
 if not os.path.exists('inspections.db'):
@@ -1423,9 +1432,7 @@ def institutional_inspection_detail(id):
         return redirect(url_for('login'))
 
     conn = get_db_connection()
-    if get_db_type() == 'sqlite':
-        conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    cursor = get_dict_cursor(conn)
 
     cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Institutional Health'", (id,))
     inspection = cursor.fetchone()
@@ -3354,9 +3361,7 @@ def download_swimming_pool_pdf(form_id):
         return redirect(url_for('login'))
 
     conn = get_db_connection()
-    if get_db_type() == 'sqlite':
-        conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    cursor = get_dict_cursor(conn)
 
     cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Swimming Pool'", (form_id,))
     inspection = cursor.fetchone()
@@ -3752,8 +3757,7 @@ def download_institutional_pdf(form_id):
         return redirect(url_for('login'))
 
     conn = get_db_connection()
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
+    c = get_dict_cursor(conn)
     c.execute("""SELECT * FROM inspections WHERE id = %s AND form_type = 'Institutional Health'""", (form_id,))
     form_data = c.fetchone()
 
@@ -4112,9 +4116,7 @@ def download_small_hotels_pdf(form_id):
 
     # Get the inspection data directly from database instead of calling the detail function
     conn = get_db_connection()
-    if get_db_type() == 'sqlite':
-        conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    cursor = get_dict_cursor(conn)
 
     cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Small Hotel'", (form_id,))
     inspection_row = cursor.fetchone()
@@ -4967,10 +4969,9 @@ def spirit_licence_inspection_detail(id):
         return redirect(url_for('login'))
 
     conn = get_db_connection()
-    conn.row_factory = sqlite3.Row  # This allows column access by name
-    c = conn.cursor()
+    c = get_dict_cursor(conn)
 
-    c.execute("""SELECT * FROM inspections 
+    c.execute("""SELECT * FROM inspections
                  WHERE id = %s AND form_type = 'Spirit Licence Premises'""", (id,))
     inspection = c.fetchone()
     conn.close()
@@ -5318,8 +5319,7 @@ def swimming_pool_inspection_detail(id):
         return redirect(url_for('login'))
 
     conn = get_db_connection()
-    conn.row_factory = sqlite3.Row  # This allows access by column name
-    cursor = conn.cursor()
+    cursor = get_dict_cursor(conn)
 
     # Select ALL columns including the individual score columns
     cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Swimming Pool'", (id,))
@@ -5897,9 +5897,7 @@ def barbershop_inspection_detail(id):
         return redirect(url_for('login'))
 
     conn = get_db_connection()
-    if get_db_type() == 'sqlite':
-        conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    cursor = get_dict_cursor(conn)
 
     cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Barbershop'", (id,))
     inspection = cursor.fetchone()
@@ -5960,8 +5958,7 @@ def download_barbershop_pdf(form_id):
         return redirect(url_for('login'))
 
     conn = get_db_connection()
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
+    c = get_dict_cursor(conn)
     c.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Barbershop'", (form_id,))
     form_data = c.fetchone()
 
@@ -7644,8 +7641,7 @@ def get_security_metrics():
             return redirect(url_for('login'))
 
         conn = get_db_connection()
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
+        cursor = get_dict_cursor(conn)
 
         cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Small Hotel'", (id,))
         inspection = cursor.fetchone()
@@ -9701,9 +9697,7 @@ def small_hotels_inspection_detail(id):
         return redirect(url_for('login'))
 
     conn = get_db_connection()
-    if get_db_type() == 'sqlite':
-        conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    cursor = get_dict_cursor(conn)
 
     cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Small Hotel'", (id,))
     inspection = cursor.fetchone()
