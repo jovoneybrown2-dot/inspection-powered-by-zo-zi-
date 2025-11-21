@@ -8669,8 +8669,15 @@ def seed_form_items():
 
     # Map form types to their hardcoded checklists
     form_checklists = {
+        'Food Establishment': FOOD_CHECKLIST_ITEMS,
+        'Residential': RESIDENTIAL_CHECKLIST_ITEMS,
+        'Spirit Licence Premises': SPIRIT_LICENCE_CHECKLIST_ITEMS,
+        'Swimming Pool': SWIMMING_POOL_CHECKLIST_ITEMS,
+        'Small Hotel': SMALL_HOTELS_CHECKLIST_ITEMS,
+        'Barbershop': BARBERSHOP_CHECKLIST_ITEMS,
+        'Institutional': INSTITUTIONAL_CHECKLIST_ITEMS,
         'Meat Processing': MEAT_PROCESSING_CHECKLIST_ITEMS,
-        # Add other forms here as needed
+        # Note: Burial doesn't have a hardcoded checklist
     }
 
     for form_type, checklist in form_checklists.items():
