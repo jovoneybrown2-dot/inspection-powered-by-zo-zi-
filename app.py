@@ -1521,8 +1521,8 @@ def institutional_inspection_detail(id):
     cursor.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = %s", (id,))
     item_scores = {}
     for row in cursor.fetchall():
-        item_key = row[0]
-        score_value = float(row[1]) if row[1] and str(row[1]).replace('.', '', 1).isdigit() else 0.0
+        item_key = row['item_id']
+        score_value = float(row['details']) if row['details'] and str(row['details']).replace('.', '', 1).isdigit() else 0.0
         item_scores[item_key] = score_value
 
     # Create the scores dictionary that the template expects
@@ -6003,7 +6003,7 @@ def barbershop_inspection_detail(id):
 
     # Get backup scores from inspection_items
     cursor.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = %s", (id,))
-    item_scores = {row[0]: float(row[1]) if row[1] and str(row[1]).replace('.', '', 1).isdigit() else 0.0 for row in cursor.fetchall()}
+    item_scores = {row['item_id']: float(row['details']) if row['details'] and str(row['details']).replace('.', '', 1).isdigit() else 0.0 for row in cursor.fetchall()}
 
     for item in BARBERSHOP_CHECKLIST_ITEMS:
         score_field = f"score_{item['id']}"
@@ -7757,8 +7757,8 @@ def get_security_metrics():
         obser_scores = {}
         error_scores = {}
         for item in items:
-            obser_scores[item[0]] = item[1] or '0'
-            error_scores[item[0]] = item[2] or '0'
+            obser_scores[item['item_id']] = item['obser'] or '0'
+            error_scores[item['item_id']] = item['error'] or '0'
 
         inspection_dict['obser'] = obser_scores
         inspection_dict['error'] = error_scores
@@ -9833,8 +9833,8 @@ def small_hotels_inspection_detail(id):
     obser_scores = {}
     error_scores = {}
     for item in items:
-        obser_scores[item[0]] = item[1] or '0'
-        error_scores[item[0]] = item[2] or '0'
+        obser_scores[item['item_id']] = item['obser'] or '0'
+        error_scores[item['item_id']] = item['error'] or '0'
 
     conn.close()
 
