@@ -340,47 +340,47 @@ SPIRIT_LICENCE_CHECKLIST_ITEMS = [
 
 # Swimming Pool Checklist - CORRECTED WEIGHTS
 SWIMMING_POOL_CHECKLIST_ITEMS = [
-    {"id": "1A", "desc": "Written procedures for microbiological monitoring of pool water implemented", "wt": 5, "category": "Documentation"},
-    {"id": "1B", "desc": "Microbiological results", "wt": 2.5, "category": "Documentation"},
-    {"id": "1C", "desc": "Date of last testing within required frequency", "wt": 2.5, "category": "Documentation"},
-    {"id": "1D", "desc": "Acceptable monitoring procedures", "wt": 5, "category": "Documentation"},
-    {"id": "1E", "desc": "Daily log books and records up-to-date", "wt": 5, "category": "Documentation"},
-    {"id": "1F", "desc": "Written emergency procedures established and implemented", "wt": 5, "category": "Documentation"},
-    {"id": "1G", "desc": "Personal liability and accident insurance", "wt": 5, "category": "Documentation"},
-    {"id": "1H", "desc": "Lifeguard/Lifesaver certification", "wt": 5, "category": "Documentation"},
-    {"id": "2A", "desc": "Defects in pool construction", "wt": 2.5, "category": "Physical Condition"},
-    {"id": "2B", "desc": "Evidence of flaking paint and/or mould growth", "wt": 2.5, "category": "Physical Condition"},
-    {"id": "2C", "desc": "All surfaces of the deck and pool free from obstruction that can cause accident/injury", "wt": 5, "category": "Physical Condition"},
-    {"id": "2D", "desc": "Exposed piping: - identified/colour coded", "wt": 2.5, "category": "Physical Condition"},
-    {"id": "2E", "desc": "In good repair", "wt": 2.5, "category": "Physical Condition"},
-    {"id": "2F", "desc": "Suction fittings/inlets: - in good repair", "wt": 2.5, "category": "Physical Condition"},
-    {"id": "2G", "desc": "At least two suction orifices equipped with anti-vortex plates", "wt": 5, "category": "Physical Condition"},
-    {"id": "2H", "desc": "Perimeter drains free of debris", "wt": 2.5, "category": "Physical Condition"},
-    {"id": "2I", "desc": "Pool walls and floor clean", "wt": 2.5, "category": "Physical Condition"},
-    {"id": "2J", "desc": "Components of the re-circulating system maintained", "wt": 2.5, "category": "Physical Condition"},
-    {"id": "3A", "desc": "Clarity", "wt": 5, "category": "Pool Chemistry"},
-    {"id": "3B", "desc": "Chlorine residual > 0.5 mg/l", "wt": 5, "category": "Pool Chemistry"},
-    {"id": "3C", "desc": "pH value within range of 7.5 and 7.8", "wt": 5, "category": "Pool Chemistry"},
-    {"id": "3D", "desc": "Well supplied and equipped", "wt": 2.5, "category": "Pool Chemistry"},
-    {"id": "4A", "desc": "Pool chemicals - stored safely", "wt": 5, "category": "Pool Chemicals"},
-    {"id": "4B", "desc": "Dispensed automatically or in a safe manner", "wt": 2.5, "category": "Pool Chemicals"},
-    {"id": "5A", "desc": "Depth markings clearly visible", "wt": 5, "category": "Safety"},
-    {"id": "5B", "desc": "Working emergency phone", "wt": 5, "category": "Safety"},
-    {"id": "6A", "desc": "Reaching poles with hook", "wt": 2.5, "category": "Safety Aids"},
-    {"id": "6B", "desc": "Two throwing aids", "wt": 2.5, "category": "Safety Aids"},
-    {"id": "6C", "desc": "Spine board with cervical collar", "wt": 2.5, "category": "Safety Aids"},
-    {"id": "6D", "desc": "Well equipped first aid kit", "wt": 2.5, "category": "Safety Aids"},
-    {"id": "7A", "desc": "Caution notices: - pool depth indications", "wt": 1, "category": "Signs and Notices"},
-    {"id": "7B", "desc": "Public health notices", "wt": 1, "category": "Signs and Notices"},
-    {"id": "7C", "desc": "Emergency procedures", "wt": 1, "category": "Signs and Notices"},
-    {"id": "7D", "desc": "Maximum bathing load", "wt": 1, "category": "Signs and Notices"},
-    {"id": "7E", "desc": "Lifeguard on duty/bathe at your own risk signs", "wt": 1, "category": "Signs and Notices"},
-    {"id": "8A", "desc": "Licensed Lifeguards always on duty during pool opening hours", "wt": 2.5, "category": "Lifeguards/Lifesavers"},
-    {"id": "8B", "desc": "If N/A, trained lifesavers readily available", "wt": 5, "category": "Lifeguards/Lifesavers"},
-    {"id": "8C", "desc": "Number of lifeguard/lifesavers", "wt": 2.5, "category": "Lifeguards/Lifesavers"},
-    {"id": "9A", "desc": "Shower, toilet and dressing rooms: - clean and disinfected as required", "wt": 5, "category": "Sanitary Facilities"},
-    {"id": "9B", "desc": "Vented", "wt": 2.5, "category": "Sanitary Facilities"},
-    {"id": "9C", "desc": "Well supplied and equipped", "wt": 2.5, "category": "Sanitary Facilities"},
+    {"id": "1A", "desc": "Written procedures for microbiological monitoring of pool water implemented", "wt": 5, "category": "Documentation", "is_critical": True},
+    {"id": "1B", "desc": "Microbiological results", "wt": 2.5, "category": "Documentation", "is_critical": False},
+    {"id": "1C", "desc": "Date of last testing within required frequency", "wt": 2.5, "category": "Documentation", "is_critical": False},
+    {"id": "1D", "desc": "Acceptable monitoring procedures", "wt": 5, "category": "Documentation", "is_critical": True},
+    {"id": "1E", "desc": "Daily log books and records up-to-date", "wt": 5, "category": "Documentation", "is_critical": False},
+    {"id": "1F", "desc": "Written emergency procedures established and implemented", "wt": 5, "category": "Documentation", "is_critical": True},
+    {"id": "1G", "desc": "Personal liability and accident insurance", "wt": 5, "category": "Documentation", "is_critical": True},
+    {"id": "1H", "desc": "Lifeguard/Lifesaver certification", "wt": 5, "category": "Documentation", "is_critical": True},
+    {"id": "2A", "desc": "Defects in pool construction", "wt": 2.5, "category": "Physical Condition", "is_critical": False},
+    {"id": "2B", "desc": "Evidence of flaking paint and/or mould growth", "wt": 2.5, "category": "Physical Condition", "is_critical": False},
+    {"id": "2C", "desc": "All surfaces of the deck and pool free from obstruction that can cause accident/injury", "wt": 5, "category": "Physical Condition", "is_critical": True},
+    {"id": "2D", "desc": "Exposed piping: - identified/colour coded", "wt": 2.5, "category": "Physical Condition", "is_critical": False},
+    {"id": "2E", "desc": "In good repair", "wt": 2.5, "category": "Physical Condition", "is_critical": False},
+    {"id": "2F", "desc": "Suction fittings/inlets: - in good repair", "wt": 2.5, "category": "Physical Condition", "is_critical": False},
+    {"id": "2G", "desc": "At least two suction orifices equipped with anti-vortex plates", "wt": 5, "category": "Physical Condition", "is_critical": True},
+    {"id": "2H", "desc": "Perimeter drains free of debris", "wt": 2.5, "category": "Physical Condition", "is_critical": False},
+    {"id": "2I", "desc": "Pool walls and floor clean", "wt": 2.5, "category": "Physical Condition", "is_critical": False},
+    {"id": "2J", "desc": "Components of the re-circulating system maintained", "wt": 2.5, "category": "Physical Condition", "is_critical": False},
+    {"id": "3A", "desc": "Clarity", "wt": 5, "category": "Pool Chemistry", "is_critical": True},
+    {"id": "3B", "desc": "Chlorine residual > 0.5 mg/l", "wt": 5, "category": "Pool Chemistry", "is_critical": True},
+    {"id": "3C", "desc": "pH value within range of 7.5 and 7.8", "wt": 5, "category": "Pool Chemistry", "is_critical": True},
+    {"id": "3D", "desc": "Well supplied and equipped", "wt": 2.5, "category": "Pool Chemistry", "is_critical": False},
+    {"id": "4A", "desc": "Pool chemicals - stored safely", "wt": 5, "category": "Pool Chemicals", "is_critical": True},
+    {"id": "4B", "desc": "Dispensed automatically or in a safe manner", "wt": 2.5, "category": "Pool Chemicals", "is_critical": False},
+    {"id": "5A", "desc": "Depth markings clearly visible", "wt": 5, "category": "Safety", "is_critical": False},
+    {"id": "5B", "desc": "Working emergency phone", "wt": 5, "category": "Safety", "is_critical": False},
+    {"id": "6A", "desc": "Reaching poles with hook", "wt": 2.5, "category": "Safety Aids", "is_critical": False},
+    {"id": "6B", "desc": "Two throwing aids", "wt": 2.5, "category": "Safety Aids", "is_critical": False},
+    {"id": "6C", "desc": "Spine board with cervical collar", "wt": 2.5, "category": "Safety Aids", "is_critical": False},
+    {"id": "6D", "desc": "Well equipped first aid kit", "wt": 2.5, "category": "Safety Aids", "is_critical": False},
+    {"id": "7A", "desc": "Caution notices: - pool depth indications", "wt": 1, "category": "Signs and Notices", "is_critical": False},
+    {"id": "7B", "desc": "Public health notices", "wt": 1, "category": "Signs and Notices", "is_critical": False},
+    {"id": "7C", "desc": "Emergency procedures", "wt": 1, "category": "Signs and Notices", "is_critical": False},
+    {"id": "7D", "desc": "Maximum bathing load", "wt": 1, "category": "Signs and Notices", "is_critical": False},
+    {"id": "7E", "desc": "Lifeguard on duty/bathe at your own risk signs", "wt": 1, "category": "Signs and Notices", "is_critical": False},
+    {"id": "8A", "desc": "Licensed Lifeguards always on duty during pool opening hours", "wt": 2.5, "category": "Lifeguards/Lifesavers", "is_critical": False},
+    {"id": "8B", "desc": "If N/A, trained lifesavers readily available", "wt": 5, "category": "Lifeguards/Lifesavers", "is_critical": True},
+    {"id": "8C", "desc": "Number of lifeguard/lifesavers", "wt": 2.5, "category": "Lifeguards/Lifesavers", "is_critical": False},
+    {"id": "9A", "desc": "Shower, toilet and dressing rooms: - clean and disinfected as required", "wt": 5, "category": "Sanitary Facilities", "is_critical": True},
+    {"id": "9B", "desc": "Vented", "wt": 2.5, "category": "Sanitary Facilities", "is_critical": False},
+    {"id": "9C", "desc": "Well supplied and equipped", "wt": 2.5, "category": "Sanitary Facilities", "is_critical": False},
 ]
 
 # Define checklist items (40 items, 28 critical)
@@ -626,12 +626,35 @@ def get_form_checklist_items(form_type, fallback_list=None):
             return items
         else:
             print(f"⚠️  No items in database for {form_type}, using hardcoded list")
-            return fallback_list if fallback_list else []
+            return normalize_checklist_items(fallback_list) if fallback_list else []
 
     except Exception as e:
         print(f"❌ Error loading form items for {form_type}: {str(e)}")
         # Return fallback on any error
-        return fallback_list if fallback_list else []
+        return normalize_checklist_items(fallback_list) if fallback_list else []
+
+
+def normalize_checklist_items(items):
+    """
+    Normalize checklist items to ensure they have consistent keys.
+    Adds 'desc' from 'description' if missing, and 'is_critical' based on weight if missing.
+    """
+    if not items:
+        return []
+
+    normalized = []
+    for item in items:
+        norm_item = dict(item)  # Copy the original item
+        # Ensure 'desc' key exists (some use 'description')
+        if 'desc' not in norm_item and 'description' in norm_item:
+            norm_item['desc'] = norm_item['description']
+        elif 'description' not in norm_item and 'desc' in norm_item:
+            norm_item['description'] = norm_item['desc']
+        # Ensure 'is_critical' key exists (default based on weight >= 5)
+        if 'is_critical' not in norm_item:
+            norm_item['is_critical'] = norm_item.get('wt', 0) >= 5 or norm_item.get('critical', False)
+        normalized.append(norm_item)
+    return normalized
 
 
 def get_form_field_properties(form_type):
