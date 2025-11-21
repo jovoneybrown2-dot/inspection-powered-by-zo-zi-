@@ -1501,7 +1501,7 @@ def institutional_inspection_detail(id):
 
     return render_template('institutional_inspection_detail.html',
                            inspection=inspection_dict,
-                           checklist=INSTITUTIONAL_CHECKLIST_ITEMS,
+                           checklist=get_form_checklist_items('Institutional', INSTITUTIONAL_CHECKLIST_ITEMS),
                            photo_data=photos)
 
 @app.route('/submit_spirit_licence', methods=['POST'])
@@ -2535,7 +2535,7 @@ def inspection_detail(id):
             except:
                 photos = []
 
-        return render_template('inspection_detail.html', inspection=inspection_data, checklist=FOOD_CHECKLIST_ITEMS,
+        return render_template('inspection_detail.html', inspection=inspection_data, checklist=get_form_checklist_items('Food Establishment', FOOD_CHECKLIST_ITEMS),
                               photo_data=photos)
     return "Inspection not found", 404
 
@@ -2604,7 +2604,7 @@ def residential_inspection(form_id):
                           inspector_signature=inspector_signature,
                           received_by=received_by,
                           created_at=created_at,
-                          checklist=RESIDENTIAL_CHECKLIST_ITEMS,
+                          checklist=get_form_checklist_items('Residential', RESIDENTIAL_CHECKLIST_ITEMS),
                           checklist_scores=checklist_scores,
                           photo_data=photos)
 
@@ -2652,7 +2652,7 @@ def meat_processing_inspection(form_id):
                               inspector_signature=details['inspector_signature'],
                               received_by=details['received_by'],
                               created_at=details['created_at'],
-                              checklist=MEAT_PROCESSING_CHECKLIST_ITEMS,
+                              checklist=get_form_checklist_items('Meat Processing', MEAT_PROCESSING_CHECKLIST_ITEMS),
                               checklist_scores=details['checklist_scores'],
                               photo_data=photos)
     else:
@@ -5425,7 +5425,7 @@ def swimming_pool_inspection_detail(id):
 
     return render_template('swimming_pool_inspection_detail.html',
                            inspection=inspection_dict,
-                           checklist=SWIMMING_POOL_CHECKLIST_ITEMS,
+                           checklist=get_form_checklist_items('Swimming Pool', SWIMMING_POOL_CHECKLIST_ITEMS),
                            photo_data=photos)
 
 # Debug route for session verification
@@ -5978,7 +5978,7 @@ def barbershop_inspection_detail(id):
         except:
             photos = []
 
-    return render_template('barbershop_inspection_detail.html', inspection=inspection_dict, checklist=BARBERSHOP_CHECKLIST_ITEMS,
+    return render_template('barbershop_inspection_detail.html', inspection=inspection_dict, checklist=get_form_checklist_items('Barbershop', BARBERSHOP_CHECKLIST_ITEMS),
                           photo_data=photos)
 
 # Replace your download_barbershop_pdf function with this corrected version
@@ -7723,7 +7723,7 @@ def get_security_metrics():
 
         return render_template('small_hotels_inspection_detail.html',
                                inspection=inspection_dict,
-                               checklist=SMALL_HOTELS_CHECKLIST_ITEMS,
+                               checklist=get_form_checklist_items('Small Hotel', SMALL_HOTELS_CHECKLIST_ITEMS),
                                photo_data=photos)
 
 
