@@ -643,82 +643,31 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% macro render_item(item_id) %}
+                        {% set item = checklist|selectattr('id', 'equalto', item_id)|first %}
+                        {% if item %}
+                        <td class="item-number {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ '%02d'|format(item_id) }}</td>
+                        <td class="item-text {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_{{ '%02d'|format(item_id) }}" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        {% endif %}
+                    {% endmacro %}
                     <tr>
                         <td colspan="4" class="section-header">PREMISES</td>
                         <td colspan="4" class="section-header">EQUIPMENT</td>
                     </tr>
+                    <tr>{{ render_item(1) }}{{ render_item(23) }}</tr>
+                    <tr>{{ render_item(2) }}{{ render_item(24) }}</tr>
                     <tr>
-                        <td class="item-number">01</td>
-                        <td class="item-text">Free of improperly stored equipment, litter, waste refuse, and unused weeds or grass</td>
-                        <td class="score-cell">1</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_01" data-critical="false">
-                                <option value="0">0</option>
-                                <option value="1">1</option>
-                            </select>
-                        </td>
-                        <td class="item-number critical-item">23</td>
-                        <td class="item-text critical-item">Viscera table, skinning cradle, hooks, saw, knives, rails, slicers, tenderizers, etc. in good repair; made from cleanable & non-corrosive material; no excess accumulation of blood, meat, fat, feaces, & odour</td>
-                        <td class="score-cell critical-item">3</td>
-                        <td class="score-cell critical-item">
-                            <select class="score-dropdown" name="score_23" data-critical="true">
-                                <option value="0">0</option>
-                                <option value="3">3</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="item-number">02</td>
-                        <td class="item-text">Clean, accessible roads, yards, and parking</td>
-                        <td class="score-cell">1</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_02" data-critical="false">
-                                <option value="0">0</option>
-                                <option value="1">1</option>
-                            </select>
-                        </td>
-                        <td class="item-number critical-item">24</td>
-                        <td class="item-text critical-item">Properly maintained, cleaned, & sanitized after each use with approved chemicals or sanitizing agents; procedure and frequency of use written; pre-operational and post-operational activity located to prevent contamination and adequately spaced for operation, inspection, & maintenance</td>
-                        <td class="score-cell critical-item">3</td>
-                        <td class="score-cell critical-item">
-                            <select class="score-dropdown" name="score_24" data-critical="true">
-                                <option value="0">0</option>
-                                <option value="3">3</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="item-number">03</td>
-                        <td class="item-text">Proper drainage</td>
-                        <td class="score-cell">1</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_03" data-critical="false">
-                                <option value="0">0</option>
-                                <option value="1">1</option>
-                            </select>
-                        </td>
+                        {{ render_item(3) }}
                         <td colspan="4" class="section-header">CHILL ROOM</td>
                     </tr>
-                    <tr>
-                        <td class="item-number">04</td>
-                        <td class="item-text">Effective control of birds, stray animals, pests, & filth from entering the plant</td>
-                        <td class="score-cell">2</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_04" data-critical="false">
-                                <option value="0">0</option>
-                                <option value="2">2</option>
-                            </select>
-                        </td>
-                        <td class="item-number critical-item">25</td>
-                        <td class="item-text critical-item">Chill room maintained at required temperature (4° C)</td>
-                        <td class="score-cell critical-item">2</td>
-                        <td class="score-cell critical-item">
-                            <select class="score-dropdown" name="score_25" data-critical="true">
-                                <option value="0">0</option>
-                                <option value="2">2</option>
-                            </select>
-                        </td>
-                    </tr>
+                    <tr>{{ render_item(4) }}{{ render_item(25) }}</tr>
                     <tr>
                         <td colspan="4" class="section-header">ANTEMORTEM</td>
                         <td class="item-number">26</td>

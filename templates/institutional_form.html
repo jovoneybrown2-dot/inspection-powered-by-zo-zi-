@@ -614,313 +614,398 @@
                     </tr>
                 </thead>
                 <tbody>
+                    <!-- BUILDING and PESTS Headers -->
                     <tr>
                         <td colspan="3" class="section-header">BUILDING</td>
                         <td colspan="3" class="section-header">PESTS</td>
                     </tr>
-                    <tr class="critical-item">
-                        <td>01 Absence of overcrowding</td>
-                        <td class="score-cell">5</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_01" data-critical="true">
-                                <option value="0">0</option>
-                                <option value="5">5</option>
-                            </select>
-                        </td>
-                        <td class="critical-item">19 Absence</td>
-                        <td class="score-cell critical-item">5</td>
-                        <td class="score-cell critical-item">
-                            <select class="score-dropdown" name="score_19" data-critical="true">
-                                <option value="0">0</option>
-                                <option value="5">5</option>
-                            </select>
-                        </td>
-                    </tr>
+                    <!-- Row: Items 1 and 19 -->
                     <tr>
-                        <td>02 Structural Integrity</td>
-                        <td class="score-cell">2</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_02" data-critical="false">
+                        {% for item in checklist if item.id == 1 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">01 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_01" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="2">2</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
-                        <td class="critical-item">20 Control system in place</td>
-                        <td class="score-cell critical-item">5</td>
-                        <td class="score-cell critical-item">
-                            <select class="score-dropdown" name="score_20" data-critical="true">
+                        {% endfor %}
+                        {% for item in checklist if item.id == 19 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">19 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_19" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="5">5</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
+                        {% endfor %}
                     </tr>
+                    <!-- Row: Items 2 and 20 -->
                     <tr>
-                        <td>03 Housekeeping</td>
-                        <td class="score-cell">2</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_03" data-critical="false">
+                        {% for item in checklist if item.id == 2 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">02 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_02" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="2">2</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
+                        {% endfor %}
+                        {% for item in checklist if item.id == 20 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">20 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_20" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    <!-- Row: Item 3 and COMPOUND Header -->
+                    <tr>
+                        {% for item in checklist if item.id == 3 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">03 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_03" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        {% endfor %}
                         <td colspan="3" class="section-header">COMPOUND</td>
                     </tr>
+                    <!-- Row: Items 4 and 21 -->
                     <tr>
-                        <td>04 Clean Floor</td>
-                        <td class="score-cell">1</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_04" data-critical="false">
+                        {% for item in checklist if item.id == 4 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">04 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_04" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="1">1</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
-                        <td>21 General Cleanliness</td>
-                        <td class="score-cell">2</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_21" data-critical="false">
+                        {% endfor %}
+                        {% for item in checklist if item.id == 21 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">21 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_21" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="2">2</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
+                        {% endfor %}
                     </tr>
+                    <!-- Row: Items 5 and 22 -->
                     <tr>
-                        <td>05 Clean Walls</td>
-                        <td class="score-cell">1</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_05" data-critical="false">
+                        {% for item in checklist if item.id == 5 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">05 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_05" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="1">1</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
-                        <td>22 Drainage</td>
-                        <td class="score-cell">2</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_22" data-critical="false">
+                        {% endfor %}
+                        {% for item in checklist if item.id == 22 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">22 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_22" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="2">2</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
+                        {% endfor %}
                     </tr>
+                    <!-- Row: Items 6 and 23 -->
                     <tr>
-                        <td>06 Clean Ceiling</td>
-                        <td class="score-cell">1</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_06" data-critical="false">
+                        {% for item in checklist if item.id == 6 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">06 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_06" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="1">1</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
-                        <td>23 Protected from stray animals</td>
-                        <td class="score-cell">2</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_23" data-critical="false">
+                        {% endfor %}
+                        {% for item in checklist if item.id == 23 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">23 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_23" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="2">2</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
+                        {% endfor %}
                     </tr>
+                    <!-- Row: Items 7 and 24 -->
                     <tr>
-                        <td>07 Lighting</td>
-                        <td class="score-cell">1</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_07" data-critical="false">
+                        {% for item in checklist if item.id == 7 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">07 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_07" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="1">1</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
-                        <td>24 Vegetation</td>
-                        <td class="score-cell">2</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_24" data-critical="false">
+                        {% endfor %}
+                        {% for item in checklist if item.id == 24 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">24 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_24" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="2">2</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
+                        {% endfor %}
                     </tr>
+                    <!-- Row: Item 8 and SAFETY MEASURES Header -->
                     <tr>
-                        <td>08 Ventilation</td>
-                        <td class="score-cell">3</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_08" data-critical="false">
+                        {% for item in checklist if item.id == 8 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">08 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_08" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="3">3</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
+                        {% endfor %}
                         <td colspan="3" class="section-header">SAFETY MEASURES</td>
                     </tr>
+                    <!-- Row: WATER SUPPLY Header and Item 25 -->
                     <tr>
                         <td colspan="3" class="section-header">WATER SUPPLY</td>
-                        <td>25 Provision for physically challenged</td>
-                        <td class="score-cell">2</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_25" data-critical="false">
+                        {% for item in checklist if item.id == 25 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">25 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_25" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="2">2</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
+                        {% endfor %}
                     </tr>
-                    <tr class="critical-item">
-                        <td>09 Adequacy</td>
-                        <td class="score-cell">5</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_09" data-critical="true">
-                                <option value="0">0</option>
-                                <option value="5">5</option>
-                            </select>
-                        </td>
-                        <td class="critical-item">26 Fire extinguishers</td>
-                        <td class="score-cell critical-item">5</td>
-                        <td class="score-cell critical-item">
-                            <select class="score-dropdown" name="score_26" data-critical="true">
-                                <option value="0">0</option>
-                                <option value="5">5</option>
-                            </select>
-                        </td>
-                    </tr>
+                    <!-- Row: Items 9 and 26 -->
                     <tr>
-                        <td class="critical-item">10 Potability</td>
-                        <td class="score-cell critical-item">5</td>
-                        <td class="score-cell critical-item">
-                            <select class="score-dropdown" name="score_10" data-critical="true">
+                        {% for item in checklist if item.id == 9 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">09 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_09" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="5">5</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
-                        <td>27 Access to medical care</td>
-                        <td class="score-cell">2</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_27" data-critical="false">
+                        {% endfor %}
+                        {% for item in checklist if item.id == 26 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">26 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_26" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="2">2</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
+                        {% endfor %}
                     </tr>
+                    <!-- Row: Items 10 and 27 -->
+                    <tr>
+                        {% for item in checklist if item.id == 10 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">10 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_10" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        {% endfor %}
+                        {% for item in checklist if item.id == 27 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">27 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_27" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    <!-- Row: EXCRETA DISPOSAL Header and Item 28 -->
                     <tr>
                         <td colspan="3" class="section-header">EXCRETA DISPOSAL FACILITIES</td>
-                        <td>28 First Aid available</td>
-                        <td class="score-cell">2</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_28" data-critical="false">
+                        {% for item in checklist if item.id == 28 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">28 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_28" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="2">2</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
+                        {% endfor %}
                     </tr>
+                    <!-- Row: Items 11 and 29 -->
                     <tr>
-                        <td class="critical-item">11 Sanitary excreta disposal</td>
-                        <td class="score-cell critical-item">5</td>
-                        <td class="score-cell critical-item">
-                            <select class="score-dropdown" name="score_11" data-critical="true">
+                        {% for item in checklist if item.id == 11 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">11 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_11" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="5">5</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
-                        <td>29 Emergency exit</td>
-                        <td class="score-cell">2</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_29" data-critical="false">
+                        {% endfor %}
+                        {% for item in checklist if item.id == 29 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">29 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_29" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="2">2</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
+                        {% endfor %}
                     </tr>
+                    <!-- Row: Items 12 and 30 -->
                     <tr>
-                        <td class="critical-item">12 Adequacy</td>
-                        <td class="score-cell critical-item">5</td>
-                        <td class="score-cell critical-item">
-                            <select class="score-dropdown" name="score_12" data-critical="true">
+                        {% for item in checklist if item.id == 12 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">12 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_12" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="5">5</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
-                        <td>30 Veterinary certification of pets</td>
-                        <td class="score-cell">1</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_30" data-critical="false">
+                        {% endfor %}
+                        {% for item in checklist if item.id == 30 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">30 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_30" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="1">1</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
+                        {% endfor %}
                     </tr>
+                    <!-- Row: FOOD HANDLING and REFRIGERATION Headers -->
                     <tr>
                         <td colspan="3" class="section-header">FOOD HANDLING FACILITIES²</td>
                         <td colspan="3" class="section-header">REFRIGERATION FOR NON-FOOD³</td>
                     </tr>
+                    <!-- Row: Items 13 and 31 -->
                     <tr>
-                        <td class="critical-item">13 Food Storage</td>
-                        <td class="score-cell critical-item">5</td>
-                        <td class="score-cell critical-item">
-                            <select class="score-dropdown" name="score_13" data-critical="true">
+                        {% for item in checklist if item.id == 13 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">13 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_13" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="5">5</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
-                        <td>31 Adequacy</td>
-                        <td class="score-cell">2</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_31" data-critical="false">
+                        {% endfor %}
+                        {% for item in checklist if item.id == 31 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">31 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_31" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="2">2</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
+                        {% endfor %}
                     </tr>
-                    <tr class="critical-item">
-                        <td>14 Kitchen</td>
-                        <td class="score-cell">5</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_14" data-critical="true">
+                    <!-- Row: Item 14 only -->
+                    <tr>
+                        {% for item in checklist if item.id == 14 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">14 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_14" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="5">5</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
+                        {% endfor %}
                         <td colspan="3"></td>
                     </tr>
-                    <tr class="critical-item">
-                        <td>15 Dining Room</td>
-                        <td class="score-cell">5</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_15" data-critical="true">
+                    <!-- Row: Item 15 only -->
+                    <tr>
+                        {% for item in checklist if item.id == 15 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">15 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_15" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="5">5</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
+                        {% endfor %}
                         <td colspan="3"></td>
                     </tr>
-                    <tr class="critical-item">
-                        <td>16 Food handling practices</td>
-                        <td class="score-cell">5</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_16" data-critical="true">
+                    <!-- Row: Item 16 only -->
+                    <tr>
+                        {% for item in checklist if item.id == 16 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">16 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_16" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="5">5</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
+                        {% endfor %}
                         <td colspan="3"></td>
                     </tr>
+                    <!-- SOLID WASTE MANAGEMENT Header -->
                     <tr>
                         <td colspan="3" class="section-header">SOLID WASTE MANAGEMENT</td>
                         <td colspan="3"></td>
                     </tr>
-                    <tr class="critical-item">
-                        <td>17 Storage</td>
-                        <td class="score-cell">5</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_17" data-critical="true">
+                    <!-- Row: Item 17 only -->
+                    <tr>
+                        {% for item in checklist if item.id == 17 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">17 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_17" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="5">5</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
+                        {% endfor %}
                         <td colspan="3"></td>
                     </tr>
-                    <tr class="critical-item">
-                        <td>18 Disposal</td>
-                        <td class="score-cell">5</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_18" data-critical="true">
+                    <!-- Row: Item 18 only -->
+                    <tr>
+                        {% for item in checklist if item.id == 18 %}
+                        <td class="{% if item.is_critical or item.critical %}critical-item{% endif %}">18 {{ item.desc }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">{{ item.wt }}</td>
+                        <td class="score-cell {% if item.is_critical or item.critical %}critical-item{% endif %}">
+                            <select class="score-dropdown" name="score_18" data-critical="{{ 'true' if item.is_critical or item.critical else 'false' }}">
                                 <option value="0">0</option>
-                                <option value="5">5</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
+                        {% endfor %}
                         <td colspan="3"></td>
                     </tr>
                 </tbody>

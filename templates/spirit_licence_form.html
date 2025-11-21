@@ -467,314 +467,203 @@
                     </tr>
                 </thead>
                 <tbody>
+                    <!-- BUILDING Section: Items 1-2 -->
                     <tr class="header-row">
                         <td colspan="4">Building</td>
                     </tr>
-                    <tr>
-                        <td>Sound, clean and in good repair</td>
-                        <td>3</td>
+                    {% for item in checklist if item.id >= 1 and item.id <= 2 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
                         <td>
-                            <select name="score_1" class="score-input">
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
                                 <option value="0">0</option>
-                                <option value="3">3</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
-                        <td><input type="text" name="comment_1"></td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
                     </tr>
-                    <tr>
-                        <td>No smoking sign displayed at entrance to premises</td>
-                        <td>3</td>
-                        <td>
-                            <select name="score_2" class="score-input">
-                                <option value="0">0</option>
-                                <option value="3">3</option>
-                            </select>
-                        </td>
-                        <td><input type="text" name="comment_2"></td>
-                    </tr>
+                    {% endfor %}
+
+                    <!-- WALLS Section: Item 3 -->
                     <tr class="header-row">
                         <td colspan="4">Walls</td>
                     </tr>
-                    <tr>
-                        <td>Sound, clean and in good repair</td>
-                        <td>3</td>
+                    {% for item in checklist if item.id == 3 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
                         <td>
-                            <select name="score_3" class="score-input">
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
                                 <option value="0">0</option>
-                                <option value="3">3</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
-                        <td><input type="text" name="comment_3"></td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
                     </tr>
+                    {% endfor %}
+
+                    <!-- FLOORS Section: Items 4-5 -->
                     <tr class="header-row">
                         <td colspan="4">Floors</td>
                     </tr>
-                    <tr>
-                        <td>Constructed of impervious, non-slip material</td>
-                        <td>3</td>
+                    {% for item in checklist if item.id >= 4 and item.id <= 5 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
                         <td>
-                            <select name="score_4" class="score-input">
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
                                 <option value="0">0</option>
-                                <option value="3">3</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
-                        <td><input type="text" name="comment_4"></td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
                     </tr>
-                    <tr>
-                        <td>Clean, drained and in good repair</td>
-                        <td>3</td>
-                        <td>
-                            <select name="score_5" class="score-input">
-                                <option value="0">0</option>
-                                <option value="3">3</option>
-                            </select>
-                        </td>
-                        <td><input type="text" name="comment_5"></td>
-                    </tr>
+                    {% endfor %}
+
+                    <!-- SERVICE COUNTER Section: Items 6-7 -->
                     <tr class="header-row">
                         <td colspan="4">Service Counter</td>
                     </tr>
-                    <tr>
-                        <td>Constructed of impervious material</td>
-                        <td>3</td>
+                    {% for item in checklist if item.id >= 6 and item.id <= 7 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
                         <td>
-                            <select name="score_6" class="score-input">
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
                                 <option value="0">0</option>
-                                <option value="3">3</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
-                        <td><input type="text" name="comment_6"></td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
                     </tr>
-                    <tr>
-                        <td>Designed, clean and in good repair</td>
-                        <td>3</td>
-                        <td>
-                            <select name="score_7" class="score-input">
-                                <option value="0">0</option>
-                                <option value="3">3</option>
-                            </select>
-                        </td>
-                        <td><input type="text" name="comment_7"></td>
-                    </tr>
+                    {% endfor %}
+
+                    <!-- LIGHTING Section: Item 8 -->
                     <tr class="header-row">
                         <td colspan="4">Lighting</td>
                     </tr>
-                    <tr>
-                        <td>Lighting provided as required</td>
-                        <td>3</td>
+                    {% for item in checklist if item.id == 8 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
                         <td>
-                            <select name="score_8" class="score-input">
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
                                 <option value="0">0</option>
-                                <option value="3">3</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
-                        <td><input type="text" name="comment_8"></td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
                     </tr>
+                    {% endfor %}
+
+                    <!-- WASHING AND SANITIZATION Section: Items 9-11 -->
                     <tr class="header-row">
                         <td colspan="4">Washing and Sanitization Facilities</td>
                     </tr>
-                    <tr class="critical">
-                        <td>Fitted with at least double compartment sink</td>
-                        <td>5</td>
+                    {% for item in checklist if item.id >= 9 and item.id <= 11 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
                         <td>
-                            <select name="score_9" class="score-input critical-item">
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
                                 <option value="0">0</option>
-                                <option value="5">5</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
-                        <td><input type="text" name="comment_9"></td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
                     </tr>
-                    <tr class="critical">
-                        <td>Soap and sanitizer provided</td>
-                        <td>5</td>
-                        <td>
-                            <select name="score_10" class="score-input critical-item">
-                                <option value="0">0</option>
-                                <option value="5">5</option>
-                            </select>
-                        </td>
-                        <td><input type="text" name="comment_10"></td>
-                    </tr>
-                    <tr class="critical">
-                        <td>Equipped handwashing facility provided</td>
-                        <td>5</td>
-                        <td>
-                            <select name="score_11" class="score-input critical-item">
-                                <option value="0">0</option>
-                                <option value="5">5</option>
-                            </select>
-                        </td>
-                        <td><input type="text" name="comment_11"></td>
-                    </tr>
+                    {% endfor %}
+
+                    <!-- WATER SUPPLY Section: Items 12-13 -->
                     <tr class="header-row">
                         <td colspan="4">Water Supply</td>
                     </tr>
-                    <tr class="critical">
-                        <td>Potable</td>
-                        <td>5</td>
+                    {% for item in checklist if item.id >= 12 and item.id <= 13 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
                         <td>
-                            <select name="score_12" class="score-input critical-item">
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
                                 <option value="0">0</option>
-                                <option value="5">5</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
-                        <td><input type="text" name="comment_12"></td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
                     </tr>
-                    <tr class="critical">
-                        <td>Piped</td>
-                        <td>5</td>
-                        <td>
-                            <select name="score_13" class="score-input critical-item">
-                                <option value="0">0</option>
-                                <option value="5">5</option>
-                            </select>
-                        </td>
-                        <td><input type="text" name="comment_13"></td>
-                    </tr>
+                    {% endfor %}
+
+                    <!-- STORAGE FACILITIES Section: Items 14-16 -->
                     <tr class="header-row">
                         <td colspan="4">Storage Facilities</td>
                     </tr>
-                    <tr class="critical">
-                        <td>Clean and adequate storage of glasses & utensils</td>
-                        <td>5</td>
+                    {% for item in checklist if item.id >= 14 and item.id <= 16 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
                         <td>
-                            <select name="score_14" class="score-input critical-item">
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
                                 <option value="0">0</option>
-                                <option value="5">5</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
-                        <td><input type="text" name="comment_14"></td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
                     </tr>
-                    <tr class="critical">
-                        <td>Free of insects and other vermins</td>
-                        <td>5</td>
-                        <td>
-                            <select name="score_15" class="score-input critical-item">
-                                <option value="0">0</option>
-                                <option value="5">5</option>
-                            </select>
-                        </td>
-                        <td><input type="text" name="comment_15"></td>
-                    </tr>
-                    <tr class="critical">
-                        <td>Being used for its intended purpose</td>
-                        <td>5</td>
-                        <td>
-                            <select name="score_16" class="score-input critical-item">
-                                <option value="0">0</option>
-                                <option value="5">5</option>
-                            </select>
-                        </td>
-                        <td><input type="text" name="comment_16"></td>
-                    </tr>
+                    {% endfor %}
+
+                    <!-- SANITARY FACILITIES Section: Items 17-21 -->
                     <tr class="header-row">
                         <td colspan="4">Sanitary Facilities</td>
                     </tr>
-                    <tr class="critical">
-                        <td>Toilet facility provided</td>
-                        <td>5</td>
+                    {% for item in checklist if item.id >= 17 and item.id <= 21 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
                         <td>
-                            <select name="score_17" class="score-input critical-item">
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
                                 <option value="0">0</option>
-                                <option value="5">5</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
-                        <td><input type="text" name="comment_17"></td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
                     </tr>
-                    <tr class="critical">
-                        <td>Adequate, accessible with lavatory basin and soap</td>
-                        <td>5</td>
-                        <td>
-                            <select name="score_18" class="score-input critical-item">
-                                <option value="0">0</option>
-                                <option value="5">5</option>
-                            </select>
-                        </td>
-                        <td><input type="text" name="comment_18"></td>
-                    </tr>
-                    <tr class="critical">
-                        <td>Satisfactory</td>
-                        <td>5</td>
-                        <td>
-                            <select name="score_19" class="score-input critical-item">
-                                <option value="0">0</option>
-                                <option value="5">5</option>
-                            </select>
-                        </td>
-                        <td><input type="text" name="comment_19"></td>
-                    </tr>
-                    <tr>
-                        <td>Urinal(s) provided</td>
-                        <td>3</td>
-                        <td>
-                            <select name="score_20" class="score-input">
-                                <option value="0">0</option>
-                                <option value="3">3</option>
-                            </select>
-                        </td>
-                        <td><input type="text" name="comment_20"></td>
-                    </tr>
-                    <tr>
-                        <td>Satisfactory</td>
-                        <td>3</td>
-                        <td>
-                            <select name="score_21" class="score-input">
-                                <option value="0">0</option>
-                                <option value="3">3</option>
-                            </select>
-                        </td>
-                        <td><input type="text" name="comment_21"></td>
-                    </tr>
+                    {% endfor %}
+
+                    <!-- SOLID WASTE MANAGEMENT Section: Items 22-24 -->
                     <tr class="header-row">
                         <td colspan="4">Solid Waste Management</td>
                     </tr>
-                    <tr>
-                        <td>Covered, adequate, pest proof and clean receptacles</td>
-                        <td>4</td>
+                    {% for item in checklist if item.id >= 22 and item.id <= 24 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
                         <td>
-                            <select name="score_22" class="score-input">
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
                                 <option value="0">0</option>
-                                <option value="4">4</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
-                        <td><input type="text" name="comment_22"></td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
                     </tr>
-                    <tr>
-                        <td>Provision made for satisfactory disposal of waste</td>
-                        <td>3</td>
-                        <td>
-                            <select name="score_23" class="score-input">
-                                <option value="0">0</option>
-                                <option value="3">3</option>
-                            </select>
-                        </td>
-                        <td><input type="text" name="comment_23"></td>
-                    </tr>
-                    <tr>
-                        <td>Premises free of litter and unnecessary articles</td>
-                        <td>3</td>
-                        <td>
-                            <select name="score_24" class="score-input">
-                                <option value="0">0</option>
-                                <option value="3">3</option>
-                            </select>
-                        </td>
-                        <td><input type="text" name="comment_24"></td>
-                    </tr>
+                    {% endfor %}
+
+                    <!-- PEST CONTROL Section: Item 25 -->
                     <tr class="header-row">
                         <td colspan="4">Pest Control</td>
                     </tr>
-                    <tr class="critical">
-                        <td>Premises free of rodents, insects and vermins</td>
-                        <td>5</td>
+                    {% for item in checklist if item.id == 25 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
                         <td>
-                            <select name="score_25" class="score-input critical-item">
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
                                 <option value="0">0</option>
-                                <option value="5">5</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>
                         </td>
-                        <td><input type="text" name="comment_25"></td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
                     </tr>
+                    {% endfor %}
                 </tbody>
             </table>
             <table>
