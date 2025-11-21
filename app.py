@@ -11906,16 +11906,19 @@ def delete_form_item(item_id):
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
+    from db_config import get_placeholder
+    ph = get_placeholder()
+
     conn = get_db_connection()
     c = conn.cursor()
 
     # Get template_id for this item
-    c.execute('SELECT form_template_id FROM form_items WHERE id = %s', (item_id,))
+    c.execute(f'SELECT form_template_id FROM form_items WHERE id = {ph}', (item_id,))
     result = c.fetchone()
     template_id = result[0] if result else None
 
     # Soft delete - keep for old forms
-    c.execute('UPDATE form_items SET active = 0 WHERE id = %s', (item_id,))
+    c.execute(f'UPDATE form_items SET active = 0 WHERE id = {ph}', (item_id,))
 
     # Track who edited this form
     if template_id:
@@ -11933,12 +11936,15 @@ def reorder_form_items():
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
+    from db_config import get_placeholder
+    ph = get_placeholder()
+
     data = request.json  # Expected: {'items': [{'id': 1, 'order': 1}, ...]}
     conn = get_db_connection()
     c = conn.cursor()
 
     for item in data['items']:
-        c.execute('UPDATE form_items SET item_order = %s WHERE id = %s',
+        c.execute(f'UPDATE form_items SET item_order = {ph} WHERE id = {ph}',
                   (item['order'], item['id']))
 
     conn.commit()
