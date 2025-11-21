@@ -18,7 +18,7 @@ from reportlab.pdfgen import canvas
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
 
 # Database Config Import
-from db_config import get_db_connection, get_db_type, get_placeholder, execute_query
+from db_config import get_db_connection, get_db_type
 
 # Import from correct database module based on DATABASE_URL
 if get_db_type() == 'postgresql':
@@ -340,47 +340,47 @@ SPIRIT_LICENCE_CHECKLIST_ITEMS = [
 
 # Swimming Pool Checklist - CORRECTED WEIGHTS
 SWIMMING_POOL_CHECKLIST_ITEMS = [
-    {"id": "1A", "desc": "Written procedures for microbiological monitoring of pool water implemented", "wt": 5, "category": "Documentation", "is_critical": True},
-    {"id": "1B", "desc": "Microbiological results", "wt": 2.5, "category": "Documentation", "is_critical": False},
-    {"id": "1C", "desc": "Date of last testing within required frequency", "wt": 2.5, "category": "Documentation", "is_critical": False},
-    {"id": "1D", "desc": "Acceptable monitoring procedures", "wt": 5, "category": "Documentation", "is_critical": True},
-    {"id": "1E", "desc": "Daily log books and records up-to-date", "wt": 5, "category": "Documentation", "is_critical": False},
-    {"id": "1F", "desc": "Written emergency procedures established and implemented", "wt": 5, "category": "Documentation", "is_critical": True},
-    {"id": "1G", "desc": "Personal liability and accident insurance", "wt": 5, "category": "Documentation", "is_critical": True},
-    {"id": "1H", "desc": "Lifeguard/Lifesaver certification", "wt": 5, "category": "Documentation", "is_critical": True},
-    {"id": "2A", "desc": "Defects in pool construction", "wt": 2.5, "category": "Physical Condition", "is_critical": False},
-    {"id": "2B", "desc": "Evidence of flaking paint and/or mould growth", "wt": 2.5, "category": "Physical Condition", "is_critical": False},
-    {"id": "2C", "desc": "All surfaces of the deck and pool free from obstruction that can cause accident/injury", "wt": 5, "category": "Physical Condition", "is_critical": True},
-    {"id": "2D", "desc": "Exposed piping: - identified/colour coded", "wt": 2.5, "category": "Physical Condition", "is_critical": False},
-    {"id": "2E", "desc": "In good repair", "wt": 2.5, "category": "Physical Condition", "is_critical": False},
-    {"id": "2F", "desc": "Suction fittings/inlets: - in good repair", "wt": 2.5, "category": "Physical Condition", "is_critical": False},
-    {"id": "2G", "desc": "At least two suction orifices equipped with anti-vortex plates", "wt": 5, "category": "Physical Condition", "is_critical": True},
-    {"id": "2H", "desc": "Perimeter drains free of debris", "wt": 2.5, "category": "Physical Condition", "is_critical": False},
-    {"id": "2I", "desc": "Pool walls and floor clean", "wt": 2.5, "category": "Physical Condition", "is_critical": False},
-    {"id": "2J", "desc": "Components of the re-circulating system maintained", "wt": 2.5, "category": "Physical Condition", "is_critical": False},
-    {"id": "3A", "desc": "Clarity", "wt": 5, "category": "Pool Chemistry", "is_critical": True},
-    {"id": "3B", "desc": "Chlorine residual > 0.5 mg/l", "wt": 5, "category": "Pool Chemistry", "is_critical": True},
-    {"id": "3C", "desc": "pH value within range of 7.5 and 7.8", "wt": 5, "category": "Pool Chemistry", "is_critical": True},
-    {"id": "3D", "desc": "Well supplied and equipped", "wt": 2.5, "category": "Pool Chemistry", "is_critical": False},
-    {"id": "4A", "desc": "Pool chemicals - stored safely", "wt": 5, "category": "Pool Chemicals", "is_critical": True},
-    {"id": "4B", "desc": "Dispensed automatically or in a safe manner", "wt": 2.5, "category": "Pool Chemicals", "is_critical": False},
-    {"id": "5A", "desc": "Depth markings clearly visible", "wt": 5, "category": "Safety", "is_critical": False},
-    {"id": "5B", "desc": "Working emergency phone", "wt": 5, "category": "Safety", "is_critical": False},
-    {"id": "6A", "desc": "Reaching poles with hook", "wt": 2.5, "category": "Safety Aids", "is_critical": False},
-    {"id": "6B", "desc": "Two throwing aids", "wt": 2.5, "category": "Safety Aids", "is_critical": False},
-    {"id": "6C", "desc": "Spine board with cervical collar", "wt": 2.5, "category": "Safety Aids", "is_critical": False},
-    {"id": "6D", "desc": "Well equipped first aid kit", "wt": 2.5, "category": "Safety Aids", "is_critical": False},
-    {"id": "7A", "desc": "Caution notices: - pool depth indications", "wt": 1, "category": "Signs and Notices", "is_critical": False},
-    {"id": "7B", "desc": "Public health notices", "wt": 1, "category": "Signs and Notices", "is_critical": False},
-    {"id": "7C", "desc": "Emergency procedures", "wt": 1, "category": "Signs and Notices", "is_critical": False},
-    {"id": "7D", "desc": "Maximum bathing load", "wt": 1, "category": "Signs and Notices", "is_critical": False},
-    {"id": "7E", "desc": "Lifeguard on duty/bathe at your own risk signs", "wt": 1, "category": "Signs and Notices", "is_critical": False},
-    {"id": "8A", "desc": "Licensed Lifeguards always on duty during pool opening hours", "wt": 2.5, "category": "Lifeguards/Lifesavers", "is_critical": False},
-    {"id": "8B", "desc": "If N/A, trained lifesavers readily available", "wt": 5, "category": "Lifeguards/Lifesavers", "is_critical": True},
-    {"id": "8C", "desc": "Number of lifeguard/lifesavers", "wt": 2.5, "category": "Lifeguards/Lifesavers", "is_critical": False},
-    {"id": "9A", "desc": "Shower, toilet and dressing rooms: - clean and disinfected as required", "wt": 5, "category": "Sanitary Facilities", "is_critical": True},
-    {"id": "9B", "desc": "Vented", "wt": 2.5, "category": "Sanitary Facilities", "is_critical": False},
-    {"id": "9C", "desc": "Well supplied and equipped", "wt": 2.5, "category": "Sanitary Facilities", "is_critical": False},
+    {"id": "1A", "desc": "Written procedures for microbiological monitoring of pool water implemented", "wt": 5, "category": "Documentation"},
+    {"id": "1B", "desc": "Microbiological results", "wt": 2.5, "category": "Documentation"},
+    {"id": "1C", "desc": "Date of last testing within required frequency", "wt": 2.5, "category": "Documentation"},
+    {"id": "1D", "desc": "Acceptable monitoring procedures", "wt": 5, "category": "Documentation"},
+    {"id": "1E", "desc": "Daily log books and records up-to-date", "wt": 5, "category": "Documentation"},
+    {"id": "1F", "desc": "Written emergency procedures established and implemented", "wt": 5, "category": "Documentation"},
+    {"id": "1G", "desc": "Personal liability and accident insurance", "wt": 5, "category": "Documentation"},
+    {"id": "1H", "desc": "Lifeguard/Lifesaver certification", "wt": 5, "category": "Documentation"},
+    {"id": "2A", "desc": "Defects in pool construction", "wt": 2.5, "category": "Physical Condition"},
+    {"id": "2B", "desc": "Evidence of flaking paint and/or mould growth", "wt": 2.5, "category": "Physical Condition"},
+    {"id": "2C", "desc": "All surfaces of the deck and pool free from obstruction that can cause accident/injury", "wt": 5, "category": "Physical Condition"},
+    {"id": "2D", "desc": "Exposed piping: - identified/colour coded", "wt": 2.5, "category": "Physical Condition"},
+    {"id": "2E", "desc": "In good repair", "wt": 2.5, "category": "Physical Condition"},
+    {"id": "2F", "desc": "Suction fittings/inlets: - in good repair", "wt": 2.5, "category": "Physical Condition"},
+    {"id": "2G", "desc": "At least two suction orifices equipped with anti-vortex plates", "wt": 5, "category": "Physical Condition"},
+    {"id": "2H", "desc": "Perimeter drains free of debris", "wt": 2.5, "category": "Physical Condition"},
+    {"id": "2I", "desc": "Pool walls and floor clean", "wt": 2.5, "category": "Physical Condition"},
+    {"id": "2J", "desc": "Components of the re-circulating system maintained", "wt": 2.5, "category": "Physical Condition"},
+    {"id": "3A", "desc": "Clarity", "wt": 5, "category": "Pool Chemistry"},
+    {"id": "3B", "desc": "Chlorine residual > 0.5 mg/l", "wt": 5, "category": "Pool Chemistry"},
+    {"id": "3C", "desc": "pH value within range of 7.5 and 7.8", "wt": 5, "category": "Pool Chemistry"},
+    {"id": "3D", "desc": "Well supplied and equipped", "wt": 2.5, "category": "Pool Chemistry"},
+    {"id": "4A", "desc": "Pool chemicals - stored safely", "wt": 5, "category": "Pool Chemicals"},
+    {"id": "4B", "desc": "Dispensed automatically or in a safe manner", "wt": 2.5, "category": "Pool Chemicals"},
+    {"id": "5A", "desc": "Depth markings clearly visible", "wt": 5, "category": "Safety"},
+    {"id": "5B", "desc": "Working emergency phone", "wt": 5, "category": "Safety"},
+    {"id": "6A", "desc": "Reaching poles with hook", "wt": 2.5, "category": "Safety Aids"},
+    {"id": "6B", "desc": "Two throwing aids", "wt": 2.5, "category": "Safety Aids"},
+    {"id": "6C", "desc": "Spine board with cervical collar", "wt": 2.5, "category": "Safety Aids"},
+    {"id": "6D", "desc": "Well equipped first aid kit", "wt": 2.5, "category": "Safety Aids"},
+    {"id": "7A", "desc": "Caution notices: - pool depth indications", "wt": 1, "category": "Signs and Notices"},
+    {"id": "7B", "desc": "Public health notices", "wt": 1, "category": "Signs and Notices"},
+    {"id": "7C", "desc": "Emergency procedures", "wt": 1, "category": "Signs and Notices"},
+    {"id": "7D", "desc": "Maximum bathing load", "wt": 1, "category": "Signs and Notices"},
+    {"id": "7E", "desc": "Lifeguard on duty/bathe at your own risk signs", "wt": 1, "category": "Signs and Notices"},
+    {"id": "8A", "desc": "Licensed Lifeguards always on duty during pool opening hours", "wt": 2.5, "category": "Lifeguards/Lifesavers"},
+    {"id": "8B", "desc": "If N/A, trained lifesavers readily available", "wt": 5, "category": "Lifeguards/Lifesavers"},
+    {"id": "8C", "desc": "Number of lifeguard/lifesavers", "wt": 2.5, "category": "Lifeguards/Lifesavers"},
+    {"id": "9A", "desc": "Shower, toilet and dressing rooms: - clean and disinfected as required", "wt": 5, "category": "Sanitary Facilities"},
+    {"id": "9B", "desc": "Vented", "wt": 2.5, "category": "Sanitary Facilities"},
+    {"id": "9C", "desc": "Well supplied and equipped", "wt": 2.5, "category": "Sanitary Facilities"},
 ]
 
 # Define checklist items (40 items, 28 critical)
@@ -583,15 +583,11 @@ def get_form_checklist_items(form_type, fallback_list=None):
         List of checklist items in the format expected by forms
     """
     try:
-        from db_config import get_db_type
         conn = get_db_connection()
         c = conn.cursor()
 
-        # Use correct placeholder based on database type
-        ph = '%s' if get_db_type() == 'postgresql' else '?'
-
         # Get template ID for this form type
-        c.execute(f'SELECT id FROM form_templates WHERE form_type = {ph} AND active = 1', (form_type,))
+        c.execute('SELECT id FROM form_templates WHERE form_type = %s AND active = 1', (form_type,))
         template = c.fetchone()
 
         if not template:
@@ -602,47 +598,23 @@ def get_form_checklist_items(form_type, fallback_list=None):
         template_id = template[0]
 
         # Get all active items for this template, ordered
-        # Try with item_id column first, fallback to without if column doesn't exist
-        try:
-            c.execute(f'''
-                SELECT id, item_order, category, description, weight, is_critical, item_id
-                FROM form_items
-                WHERE form_template_id = {ph} AND active = 1
-                ORDER BY item_order
-            ''', (template_id,))
-            has_item_id_column = True
-        except Exception:
-            # item_id column might not exist yet
-            c.execute(f'''
-                SELECT id, item_order, category, description, weight, is_critical
-                FROM form_items
-                WHERE form_template_id = {ph} AND active = 1
-                ORDER BY item_order
-            ''', (template_id,))
-            has_item_id_column = False
+        c.execute('''
+            SELECT id, item_order, category, description, weight, is_critical
+            FROM form_items
+            WHERE form_template_id = %s AND active = 1
+            ORDER BY item_order
+        ''', (template_id,))
 
         items = []
         for row in c.fetchall():
             # Convert to format expected by forms
-            item_order = row[1]
-            stored_item_id = row[6] if has_item_id_column and len(row) > 6 else None
-
-            # Use stored item_id if available, otherwise generate from item_order
-            if stored_item_id:
-                item_id = stored_item_id
-            else:
-                # Fallback: zero-padded string for numeric IDs ('01', '02')
-                item_id = str(item_order).zfill(2)
-
             item = {
-                'id': item_id,
-                'item_order': item_order,
+                'id': row[1],  # item_order becomes the ID for compatibility
                 'desc': row[3],  # description
                 'description': row[3],  # alternative key
                 'wt': row[4],  # weight
                 'category': row[2],  # category
-                'is_critical': row[5],  # critical flag
-                'critical': row[5]  # alternative key for critical
+                'is_critical': row[5]  # critical flag
             }
             items.append(item)
 
@@ -650,50 +622,16 @@ def get_form_checklist_items(form_type, fallback_list=None):
 
         # If database has items, use them; otherwise use fallback
         if items:
-            # For forms with alphanumeric IDs, check if item_id is properly populated
-            # If not, fall back to hardcoded list to ensure proper IDs
-            alphanumeric_forms = ['Swimming Pool', 'Small Hotel']
-            if form_type in alphanumeric_forms and fallback_list:
-                # Check if first item has proper alphanumeric ID (contains letter)
-                first_id = items[0]['id'] if items else ''
-                has_letter = any(c.isalpha() for c in str(first_id))
-                if not has_letter:
-                    print(f"⚠️  {form_type} items missing alphanumeric IDs, using hardcoded list")
-                    return normalize_checklist_items(fallback_list)
-
             print(f"✓ Loaded {len(items)} items from database for {form_type}")
             return items
         else:
             print(f"⚠️  No items in database for {form_type}, using hardcoded list")
-            return normalize_checklist_items(fallback_list) if fallback_list else []
+            return fallback_list if fallback_list else []
 
     except Exception as e:
         print(f"❌ Error loading form items for {form_type}: {str(e)}")
         # Return fallback on any error
-        return normalize_checklist_items(fallback_list) if fallback_list else []
-
-
-def normalize_checklist_items(items):
-    """
-    Normalize checklist items to ensure they have consistent keys.
-    Adds 'desc' from 'description' if missing, and 'is_critical' based on weight if missing.
-    """
-    if not items:
-        return []
-
-    normalized = []
-    for item in items:
-        norm_item = dict(item)  # Copy the original item
-        # Ensure 'desc' key exists (some use 'description')
-        if 'desc' not in norm_item and 'description' in norm_item:
-            norm_item['desc'] = norm_item['description']
-        elif 'description' not in norm_item and 'desc' in norm_item:
-            norm_item['description'] = norm_item['desc']
-        # Ensure 'is_critical' key exists (default based on weight >= 5)
-        if 'is_critical' not in norm_item:
-            norm_item['is_critical'] = norm_item.get('wt', 0) >= 5 or norm_item.get('critical', False)
-        normalized.append(norm_item)
-    return normalized
+        return fallback_list if fallback_list else []
 
 
 def get_form_field_properties(form_type):
@@ -712,8 +650,7 @@ def get_form_field_properties(form_type):
         c = conn.cursor()
 
         # Get template ID for this form type
-        ph = get_placeholder()
-        c.execute(f'SELECT id FROM form_templates WHERE form_type = {ph} AND active = 1', (form_type,))
+        c.execute('SELECT id FROM form_templates WHERE form_type = %s AND active = 1', (form_type,))
         template = c.fetchone()
 
         if not template:
@@ -1966,10 +1903,8 @@ def submit_swimming_pools():
     score_columns = ', '.join([f"score_{item['id']}" for item in SWIMMING_POOL_CHECKLIST_ITEMS])
     all_columns = f"{base_columns}, {score_columns}"
 
-    # Use correct placeholder based on database type
-    ph = '%s' if get_db_type() == 'postgresql' else '?'
-    base_placeholders = ', '.join([ph] * 18)
-    score_placeholders = ', '.join([ph for _ in SWIMMING_POOL_CHECKLIST_ITEMS])
+    base_placeholders = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s'
+    score_placeholders = ', '.join(['%s' for _ in SWIMMING_POOL_CHECKLIST_ITEMS])
     all_placeholders = f"{base_placeholders}, {score_placeholders}"
 
     base_values = (
@@ -2023,13 +1958,12 @@ def submit_swimming_pools():
             inspection_id = cursor.lastrowid
 
     # Insert inspection items
-    ph = '%s' if get_db_type() == 'postgresql' else '?'
     for item in SWIMMING_POOL_CHECKLIST_ITEMS:
         score_key = f"score_{item['id']}"
         score = float(request.form.get(score_key, 0))
-        cursor.execute(f'''
+        cursor.execute('''
             INSERT INTO inspection_items (inspection_id, item_id, details)
-            VALUES ({ph}, {ph}, {ph})
+            VALUES (%s, %s, %s)
         ''', (inspection_id, item['id'], str(score)))
 
     conn.commit()
@@ -2199,17 +2133,14 @@ def submit_small_hotels():
     overall_score = round((total_items_passed / total_items) * 100)
 
     # Insert inspection with ALL required fields
-    ph = '%s' if get_db_type() == 'postgresql' else '?'
-    now_func = 'NOW()' if get_db_type() == 'postgresql' else "datetime('now')"
-
-    c.execute(f'''
+    c.execute('''
         INSERT INTO inspections (
             establishment_name, address, physical_location, inspector_name,
             inspection_date, comments, result, overall_score, critical_score,
             inspector_signature, manager_signature, received_by,
             photo_data, created_at, form_type
         )
-        VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {now_func}, {ph})
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)
     ''', (
         data.get('establishment_name', ''),
         data.get('address', ''),
@@ -2234,9 +2165,9 @@ def submit_small_hotels():
 
     # Insert ALL checklist items to preserve form data
     for item_id in all_item_ids:
-        c.execute(f'''
+        c.execute('''
             INSERT INTO inspection_items (inspection_id, item_id, obser, error)
-            VALUES ({ph}, {ph}, {ph}, {ph})
+            VALUES (%s, %s, %s, %s)
         ''', (
             inspection_id,
             item_id,
@@ -8664,7 +8595,6 @@ def init_form_management_db():
     c.execute(f'''CREATE TABLE IF NOT EXISTS form_items (
         id {auto_inc},
         form_template_id INTEGER NOT NULL,
-        item_id TEXT,
         item_order INTEGER NOT NULL,
         category TEXT NOT NULL,
         description TEXT NOT NULL,
@@ -8674,15 +8604,6 @@ def init_form_management_db():
         created_date {timestamp},
         FOREIGN KEY (form_template_id) REFERENCES form_templates(id)
     )''')
-
-    # Add item_id column if it doesn't exist (migration for existing databases)
-    try:
-        if get_db_type() == 'postgresql':
-            c.execute("ALTER TABLE form_items ADD COLUMN IF NOT EXISTS item_id TEXT")
-        else:
-            c.execute("ALTER TABLE form_items ADD COLUMN item_id TEXT")
-    except Exception:
-        pass  # Column already exists
 
     # Form Categories Table - For organizing items
     c.execute(f'''CREATE TABLE IF NOT EXISTS form_categories (
@@ -8707,7 +8628,7 @@ def init_form_management_db():
         if get_db_type() == 'postgresql':
             c.execute('INSERT INTO form_categories (name, description, display_order) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING', category)
         else:
-            c.execute('INSERT OR IGNORE INTO form_categories (name, description, display_order) VALUES (?, ?, ?)', category)
+            c.execute('INSERT INTO form_categories (name, description, display_order) VALUES (%s, %s, %s)', category)
 
     # Insert existing form templates
     existing_templates = [
@@ -8726,85 +8647,11 @@ def init_form_management_db():
         if get_db_type() == 'postgresql':
             c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (%s, %s, %s) ON CONFLICT (name) DO NOTHING', template)
         else:
-            c.execute('INSERT OR IGNORE INTO form_templates (name, description, form_type) VALUES (?, ?, ?)', template)
+            c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (%s, %s, %s)', template)
 
     # Only commit if not using autocommit (SQLite)
     if get_db_type() != 'postgresql':
         conn.commit()
-    conn.close()
-
-
-def seed_form_items():
-    """Seed form_items table with hardcoded checklists if empty"""
-    from db_config import get_db_type
-
-    conn = get_db_connection()
-    if get_db_type() == 'postgresql':
-        conn.autocommit = True
-    c = conn.cursor()
-
-    # Determine placeholder style
-    ph = '%s' if get_db_type() == 'postgresql' else '?'
-
-    # Map form types to their hardcoded checklists
-    form_checklists = {
-        'Food Establishment': FOOD_CHECKLIST_ITEMS,
-        'Residential': RESIDENTIAL_CHECKLIST_ITEMS,
-        'Spirit Licence Premises': SPIRIT_LICENCE_CHECKLIST_ITEMS,
-        'Swimming Pool': SWIMMING_POOL_CHECKLIST_ITEMS,
-        'Small Hotel': SMALL_HOTELS_CHECKLIST_ITEMS,
-        'Barbershop': BARBERSHOP_CHECKLIST_ITEMS,
-        'Institutional': INSTITUTIONAL_CHECKLIST_ITEMS,
-        'Meat Processing': MEAT_PROCESSING_CHECKLIST_ITEMS,
-        # Note: Burial doesn't have a hardcoded checklist
-    }
-
-    for form_type, checklist in form_checklists.items():
-        # Get template ID
-        c.execute(f'SELECT id FROM form_templates WHERE form_type = {ph} AND active = 1', (form_type,))
-        template = c.fetchone()
-
-        if not template:
-            print(f"⚠️  No template found for {form_type}, skipping seed")
-            continue
-
-        template_id = template[0]
-
-        # Check if items already exist
-        c.execute(f'SELECT COUNT(*) FROM form_items WHERE form_template_id = {ph} AND active = 1', (template_id,))
-        count = c.fetchone()[0]
-
-        if count > 0:
-            print(f"✓ {form_type} already has {count} items, skipping seed")
-            continue
-
-        # Seed items from hardcoded checklist
-        print(f"🌱 Seeding {len(checklist)} items for {form_type}...")
-        timestamp_val = 'CURRENT_TIMESTAMP' if get_db_type() == 'postgresql' else "datetime('now')"
-
-        for idx, item in enumerate(checklist):
-            # Store original item_id (e.g., '1A', '01') and use numeric index for item_order
-            original_id = item['id']
-            c.execute(f'''
-                INSERT INTO form_items (
-                    form_template_id, item_id, item_order, category, description,
-                    weight, is_critical, active, created_date
-                ) VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {timestamp_val})
-            ''', (
-                template_id,
-                original_id,  # Store original ID like '1A', '01', etc.
-                idx + 1,  # Numeric order for sorting
-                item.get('category', 'GENERAL'),
-                item.get('desc', item.get('description', '')),
-                item.get('wt', item.get('weight', 1)),
-                1 if item.get('critical', item.get('is_critical', False)) else 0,
-                1
-            ))
-
-        if get_db_type() != 'postgresql':
-            conn.commit()
-        print(f"✅ Seeded {len(checklist)} items for {form_type}")
-
     conn.close()
 
 
@@ -8947,9 +8794,6 @@ def save_form():
         return jsonify({'success': False, 'error': 'Unauthorized'}), 401
 
     try:
-        from db_config import get_placeholder
-        ph = get_placeholder()
-
         data = request.get_json()
         form_id = data.get('form_id')
         form_name = data.get('form_name')
@@ -8961,31 +8805,29 @@ def save_form():
         c = conn.cursor()
 
         if form_id:  # Update existing form
-            c.execute(f'''
-                UPDATE form_templates
-                SET name = {ph}, description = {ph}, form_type = {ph}, version = {ph}
-                WHERE id = {ph}
+            c.execute('''
+                UPDATE form_templates 
+                SET name = %s, description = %s, form_type = %s, version = %s
+                WHERE id = %s
             ''', (form_name, form_description, form_type, '1.1', form_id))
 
             # Deactivate existing items
-            c.execute(f'UPDATE form_items SET active = 0 WHERE form_template_id = {ph}', (form_id,))
+            c.execute('UPDATE form_items SET active = 0 WHERE form_template_id = %s', (form_id,))
 
         else:  # Create new form
-            c.execute(f'''
+            c.execute('''
                 INSERT INTO form_templates (name, description, form_type, created_by)
-                VALUES ({ph}, {ph}, {ph}, {ph})
+                VALUES (%s, %s, %s, %s)
             ''', (form_name, form_description, form_type, session.get('user_id', 'admin')))
             form_id = c.lastrowid
 
-        # Insert/update items with item_id
-        for idx, item in enumerate(items):
-            # Generate item_id - use provided value or generate from order
-            item_id_val = item.get('item_id', str(item['order']).zfill(2))
+        # Insert/update items
+        for item in items:
             c.execute(f'''
-                INSERT INTO form_items
-                (form_template_id, item_id, item_order, category, description, weight, is_critical)
-                VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph})
-            ''', (form_id, item_id_val, item['order'], item['category'], item['description'],
+                INSERT INTO form_items 
+                (form_template_id, item_order, category, description, weight, is_critical)
+                VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})
+            ''', (form_id, item['order'], item['category'], item['description'],
                   item['weight'], 1 if item.get('critical') else 0))
 
         conn.commit()
@@ -11980,17 +11822,13 @@ def create_form_item():
     max_order = c.fetchone()[0]
     next_order = (max_order + 1) if max_order else 1
 
-    # Generate item_id - use provided value or generate from item_order
-    new_item_id = data.get('item_id', str(next_order).zfill(2))
-
     c = execute_query(conn, '''
         INSERT INTO form_items (
-            form_template_id, item_id, item_order, category, description,
+            form_template_id, item_order, category, description,
             weight, is_critical, active, created_date
-        ) VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph})
+        ) VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph})
     ''', (
         data['form_template_id'],
-        new_item_id,
         next_order,
         data.get('category', 'GENERAL'),
         data['description'],
@@ -12554,7 +12392,6 @@ def api_download_inspection(inspection_type, inspection_id):
 # Initialize database and migrate checklists on app startup (works with Gunicorn)
 init_db()
 init_form_management_db()
-seed_form_items()
 auto_migrate_checklists()
 auto_migrate_form_fields()
 

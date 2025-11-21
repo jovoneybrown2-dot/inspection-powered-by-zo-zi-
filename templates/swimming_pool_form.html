@@ -78,10 +78,6 @@
             background-color: rgba(0, 155, 58, 0.2);
             border-left: 3px solid #000;
         }
-        .critical-item {
-            background-color: rgba(0, 155, 58, 0.2);
-            border-left: 3px solid #000;
-        }
         .input-field {
             width: 100%;
             padding: 8px;
@@ -198,106 +194,243 @@
 
             <div class="category-header">1 - Documentation (15%)</div>
             <table>
-                {% for item in checklist if item.id.startswith('1') %}
-                <tr class="{% if item.is_critical %}critical-item{% endif %}">
-                    <td>{{ item.id[1:] }}</td>
-                    <td>{{ item.desc }}{% if item.id == '1C' %} <input type="text" class="date-input-field" name="last_testing_date" placeholder="DD/MM/YYYY">{% endif %}</td>
-                    <td><div class="checkbox-group"><input type="radio" name="score_{{ item.id }}" value="{{ item.wt }}"> Yes <input type="radio" name="score_{{ item.id }}" value="0"> No</div></td>
+                <tr class="critical">
+                    <td>A</td>
+                    <td>Written procedures for microbiological monitoring of pool water implemented</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_1A" value="5"> Yes <input type="radio" name="score_1A" value="0"> No</div></td>
                 </tr>
-                {% endfor %}
+                <tr>
+                    <td>B</td>
+                    <td>Microbiological results</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_1B" value="2.5"> Yes <input type="radio" name="score_1B" value="0"> No</div></td>
+                </tr>
+                <tr>
+                    <td>C</td>
+                    <td>Date of last testing <input type="text" class="date-input-field" name="last_testing_date" placeholder="DD/MM/YYYY"> within required frequency</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_1C" value="2.5"> Yes <input type="radio" name="score_1C" value="0"> No</div></td>
+                </tr>
+                <tr class="critical">
+                    <td>D</td>
+                    <td>Acceptable monitoring procedures</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_1D" value="5"> Yes <input type="radio" name="score_1D" value="0"> No</div></td>
+                </tr>
+                <tr>
+                    <td>E</td>
+                    <td>Daily log books and records up-to-date</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_1E" value="5"> Yes <input type="radio" name="score_1E" value="0"> No</div></td>
+                </tr>
+                <tr class="critical">
+                    <td>F</td>
+                    <td>Written emergency procedures established and implemented</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_1F" value="5"> Yes <input type="radio" name="score_1F" value="0"> No</div></td>
+                </tr>
+                <tr class="critical">
+                    <td>G</td>
+                    <td>Personal liability and accident insurance</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_1G" value="5"> Yes <input type="radio" name="score_1G" value="0"> No</div></td>
+                </tr>
+                <tr class="critical">
+                    <td>H</td>
+                    <td>Lifeguard/Lifesaver certification</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_1H" value="5"> Yes <input type="radio" name="score_1H" value="0"> No</div></td>
+                </tr>
             </table>
 
             <div class="category-header">2 - Physical condition of pool (10%)</div>
             <table>
-                {% for item in checklist if item.id.startswith('2') %}
-                <tr class="{% if item.is_critical %}critical-item{% endif %}">
-                    <td>{{ item.id[1:] }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td><div class="checkbox-group"><input type="radio" name="score_{{ item.id }}" value="{{ item.wt }}"> Yes <input type="radio" name="score_{{ item.id }}" value="0"> No</div></td>
+                <tr>
+                    <td>A</td>
+                    <td>Defects in pool construction</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_2A" value="2.5"> Yes <input type="radio" name="score_2A" value="0"> No</div></td>
                 </tr>
-                {% endfor %}
+                <tr>
+                    <td>B</td>
+                    <td>Evidence of flaking paint and/or mould growth</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_2B" value="2.5"> Yes <input type="radio" name="score_2B" value="0"> No</div></td>
+                </tr>
+                <tr class="critical">
+                    <td>C</td>
+                    <td>All surfaces of the deck and pool free from obstruction that can cause accident/injury</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_2C" value="5"> Yes <input type="radio" name="score_2C" value="0"> No</div></td>
+                </tr>
+                <tr>
+                    <td>D</td>
+                    <td>Exposed piping: - identified/colour coded</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_2D" value="2.5"> Yes <input type="radio" name="score_2D" value="0"> No</div></td>
+                </tr>
+                <tr>
+                    <td>E</td>
+                    <td>In good repair</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_2E" value="2.5"> Yes <input type="radio" name="score_2E" value="0"> No</div></td>
+                </tr>
+                <tr>
+                    <td>F</td>
+                    <td>Suction fittings/inlets: - in good repair</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_2F" value="2.5"> Yes <input type="radio" name="score_2F" value="0"> No</div></td>
+                </tr>
+                <tr class="critical">
+                    <td>G</td>
+                    <td>At least two suction orifices equipped with anti-vortex plates</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_2G" value="5"> Yes <input type="radio" name="score_2G" value="0"> No</div></td>
+                </tr>
+                <tr>
+                    <td>H</td>
+                    <td>Perimeter drains free of debris</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_2H" value="2.5"> Yes <input type="radio" name="score_2H" value="0"> No</div></td>
+                </tr>
+                <tr>
+                    <td>I</td>
+                    <td>Pool walls and floor clean</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_2I" value="2.5"> Yes <input type="radio" name="score_2I" value="0"> No</div></td>
+                </tr>
+                <tr>
+                    <td>J</td>
+                    <td>Components of the re-circulating system maintained</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_2J" value="2.5"> Yes <input type="radio" name="score_2J" value="0"> No</div></td>
+                </tr>
             </table>
 
             <div class="category-header">3 - Pool chemistry (20%)</div>
             <table>
-                {% for item in checklist if item.id.startswith('3') %}
-                <tr class="{% if item.is_critical %}critical-item{% endif %}">
-                    <td>{{ item.id[1:] }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td><div class="checkbox-group"><input type="radio" name="score_{{ item.id }}" value="{{ item.wt }}"> Yes <input type="radio" name="score_{{ item.id }}" value="0"> No</div></td>
+                <tr class="critical">
+                    <td>A</td>
+                    <td>Clarity</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_3A" value="5"> Yes <input type="radio" name="score_3A" value="0"> No</div></td>
                 </tr>
-                {% endfor %}
+                <tr class="critical">
+                    <td>B</td>
+                    <td>Chlorine residual > 0.5 mg/l- Level</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_3B" value="5"> Yes <input type="radio" name="score_3B" value="0"> No</div></td>
+                </tr>
+                <tr class="critical">
+                    <td>C</td>
+                    <td>pH value within range of 7.5 and 7.8</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_3C" value="5"> Yes <input type="radio" name="score_3C" value="0"> No</div></td>
+                </tr>
             </table>
 
             <div class="category-header">4 - Pool chemicals (10%)</div>
             <table>
-                {% for item in checklist if item.id.startswith('4') %}
-                <tr class="{% if item.is_critical %}critical-item{% endif %}">
-                    <td>{{ item.id[1:] }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td><div class="checkbox-group"><input type="radio" name="score_{{ item.id }}" value="{{ item.wt }}"> Yes <input type="radio" name="score_{{ item.id }}" value="0"> No</div></td>
+                <tr class="critical">
+                    <td>A</td>
+                    <td>Pool chemicals - stored safely</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_4A" value="5"> Yes <input type="radio" name="score_4A" value="0"> No</div></td>
                 </tr>
-                {% endfor %}
+                <tr>
+                    <td>B</td>
+                    <td>Dispensed automatically or in a safe manner</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_4B" value="2.5"> Yes <input type="radio" name="score_4B" value="0"> No</div></td>
+                </tr>
             </table>
 
             <div class="category-header">5 - Safety (10%)</div>
             <table>
-                {% for item in checklist if item.id.startswith('5') %}
-                <tr class="{% if item.is_critical %}critical-item{% endif %}">
-                    <td>{{ item.id[1:] }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td><div class="checkbox-group"><input type="radio" name="score_{{ item.id }}" value="{{ item.wt }}"> Yes <input type="radio" name="score_{{ item.id }}" value="0"> No</div></td>
+                <tr>
+                    <td>A</td>
+                    <td>Depth markings clearly visible</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_5A" value="5"> Yes <input type="radio" name="score_5A" value="0"> No</div></td>
                 </tr>
-                {% endfor %}
+                <tr>
+                    <td>B</td>
+                    <td>Working emergency phone</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_5B" value="5"> Yes <input type="radio" name="score_5B" value="0"> No</div></td>
+                </tr>
             </table>
 
             <div class="category-header">6 - Safety Aids (10%)</div>
             <table>
-                {% for item in checklist if item.id.startswith('6') %}
-                <tr class="{% if item.is_critical %}critical-item{% endif %}">
-                    <td>{{ item.id[1:] }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td><div class="checkbox-group"><input type="radio" name="score_{{ item.id }}" value="{{ item.wt }}"> Yes <input type="radio" name="score_{{ item.id }}" value="0"> No</div></td>
+                <tr>
+                    <td>A</td>
+                    <td>Reaching poles with hook</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_6A" value="2.5"> Yes <input type="radio" name="score_6A" value="0"> No</div></td>
                 </tr>
-                {% endfor %}
+                <tr>
+                    <td>B</td>
+                    <td>Two throwing aids</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_6B" value="2.5"> Yes <input type="radio" name="score_6B" value="0"> No</div></td>
+                </tr>
+                <tr>
+                    <td>C</td>
+                    <td>Spine board with cervical collar</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_6C" value="2.5"> Yes <input type="radio" name="score_6C" value="0"> No</div></td>
+                </tr>
+                <tr>
+                    <td>D</td>
+                    <td>Well equipped first aid kit</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_6D" value="2.5"> Yes <input type="radio" name="score_6D" value="0"> No</div></td>
+                </tr>
             </table>
 
             <div class="category-header">7 - Signs and notices (5%)</div>
             <table>
-                {% for item in checklist if item.id.startswith('7') %}
-                <tr class="{% if item.is_critical %}critical-item{% endif %}">
-                    <td>{{ item.id[1:] }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td><div class="checkbox-group"><input type="radio" name="score_{{ item.id }}" value="{{ item.wt }}"> Yes <input type="radio" name="score_{{ item.id }}" value="0"> No</div></td>
+                <tr>
+                    <td>A</td>
+                    <td>Caution notices: - pool depth indications</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_7A" value="1"> Yes <input type="radio" name="score_7A" value="0"> No</div></td>
                 </tr>
-                {% endfor %}
+                <tr>
+                    <td>B</td>
+                    <td>Public health notices</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_7B" value="1"> Yes <input type="radio" name="score_7B" value="0"> No</div></td>
+                </tr>
+                <tr>
+                    <td>C</td>
+                    <td>Emergency procedures</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_7C" value="1"> Yes <input type="radio" name="score_7C" value="0"> No</div></td>
+                </tr>
+                <tr>
+                    <td>D</td>
+                    <td>Maximum bathing load</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_7D" value="1"> Yes <input type="radio" name="score_7D" value="0"> No</div></td>
+                </tr>
+                <tr>
+                    <td>E</td>
+                    <td>Lifeguard on duty/bathe at your own risk signs</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_7E" value="1"> Yes <input type="radio" name="score_7E" value="0"> No</div></td>
+                </tr>
             </table>
 
             <div class="category-header">8 - Lifeguards/Lifesavers (10%)</div>
             <table>
-                {% for item in checklist if item.id.startswith('8') %}
-                <tr class="{% if item.is_critical %}critical-item{% endif %}">
-                    <td>{{ item.id[1:] }}</td>
-                    <td>{{ item.desc }}{% if item.id == '8A' %}
+                <tr>
+                    <td>A</td>
+                    <td>Licensed Lifeguards always on duty during pool opening hours
                         <div class="na-checkbox">
                             <input type="checkbox" id="na-8a" name="na_8a">
                             <label for="na-8a">N/A</label>
                         </div>
-                    {% endif %}</td>
-                    <td><div class="checkbox-group"><input type="radio" name="score_{{ item.id }}" value="{{ item.wt }}"> Yes <input type="radio" name="score_{{ item.id }}" value="0"> No</div></td>
+                    </td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_8A" value="2.5"> Yes <input type="radio" name="score_8A" value="0"> No</div></td>
                 </tr>
-                {% endfor %}
+                <tr class="critical">
+                    <td>B</td>
+                    <td>If N/A are trained lifesavers readily available</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_8B" value="5"> Yes <input type="radio" name="score_8B" value="0"> No</div></td>
+                </tr>
+                <tr>
+                    <td>C</td>
+                    <td>Number of lifeguard/lifesavers</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_8C" value="2.5"> Yes <input type="radio" name="score_8C" value="0"> No</div></td>
+                </tr>
             </table>
 
             <div class="category-header">9 - Sanitary facilities (10%)</div>
             <table>
-                {% for item in checklist if item.id.startswith('9') %}
-                <tr class="{% if item.is_critical %}critical-item{% endif %}">
-                    <td>{{ item.id[1:] }}</td>
-                    <td>{{ item.desc }}</td>
-                    <td><div class="checkbox-group"><input type="radio" name="score_{{ item.id }}" value="{{ item.wt }}"> Yes <input type="radio" name="score_{{ item.id }}" value="0"> No</div></td>
+                <tr class="critical">
+                    <td>A</td>
+                    <td>Shower, toilet and dressing rooms: - clean and disinfected as required</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_9A" value="5"> Yes <input type="radio" name="score_9A" value="0"> No</div></td>
                 </tr>
-                {% endfor %}
+                <tr>
+                    <td>B</td>
+                    <td>Vented</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_9B" value="2.5"> Yes <input type="radio" name="score_9B" value="0"> No</div></td>
+                </tr>
+                <tr>
+                    <td>C</td>
+                    <td>Well supplied and equipped</td>
+                    <td><div class="checkbox-group"><input type="radio" name="score_9C" value="2.5"> Yes <input type="radio" name="score_9C" value="0"> No</div></td>
+                </tr>
             </table>
 
             <div class="form-header">Inspector's Comments</div>
@@ -341,10 +474,18 @@
                 let total = 0;
                 let checkedItems = 0;
 
-                // Get all radio button groups dynamically
-                const allRadios = document.querySelectorAll('input[type="radio"][name^="score_"]');
-                const radioGroups = new Set();
-                allRadios.forEach(radio => radioGroups.add(radio.name));
+                // All radio button groups - REMOVED score_3D as it doesn't exist
+                const radioGroups = [
+                    'score_1A', 'score_1B', 'score_1C', 'score_1D', 'score_1E', 'score_1F', 'score_1G', 'score_1H',
+                    'score_2A', 'score_2B', 'score_2C', 'score_2D', 'score_2E', 'score_2F', 'score_2G', 'score_2H', 'score_2I', 'score_2J',
+                    'score_3A', 'score_3B', 'score_3C',
+                    'score_4A', 'score_4B',
+                    'score_5A', 'score_5B',
+                    'score_6A', 'score_6B', 'score_6C', 'score_6D',
+                    'score_7A', 'score_7B', 'score_7C', 'score_7D', 'score_7E',
+                    'score_8A', 'score_8B', 'score_8C',
+                    'score_9A', 'score_9B', 'score_9C'
+                ];
 
                 radioGroups.forEach(groupName => {
                     const selectedRadio = document.querySelector(`input[name="${groupName}"]:checked`);
