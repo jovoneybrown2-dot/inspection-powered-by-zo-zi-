@@ -1737,13 +1737,29 @@ def submit_meat_processing():
     # Process photos if included
     photos_json = request.form.get('photos', '[]')
 
+    # Load checklist from database to get critical flags
+    checklist = get_form_checklist_items('Meat Processing', MEAT_PROCESSING_CHECKLIST_ITEMS)
+
+    # Calculate critical score (only shaded/critical items)
+    critical_score = 0.0
+    overall_score = 0.0
+    for item in checklist:
+        item_id = item.get('id')
+        score_value = safe_float_convert(request.form.get(f'score_{item_id:02d}', '0'), 0.0)
+        overall_score += score_value
+
+        # Check if item is critical (shaded)
+        if item.get('critical') or item.get('is_critical'):
+            critical_score += score_value
+
     data = {
         'establishment_name': request.form.get('establishment_name', ''),
         'owner_operator': request.form.get('owner_operator', ''),
         'address': request.form.get('address', ''),
         'inspector_name': request.form.get('inspector_name', ''),
         'establishment_no': request.form.get('establishment_no', ''),
-        'overall_score': safe_float_convert(request.form.get('overall_score', '0')),
+        'overall_score': overall_score,
+        'critical_score': critical_score,
         'food_contact_surfaces': safe_int_convert(request.form.get('food_contact_surfaces', '0')),
         'water_samples': safe_int_convert(request.form.get('water_samples', '0')),
         'product_samples': safe_int_convert(request.form.get('product_samples', '0')),
@@ -8612,7 +8628,7 @@ def init_form_management_db():
         if get_db_type() == 'postgresql':
             c.execute('INSERT INTO form_categories (name, description, display_order) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING', category)
         else:
-            c.execute('INSERT INTO form_categories (name, description, display_order) VALUES (%s, %s, %s)', category)
+            c.execute('INSERT OR IGNORE INTO form_categories (name, description, display_order) VALUES (?, ?, ?)', category)
 
     # Insert existing form templates
     existing_templates = [
@@ -8631,11 +8647,75 @@ def init_form_management_db():
         if get_db_type() == 'postgresql':
             c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (%s, %s, %s) ON CONFLICT (name) DO NOTHING', template)
         else:
-            c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (%s, %s, %s)', template)
+            c.execute('INSERT OR IGNORE INTO form_templates (name, description, form_type) VALUES (?, ?, ?)', template)
 
     # Only commit if not using autocommit (SQLite)
     if get_db_type() != 'postgresql':
         conn.commit()
+    conn.close()
+
+
+def seed_form_items():
+    """Seed form_items table with hardcoded checklists if empty"""
+    from db_config import get_db_type
+
+    conn = get_db_connection()
+    if get_db_type() == 'postgresql':
+        conn.autocommit = True
+    c = conn.cursor()
+
+    # Determine placeholder style
+    ph = '%s' if get_db_type() == 'postgresql' else '?'
+
+    # Map form types to their hardcoded checklists
+    form_checklists = {
+        'Meat Processing': MEAT_PROCESSING_CHECKLIST_ITEMS,
+        # Add other forms here as needed
+    }
+
+    for form_type, checklist in form_checklists.items():
+        # Get template ID
+        c.execute(f'SELECT id FROM form_templates WHERE form_type = {ph} AND active = 1', (form_type,))
+        template = c.fetchone()
+
+        if not template:
+            print(f"⚠️  No template found for {form_type}, skipping seed")
+            continue
+
+        template_id = template[0]
+
+        # Check if items already exist
+        c.execute(f'SELECT COUNT(*) FROM form_items WHERE form_template_id = {ph} AND active = 1', (template_id,))
+        count = c.fetchone()[0]
+
+        if count > 0:
+            print(f"✓ {form_type} already has {count} items, skipping seed")
+            continue
+
+        # Seed items from hardcoded checklist
+        print(f"🌱 Seeding {len(checklist)} items for {form_type}...")
+        timestamp_val = 'CURRENT_TIMESTAMP' if get_db_type() == 'postgresql' else "datetime('now')"
+
+        for item in checklist:
+            c.execute(f'''
+                INSERT INTO form_items (
+                    form_template_id, item_order, category, description,
+                    weight, is_critical, active, created_date
+                ) VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {timestamp_val})
+            ''', (
+                template_id,
+                item['id'],
+                item.get('category', 'GENERAL'),
+                item.get('desc', item.get('description', '')),
+                item.get('wt', item.get('weight', 1)),
+                1 if item.get('critical', item.get('is_critical', False)) else 0,
+                1
+            ))
+
+        if get_db_type() != 'postgresql':
+            conn.commit()
+        print(f"✅ Seeded {len(checklist)} items for {form_type}")
+
     conn.close()
 
 
@@ -12376,6 +12456,7 @@ def api_download_inspection(inspection_type, inspection_id):
 # Initialize database and migrate checklists on app startup (works with Gunicorn)
 init_db()
 init_form_management_db()
+seed_form_items()
 auto_migrate_checklists()
 auto_migrate_form_fields()
 

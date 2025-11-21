@@ -97,6 +97,31 @@ def run_migration():
 
         print("✅ users table updated successfully")
 
+        # Add critical_score to meat_processing_inspections
+        print("Checking meat_processing_inspections table...")
+        cursor.execute("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables
+                WHERE table_name = 'meat_processing_inspections'
+            )
+        """)
+        meat_table_exists = cursor.fetchone()[0]
+
+        if meat_table_exists:
+            cursor.execute("""
+                SELECT column_name FROM information_schema.columns
+                WHERE table_name='meat_processing_inspections'
+            """)
+            meat_columns = [row[0] for row in cursor.fetchall()]
+
+            if 'critical_score' not in meat_columns:
+                print("Adding critical_score column to meat_processing_inspections...")
+                cursor.execute("ALTER TABLE meat_processing_inspections ADD COLUMN critical_score REAL DEFAULT 0")
+                conn.commit()
+                print("✅ Added critical_score column to meat_processing_inspections")
+            else:
+                print("✅ meat_processing_inspections already has critical_score column")
+
         print("\n" + "="*60)
         print("✅ ALL MIGRATIONS COMPLETED SUCCESSFULLY")
         print("="*60)

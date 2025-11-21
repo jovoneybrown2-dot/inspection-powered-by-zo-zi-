@@ -518,7 +518,7 @@ def save_meat_processing_inspection(data):
             cursor.execute("""
                 UPDATE meat_processing_inspections
                 SET establishment_name = %s, owner_operator = %s, address = %s, inspector_name = %s,
-                    establishment_no = %s, overall_score = %s, food_contact_surfaces = %s, water_samples = %s,
+                    establishment_no = %s, overall_score = %s, critical_score = %s, food_contact_surfaces = %s, water_samples = %s,
                     product_samples = %s, types_of_products = %s, staff_fhp = %s, staff_compliment = %s, water_public = %s,
                     water_private = %s, type_processing = %s, type_slaughter = %s, purpose_of_visit = %s,
                     inspection_date = %s, inspector_code = %s, result = %s, telephone_no = %s,
@@ -527,7 +527,7 @@ def save_meat_processing_inspection(data):
                 WHERE id = %s
             """, (
                 data['establishment_name'], data['owner_operator'], data['address'], data['inspector_name'],
-                data['establishment_no'], data['overall_score'], data['food_contact_surfaces'], data['water_samples'],
+                data['establishment_no'], data['overall_score'], data.get('critical_score', 0), data['food_contact_surfaces'], data['water_samples'],
                 data['product_samples'], data['types_of_products'], data['staff_fhp'], data.get('staff_compliment', 0), data['water_public'],
                 data['water_private'], data['type_processing'], data['type_slaughter'], data['purpose_of_visit'],
                 data['inspection_date'], data['inspector_code'], data['result'], data['telephone_no'],
@@ -540,18 +540,18 @@ def save_meat_processing_inspection(data):
             cursor.execute("""
                 INSERT INTO meat_processing_inspections (
                     establishment_name, owner_operator, address, inspector_name,
-                    establishment_no, overall_score, food_contact_surfaces, water_samples,
+                    establishment_no, overall_score, critical_score, food_contact_surfaces, water_samples,
                     product_samples, types_of_products, staff_fhp, staff_compliment, water_public,
                     water_private, type_processing, type_slaughter, purpose_of_visit,
                     inspection_date, inspector_code, result, telephone_no,
                     registration_status, action, comments, inspector_signature,
                     received_by, created_at, photo_data
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (
                 data['establishment_name'], data['owner_operator'], data['address'], data['inspector_name'],
-                data['establishment_no'], data['overall_score'], data['food_contact_surfaces'], data['water_samples'],
+                data['establishment_no'], data['overall_score'], data.get('critical_score', 0), data['food_contact_surfaces'], data['water_samples'],
                 data['product_samples'], data['types_of_products'], data['staff_fhp'], data.get('staff_compliment', 0), data['water_public'],
                 data['water_private'], data['type_processing'], data['type_slaughter'], data['purpose_of_visit'],
                 data['inspection_date'], data['inspector_code'], data['result'], data['telephone_no'],
@@ -617,28 +617,29 @@ def get_meat_processing_inspection_details(inspection_id):
             'inspector_name': inspection[4] or '',
             'establishment_no': inspection[5] or '',
             'overall_score': inspection[6] or 0.0,
-            'food_contact_surfaces': inspection[7] or 0,
-            'water_samples': inspection[8] or 0,
-            'product_samples': inspection[9] or 0,
-            'types_of_products': inspection[10] or '',
-            'staff_fhp': inspection[11] or 0,
-            'staff_compliment': inspection[12] if len(inspection) > 12 else 0,
-            'water_public': inspection[13] if len(inspection) > 13 else 0,
-            'water_private': inspection[14] if len(inspection) > 14 else 0,
-            'type_processing': inspection[15] if len(inspection) > 15 else 0,
-            'type_slaughter': inspection[16] if len(inspection) > 16 else 0,
-            'purpose_of_visit': inspection[17] if len(inspection) > 17 else '',
-            'inspection_date': inspection[18] if len(inspection) > 18 else '',
-            'inspector_code': inspection[19] if len(inspection) > 19 else '',
-            'result': inspection[20] if len(inspection) > 20 else '',
-            'telephone_no': inspection[21] if len(inspection) > 21 else '',
-            'registration_status': inspection[22] if len(inspection) > 22 else '',
-            'action': inspection[23] if len(inspection) > 23 else '',
-            'comments': inspection[24] if len(inspection) > 24 else '',
-            'inspector_signature': inspection[25] if len(inspection) > 25 else '',
-            'received_by': inspection[26] if len(inspection) > 26 else '',
-            'created_at': inspection[27] if len(inspection) > 27 else '',
-            'photo_data': inspection[28] if len(inspection) > 28 else '[]',
+            'critical_score': inspection[7] if len(inspection) > 7 else 0.0,
+            'food_contact_surfaces': inspection[8] if len(inspection) > 8 else 0,
+            'water_samples': inspection[9] if len(inspection) > 9 else 0,
+            'product_samples': inspection[10] if len(inspection) > 10 else 0,
+            'types_of_products': inspection[11] if len(inspection) > 11 else '',
+            'staff_fhp': inspection[12] if len(inspection) > 12 else 0,
+            'staff_compliment': inspection[13] if len(inspection) > 13 else 0,
+            'water_public': inspection[14] if len(inspection) > 14 else 0,
+            'water_private': inspection[15] if len(inspection) > 15 else 0,
+            'type_processing': inspection[16] if len(inspection) > 16 else 0,
+            'type_slaughter': inspection[17] if len(inspection) > 17 else 0,
+            'purpose_of_visit': inspection[18] if len(inspection) > 18 else '',
+            'inspection_date': inspection[19] if len(inspection) > 19 else '',
+            'inspector_code': inspection[20] if len(inspection) > 20 else '',
+            'result': inspection[21] if len(inspection) > 21 else '',
+            'telephone_no': inspection[22] if len(inspection) > 22 else '',
+            'registration_status': inspection[23] if len(inspection) > 23 else '',
+            'action': inspection[24] if len(inspection) > 24 else '',
+            'comments': inspection[25] if len(inspection) > 25 else '',
+            'inspector_signature': inspection[26] if len(inspection) > 26 else '',
+            'received_by': inspection[27] if len(inspection) > 27 else '',
+            'created_at': inspection[28] if len(inspection) > 28 else '',
+            'photo_data': inspection[29] if len(inspection) > 29 else '[]',
             'checklist_scores': checklist_scores
         }
     cursor.close()
