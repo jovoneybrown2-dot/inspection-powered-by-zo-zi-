@@ -18,7 +18,7 @@ from reportlab.pdfgen import canvas
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
 
 # Database Config Import
-from db_config import get_db_connection, get_db_type
+from db_config import get_db_connection, get_db_type, get_placeholder, execute_query
 
 # Import from correct database module based on DATABASE_URL
 if get_db_type() == 'postgresql':
@@ -583,11 +583,15 @@ def get_form_checklist_items(form_type, fallback_list=None):
         List of checklist items in the format expected by forms
     """
     try:
+        from db_config import get_db_type
         conn = get_db_connection()
         c = conn.cursor()
 
+        # Use correct placeholder based on database type
+        ph = '%s' if get_db_type() == 'postgresql' else '?'
+
         # Get template ID for this form type
-        c.execute('SELECT id FROM form_templates WHERE form_type = %s AND active = 1', (form_type,))
+        c.execute(f'SELECT id FROM form_templates WHERE form_type = {ph} AND active = 1', (form_type,))
         template = c.fetchone()
 
         if not template:
@@ -598,23 +602,47 @@ def get_form_checklist_items(form_type, fallback_list=None):
         template_id = template[0]
 
         # Get all active items for this template, ordered
-        c.execute('''
-            SELECT id, item_order, category, description, weight, is_critical
-            FROM form_items
-            WHERE form_template_id = %s AND active = 1
-            ORDER BY item_order
-        ''', (template_id,))
+        # Try with item_id column first, fallback to without if column doesn't exist
+        try:
+            c.execute(f'''
+                SELECT id, item_order, category, description, weight, is_critical, item_id
+                FROM form_items
+                WHERE form_template_id = {ph} AND active = 1
+                ORDER BY item_order
+            ''', (template_id,))
+            has_item_id_column = True
+        except Exception:
+            # item_id column might not exist yet
+            c.execute(f'''
+                SELECT id, item_order, category, description, weight, is_critical
+                FROM form_items
+                WHERE form_template_id = {ph} AND active = 1
+                ORDER BY item_order
+            ''', (template_id,))
+            has_item_id_column = False
 
         items = []
         for row in c.fetchall():
             # Convert to format expected by forms
+            item_order = row[1]
+            stored_item_id = row[6] if has_item_id_column and len(row) > 6 else None
+
+            # Use stored item_id if available, otherwise generate from item_order
+            if stored_item_id:
+                item_id = stored_item_id
+            else:
+                # Fallback: zero-padded string for numeric IDs ('01', '02')
+                item_id = str(item_order).zfill(2)
+
             item = {
-                'id': row[1],  # item_order becomes the ID for compatibility
+                'id': item_id,
+                'item_order': item_order,
                 'desc': row[3],  # description
                 'description': row[3],  # alternative key
                 'wt': row[4],  # weight
                 'category': row[2],  # category
-                'is_critical': row[5]  # critical flag
+                'is_critical': row[5],  # critical flag
+                'critical': row[5]  # alternative key for critical
             }
             items.append(item)
 
@@ -673,7 +701,8 @@ def get_form_field_properties(form_type):
         c = conn.cursor()
 
         # Get template ID for this form type
-        c.execute('SELECT id FROM form_templates WHERE form_type = %s AND active = 1', (form_type,))
+        ph = get_placeholder()
+        c.execute(f'SELECT id FROM form_templates WHERE form_type = {ph} AND active = 1', (form_type,))
         template = c.fetchone()
 
         if not template:
@@ -1926,8 +1955,10 @@ def submit_swimming_pools():
     score_columns = ', '.join([f"score_{item['id']}" for item in SWIMMING_POOL_CHECKLIST_ITEMS])
     all_columns = f"{base_columns}, {score_columns}"
 
-    base_placeholders = '%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s'
-    score_placeholders = ', '.join(['%s' for _ in SWIMMING_POOL_CHECKLIST_ITEMS])
+    # Use correct placeholder based on database type
+    ph = '%s' if get_db_type() == 'postgresql' else '?'
+    base_placeholders = ', '.join([ph] * 18)
+    score_placeholders = ', '.join([ph for _ in SWIMMING_POOL_CHECKLIST_ITEMS])
     all_placeholders = f"{base_placeholders}, {score_placeholders}"
 
     base_values = (
@@ -1981,12 +2012,13 @@ def submit_swimming_pools():
             inspection_id = cursor.lastrowid
 
     # Insert inspection items
+    ph = '%s' if get_db_type() == 'postgresql' else '?'
     for item in SWIMMING_POOL_CHECKLIST_ITEMS:
         score_key = f"score_{item['id']}"
         score = float(request.form.get(score_key, 0))
-        cursor.execute('''
+        cursor.execute(f'''
             INSERT INTO inspection_items (inspection_id, item_id, details)
-            VALUES (%s, %s, %s)
+            VALUES ({ph}, {ph}, {ph})
         ''', (inspection_id, item['id'], str(score)))
 
     conn.commit()
@@ -2156,14 +2188,17 @@ def submit_small_hotels():
     overall_score = round((total_items_passed / total_items) * 100)
 
     # Insert inspection with ALL required fields
-    c.execute('''
+    ph = '%s' if get_db_type() == 'postgresql' else '?'
+    now_func = 'NOW()' if get_db_type() == 'postgresql' else "datetime('now')"
+
+    c.execute(f'''
         INSERT INTO inspections (
             establishment_name, address, physical_location, inspector_name,
             inspection_date, comments, result, overall_score, critical_score,
             inspector_signature, manager_signature, received_by,
             photo_data, created_at, form_type
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)
+        VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {now_func}, {ph})
     ''', (
         data.get('establishment_name', ''),
         data.get('address', ''),
@@ -2188,9 +2223,9 @@ def submit_small_hotels():
 
     # Insert ALL checklist items to preserve form data
     for item_id in all_item_ids:
-        c.execute('''
+        c.execute(f'''
             INSERT INTO inspection_items (inspection_id, item_id, obser, error)
-            VALUES (%s, %s, %s, %s)
+            VALUES ({ph}, {ph}, {ph}, {ph})
         ''', (
             inspection_id,
             item_id,
@@ -8618,6 +8653,7 @@ def init_form_management_db():
     c.execute(f'''CREATE TABLE IF NOT EXISTS form_items (
         id {auto_inc},
         form_template_id INTEGER NOT NULL,
+        item_id TEXT,
         item_order INTEGER NOT NULL,
         category TEXT NOT NULL,
         description TEXT NOT NULL,
@@ -8627,6 +8663,15 @@ def init_form_management_db():
         created_date {timestamp},
         FOREIGN KEY (form_template_id) REFERENCES form_templates(id)
     )''')
+
+    # Add item_id column if it doesn't exist (migration for existing databases)
+    try:
+        if get_db_type() == 'postgresql':
+            c.execute("ALTER TABLE form_items ADD COLUMN IF NOT EXISTS item_id TEXT")
+        else:
+            c.execute("ALTER TABLE form_items ADD COLUMN item_id TEXT")
+    except Exception:
+        pass  # Column already exists
 
     # Form Categories Table - For organizing items
     c.execute(f'''CREATE TABLE IF NOT EXISTS form_categories (
@@ -8726,15 +8771,18 @@ def seed_form_items():
         print(f"🌱 Seeding {len(checklist)} items for {form_type}...")
         timestamp_val = 'CURRENT_TIMESTAMP' if get_db_type() == 'postgresql' else "datetime('now')"
 
-        for item in checklist:
+        for idx, item in enumerate(checklist):
+            # Store original item_id (e.g., '1A', '01') and use numeric index for item_order
+            original_id = item['id']
             c.execute(f'''
                 INSERT INTO form_items (
-                    form_template_id, item_order, category, description,
+                    form_template_id, item_id, item_order, category, description,
                     weight, is_critical, active, created_date
-                ) VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {timestamp_val})
+                ) VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {timestamp_val})
             ''', (
                 template_id,
-                item['id'],
+                original_id,  # Store original ID like '1A', '01', etc.
+                idx + 1,  # Numeric order for sorting
                 item.get('category', 'GENERAL'),
                 item.get('desc', item.get('description', '')),
                 item.get('wt', item.get('weight', 1)),
@@ -8888,6 +8936,9 @@ def save_form():
         return jsonify({'success': False, 'error': 'Unauthorized'}), 401
 
     try:
+        from db_config import get_placeholder
+        ph = get_placeholder()
+
         data = request.get_json()
         form_id = data.get('form_id')
         form_name = data.get('form_name')
@@ -8899,29 +8950,31 @@ def save_form():
         c = conn.cursor()
 
         if form_id:  # Update existing form
-            c.execute('''
-                UPDATE form_templates 
-                SET name = %s, description = %s, form_type = %s, version = %s
-                WHERE id = %s
+            c.execute(f'''
+                UPDATE form_templates
+                SET name = {ph}, description = {ph}, form_type = {ph}, version = {ph}
+                WHERE id = {ph}
             ''', (form_name, form_description, form_type, '1.1', form_id))
 
             # Deactivate existing items
-            c.execute('UPDATE form_items SET active = 0 WHERE form_template_id = %s', (form_id,))
+            c.execute(f'UPDATE form_items SET active = 0 WHERE form_template_id = {ph}', (form_id,))
 
         else:  # Create new form
-            c.execute('''
+            c.execute(f'''
                 INSERT INTO form_templates (name, description, form_type, created_by)
-                VALUES (%s, %s, %s, %s)
+                VALUES ({ph}, {ph}, {ph}, {ph})
             ''', (form_name, form_description, form_type, session.get('user_id', 'admin')))
             form_id = c.lastrowid
 
-        # Insert/update items
-        for item in items:
+        # Insert/update items with item_id
+        for idx, item in enumerate(items):
+            # Generate item_id - use provided value or generate from order
+            item_id_val = item.get('item_id', str(item['order']).zfill(2))
             c.execute(f'''
-                INSERT INTO form_items 
-                (form_template_id, item_order, category, description, weight, is_critical)
-                VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})
-            ''', (form_id, item['order'], item['category'], item['description'],
+                INSERT INTO form_items
+                (form_template_id, item_id, item_order, category, description, weight, is_critical)
+                VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph})
+            ''', (form_id, item_id_val, item['order'], item['category'], item['description'],
                   item['weight'], 1 if item.get('critical') else 0))
 
         conn.commit()
@@ -11916,13 +11969,17 @@ def create_form_item():
     max_order = c.fetchone()[0]
     next_order = (max_order + 1) if max_order else 1
 
+    # Generate item_id - use provided value or generate from item_order
+    new_item_id = data.get('item_id', str(next_order).zfill(2))
+
     c = execute_query(conn, '''
         INSERT INTO form_items (
-            form_template_id, item_order, category, description,
+            form_template_id, item_id, item_order, category, description,
             weight, is_critical, active, created_date
-        ) VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph})
+        ) VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph})
     ''', (
         data['form_template_id'],
+        new_item_id,
         next_order,
         data.get('category', 'GENERAL'),
         data['description'],
@@ -12378,8 +12435,82 @@ def auto_migrate_checklists():
             print("✅ Automatic migration completed!")
         else:
             print(f"✓ Found {count} checklist items in database")
+            # Ensure item_id column is populated
+            fix_missing_item_ids()
     except Exception as e:
         print(f"⚠️  Auto-migration error: {str(e)}")
+
+
+def fix_missing_item_ids():
+    """Fix existing form_items that have NULL item_id by re-seeding affected form types"""
+    try:
+        from db_config import get_db_type
+        conn = get_db_connection()
+        c = conn.cursor()
+        ph = '%s' if get_db_type() == 'postgresql' else '?'
+
+        # Forms that use alphanumeric IDs (need special handling)
+        alphanumeric_forms = ['Swimming Pool', 'Small Hotel']
+
+        # Map form types to their hardcoded checklists
+        form_checklists = {
+            'Swimming Pool': SWIMMING_POOL_CHECKLIST_ITEMS,
+            'Small Hotel': SMALL_HOTELS_CHECKLIST_ITEMS,
+            'Barbershop': BARBERSHOP_CHECKLIST_ITEMS,
+            'Institutional': INSTITUTIONAL_CHECKLIST_ITEMS,
+        }
+
+        for form_type, checklist in form_checklists.items():
+            # Get template ID
+            c.execute(f'SELECT id FROM form_templates WHERE form_type = {ph} AND active = 1', (form_type,))
+            template = c.fetchone()
+            if not template:
+                continue
+
+            template_id = template[0]
+
+            # Check if any items have NULL item_id
+            c.execute(f'SELECT COUNT(*) FROM form_items WHERE form_template_id = {ph} AND item_id IS NULL', (template_id,))
+            null_count = c.fetchone()[0]
+
+            if null_count > 0:
+                print(f"🔧 Fixing {null_count} items with NULL item_id for {form_type}...")
+
+                # Delete items with NULL item_id and re-seed
+                c.execute(f'DELETE FROM form_items WHERE form_template_id = {ph} AND item_id IS NULL', (template_id,))
+
+                # Check if items exist now
+                c.execute(f'SELECT COUNT(*) FROM form_items WHERE form_template_id = {ph}', (template_id,))
+                remaining = c.fetchone()[0]
+
+                if remaining == 0:
+                    # Re-seed with correct item_ids
+                    timestamp_val = 'CURRENT_TIMESTAMP' if get_db_type() == 'postgresql' else "datetime('now')"
+                    for idx, item in enumerate(checklist):
+                        original_id = item['id']
+                        c.execute(f'''
+                            INSERT INTO form_items (
+                                form_template_id, item_id, item_order, category, description,
+                                weight, is_critical, active, created_date
+                            ) VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {timestamp_val})
+                        ''', (
+                            template_id,
+                            original_id,
+                            idx + 1,
+                            item.get('category', 'GENERAL'),
+                            item.get('desc', item.get('description', '')),
+                            item.get('wt', item.get('weight', 1)),
+                            1 if item.get('critical', item.get('is_critical', False)) else 0,
+                            1
+                        ))
+                    print(f"✅ Re-seeded {len(checklist)} items for {form_type}")
+
+                if get_db_type() != 'postgresql':
+                    conn.commit()
+
+        conn.close()
+    except Exception as e:
+        print(f"⚠️  fix_missing_item_ids error: {str(e)}")
 
 
 def auto_migrate_form_fields():
