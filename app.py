@@ -12354,8 +12354,72 @@ def auto_migrate_checklists():
             print("✅ Automatic migration completed!")
         else:
             print(f"✓ Found {count} checklist items in database")
+            # Check each form type and seed if missing
+            seed_missing_form_items()
     except Exception as e:
         print(f"⚠️  Auto-migration error: {str(e)}")
+
+
+def seed_missing_form_items():
+    """Seed form_items for any form types that are missing items"""
+    from db_config import get_placeholder
+    ph = get_placeholder()
+
+    # Map form types to their hardcoded checklists
+    form_checklists = {
+        'Food Establishment': FOOD_CHECKLIST_ITEMS,
+        'Residential': RESIDENTIAL_CHECKLIST_ITEMS,
+        'Spirit Licence Premises': SPIRIT_LICENCE_CHECKLIST_ITEMS,
+        'Swimming Pool': SWIMMING_POOL_CHECKLIST_ITEMS,
+        'Small Hotel': SMALL_HOTELS_CHECKLIST_ITEMS,
+        'Barbershop': BARBERSHOP_CHECKLIST_ITEMS,
+        'Institutional': INSTITUTIONAL_CHECKLIST_ITEMS,
+        'Meat Processing': MEAT_PROCESSING_CHECKLIST_ITEMS,
+    }
+
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+
+        for form_type, checklist in form_checklists.items():
+            # Get template ID
+            c.execute(f'SELECT id FROM form_templates WHERE form_type = {ph} AND active = 1', (form_type,))
+            template = c.fetchone()
+
+            if not template:
+                print(f"⚠️  No template for {form_type}")
+                continue
+
+            template_id = template[0]
+
+            # Check if items exist for this template
+            c.execute(f'SELECT COUNT(*) FROM form_items WHERE form_template_id = {ph}', (template_id,))
+            item_count = c.fetchone()[0]
+
+            if item_count == 0:
+                print(f"🌱 Seeding {len(checklist)} items for {form_type}...")
+
+                for idx, item in enumerate(checklist):
+                    is_critical = 1 if item.get('critical', item.get('is_critical', item.get('wt', 0) >= 4)) else 0
+                    c.execute(f'''
+                        INSERT INTO form_items
+                        (form_template_id, item_order, category, description, weight, is_critical, active)
+                        VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, 1)
+                    ''', (
+                        template_id,
+                        idx + 1,
+                        item.get('category', 'GENERAL'),
+                        item.get('desc', item.get('description', '')),
+                        item.get('wt', item.get('weight', 1)),
+                        is_critical
+                    ))
+
+                print(f"✅ Seeded {len(checklist)} items for {form_type}")
+
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"⚠️  seed_missing_form_items error: {str(e)}")
 
 
 def auto_migrate_form_fields():
