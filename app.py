@@ -16,6 +16,8 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from reportlab.pdfgen import canvas
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+from reportlab.lib.utils import ImageReader
+import base64
 
 # Database Config Import
 from db_config import get_db_connection, get_db_type
@@ -138,6 +140,49 @@ if os.path.exists('inspections.db'):
         conn.close()
     except Exception as e:
         print(f"Migration error: {e}")
+
+# Helper function to draw signature images in PDFs
+def draw_signature_image(p, signature_data, x, y, max_width=100, max_height=40):
+    """
+    Draw a signature image on the PDF canvas.
+
+    Args:
+        p: PDF canvas object
+        signature_data: Base64 encoded image data (data:image/png;base64,...)
+        x, y: Position to draw the signature
+        max_width, max_height: Maximum dimensions for the signature
+
+    Returns:
+        True if signature was drawn as image, False if drawn as text
+    """
+    if not signature_data:
+        return False
+
+    # Check if it's base64 image data
+    if isinstance(signature_data, str) and signature_data.startswith('data:image'):
+        try:
+            # Extract base64 data after the comma
+            header, encoded = signature_data.split(',', 1)
+            image_data = base64.b64decode(encoded)
+            image_buffer = io.BytesIO(image_data)
+
+            # Create image reader and draw
+            img = ImageReader(image_buffer)
+            img_width, img_height = img.getSize()
+
+            # Scale to fit within max dimensions while maintaining aspect ratio
+            scale = min(max_width / img_width, max_height / img_height)
+            draw_width = img_width * scale
+            draw_height = img_height * scale
+
+            p.drawImage(img, x, y - draw_height, width=draw_width, height=draw_height)
+            return True
+        except Exception as e:
+            print(f"Error drawing signature image: {e}")
+            return False
+
+    return False
+
 
 # Corrected Checklist for Food Establishment Inspection Form
 # Complete 45-item structure matching the official form
@@ -2872,13 +2917,17 @@ def download_residential_pdf(form_id):
     y -= 30
     p.setFont("Times-Bold", 14)
     p.drawString(label_x, y, "Inspector's Signature:")
-    p.setFont("Times-Roman", 14)
-    p.drawString(label_x + 150, y, str(details.get('inspector_signature', '')))
+    inspector_sig = details.get('inspector_signature', '')
+    if not draw_signature_image(p, inspector_sig, label_x + 150, y, 120, 40):
+        p.setFont("Times-Roman", 14)
+        p.drawString(label_x + 150, y, str(inspector_sig)[:30] if inspector_sig else '')
 
     p.setFont("Times-Bold", 14)
     p.drawString(350, y, "Received by:")
-    p.setFont("Times-Roman", 14)
-    p.drawString(450, y, str(details.get('received_by', '')))
+    received_sig = details.get('received_by', '')
+    if not draw_signature_image(p, received_sig, 430, y, 120, 40):
+        p.setFont("Times-Roman", 14)
+        p.drawString(430, y, str(received_sig)[:30] if received_sig else '')
 
     p.save()
     buffer.seek(0)
@@ -3111,13 +3160,17 @@ def download_meat_processing_pdf(form_id):
     y -= 30
     p.setFont("Times-Bold", 12)
     p.drawString(label_x, y, "Inspector's Signature:")
-    p.setFont("Times-Roman", 11)
-    p.drawString(label_x + 130, y, str(details.get('inspector_signature', '')))
+    inspector_sig = details.get('inspector_signature', '')
+    if not draw_signature_image(p, inspector_sig, label_x + 130, y, 120, 40):
+        p.setFont("Times-Roman", 11)
+        p.drawString(label_x + 130, y, str(inspector_sig)[:30] if inspector_sig else '')
 
     p.setFont("Times-Bold", 12)
     p.drawString(350, y, "Received by:")
-    p.setFont("Times-Roman", 11)
-    p.drawString(440, y, str(details.get('received_by', '')))
+    received_sig = details.get('received_by', '')
+    if not draw_signature_image(p, received_sig, 430, y, 120, 40):
+        p.setFont("Times-Roman", 11)
+        p.drawString(430, y, str(received_sig)[:30] if received_sig else '')
 
     p.save()
     buffer.seek(0)
