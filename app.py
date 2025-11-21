@@ -583,11 +583,14 @@ def get_form_checklist_items(form_type, fallback_list=None):
         List of checklist items in the format expected by forms
     """
     try:
+        from db_config import get_placeholder
+        ph = get_placeholder()
+
         conn = get_db_connection()
         c = conn.cursor()
 
         # Get template ID for this form type
-        c.execute('SELECT id FROM form_templates WHERE form_type = %s AND active = 1', (form_type,))
+        c.execute(f'SELECT id FROM form_templates WHERE form_type = {ph} AND active = 1', (form_type,))
         template = c.fetchone()
 
         if not template:
@@ -598,23 +601,25 @@ def get_form_checklist_items(form_type, fallback_list=None):
         template_id = template[0]
 
         # Get all active items for this template, ordered
-        c.execute('''
+        c.execute(f'''
             SELECT id, item_order, category, description, weight, is_critical
             FROM form_items
-            WHERE form_template_id = %s AND active = 1
+            WHERE form_template_id = {ph} AND active = 1
             ORDER BY item_order
         ''', (template_id,))
 
         items = []
         for row in c.fetchall():
             # Convert to format expected by forms
+            is_crit = bool(row[5])  # Convert to boolean
             item = {
                 'id': row[1],  # item_order becomes the ID for compatibility
                 'desc': row[3],  # description
                 'description': row[3],  # alternative key
                 'wt': row[4],  # weight
                 'category': row[2],  # category
-                'is_critical': row[5]  # critical flag
+                'is_critical': is_crit,  # critical flag
+                'critical': is_crit  # alternative key for templates using 'critical'
             }
             items.append(item)
 
@@ -8628,7 +8633,10 @@ def init_form_management_db():
         if get_db_type() == 'postgresql':
             c.execute('INSERT INTO form_categories (name, description, display_order) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING', category)
         else:
-            c.execute('INSERT INTO form_categories (name, description, display_order) VALUES (%s, %s, %s)', category)
+            try:
+                c.execute('INSERT INTO form_categories (name, description, display_order) VALUES (?, ?, ?)', category)
+            except:
+                pass  # Already exists
 
     # Insert existing form templates
     existing_templates = [
@@ -8647,7 +8655,10 @@ def init_form_management_db():
         if get_db_type() == 'postgresql':
             c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (%s, %s, %s) ON CONFLICT (name) DO NOTHING', template)
         else:
-            c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (%s, %s, %s)', template)
+            try:
+                c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (?, ?, ?)', template)
+            except:
+                pass  # Already exists
 
     # Only commit if not using autocommit (SQLite)
     if get_db_type() != 'postgresql':
