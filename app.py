@@ -650,6 +650,17 @@ def get_form_checklist_items(form_type, fallback_list=None):
 
         # If database has items, use them; otherwise use fallback
         if items:
+            # For forms with alphanumeric IDs, check if item_id is properly populated
+            # If not, fall back to hardcoded list to ensure proper IDs
+            alphanumeric_forms = ['Swimming Pool', 'Small Hotel']
+            if form_type in alphanumeric_forms and fallback_list:
+                # Check if first item has proper alphanumeric ID (contains letter)
+                first_id = items[0]['id'] if items else ''
+                has_letter = any(c.isalpha() for c in str(first_id))
+                if not has_letter:
+                    print(f"⚠️  {form_type} items missing alphanumeric IDs, using hardcoded list")
+                    return normalize_checklist_items(fallback_list)
+
             print(f"✓ Loaded {len(items)} items from database for {form_type}")
             return items
         else:
@@ -12435,82 +12446,8 @@ def auto_migrate_checklists():
             print("✅ Automatic migration completed!")
         else:
             print(f"✓ Found {count} checklist items in database")
-            # Ensure item_id column is populated
-            fix_missing_item_ids()
     except Exception as e:
         print(f"⚠️  Auto-migration error: {str(e)}")
-
-
-def fix_missing_item_ids():
-    """Fix existing form_items that have NULL item_id by re-seeding affected form types"""
-    try:
-        from db_config import get_db_type
-        conn = get_db_connection()
-        c = conn.cursor()
-        ph = '%s' if get_db_type() == 'postgresql' else '?'
-
-        # Forms that use alphanumeric IDs (need special handling)
-        alphanumeric_forms = ['Swimming Pool', 'Small Hotel']
-
-        # Map form types to their hardcoded checklists
-        form_checklists = {
-            'Swimming Pool': SWIMMING_POOL_CHECKLIST_ITEMS,
-            'Small Hotel': SMALL_HOTELS_CHECKLIST_ITEMS,
-            'Barbershop': BARBERSHOP_CHECKLIST_ITEMS,
-            'Institutional': INSTITUTIONAL_CHECKLIST_ITEMS,
-        }
-
-        for form_type, checklist in form_checklists.items():
-            # Get template ID
-            c.execute(f'SELECT id FROM form_templates WHERE form_type = {ph} AND active = 1', (form_type,))
-            template = c.fetchone()
-            if not template:
-                continue
-
-            template_id = template[0]
-
-            # Check if any items have NULL item_id
-            c.execute(f'SELECT COUNT(*) FROM form_items WHERE form_template_id = {ph} AND item_id IS NULL', (template_id,))
-            null_count = c.fetchone()[0]
-
-            if null_count > 0:
-                print(f"🔧 Fixing {null_count} items with NULL item_id for {form_type}...")
-
-                # Delete items with NULL item_id and re-seed
-                c.execute(f'DELETE FROM form_items WHERE form_template_id = {ph} AND item_id IS NULL', (template_id,))
-
-                # Check if items exist now
-                c.execute(f'SELECT COUNT(*) FROM form_items WHERE form_template_id = {ph}', (template_id,))
-                remaining = c.fetchone()[0]
-
-                if remaining == 0:
-                    # Re-seed with correct item_ids
-                    timestamp_val = 'CURRENT_TIMESTAMP' if get_db_type() == 'postgresql' else "datetime('now')"
-                    for idx, item in enumerate(checklist):
-                        original_id = item['id']
-                        c.execute(f'''
-                            INSERT INTO form_items (
-                                form_template_id, item_id, item_order, category, description,
-                                weight, is_critical, active, created_date
-                            ) VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {timestamp_val})
-                        ''', (
-                            template_id,
-                            original_id,
-                            idx + 1,
-                            item.get('category', 'GENERAL'),
-                            item.get('desc', item.get('description', '')),
-                            item.get('wt', item.get('weight', 1)),
-                            1 if item.get('critical', item.get('is_critical', False)) else 0,
-                            1
-                        ))
-                    print(f"✅ Re-seeded {len(checklist)} items for {form_type}")
-
-                if get_db_type() != 'postgresql':
-                    conn.commit()
-
-        conn.close()
-    except Exception as e:
-        print(f"⚠️  fix_missing_item_ids error: {str(e)}")
 
 
 def auto_migrate_form_fields():
