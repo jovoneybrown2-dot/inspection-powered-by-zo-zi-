@@ -533,6 +533,10 @@
                     <div class="info-label">Overall Sc.</div>
                     <input type="text" name="overall_score" id="overall_score" value="0.0" readonly>
                 </div>
+                <div class="info-box">
+                    <div class="info-label">Critical Sc.</div>
+                    <input type="text" name="critical_score" id="critical_score" value="0.0" readonly>
+                </div>
             </div>
 
             <div class="institutional-details">
@@ -1378,13 +1382,18 @@
         function updateScores() {
             const scoreDropdowns = document.querySelectorAll('.score-dropdown');
             let overallScore = 0;
+            let criticalScore = 0;
 
             scoreDropdowns.forEach(dropdown => {
                 const value = parseFloat(dropdown.value) || 0;
                 overallScore += value;
+                if (dropdown.dataset.critical === 'true') {
+                    criticalScore += value;
+                }
             });
 
             document.getElementById('overall_score').value = overallScore.toFixed(1);
+            document.getElementById('critical_score').value = criticalScore.toFixed(1);
 
             const resultRadios = document.querySelectorAll('input[name="result"]');
             if (overallScore >= 80) {
