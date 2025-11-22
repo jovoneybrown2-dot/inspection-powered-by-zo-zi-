@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Audit Logs - Zo-Zi Inspection System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .filters {
+            padding: 30px;
+            background: #f8f9fa;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .filter-btn {
+            background: #667eea;
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: auto;
+        }
+
+        .filter-btn:hover {
+            background: #5568d3;
+        }
+
+        .logs-container {
+            padding: 30px;
+        }
+
+        .log-entry {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .log-entry:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .log-action {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .log-timestamp {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .log-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .log-info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .log-info-label {
+            font-size: 12px;
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .log-info-value {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .log-details {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .log-details pre {
+            margin: 0;
+            font-size: 13px;
+            color: #555;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .no-logs {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .no-logs-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+
+        .action-user_login { background: #e3f2fd; color: #1976d2; }
+        .action-inspection_created { background: #e8f5e9; color: #388e3c; }
+        .action-form_modified { background: #fff3e0; color: #f57c00; }
+        .action-user_created { background: #f3e5f5; color: #7b1fa2; }
+        .action-support_access_enabled { background: #fce4ec; color: #c2185b; }
+        .action-default { background: #f5f5f5; color: #616161; }
+
+        .installation-id {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}">
+</head>
+<body>
+    <button class="theme-toggle-btn" onclick="toggleTheme()">Dark</button>
+
+    <div class="container">
+        <div class="header">
+            <h1>📜 Security Audit Logs</h1>
+            <a href="/admin" class="back-btn">← Back to Admin</a>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Entries</h3>
+                <div class="value">{{ stats.total_entries or 0 }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Unique Users</h3>
+                <div class="value">{{ stats.users|length if stats.users else 0 }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Action Types</h3>
+                <div class="value">{{ stats.actions|length if stats.actions else 0 }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Installation ID</h3>
+                <div class="installation-id">{{ installation_id[:8] }}</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <form method="get" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
+                <div class="filter-group">
+                    <label>Action Type</label>
+                    <select name="action">
+                        <option value="">All Actions</option>
+                        {% if stats.actions %}
+                            {% for action in stats.actions.keys() %}
+                                <option value="{{ action }}" {% if current_filter.action == action %}selected{% endif %}>
+                                    {{ action }}
+                                </option>
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>User</label>
+                    <select name="user">
+                        <option value="">All Users</option>
+                        {% if stats.users %}
+                            {% for user in stats.users.keys() %}
+                                <option value="{{ user }}" {% if current_filter.user == user %}selected{% endif %}>
+                                    {{ user }}
+                                </option>
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Limit</label>
+                    <select name="limit">
+                        <option value="25" {% if current_filter.limit == 25 %}selected{% endif %}>25</option>
+                        <option value="50" {% if current_filter.limit == 50 %}selected{% endif %}>50</option>
+                        <option value="100" {% if current_filter.limit == 100 %}selected{% endif %}>100</option>
+                        <option value="500" {% if current_filter.limit == 500 %}selected{% endif %}>500</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="filter-btn">Apply Filters</button>
+                <a href="/admin/audit-logs" class="filter-btn" style="background: #999; text-decoration: none; display: inline-block;">Clear</a>
+            </form>
+        </div>
+
+        <!-- Logs -->
+        <div class="logs-container">
+            {% if logs %}
+                {% for log in logs %}
+                    <div class="log-entry">
+                        <div class="log-header">
+                            <div>
+                                <span class="action-badge action-{{ log.action_type|replace('_', '') }}">
+                                    {{ log.action_type }}
+                                </span>
+                                <span class="log-action">{{ log.action_type|replace('_', ' ')|title }}</span>
+                            </div>
+                            <span class="log-timestamp">{{ log.timestamp }}</span>
+                        </div>
+
+                        <div class="log-info">
+                            <div class="log-info-item">
+                                <span class="log-info-label">User</span>
+                                <span class="log-info-value">{{ log.user or 'N/A' }}</span>
+                            </div>
+                            {% if log.installation_id %}
+                            <div class="log-info-item">
+                                <span class="log-info-label">Installation ID</span>
+                                <span class="log-info-value installation-id">{{ log.installation_id[:16] }}...</span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {% if log.details %}
+                        <div class="log-details">
+                            <pre>{{ log.details|tojson(indent=2) }}</pre>
+                        </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-logs">
+                    <div class="no-logs-icon">📭</div>
+                    <h2>No audit logs found</h2>
+                    <p>Try adjusting your filters or check back later</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/dark-mode.js') }}"></script>
+</body>
+</html>

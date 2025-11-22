@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Security Info - Zo-Zi Inspection System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .section-header h2 {
+            font-size: 20px;
+            color: #333;
+        }
+
+        .section-icon {
+            font-size: 28px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+            word-wrap: break-word;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .status-valid {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-invalid {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .status-warning {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .status-info {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .modified-files {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+
+        .modified-files h4 {
+            color: #e65100;
+            margin-bottom: 10px;
+        }
+
+        .modified-files ul {
+            margin-left: 20px;
+        }
+
+        .modified-files li {
+            color: #f57c00;
+            margin: 5px 0;
+        }
+
+        .support-code {
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .expiry-info {
+            text-align: center;
+            color: #666;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .alert-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .alert-box.error {
+            background: #f8d7da;
+            border-color: #f44336;
+        }
+
+        .alert-box.success {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .alert-icon {
+            font-size: 28px;
+        }
+
+        .alert-content h3 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .alert-content p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .installation-id-box {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 16px;
+            color: #667eea;
+            border: 2px dashed #667eea;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .action-btn.primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .action-btn.secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .action-btn.secondary:hover {
+            background: #e0e0e0;
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}">
+</head>
+<body>
+    <button class="theme-toggle-btn" onclick="toggleTheme()">Dark</button>
+
+    <div class="container">
+        <div class="header">
+            <h1>🔐 System Security Information</h1>
+            <a href="/admin" class="back-btn">← Back to Admin</a>
+        </div>
+
+        <div class="content">
+            <!-- Alert Box for Code Integrity Issues -->
+            {% if not integrity_info.valid %}
+                <div class="alert-box error">
+                    <div class="alert-icon">⚠️</div>
+                    <div class="alert-content">
+                        <h3>Code Integrity Failed</h3>
+                        <p>{{ integrity_info.reason }}</p>
+                    </div>
+                </div>
+            {% elif integrity_info.valid %}
+                <div class="alert-box success">
+                    <div class="alert-icon">✅</div>
+                    <div class="alert-content">
+                        <h3>Code Integrity Verified</h3>
+                        <p>All critical files are unmodified and match the official Zo-Zi release.</p>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Installation Information -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-icon">🆔</span>
+                    <h2>Installation Information</h2>
+                </div>
+
+                <div class="installation-id-box">
+                    <strong>Installation ID:</strong><br>
+                    {{ system_info.installation_id }}
+                </div>
+
+                <div class="info-grid" style="margin-top: 20px;">
+                    <div class="info-item">
+                        <div class="info-label">Python Version</div>
+                        <div class="info-value">{{ system_info.python_version }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Flask Version</div>
+                        <div class="info-value">{{ system_info.flask_version }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Database Type</div>
+                        <div class="info-value">{{ system_info.database_type }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Mode</div>
+                        <div class="info-value">
+                            {% if system_info.demo_mode %}
+                                <span class="status-badge status-warning">Demo Mode</span>
+                            {% else %}
+                                <span class="status-badge status-valid">Production Mode</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Code Integrity -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-icon">🔍</span>
+                    <h2>Code Integrity Status</h2>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Status</div>
+                        <div class="info-value">
+                            {% if integrity_info.valid %}
+                                <span class="status-badge status-valid">✓ Valid</span>
+                            {% else %}
+                                <span class="status-badge status-invalid">✗ Invalid</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Version</div>
+                        <div class="info-value">{{ integrity_info.version }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Reason</div>
+                        <div class="info-value">{{ integrity_info.reason }}</div>
+                    </div>
+                </div>
+
+                {% if integrity_info.modified_files %}
+                    <div class="modified-files">
+                        <h4>⚠️ Modified Files Detected</h4>
+                        <ul>
+                            {% for file in integrity_info.modified_files %}
+                                <li>{{ file }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- License Information -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-icon">🔑</span>
+                    <h2>License Information</h2>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Status</div>
+                        <div class="info-value">
+                            {% if license_info.valid %}
+                                <span class="status-badge status-valid">✓ Valid</span>
+                            {% else %}
+                                <span class="status-badge status-invalid">✗ Invalid</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Institution</div>
+                        <div class="info-value">{{ license_info.institution or 'Not Set' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">License Key</div>
+                        <div class="info-value" style="font-family: monospace; font-size: 12px;">
+                            {{ license_info.key }}
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Message</div>
+                        <div class="info-value">{{ license_info.message }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support Access -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-icon">🔓</span>
+                    <h2>Support Access Status</h2>
+                </div>
+
+                {% if support_status.enabled %}
+                    <div class="support-code">
+                        {{ support_status.code }}
+                    </div>
+                    <div class="expiry-info">
+                        <strong>Expires:</strong> {{ support_status.expires }}<br>
+                        <strong>Time Remaining:</strong> {{ support_status.hours_remaining|round(1) }} hours<br>
+                        <strong>Enabled By:</strong> {{ support_status.enabled_by }}
+                    </div>
+                {% else %}
+                    <div style="text-align: center; padding: 30px; color: #999;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">🔒</div>
+                        <h3>Support Access Disabled</h3>
+                        <p>No active support access codes</p>
+                    </div>
+                {% endif %}
+
+                <div class="quick-actions">
+                    <a href="/admin/support-access" class="action-btn primary">
+                        {% if support_status.enabled %}
+                            Manage Support Access
+                        {% else %}
+                            Enable Support Access
+                        {% endif %}
+                    </a>
+                    <a href="/admin/audit-logs" class="action-btn secondary">
+                        View Audit Logs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/dark-mode.js') }}"></script>
+</body>
+</html>

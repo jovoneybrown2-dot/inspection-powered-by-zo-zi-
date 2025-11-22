@@ -306,8 +306,11 @@
             gap: 8px;
         }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}">
 </head>
 <body>
+    <button class="theme-toggle-btn" onclick="toggleTheme()">Dark</button>
+
     <!-- Header -->
     <div class="header-bar">
         <div class="flex justify-between items-center max-w-7xl mx-auto">
@@ -585,5 +588,6 @@
         });
     </script>
     {% include 'zozi_badge.html' %}
+    <script src="{{ url_for('static', filename='js/dark-mode.js') }}"></script>
 </body>
 </html>

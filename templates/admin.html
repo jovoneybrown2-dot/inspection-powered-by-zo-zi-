@@ -1279,6 +1279,9 @@
             <button class="sidebar-button" onclick="window.location.href='/parish_leaderboard'">🏆 Parish Rankings</button>
             <button class="sidebar-button" onclick="toggleFormCreator()">➕ Create Forms</button>
             <button class="sidebar-button" onclick="openModal('inspector_dashboard_view')">📊 Inspector View</button>
+            <button class="sidebar-button" onclick="window.location.href='/admin/support-access'">🔓 Support Access</button>
+            <button class="sidebar-button" onclick="window.location.href='/admin/audit-logs'">📜 Security Audit Logs</button>
+            <button class="sidebar-button" onclick="window.location.href='/admin/system-info'">🔐 System Security Info</button>
         </div>
 
         <!-- Overview Tab -->
@@ -1373,8 +1376,8 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">{{ form[3].strftime('%Y-%m-%d') if form[3] and form[3].__class__.__name__ == 'datetime' else (form[3].split(' ')[0] if form[3] and ' ' in str(form[3]) else (form[3] if form[3] else 'N/A')) }}</div>
-                                <div class="text-xs text-gray-500">{{ form[3].strftime('%H:%M:%S') if form[3] and form[3].__class__.__name__ == 'datetime' else (form[3].split(' ', 1)[1] if form[3] and ' ' in str(form[3]) and len(str(form[3]).split(' ', 1)) > 1 else '') }}</div>
+                                <div class="text-sm text-gray-900">{{ form[3].strftime('%Y-%m-%d') if form[3] and form[3].__class__.__name__ == 'datetime' else (form[3].split(' ')[0] if form[3] and ' ' in (form[3]|string) else (form[3] if form[3] else 'N/A')) }}</div>
+                                <div class="text-xs text-gray-500">{{ form[3].strftime('%H:%M:%S') if form[3] and form[3].__class__.__name__ == 'datetime' else (form[3].split(' ', 1)[1] if form[3] and ' ' in (form[3]|string) and ((form[3]|string).split(' ', 1)|length) > 1 else '') }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="form-actions">
@@ -1497,8 +1500,8 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">{{ form[3].strftime('%Y-%m-%d') if form[3] and form[3].__class__.__name__ == 'datetime' else (form[3].split(' ')[0] if form[3] and ' ' in str(form[3]) else (form[3] if form[3] else 'N/A')) }}</div>
-                                <div class="text-xs text-gray-500">{{ form[3].strftime('%H:%M:%S') if form[3] and form[3].__class__.__name__ == 'datetime' else (form[3].split(' ', 1)[1] if form[3] and ' ' in str(form[3]) and len(str(form[3]).split(' ', 1)) > 1 else '') }}</div>
+                                <div class="text-sm text-gray-900">{{ form[3].strftime('%Y-%m-%d') if form[3] and form[3].__class__.__name__ == 'datetime' else (form[3].split(' ')[0] if form[3] and ' ' in (form[3]|string) else (form[3] if form[3] else 'N/A')) }}</div>
+                                <div class="text-xs text-gray-500">{{ form[3].strftime('%H:%M:%S') if form[3] and form[3].__class__.__name__ == 'datetime' else (form[3].split(' ', 1)[1] if form[3] and ' ' in (form[3]|string) and ((form[3]|string).split(' ', 1)|length) > 1 else '') }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="form-actions">

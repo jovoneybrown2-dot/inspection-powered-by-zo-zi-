@@ -209,8 +209,11 @@
             color: #28a745;
         }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}">
 </head>
 <body>
+    <button class="theme-toggle-btn" onclick="toggleTheme()">Dark</button>
+
     <div class="main-content-wrapper">
         <!-- Photos Sidebar -->
         <div class="photos-sidebar">
@@ -493,5 +496,6 @@
 
 
     {% include 'zozi_badge.html' %}
+    <script src="{{ url_for('static', filename='js/dark-mode.js') }}"></script>
 </body>
 </html>

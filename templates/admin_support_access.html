@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Access - Zo-Zi Inspection System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+        }
+
+        .info-box h3 {
+            color: #1565c0;
+            margin-bottom: 10px;
+        }
+
+        .info-box p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .info-box ul {
+            margin-top: 10px;
+            margin-left: 20px;
+        }
+
+        .info-box li {
+            color: #555;
+            margin: 5px 0;
+        }
+
+        .status-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .status-card h2 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-active {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+        }
+
+        .status-inactive {
+            background: #f5f5f5;
+            border: 2px solid #9e9e9e;
+        }
+
+        .support-code-display {
+            font-family: 'Courier New', monospace;
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            letter-spacing: 3px;
+            margin: 20px 0;
+            border: 2px dashed #667eea;
+        }
+
+        .expiry-info {
+            text-align: center;
+            padding: 15px;
+            background: #fff3e0;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .expiry-info strong {
+            color: #e65100;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .security-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 30px;
+        }
+
+        .security-info h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .security-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .security-info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .security-info-label {
+            font-size: 12px;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .security-info-value {
+            font-size: 14px;
+            color: #333;
+            font-family: monospace;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .copy-btn {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .copy-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .inactive-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .inactive-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}">
+</head>
+<body>
+    <button class="theme-toggle-btn" onclick="toggleTheme()">Dark</button>
+
+    <div class="container">
+        <div class="header">
+            <h1>🔓 Support Access Management</h1>
+            <a href="/admin" class="back-btn">← Back to Admin</a>
+        </div>
+
+        <div class="content">
+            <!-- Information Box -->
+            <div class="info-box">
+                <h3>ℹ️ About Support Access</h3>
+                <p>This feature allows you to temporarily enable access for Zo-Zi support staff to help troubleshoot issues.</p>
+                <ul>
+                    <li>Support access is <strong>time-limited</strong> (default: 4 hours)</li>
+                    <li>All support actions are <strong>logged</strong> in the audit trail</li>
+                    <li>You can <strong>disable access</strong> at any time</li>
+                    <li>Access codes expire automatically</li>
+                </ul>
+            </div>
+
+            <!-- Current Status -->
+            {% if support_status.enabled %}
+                <div class="status-card status-active">
+                    <h2>✅ Support Access Active</h2>
+
+                    <div class="support-code-display">
+                        {{ support_status.code }}
+                    </div>
+
+                    <button class="copy-btn" onclick="copyCode('{{ support_status.code }}')">
+                        📋 Copy Code
+                    </button>
+
+                    <div class="expiry-info">
+                        <p><strong>Expires:</strong> {{ support_status.expires }}</p>
+                        <p><strong>Time Remaining:</strong> {{ support_status.hours_remaining|round(1) }} hours</p>
+                        <p><strong>Enabled By:</strong> {{ support_status.enabled_by }}</p>
+                    </div>
+
+                    <form id="disableForm">
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-danger">🔒 Disable Support Access</button>
+                        </div>
+                    </form>
+                </div>
+            {% else %}
+                <div class="status-card status-inactive">
+                    <h2>🔒 Support Access Disabled</h2>
+
+                    <div class="inactive-state">
+                        <div class="inactive-state-icon">🔒</div>
+                        <p>No active support access codes</p>
+                    </div>
+
+                    <form id="enableForm">
+                        <div class="form-group">
+                            <label for="duration">Access Duration (hours)</label>
+                            <select id="duration" name="duration">
+                                <option value="1">1 hour</option>
+                                <option value="2">2 hours</option>
+                                <option value="4" selected>4 hours (recommended)</option>
+                                <option value="8">8 hours</option>
+                                <option value="24">24 hours</option>
+                            </select>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">🔓 Enable Support Access</button>
+                        </div>
+                    </form>
+                </div>
+            {% endif %}
+
+            <!-- Security Information -->
+            <div class="security-info">
+                <h3>🔐 Security Information</h3>
+                <div class="security-info-grid">
+                    <div class="security-info-item">
+                        <span class="security-info-label">Installation ID</span>
+                        <span class="security-info-value">{{ security_info.installation_id[:16] }}...</span>
+                    </div>
+                    <div class="security-info-item">
+                        <span class="security-info-label">Version</span>
+                        <span class="security-info-value">{{ security_info.version }}</span>
+                    </div>
+                    <div class="security-info-item">
+                        <span class="security-info-label">Code Integrity</span>
+                        <span class="security-info-value">
+                            {% if security_info.code_integrity %}
+                                ✅ Valid
+                            {% else %}
+                                ❌ Modified
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="security-info-item">
+                        <span class="security-info-label">License</span>
+                        <span class="security-info-value">
+                            {% if security_info.license_info.valid %}
+                                ✅ {{ security_info.license_info.institution }}
+                            {% else %}
+                                ❌ Invalid
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Copy support code to clipboard
+        function copyCode(code) {
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Support code copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy code. Please copy manually.');
+            });
+        }
+
+        // Enable support access
+        const enableForm = document.getElementById('enableForm');
+        if (enableForm) {
+            enableForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const duration = document.getElementById('duration').value;
+                const formData = new FormData();
+                formData.append('action', 'enable');
+                formData.append('duration', duration);
+
+                try {
+                    const response = await fetch('/admin/support-access', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (result.status === 'success') {
+                        alert('Support access enabled successfully!');
+                        window.location.reload();
+                    } else {
+                        alert('Failed to enable support access');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred');
+                }
+            });
+        }
+
+        // Disable support access
+        const disableForm = document.getElementById('disableForm');
+        if (disableForm) {
+            disableForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                if (!confirm('Are you sure you want to disable support access?')) {
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('action', 'disable');
+
+                try {
+                    const response = await fetch('/admin/support-access', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (result.status === 'success') {
+                        alert('Support access disabled successfully!');
+                        window.location.reload();
+                    } else {
+                        alert('Failed to disable support access');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred');
+                }
+            });
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/dark-mode.js') }}"></script>
+</body>
+</html>

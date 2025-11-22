@@ -221,7 +221,7 @@ def init_db():
     if get_db_type() == 'postgresql':
         c.executemany(f"INSERT INTO users (username, password, role) VALUES (%s, %s, %s) ON CONFLICT (username) DO NOTHING", users)
     else:
-        c.executemany("INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)", users)
+        c.executemany("INSERT OR IGNORE INTO users (username, password, role) VALUES (%s, %s, %s)", users)
 
     # Login history table (required by login route)
     c.execute(f'''CREATE TABLE IF NOT EXISTS login_history
@@ -344,7 +344,7 @@ def init_db():
         if get_db_type() == 'postgresql':
             c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (%s, %s, %s) ON CONFLICT (name) DO NOTHING', template)
         else:
-            c.execute('INSERT OR IGNORE INTO form_templates (name, description, form_type) VALUES (?, ?, ?)', template)
+            c.execute('INSERT OR IGNORE INTO form_templates (name, description, form_type) VALUES (%s, %s, %s)', template)
 
     # Only commit if not using autocommit (SQLite)
     if get_db_type() != 'postgresql':
@@ -381,11 +381,11 @@ def save_burial_inspection(data):
     try:
         if data.get('id'):
             c.execute(f'''UPDATE burial_site_inspections SET
-                         inspection_date = ?, applicant_name = ?, deceased_name = ?, burial_location = ?,
-                         site_description = ?, proximity_water_source = ?, proximity_perimeter_boundaries = ?,
-                         proximity_road_pathway = ?, proximity_trees = ?, proximity_houses_buildings = ?,
-                         proposed_grave_type = ?, general_remarks = ?, inspector_signature = ?,
-                         received_by = ?, photo_data = ?, created_at = ?
+                         inspection_date = %s, applicant_name = %s, deceased_name = %s, burial_location = %s,
+                         site_description = %s, proximity_water_source = %s, proximity_perimeter_boundaries = %s,
+                         proximity_road_pathway = %s, proximity_trees = %s, proximity_houses_buildings = %s,
+                         proposed_grave_type = %s, general_remarks = %s, inspector_signature = %s,
+                         received_by = %s, photo_data = %s, created_at = %s
                          WHERE id = %s''',
                       (data['inspection_date'], data['applicant_name'], data['deceased_name'], data['burial_location'],
                        data['site_description'], data['proximity_water_source'], data['proximity_perimeter_boundaries'],
@@ -418,12 +418,12 @@ def save_residential_inspection(data):
         if data.get('id'):
             c.execute("""
                             UPDATE residential_inspections
-                            SET premises_name = ?, owner = ?, address = ?, inspector_name = ?,
-                                inspection_date = ?, inspector_code = ?, treatment_facility = ?, vector = ?,
-                                result = ?, onsite_system = ?, building_construction_type = ?, purpose_of_visit = ?,
-                                action = ?, no_of_bedrooms = ?, total_population = ?, critical_score = ?,
-                                overall_score = ?, comments = ?, inspector_signature = ?, received_by = ?,
-                                created_at = ?, photo_data = ?
+                            SET premises_name = %s, owner = %s, address = %s, inspector_name = %s,
+                                inspection_date = %s, inspector_code = %s, treatment_facility = %s, vector = %s,
+                                result = %s, onsite_system = %s, building_construction_type = %s, purpose_of_visit = %s,
+                                action = %s, no_of_bedrooms = %s, total_population = %s, critical_score = %s,
+                                overall_score = %s, comments = %s, inspector_signature = %s, received_by = %s,
+                                created_at = %s, photo_data = %s
                             WHERE id = %s
                         """,
                         (data['premises_name'], data['owner'], data['address'], data['inspector_name'],
@@ -476,13 +476,13 @@ def save_meat_processing_inspection(data):
         if data.get('id'):
             c.execute("""
                 UPDATE meat_processing_inspections
-                SET establishment_name = ?, owner_operator = ?, address = ?, inspector_name = ?,
-                    establishment_no = ?, overall_score = ?, food_contact_surfaces = ?, water_samples = ?,
-                    product_samples = ?, types_of_products = ?, staff_fhp = ?, staff_compliment = ?, water_public = ?,
-                    water_private = ?, type_processing = ?, type_slaughter = ?, purpose_of_visit = ?,
-                    inspection_date = ?, inspector_code = ?, result = ?, telephone_no = ?,
-                    registration_status = ?, action = ?, comments = ?, inspector_signature = ?,
-                    received_by = ?, created_at = ?, photo_data = ?
+                SET establishment_name = %s, owner_operator = %s, address = %s, inspector_name = %s,
+                    establishment_no = %s, overall_score = %s, food_contact_surfaces = %s, water_samples = %s,
+                    product_samples = %s, types_of_products = %s, staff_fhp = %s, staff_compliment = %s, water_public = %s,
+                    water_private = %s, type_processing = %s, type_slaughter = %s, purpose_of_visit = %s,
+                    inspection_date = %s, inspector_code = %s, result = %s, telephone_no = %s,
+                    registration_status = %s, action = %s, comments = %s, inspector_signature = %s,
+                    received_by = %s, created_at = %s, photo_data = %s
                 WHERE id = %s
             """, (
                 data['establishment_name'], data['owner_operator'], data['address'], data['inspector_name'],

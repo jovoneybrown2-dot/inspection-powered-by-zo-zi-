@@ -1,0 +1,28 @@
+{"timestamp": "2025-11-21T19:43:49.510313", "installation_id": "b2676ed3-3c7d-4821-a0eb-ac90d42576fc", "action_type": "test_action", "user": "test_user", "details": {"test": "data"}}
+{"timestamp": "2025-11-21T19:43:49.519315", "action_type": "audit_send_failed", "error": "No module named 'requests'"}
+{"timestamp": "2025-11-21T19:43:49.519579", "installation_id": "b2676ed3-3c7d-4821-a0eb-ac90d42576fc", "action_type": "inspection_created", "user": "inspector1", "details": {"inspection_id": 123, "form_type": "Food Establishment", "establishment": "Test Restaurant"}}
+{"timestamp": "2025-11-21T19:43:49.521140", "action_type": "audit_send_failed", "error": "No module named 'requests'"}
+{"timestamp": "2025-11-21T19:44:08.203483", "installation_id": "b2676ed3-3c7d-4821-a0eb-ac90d42576fc", "action_type": "support_access_enabled", "user": "admin_test", "details": {"code": "ZOZI-9724-26****", "expires": "2025-11-21T23:44:08.202153", "duration_hours": 4}}
+{"timestamp": "2025-11-21T19:44:08.204219", "action_type": "audit_send_failed", "error": "No module named 'requests'"}
+{"timestamp": "2025-11-21T21:19:48.602463", "installation_id": "b2676ed3-3c7d-4821-a0eb-ac90d42576fc", "action_type": "user_login", "user": "admin", "details": {"success": true, "ip_address": "127.0.0.1"}}
+{"timestamp": "2025-11-21T21:19:48.605449", "action_type": "audit_send_failed", "error": "No module named 'requests'"}
+{"timestamp": "2025-11-21T21:27:43.959359", "installation_id": "b2676ed3-3c7d-4821-a0eb-ac90d42576fc", "action_type": "user_login", "user": "admin", "details": {"success": true, "ip_address": "127.0.0.1"}}
+{"timestamp": "2025-11-21T21:27:43.961326", "action_type": "audit_send_failed", "error": "No module named 'requests'"}
+{"timestamp": "2025-11-22T15:12:07.776820", "installation_id": "b2676ed3-3c7d-4821-a0eb-ac90d42576fc", "action_type": "user_login", "user": "admin", "details": {"success": true, "ip_address": "127.0.0.1"}}
+{"timestamp": "2025-11-22T15:12:07.780716", "action_type": "audit_send_failed", "error": "No module named 'requests'"}
+{"timestamp": "2025-11-22T16:02:42.883130", "installation_id": "b2676ed3-3c7d-4821-a0eb-ac90d42576fc", "action_type": "user_login", "user": "inspector1", "details": {"success": true, "ip_address": "127.0.0.1"}}
+{"timestamp": "2025-11-22T16:02:42.887507", "action_type": "audit_send_failed", "error": "No module named 'requests'"}
+{"timestamp": "2025-11-22T16:39:18.591807", "installation_id": "b2676ed3-3c7d-4821-a0eb-ac90d42576fc", "action_type": "user_login", "user": "inspector1", "details": {"success": true, "ip_address": "127.0.0.1"}}
+{"timestamp": "2025-11-22T16:39:18.599461", "action_type": "audit_send_failed", "error": "No module named 'requests'"}
+{"timestamp": "2025-11-22T16:40:05.138254", "installation_id": "b2676ed3-3c7d-4821-a0eb-ac90d42576fc", "action_type": "user_login", "user": "admin", "details": {"success": true, "ip_address": "127.0.0.1"}}
+{"timestamp": "2025-11-22T16:40:05.140941", "action_type": "audit_send_failed", "error": "No module named 'requests'"}
+{"timestamp": "2025-11-22T16:59:04.060039", "installation_id": "b2676ed3-3c7d-4821-a0eb-ac90d42576fc", "action_type": "user_login", "user": "inspector1", "details": {"success": true, "ip_address": "127.0.0.1"}}
+{"timestamp": "2025-11-22T16:59:04.062689", "action_type": "audit_send_failed", "error": "No module named 'requests'"}
+{"timestamp": "2025-11-22T17:01:31.492786", "installation_id": "b2676ed3-3c7d-4821-a0eb-ac90d42576fc", "action_type": "user_login", "user": "admin", "details": {"success": true, "ip_address": "127.0.0.1"}}
+{"timestamp": "2025-11-22T17:01:31.500256", "action_type": "audit_send_failed", "error": "No module named 'requests'"}
+{"timestamp": "2025-11-22T17:25:42.191225", "installation_id": "b2676ed3-3c7d-4821-a0eb-ac90d42576fc", "action_type": "user_login", "user": "inspector1", "details": {"success": true, "ip_address": "127.0.0.1"}}
+{"timestamp": "2025-11-22T17:25:42.193925", "action_type": "audit_send_failed", "error": "No module named 'requests'"}
+{"timestamp": "2025-11-22T17:28:56.479765", "installation_id": "b2676ed3-3c7d-4821-a0eb-ac90d42576fc", "action_type": "user_login", "user": "inspector1", "details": {"success": true, "ip_address": "127.0.0.1"}}
+{"timestamp": "2025-11-22T17:28:56.483889", "action_type": "audit_send_failed", "error": "No module named 'requests'"}
+{"timestamp": "2025-11-22T21:01:58.387118", "installation_id": "b2676ed3-3c7d-4821-a0eb-ac90d42576fc", "action_type": "user_login", "user": "inspector1", "details": {"success": true, "ip_address": "127.0.0.1"}}
+{"timestamp": "2025-11-22T21:01:58.388666", "action_type": "audit_send_failed", "error": "No module named 'requests'"}

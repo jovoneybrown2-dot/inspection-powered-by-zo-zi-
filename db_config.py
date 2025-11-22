@@ -154,7 +154,7 @@ def execute_query(conn, query, params=None):
 
     Args:
         conn: Database connection
-        query: SQL query with ? placeholders
+        query: SQL query with ? or %s placeholders
         params: Query parameters (tuple or list)
 
     Returns:
@@ -164,10 +164,15 @@ def execute_query(conn, query, params=None):
         conn = get_db_connection()
         results = execute_query(conn, "SELECT * FROM users WHERE id = ?", (user_id,))
     """
-    # Convert SQLite placeholders (?) to PostgreSQL (%s) if needed
-    if get_db_type() == 'postgresql' and '?' in query:
-        # Simple replacement - works for most queries
+    db_type = get_db_type()
+
+    # Convert placeholders based on database type
+    if db_type == 'postgresql' and '?' in query:
+        # Convert SQLite placeholders (?) to PostgreSQL (%s)
         query = query.replace('?', '%s')
+    elif db_type == 'sqlite' and '%s' in query:
+        # Convert PostgreSQL placeholders (%s) to SQLite (?)
+        query = query.replace('%s', '?')
 
     cursor = conn.cursor()
     if params:

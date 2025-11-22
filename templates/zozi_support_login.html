@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zo-Zi Support Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .login-header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .login-icon {
+            font-size: 64px;
+            margin-bottom: 15px;
+        }
+
+        .login-form {
+            padding: 40px 30px;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 25px;
+        }
+
+        .info-box p {
+            color: #1565c0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group input::placeholder {
+            letter-spacing: normal;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .error-message {
+            background: #ffebee;
+            border: 1px solid #f44336;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .error-icon {
+            font-size: 24px;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .security-badge {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .security-badge p {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .security-icon {
+            font-size: 20px;
+            margin-right: 5px;
+        }
+
+        .code-format {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .code-format code {
+            background: #f5f5f5;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .warning-box p {
+            color: #856404;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .warning-box strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}">
+</head>
+<body>
+    <button class="theme-toggle-btn" onclick="toggleTheme()">Dark</button>
+
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-icon">🔓</div>
+            <h1>Zo-Zi Support Access</h1>
+            <p>Enter your support access code</p>
+        </div>
+
+        <div class="login-form">
+            {% if error %}
+                <div class="error-message">
+                    <span class="error-icon">⚠️</span>
+                    <span>{{ error }}</span>
+                </div>
+            {% endif %}
+
+            <div class="info-box">
+                <p>This login is for <strong>Zo-Zi support staff only</strong>. You must have a valid support access code provided by the institution's administrator.</p>
+            </div>
+
+            <form method="POST">
+                <div class="code-format">
+                    Expected format: <code>ZOZI-####-####-####</code>
+                </div>
+
+                <div class="form-group">
+                    <label for="support_code">Support Access Code</label>
+                    <input
+                        type="text"
+                        id="support_code"
+                        name="support_code"
+                        placeholder="ZOZI-1234-5678-9012"
+                        pattern="ZOZI-\d{4}-\d{4}-\d{4}"
+                        maxlength="19"
+                        required
+                        autofocus
+                    >
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    🔑 Validate & Login
+                </button>
+            </form>
+
+            <div class="warning-box">
+                <strong>⚠️ Important:</strong>
+                <p>All actions performed using support access are logged and monitored. Access is time-limited and will expire automatically.</p>
+            </div>
+
+            <div class="back-link">
+                <a href="/login">← Back to Regular Login</a>
+            </div>
+
+            <div class="security-badge">
+                <p>
+                    <span class="security-icon">🔐</span>
+                    Secured by Zo-Zi Inspection System
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-format support code input
+        const codeInput = document.getElementById('support_code');
+
+        codeInput.addEventListener('input', (e) => {
+            let value = e.target.value.toUpperCase().replace(/[^0-9ZOZI-]/g, '');
+
+            // Remove existing dashes for reformatting
+            value = value.replace(/-/g, '');
+
+            // Add ZOZI prefix if not present
+            if (!value.startsWith('ZOZI')) {
+                if (value.length > 0) {
+                    value = 'ZOZI' + value;
+                }
+            }
+
+            // Format: ZOZI-####-####-####
+            let formatted = 'ZOZI';
+            const digits = value.substring(4);
+
+            if (digits.length > 0) {
+                formatted += '-' + digits.substring(0, 4);
+            }
+            if (digits.length > 4) {
+                formatted += '-' + digits.substring(4, 8);
+            }
+            if (digits.length > 8) {
+                formatted += '-' + digits.substring(8, 12);
+            }
+
+            e.target.value = formatted;
+        });
+
+        // Set initial value if empty
+        codeInput.addEventListener('focus', (e) => {
+            if (e.target.value === '') {
+                e.target.value = 'ZOZI-';
+            }
+        });
+    </script>
+    <script src="{{ url_for('static', filename='js/dark-mode.js') }}"></script>
+</body>
+</html>

@@ -22,6 +22,12 @@ import base64
 # Database Config Import
 from db_config import get_db_connection, get_db_type
 
+# Security Modules Import
+from integrity_check import verify_integrity, get_installation_id
+from license_manager import validate_license, send_telemetry, send_integrity_report
+from audit_log import log_action, audit_user_login, audit_inspection_created, audit_form_modified, audit_user_created
+from support_access import validate_support_code, enable_support_access, disable_support_access, get_support_access_status
+
 # Import from correct database module based on DATABASE_URL
 if get_db_type() == 'postgresql':
     from psycopg2.extras import RealDictCursor
@@ -140,6 +146,271 @@ if os.path.exists('inspections.db'):
         conn.close()
     except Exception as e:
         print(f"Migration error: {e}")
+
+# =============================================================================
+# SECURITY INITIALIZATION - Zo-Zi Protection System
+# =============================================================================
+
+# Global security state
+CODE_INTEGRITY = {'valid': None, 'checked': False, 'version': 'unknown'}
+LICENSE_INFO = {'valid': False, 'institution': 'Unlicensed', 'message': 'Not checked'}
+INSTALLATION_ID = get_installation_id()
+
+print("\n" + "="*70)
+print("🔐 ZO-ZI INSPECTION SYSTEM - SECURITY CHECK")
+print("="*70)
+
+# 1. Check Installation ID
+print(f"\n📋 Installation ID: {INSTALLATION_ID}")
+
+# 2. Check Code Integrity
+print("\n🔍 Checking code integrity...")
+integrity_result = verify_integrity()
+CODE_INTEGRITY = integrity_result
+
+if integrity_result['valid'] is None:
+    print("   ⚠️  Development mode - No integrity manifest")
+    app.config['CODE_MODIFIED'] = False
+elif integrity_result['valid']:
+    print(f"   ✅ Code integrity verified - Version {integrity_result.get('version')}")
+    app.config['CODE_MODIFIED'] = False
+else:
+    print(f"   ❌ CODE INTEGRITY FAILED!")
+    print(f"      Reason: {integrity_result.get('reason')}")
+    if integrity_result.get('modified_files'):
+        print(f"      Modified files: {', '.join(integrity_result['modified_files'])}")
+    app.config['CODE_MODIFIED'] = True
+    app.config['MODIFIED_FILES'] = integrity_result.get('modified_files', [])
+
+# Send integrity report to monitoring server
+send_integrity_report(integrity_result)
+
+# 3. Check License
+print("\n🔑 Checking license...")
+license_key = os.environ.get('ZOZI_LICENSE_KEY')
+
+if license_key:
+    print(f"   License key found: {license_key[:12]}...")
+    valid, institution, message = validate_license(license_key)
+    LICENSE_INFO = {
+        'valid': valid,
+        'institution': institution or 'Unknown',
+        'message': message
+    }
+
+    if valid:
+        print(f"   ✅ License valid")
+        print(f"      Institution: {institution}")
+        print(f"      Status: {message}")
+        app.config['DEMO_MODE'] = False
+    else:
+        print(f"   ❌ License validation failed: {message}")
+        app.config['DEMO_MODE'] = True
+else:
+    print("   ⚠️  No license key found (ZOZI_LICENSE_KEY environment variable)")
+    print("      Running in DEMO MODE")
+    app.config['DEMO_MODE'] = True
+    LICENSE_INFO = {
+        'valid': False,
+        'institution': 'Demo Mode',
+        'message': 'No license key provided'
+    }
+
+# 4. Send startup telemetry
+print("\n📡 Sending startup telemetry...")
+try:
+    send_telemetry('app_started', {
+        'version': CODE_INTEGRITY.get('version'),
+        'integrity_valid': CODE_INTEGRITY.get('valid'),
+        'license_valid': LICENSE_INFO['valid'],
+        'institution': LICENSE_INFO['institution']
+    })
+    print("   ✅ Telemetry sent")
+except Exception as e:
+    print(f"   ⚠️  Telemetry failed: {e}")
+
+print("\n" + "="*70)
+print("✅ SECURITY CHECK COMPLETE")
+print("="*70 + "\n")
+
+# =============================================================================
+# SECURITY CONTEXT & ROUTES
+# =============================================================================
+
+@app.context_processor
+def inject_security_info():
+    """Make security information available to all templates"""
+    return {
+        'installation_id': INSTALLATION_ID[:8],  # Short version for display
+        'zozi_version': CODE_INTEGRITY.get('version', 'unknown'),
+        'code_modified': app.config.get('CODE_MODIFIED', False),
+        'modified_files': app.config.get('MODIFIED_FILES', []),
+        'institution_name': LICENSE_INFO.get('institution', 'Unknown'),
+        'is_demo': app.config.get('DEMO_MODE', True),
+        'license_valid': LICENSE_INFO.get('valid', False)
+    }
+
+@app.route('/admin/support-access', methods=['GET', 'POST'])
+def admin_support_access():
+    """Admin page to manage support access"""
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        action = request.form.get('action')
+        admin_user = session.get('admin', 'unknown')
+
+        if action == 'enable':
+            # Enable support access
+            duration = int(request.form.get('duration', 4))
+            result = enable_support_access(admin_user, duration)
+
+            return jsonify({
+                'status': 'success',
+                'message': 'Support access enabled',
+                'code': result['code'],
+                'expires': result['expires'],
+                'duration_hours': duration
+            })
+
+        elif action == 'disable':
+            # Disable support access
+            disable_support_access(admin_user)
+
+            return jsonify({
+                'status': 'success',
+                'message': 'Support access disabled'
+            })
+
+    # GET request - show status
+    status = get_support_access_status()
+
+    return render_template('admin_support_access.html',
+                          support_status=status,
+                          security_info={
+                              'installation_id': INSTALLATION_ID,
+                              'version': CODE_INTEGRITY.get('version'),
+                              'code_integrity': CODE_INTEGRITY.get('valid'),
+                              'license_info': LICENSE_INFO
+                          })
+
+@app.route('/zozi-support-login', methods=['GET', 'POST'])
+def zozi_support_login():
+    """Special login for Zo-Zi support staff"""
+    if request.method == 'POST':
+        support_code = request.form.get('support_code', '').strip()
+
+        # Validate support code
+        valid, message, time_remaining = validate_support_code(support_code)
+
+        if valid:
+            # Grant temporary support access
+            session['zozi_support'] = True
+            session['support_code'] = support_code
+            session['support_expires'] = time_remaining
+
+            # Log support access
+            log_action('support_access_used', 'zozi_support', {
+                'time_remaining': time_remaining,
+                'message': message
+            })
+
+            return redirect('/dashboard')
+        else:
+            return render_template('zozi_support_login.html',
+                                  error=message)
+
+    return render_template('zozi_support_login.html')
+
+@app.route('/zozi-support-logout')
+def zozi_support_logout():
+    """Logout support user"""
+    if session.get('zozi_support'):
+        log_action('support_access_logout', 'zozi_support', {})
+
+        session.pop('zozi_support', None)
+        session.pop('support_code', None)
+        session.pop('support_expires', None)
+
+    return redirect('/')
+
+@app.route('/admin/audit-logs')
+def admin_audit_logs():
+    """View security audit logs"""
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+
+    # Read audit log entries
+    from audit_log import read_audit_log, get_audit_stats
+
+    # Get parameters
+    limit = request.args.get('limit', 50, type=int)
+    action_filter = request.args.get('action', None)
+    user_filter = request.args.get('user', None)
+
+    # Read logs
+    logs = read_audit_log(limit=limit)
+
+    # Apply filters if specified
+    if action_filter:
+        logs = [log for log in logs if log.get('action_type') == action_filter]
+    if user_filter:
+        logs = [log for log in logs if log.get('user') == user_filter]
+
+    # Get statistics
+    stats = get_audit_stats()
+
+    return render_template('audit_logs.html',
+                          logs=logs,
+                          stats=stats,
+                          installation_id=INSTALLATION_ID,
+                          current_filter={'action': action_filter, 'user': user_filter, 'limit': limit})
+
+@app.route('/admin/system-info')
+def admin_system_info():
+    """View system security information"""
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+
+    # Gather system information
+    import os
+    from datetime import datetime
+
+    # Code integrity info
+    integrity_info = {
+        'valid': CODE_INTEGRITY.get('valid'),
+        'version': CODE_INTEGRITY.get('version'),
+        'reason': CODE_INTEGRITY.get('reason', 'N/A'),
+        'modified_files': CODE_INTEGRITY.get('modified_files', [])
+    }
+
+    # License info
+    license_info = {
+        'valid': LICENSE_INFO.get('valid'),
+        'institution': LICENSE_INFO.get('institution'),
+        'message': LICENSE_INFO.get('message'),
+        'key': os.getenv('ZOZI_LICENSE_KEY', 'Not set')[:20] + '...' if os.getenv('ZOZI_LICENSE_KEY') else 'Not set'
+    }
+
+    # Support access status
+    from support_access import get_support_access_status
+    support_status = get_support_access_status()
+
+    # System info
+    system_info = {
+        'installation_id': INSTALLATION_ID,
+        'python_version': os.sys.version.split()[0],
+        'flask_version': '2.0+',
+        'database_type': 'PostgreSQL' if os.getenv('DATABASE_URL') else 'SQLite',
+        'demo_mode': app.config.get('DEMO_MODE', True),
+        'uptime': 'N/A'  # Could implement uptime tracking
+    }
+
+    return render_template('system_info.html',
+                          integrity_info=integrity_info,
+                          license_info=license_info,
+                          support_status=support_status,
+                          system_info=system_info)
 
 # Helper function to draw signature images in PDFs
 def draw_signature_image(p, signature_data, x, y, max_width=100, max_height=40):
@@ -2496,9 +2767,9 @@ def search():
     data = get_establishment_data()
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT id, applicant_name, deceased_name FROM burial_site_inspections WHERE LOWER(applicant_name) LIKE %s OR LOWER(deceased_name) LIKE %s", (f'%{query}%', f'%{query}%'))
+    c.execute("SELECT id, applicant_name, deceased_name FROM burial_site_inspections WHERE LOWER(applicant_name) LIKE ? OR LOWER(deceased_name) LIKE ?", (f'%{query}%', f'%{query}%'))
     burial_records = c.fetchall()
-    c.execute("SELECT id, establishment_name, owner, license_no FROM inspections WHERE form_type = 'Barbershop' AND (LOWER(establishment_name) LIKE %s OR LOWER(owner) LIKE %s OR LOWER(license_no) LIKE %s)", (f'%{query}%', f'%{query}%', f'%{query}%'))
+    c.execute("SELECT id, establishment_name, owner, license_no FROM inspections WHERE form_type = 'Barbershop' AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ? OR LOWER(license_no) LIKE ?)", (f'%{query}%', f'%{query}%', f'%{query}%'))
     barbershop_records = c.fetchall()
     conn.close()
     suggestions = []
@@ -5552,7 +5823,7 @@ def search_forms():
             UNION
             SELECT id, applicant_name AS establishment_name, created_at, 'Completed' AS result, 'Burial Site' AS form_type, 0 AS overall_score, 0 AS critical_score
             FROM burial_site_inspections
-            WHERE LOWER(applicant_name) LIKE %s OR LOWER(deceased_name) LIKE %s
+            WHERE LOWER(applicant_name) LIKE ? OR LOWER(deceased_name) LIKE ?
             UNION
             SELECT id, premises_name AS establishment_name, created_at, result, 'Residential' AS form_type, overall_score, critical_score
             FROM residential_inspections
@@ -5609,7 +5880,7 @@ def search_forms():
             c = execute_query(conn, """
                 SELECT id, applicant_name, deceased_name, created_at
                 FROM burial_site_inspections
-                WHERE LOWER(applicant_name) LIKE %s OR LOWER(deceased_name) LIKE %s
+                WHERE LOWER(applicant_name) LIKE ? OR LOWER(deceased_name) LIKE ?
             """, (f'%{query}%', f'%{query}%'))
         elif form_type == 'spirit_licence':
             c = execute_query(conn, """
@@ -6722,6 +6993,9 @@ def login_post():
         session['user_id'] = user['id']
         session[login_type] = user['username']  # ✅ FIXED HERE
 
+        # Audit log: successful login
+        audit_user_login(user['username'], success=True, ip_address=ip_address)
+
         # Get REAL GPS coordinates from the login form (captured by browser geolocation)
         latitude = request.form.get('latitude', '')
         longitude = request.form.get('longitude', '')
@@ -6777,6 +7051,7 @@ def login_post():
 
     # Log failed login attempt
     log_audit_event(username, 'login_failed', ip_address, f'Failed {login_type} login attempt')
+    audit_user_login(username, success=False, ip_address=ip_address)
 
     return render_template('login.html', error='Invalid credentials')
 
@@ -8687,7 +8962,7 @@ def init_form_management_db():
             c.execute('INSERT INTO form_categories (name, description, display_order) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING', category)
         else:
             try:
-                c.execute('INSERT INTO form_categories (name, description, display_order) VALUES (?, ?, ?)', category)
+                c.execute('INSERT INTO form_categories (name, description, display_order) VALUES (%s, %s, %s)', category)
             except:
                 pass  # Already exists
 
@@ -8709,7 +8984,7 @@ def init_form_management_db():
             c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (%s, %s, %s) ON CONFLICT (name) DO NOTHING', template)
         else:
             try:
-                c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (?, ?, ?)', template)
+                c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (%s, %s, %s)', template)
             except:
                 pass  # Already exists
 
@@ -8956,7 +9231,7 @@ def clone_form(form_id):
         c.execute('''
             INSERT INTO form_items 
             (form_template_id, item_order, category, description, weight, is_critical)
-            SELECT ?, item_order, category, description, weight, is_critical
+            SELECT %s, item_order, category, description, weight, is_critical
             FROM form_items WHERE form_template_id = %s AND active = 1
         ''', (new_form_id, form_id))
 
@@ -10232,7 +10507,7 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
             {}
             GROUP BY DATE(inspection_date)
             ORDER BY date
-        """.format("AND form_type = ?" if inspection_type != 'all' else "")
+        """.format("AND form_type = %s" if inspection_type != 'all' else "")
 
         trend_params = params
         c.execute(trend_query, trend_params)
@@ -10262,7 +10537,7 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
             HAVING COUNT(*) > 0
             ORDER BY perfect_scores DESC, avg_overall DESC
             LIMIT 10
-        """.format("AND form_type = ?" if inspection_type != 'all' else "")
+        """.format("AND form_type = %s" if inspection_type != 'all' else "")
 
         c.execute(inspector_query, params)
         top_inspectors = [{
@@ -10292,7 +10567,7 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
             HAVING failures > 0
             ORDER BY failures DESC, total_checks DESC
             LIMIT 20
-        """.format("AND i.form_type = ?" if inspection_type != 'all' else "")
+        """.format("AND i.form_type = %s" if inspection_type != 'all' else "")
 
         c.execute(checklist_query, params)
         failed_items = [{
@@ -10321,7 +10596,7 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
             GROUP BY establishment_name, form_type
             HAVING COUNT(*) > 0
             ORDER BY avg_score DESC
-        """.format("AND form_type = ?" if inspection_type != 'all' else "")
+        """.format("AND form_type = %s" if inspection_type != 'all' else "")
 
         c.execute(establishment_query, params)
         all_establishments = c.fetchall()
@@ -10966,7 +11241,7 @@ def get_advanced_statistical_overview(inspection_type, start_date, end_date):
     params = [start_date, end_date]
 
     if inspection_type != 'all':
-        query += " AND form_type = ?"
+        query += " AND form_type = %s"
         params.append(inspection_type)
 
     c.execute(query, params)
@@ -11057,7 +11332,7 @@ def calculate_trend_indicator(inspection_type, start_date, end_date):
     params = [start_date, end_date]
 
     if inspection_type != 'all':
-        query += " AND form_type = ?"
+        query += " AND form_type = %s"
         params.append(inspection_type)
 
     query += " GROUP BY week ORDER BY week"
@@ -11107,7 +11382,7 @@ def assess_data_quality(inspection_type, start_date, end_date):
     params = [start_date, end_date]
 
     if inspection_type != 'all':
-        query += " AND form_type = ?"
+        query += " AND form_type = %s"
         params.append(inspection_type)
 
     c.execute(query, params)
@@ -11168,7 +11443,7 @@ def generate_checklist_failure_analysis(inspection_type, start_date, end_date):
     params = [start_date, end_date]
 
     if inspection_type != 'all':
-        query += " AND i.form_type = ?"
+        query += " AND i.form_type = %s"
         params.append(inspection_type)
 
     query += """
@@ -11220,7 +11495,7 @@ def generate_inspector_performance(inspection_type, start_date, end_date):
     params = [start_date, end_date]
 
     if inspection_type != 'all':
-        query += " AND form_type = ?"
+        query += " AND form_type = %s"
         params.append(inspection_type)
 
     query += " GROUP BY inspector_name ORDER BY total_inspections DESC"
@@ -11256,7 +11531,7 @@ def generate_score_analysis(inspection_type, start_date, end_date):
     params = [start_date, end_date]
 
     if inspection_type != 'all':
-        query += " AND form_type = ?"
+        query += " AND form_type = %s"
         params.append(inspection_type)
 
     query += " ORDER BY created_at"
@@ -11319,7 +11594,7 @@ def generate_recommendations(inspection_type, start_date, end_date):
     params = [start_date, end_date]
 
     if inspection_type != 'all':
-        query += " AND form_type = ?"
+        query += " AND form_type = %s"
         params.append(inspection_type)
 
     c.execute(query, params)
