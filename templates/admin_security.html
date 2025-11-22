@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Dashboard - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .security-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+
+        .security-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .security-stat:last-child {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-verified {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-modified {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .alert-card {
+            border-left: 4px solid;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .alert-high {
+            border-color: #dc2626;
+            background: #fef2f2;
+        }
+
+        .alert-medium {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .alert-low {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .log-entry {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        .log-entry:hover {
+            background: #f9fafb;
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            border: none;
+            background: #f3f4f6;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .integrity-check-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .integrity-check-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .file-item {
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto p-6">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">🛡️ Security Dashboard</h1>
+                <p class="text-gray-600">Comprehensive system security monitoring and audit logging</p>
+            </div>
+            <a href="/admin" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">← Back to Admin</a>
+        </div>
+
+        <!-- Security Overview Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="security-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">File Integrity</p>
+                        <h3 class="text-2xl font-bold {% if overview.file_integrity.modified > 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                            {{ overview.file_integrity.verified }}/{{ overview.file_integrity.total }}
+                        </h3>
+                        <p class="text-xs text-gray-500">Files Verified</p>
+                    </div>
+                    <div class="text-4xl">
+                        {% if overview.file_integrity.modified > 0 %}⚠️{% else %}✅{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="security-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">Login Activity (24h)</p>
+                        <h3 class="text-2xl font-bold text-blue-600">{{ overview.login_activity.total }}</h3>
+                        <p class="text-xs text-gray-500">{{ overview.login_activity.failed }} Failed</p>
+                    </div>
+                    <div class="text-4xl">👤</div>
+                </div>
+            </div>
+
+            <div class="security-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">Audit Events (24h)</p>
+                        <h3 class="text-2xl font-bold text-purple-600">{{ overview.audit_activity.total_actions }}</h3>
+                        <p class="text-xs text-gray-500">Total Actions</p>
+                    </div>
+                    <div class="text-4xl">📝</div>
+                </div>
+            </div>
+
+            <div class="security-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">Security Alerts</p>
+                        <h3 class="text-2xl font-bold {% if overview.alerts.unacknowledged > 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                            {{ overview.alerts.unacknowledged }}
+                        </h3>
+                        <p class="text-xs text-gray-500">Unacknowledged</p>
+                    </div>
+                    <div class="text-4xl">⚠️</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="mb-4">
+            <div class="flex bg-white rounded-lg overflow-hidden shadow">
+                <button class="tab-button active" data-tab="overview">Overview</button>
+                <button class="tab-button" data-tab="file-integrity">File Integrity</button>
+                <button class="tab-button" data-tab="audit-log">Audit Log</button>
+                <button class="tab-button" data-tab="login-history">Login History</button>
+                <button class="tab-button" data-tab="database-activity">Database Activity</button>
+                <button class="tab-button" data-tab="alerts">Alerts</button>
+            </div>
+        </div>
+
+        <!-- Tab Contents -->
+
+        <!-- Overview Tab -->
+        <div class="tab-content active" data-tab="overview">
+            <div class="security-card">
+                <h2 class="text-xl font-bold mb-4">🔍 Quick Security Check</h2>
+                <button id="runIntegrityCheck" class="integrity-check-btn">
+                    Run File Integrity Check Now
+                </button>
+                <p class="text-sm text-gray-600 mt-2">Last check: <span id="lastCheckTime">{{ last_check or 'Never' }}</span></p>
+            </div>
+
+            {% if alerts and alerts|length > 0 %}
+            <div class="security-card">
+                <h2 class="text-xl font-bold mb-4">⚠️ Recent Security Alerts</h2>
+                {% for alert in alerts[:5] %}
+                <div class="alert-card alert-{{ alert[3] }}">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-bold">{{ alert[4] }}</h3>
+                            <p class="text-sm text-gray-700">{{ alert[5] }}</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ alert[1] }}</p>
+                        </div>
+                        {% if not alert[8] %}
+                        <button class="text-sm px-3 py-1 bg-blue-600 text-white rounded" onclick="acknowledgeAlert({{ alert[0] }})">
+                            Acknowledge
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="security-card">
+                    <h2 class="text-xl font-bold mb-4">👤 Recent User Activity</h2>
+                    {% if recent_audit[:5] %}
+                        {% for log in recent_audit[:5] %}
+                        <div class="log-entry">
+                            <div class="flex justify-between">
+                                <span class="font-semibold">{{ log[2] }}</span>
+                                <span class="text-xs text-gray-500">{{ log[1] }}</span>
+                            </div>
+                            <p class="text-sm text-gray-600">{{ log[4] }}</p>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-gray-500">No recent activity</p>
+                    {% endif %}
+                </div>
+
+                <div class="security-card">
+                    <h2 class="text-xl font-bold mb-4">📁 Recent Database Changes</h2>
+                    {% if db_activity[:5] %}
+                        {% for activity in db_activity[:5] %}
+                        <div class="log-entry">
+                            <div class="flex justify-between">
+                                <span class="font-semibold">{{ activity[2] }}</span>
+                                <span class="text-xs text-gray-500">{{ activity[1] }}</span>
+                            </div>
+                            <p class="text-sm text-gray-600">{{ activity[3] }} on {{ activity[4] }}</p>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-gray-500">No recent database activity</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- File Integrity Tab -->
+        <div class="tab-content" data-tab="file-integrity">
+            <div class="security-card">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold">📄 File Integrity Monitoring</h2>
+                    <button id="runIntegrityCheck2" class="integrity-check-btn">
+                        Run Check
+                    </button>
+                </div>
+
+                <div id="fileIntegrityResults">
+                    {% for file in file_integrity %}
+                    <div class="file-item">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="font-semibold">{{ file[1] }}</h3>
+                                <p class="text-xs text-gray-500">Last checked: {{ file[4] }}</p>
+                                {% if file[6] %}
+                                <p class="text-xs text-gray-500">Modified: {{ file[6] }}</p>
+                                {% endif %}
+                            </div>
+                            <span class="status-badge status-{{ file[5] }}">
+                                {{ file[5]|upper }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2 font-mono">Hash: {{ file[2][:32] }}...</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Log Tab -->
+        <div class="tab-content" data-tab="audit-log">
+            <div class="security-card">
+                <h2 class="text-xl font-bold mb-4">📝 Complete Audit Log</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-3 text-left">Timestamp</th>
+                                <th class="p-3 text-left">User</th>
+                                <th class="p-3 text-left">Role</th>
+                                <th class="p-3 text-left">Action</th>
+                                <th class="p-3 text-left">Description</th>
+                                <th class="p-3 text-left">IP Address</th>
+                                <th class="p-3 text-left">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in recent_audit %}
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="p-3">{{ log[1] }}</td>
+                                <td class="p-3 font-semibold">{{ log[3] }}</td>
+                                <td class="p-3"><span class="status-badge status-verified">{{ log[4] or 'N/A' }}</span></td>
+                                <td class="p-3">{{ log[5] }}</td>
+                                <td class="p-3">{{ log[6] }}</td>
+                                <td class="p-3 text-xs">{{ log[9] or 'N/A' }}</td>
+                                <td class="p-3">
+                                    <span class="status-badge {% if log[13] == 'success' %}status-success{% else %}status-failed{% endif %}">
+                                        {{ log[13] }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login History Tab -->
+        <div class="tab-content" data-tab="login-history">
+            <div class="security-card">
+                <h2 class="text-xl font-bold mb-4">🔐 Login History</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-3 text-left">Timestamp</th>
+                                <th class="p-3 text-left">Username</th>
+                                <th class="p-3 text-left">IP Address</th>
+                                <th class="p-3 text-left">Status</th>
+                                <th class="p-3 text-left">Failure Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for attempt in login_attempts %}
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="p-3">{{ attempt[1] }}</td>
+                                <td class="p-3 font-semibold">{{ attempt[2] }}</td>
+                                <td class="p-3 text-xs">{{ attempt[3] or 'N/A' }}</td>
+                                <td class="p-3">
+                                    <span class="status-badge {% if attempt[5] == 1 %}status-success{% else %}status-failed{% endif %}">
+                                        {% if attempt[5] == 1 %}SUCCESS{% else %}FAILED{% endif %}
+                                    </span>
+                                </td>
+                                <td class="p-3 text-xs">{{ attempt[6] or '-' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Database Activity Tab -->
+        <div class="tab-content" data-tab="database-activity">
+            <div class="security-card">
+                <h2 class="text-xl font-bold mb-4">📁 Database Activity Log</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-3 text-left">Timestamp</th>
+                                <th class="p-3 text-left">User</th>
+                                <th class="p-3 text-left">Operation</th>
+                                <th class="p-3 text-left">Table</th>
+                                <th class="p-3 text-left">Record ID</th>
+                                <th class="p-3 text-left">Changes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in db_activity %}
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="p-3">{{ activity[1] }}</td>
+                                <td class="p-3 font-semibold">{{ activity[2] }}</td>
+                                <td class="p-3">
+                                    <span class="status-badge status-verified">{{ activity[3] }}</span>
+                                </td>
+                                <td class="p-3">{{ activity[4] }}</td>
+                                <td class="p-3">{{ activity[5] or 'N/A' }}</td>
+                                <td class="p-3 text-xs">{{ activity[6][:50] }}{% if activity[6] and activity[6]|length > 50 %}...{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts Tab -->
+        <div class="tab-content" data-tab="alerts">
+            <div class="security-card">
+                <h2 class="text-xl font-bold mb-4">⚠️ Security Alerts</h2>
+                {% if alerts %}
+                    {% for alert in alerts %}
+                    <div class="alert-card alert-{{ alert[3] }}" id="alert-{{ alert[0] }}">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-bold">{{ alert[4] }}</h3>
+                                    <span class="status-badge status-{% if alert[3] == 'high' %}failed{% else %}verified{% endif %}">
+                                        {{ alert[2]|upper }}
+                                    </span>
+                                </div>
+                                <p class="text-sm text-gray-700 mt-1">{{ alert[5] }}</p>
+                                <p class="text-xs text-gray-500 mt-2">
+                                    {{ alert[1] }}
+                                    {% if alert[6] %} | User: {{ alert[6] }}{% endif %}
+                                    {% if alert[7] %} | File: {{ alert[7] }}{% endif %}
+                                </p>
+                                {% if alert[8] %}
+                                <p class="text-xs text-green-600 mt-2">
+                                    ✓ Acknowledged by {{ alert[9] }} at {{ alert[10] }}
+                                </p>
+                                {% endif %}
+                            </div>
+                            {% if not alert[8] %}
+                            <button class="text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                    onclick="acknowledgeAlert({{ alert[0] }})">
+                                Acknowledge
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-gray-500 text-center py-8">No security alerts</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const targetTab = button.dataset.tab;
+
+                // Update buttons
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                // Update content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.querySelector(`.tab-content[data-tab="${targetTab}"]`).classList.add('active');
+            });
+        });
+
+        // Run integrity check
+        document.getElementById('runIntegrityCheck').addEventListener('click', runIntegrityCheck);
+        document.getElementById('runIntegrityCheck2').addEventListener('click', runIntegrityCheck);
+
+        function runIntegrityCheck() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Checking...';
+
+            fetch('/api/admin/security/integrity-check', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.violations && data.violations.length > 0) {
+                    alert(`⚠️ File Integrity Check Complete\n\n${data.violations.length} file(s) modified:\n` +
+                          data.violations.map(v => `- ${v.file}: ${v.message}`).join('\n'));
+                } else {
+                    alert('✅ File Integrity Check Complete\n\nAll files verified successfully!');
+                }
+                location.reload();
+            })
+            .catch(error => {
+                alert('Error running integrity check: ' + error);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.textContent = 'Run File Integrity Check Now';
+            });
+        }
+
+        function acknowledgeAlert(alertId) {
+            if (!confirm('Acknowledge this security alert?')) return;
+
+            fetch(`/api/admin/security/acknowledge-alert/${alertId}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                alert('Error acknowledging alert: ' + error);
+            });
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            location.reload();
+        }, 30000);
+    </script>
+</body>
+</html>

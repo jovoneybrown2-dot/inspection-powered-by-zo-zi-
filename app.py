@@ -27,6 +27,10 @@ from integrity_check import verify_integrity, get_installation_id
 from license_manager import validate_license, send_telemetry, send_integrity_report
 from audit_log import log_action, audit_user_login, audit_inspection_created, audit_form_modified, audit_user_created
 from support_access import validate_support_code, enable_support_access, disable_support_access, get_support_access_status
+from alert_system import (create_alert, read_alerts, acknowledge_alert, get_alert_stats,
+                          alert_code_tampered, alert_unauthorized_login, alert_license_invalid,
+                          SEVERITY_CRITICAL, SEVERITY_WARNING, SEVERITY_INFO)
+from security_monitoring import security_monitor
 
 # Import from correct database module based on DATABASE_URL
 if get_db_type() == 'postgresql':
@@ -411,6 +415,81 @@ def admin_system_info():
                           license_info=license_info,
                           support_status=support_status,
                           system_info=system_info)
+
+# ===== SECURITY MONITORING ROUTES =====
+
+@app.route('/admin/security')
+def admin_security():
+    """Comprehensive Security Dashboard"""
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+
+    # Get security overview
+    overview = security_monitor.get_security_overview()
+
+    # Get file integrity details
+    file_integrity = security_monitor.get_file_integrity_details()
+
+    # Get recent audit logs
+    recent_audit = security_monitor.get_recent_audit_logs(limit=50)
+
+    # Get login attempts
+    login_attempts = security_monitor.get_recent_login_attempts(limit=50)
+
+    # Get database activity
+    db_activity = security_monitor.get_database_activity(limit=50)
+
+    # Get security alerts
+    alerts = security_monitor.get_security_alerts(acknowledged=False)
+
+    # Get last check time from file_integrity
+    last_check = None
+    if file_integrity:
+        last_check = file_integrity[0][4] if len(file_integrity[0]) > 4 else None
+
+    return render_template('admin_security.html',
+                          overview=overview,
+                          file_integrity=file_integrity,
+                          recent_audit=recent_audit,
+                          login_attempts=login_attempts,
+                          db_activity=db_activity,
+                          alerts=alerts,
+                          last_check=last_check)
+
+@app.route('/api/admin/security/integrity-check', methods=['POST'])
+def api_security_integrity_check():
+    """Run file integrity check"""
+    if 'admin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    violations = security_monitor.check_file_integrity()
+
+    return jsonify({
+        'success': True,
+        'violations': violations,
+        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    })
+
+@app.route('/api/admin/security/acknowledge-alert/<int:alert_id>', methods=['POST'])
+def api_acknowledge_security_alert(alert_id):
+    """Acknowledge a security alert"""
+    if 'admin' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    admin_user = session.get('admin', 'unknown')
+    security_monitor.acknowledge_alert(alert_id, admin_user)
+
+    # Log the acknowledgment
+    security_monitor.log_audit(
+        username=admin_user,
+        action_type='security_alert_acknowledged',
+        action_description=f'Acknowledged security alert #{alert_id}',
+        user_role='admin',
+        target_type='security_alert',
+        target_id=alert_id
+    )
+
+    return jsonify({'success': True})
 
 # Helper function to draw signature images in PDFs
 def draw_signature_image(p, signature_data, x, y, max_width=100, max_height=40):
@@ -6996,6 +7075,23 @@ def login_post():
         # Audit log: successful login
         audit_user_login(user['username'], success=True, ip_address=ip_address)
 
+        # Security monitoring: log successful login
+        security_monitor.log_login_attempt(
+            username=user['username'],
+            success=True,
+            ip_address=ip_address,
+            user_agent=request.headers.get('User-Agent', ''),
+            session_id=str(session.get('user_id', ''))
+        )
+        security_monitor.log_audit(
+            username=user['username'],
+            action_type='login_success',
+            action_description=f'Successful {login_type} login',
+            user_role=user['role'],
+            ip_address=ip_address,
+            user_agent=request.headers.get('User-Agent', '')
+        )
+
         # Get REAL GPS coordinates from the login form (captured by browser geolocation)
         latitude = request.form.get('latitude', '')
         longitude = request.form.get('longitude', '')
@@ -7052,6 +7148,24 @@ def login_post():
     # Log failed login attempt
     log_audit_event(username, 'login_failed', ip_address, f'Failed {login_type} login attempt')
     audit_user_login(username, success=False, ip_address=ip_address)
+
+    # Security monitoring: log failed login
+    security_monitor.log_login_attempt(
+        username=username,
+        success=False,
+        ip_address=ip_address,
+        user_agent=request.headers.get('User-Agent', ''),
+        failure_reason='Invalid credentials'
+    )
+    security_monitor.log_audit(
+        username=username,
+        action_type='login_failed',
+        action_description=f'Failed {login_type} login attempt - Invalid credentials',
+        ip_address=ip_address,
+        user_agent=request.headers.get('User-Agent', ''),
+        status='failed',
+        error_message='Invalid username or password'
+    )
 
     return render_template('login.html', error='Invalid credentials')
 
@@ -12360,7 +12474,6 @@ def get_form_template_info(template_id):
 
     conn = get_db_connection()
     c = conn.cursor()
-
     c.execute('''
         SELECT id, name, description, form_type, version,
                last_edited_by, last_edited_date, last_edited_role
