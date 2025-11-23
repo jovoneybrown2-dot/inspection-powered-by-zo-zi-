@@ -42,6 +42,26 @@ class SecurityMonitor:
         auto_inc = self.get_auto_increment()
         timestamp = self.get_timestamp_default()
 
+        # Migration: Rename old audit_log table if it exists with old schema
+        try:
+            # Check if audit_log exists and has old schema (missing user_role column)
+            cursor = self._execute(conn, """
+                SELECT column_name FROM information_schema.columns
+                WHERE table_name = 'audit_log' AND column_name = 'user_role'
+            """ if get_db_type() == 'postgresql' else """
+                SELECT name FROM pragma_table_info('audit_log') WHERE name = 'user_role'
+            """)
+
+            if not cursor.fetchone():
+                # Old schema detected - rename the table
+                print("📋 Migrating old audit_log table to audit_log_legacy...")
+                self._execute(conn, "ALTER TABLE audit_log RENAME TO audit_log_legacy")
+                conn.commit()
+                print("✓ Old audit_log table backed up as audit_log_legacy")
+        except Exception as e:
+            # Table doesn't exist or other error - that's fine, we'll create it fresh
+            pass
+
         # File integrity monitoring table
         self._execute(conn, f'''CREATE TABLE IF NOT EXISTS file_integrity (
             id {auto_inc},
@@ -109,7 +129,7 @@ class SecurityMonitor:
             related_file TEXT,
             acknowledged INTEGER DEFAULT 0,
             acknowledged_by TEXT,
-            acknowledged_at {timestamp}
+            acknowledged_at TIMESTAMP
         )''')
 
         # Database activity log
