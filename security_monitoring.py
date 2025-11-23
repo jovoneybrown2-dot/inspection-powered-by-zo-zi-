@@ -6,8 +6,15 @@ Provides file integrity monitoring, audit logging, and security analytics
 import os
 import hashlib
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from db_config import get_db_connection, get_db_type, execute_query
+
+# Jamaica timezone offset (EST - no daylight saving)
+JAMAICA_UTC_OFFSET = timedelta(hours=-5)
+
+def get_jamaica_time():
+    """Get current time in Jamaica timezone (UTC-5)"""
+    return datetime.utcnow() + JAMAICA_UTC_OFFSET
 
 class SecurityMonitor:
     """Comprehensive security monitoring and audit logging"""
@@ -176,7 +183,7 @@ class SecurityMonitor:
                     self._execute(conn, '''UPDATE file_integrity
                                SET file_hash = %s, file_size = %s, last_checked = %s, modified_date = %s, status = 'verified'
                                WHERE file_path = %s''',
-                             (file_hash, file_size, datetime.now(), modified_date, file_path))
+                             (file_hash, file_size, get_jamaica_time(), modified_date, file_path))
                 else:
                     # Insert new record
                     self._execute(conn, '''INSERT INTO file_integrity (file_path, file_hash, file_size, modified_date, status)
@@ -224,7 +231,7 @@ class SecurityMonitor:
                 self._execute(conn, '''UPDATE file_integrity
                            SET file_hash = %s, file_size = %s, last_checked = %s, modified_date = %s, status = 'modified'
                            WHERE file_path = %s''',
-                         (current_hash, current_size, datetime.now(), modified_date, file_path))
+                         (current_hash, current_size, get_jamaica_time(), modified_date, file_path))
 
                 # Log the change
                 self._execute(conn, '''INSERT INTO system_changes (change_type, file_path, change_description, old_hash, new_hash, severity)
@@ -247,7 +254,7 @@ class SecurityMonitor:
             else:
                 # File is unchanged - update check time
                 self._execute(conn, 'UPDATE file_integrity SET last_checked = %s, status = %s WHERE file_path = %s',
-                         (datetime.now(), 'verified', file_path))
+                         (get_jamaica_time(), 'verified', file_path))
 
         conn.commit()
         conn.close()
@@ -416,7 +423,7 @@ class SecurityMonitor:
         self._execute(conn, '''UPDATE security_alerts
                    SET acknowledged = 1, acknowledged_by = %s, acknowledged_at = %s
                    WHERE id = %s''',
-                 (acknowledged_by, datetime.now(), alert_id))
+                 (acknowledged_by, get_jamaica_time(), alert_id))
 
         conn.commit()
         conn.close()

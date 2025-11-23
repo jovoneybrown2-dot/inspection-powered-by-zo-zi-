@@ -5,6 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Security Dashboard - Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Convert UTC timestamps to Jamaica time (EST - UTC-5)
+        function convertToJamaicaTime(utcDateString) {
+            if (!utcDateString || utcDateString === 'Never') return utcDateString;
+
+            const utcDate = new Date(utcDateString + ' UTC');
+            const jamaicaDate = new Date(utcDate.getTime() - (5 * 60 * 60 * 1000)); // UTC-5
+
+            const year = jamaicaDate.getFullYear();
+            const month = String(jamaicaDate.getMonth() + 1).padStart(2, '0');
+            const day = String(jamaicaDate.getDate()).padStart(2, '0');
+            const hours = String(jamaicaDate.getHours()).padStart(2, '0');
+            const minutes = String(jamaicaDate.getMinutes()).padStart(2, '0');
+            const seconds = String(jamaicaDate.getSeconds()).padStart(2, '0');
+
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds} EST`;
+        }
+
+        // Auto-convert all timestamps on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            // Convert all text that looks like timestamps
+            document.querySelectorAll('td, p, span').forEach(function(el) {
+                const text = el.textContent.trim();
+                // Match YYYY-MM-DD HH:MM:SS pattern
+                if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(text)) {
+                    el.textContent = convertToJamaicaTime(text);
+                }
+            });
+        });
+    </script>
     <style>
         .security-card {
             background: white;
