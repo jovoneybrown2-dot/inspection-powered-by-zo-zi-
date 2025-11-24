@@ -870,5 +870,41 @@
     </div>
     {% include 'zozi_badge.html' %}
     <script src="{{ url_for('static', filename='js/dark-mode.js') }}"></script>
+
+    <script>
+        // Load inspection photos
+        document.addEventListener('DOMContentLoaded', function() {
+            const photoData = '{{ inspection.photo_data|safe }}';
+            const container = document.getElementById('photosSidebarContainer');
+
+            if (!photoData || photoData === '[]' || photoData === 'null' || photoData === '') {
+                container.innerHTML = '<div class="no-photos">No photos attached to this inspection.</div>';
+                return;
+            }
+
+            try {
+                const photos = JSON.parse(photoData);
+
+                if (!photos || photos.length === 0) {
+                    container.innerHTML = '<div class="no-photos">No photos attached to this inspection.</div>';
+                    return;
+                }
+
+                // Display photos
+                container.innerHTML = photos.map(photo => `
+                    <div class="photo-item">
+                        <div class="photo-item-number">📷 ${photo.number || 'Photo'}</div>
+                        <img src="${photo.data}" alt="Inspection Photo" onclick="window.open('${photo.data}', '_blank')">
+                        <div class="photo-item-comment">${photo.comment || 'No comment'}</div>
+                        ${photo.timestamp ? `<div style="font-size: 11px; color: #999; margin-top: 5px;">${new Date(photo.timestamp).toLocaleString()}</div>` : ''}
+                    </div>
+                `).join('');
+
+            } catch (e) {
+                console.error('Error parsing photos:', e);
+                container.innerHTML = '<div class="no-photos">Error loading photos.</div>';
+            }
+        });
+    </script>
 </body>
 </html>
