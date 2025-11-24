@@ -1026,6 +1026,35 @@
                 submitButton.disabled = false;
             }
         });
+
+        // Apply critical shading based on database flags
+        (function applyCriticalShading() {
+            {% if checklist %}
+            const criticalItems = {{ checklist | tojson }};
+
+            // Create a map of item ID to critical status
+            const criticalMap = {};
+            criticalItems.forEach(item => {
+                if (item.is_critical || item.critical) {
+                    criticalMap[item.id] = true;
+                }
+            });
+
+            // Find all table rows with item IDs and apply critical-item class
+            document.addEventListener('DOMContentLoaded', function() {
+                const tableRows = document.querySelectorAll('.inspection-table tbody tr, table tbody tr');
+                tableRows.forEach(row => {
+                    const firstCell = row.querySelector('td:first-child');
+                    if (firstCell) {
+                        const itemId = firstCell.textContent.trim().toLowerCase();
+                        if (criticalMap[itemId]) {
+                            row.classList.add('critical-item');
+                        }
+                    }
+                });
+            });
+            {% endif %}
+        })();
     </script>
     <!-- Signature Pad -->
 
