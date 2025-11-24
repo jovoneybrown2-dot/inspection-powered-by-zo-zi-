@@ -8197,8 +8197,8 @@ def get_security_metrics():
 
     @app.route('/small_hotels/inspection/<int:id>')
     def small_hotels_inspection_detail(id):
-    from db_config import get_placeholder
-    ph = get_placeholder()
+        from db_config import get_placeholder
+        ph = get_placeholder()
 
         if 'inspector' not in session and 'admin' not in session:
             return redirect(url_for('login'))
