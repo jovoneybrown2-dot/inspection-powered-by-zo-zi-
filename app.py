@@ -1444,7 +1444,7 @@ def view_institutional(form_id):
 
 @app.route('/generate_report', methods=['GET'])
 def generate_report():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({'error': 'Unauthorized'}), 401
     metric = request.args.get('metric', 'inspections')
     timeframe = request.args.get('timeframe', 'daily')
@@ -1469,7 +1469,7 @@ def generate_report():
 
 @app.route('/api/system_health', methods=['GET'])
 def system_health():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({'error': 'Unauthorized'}), 401
     # Simulated data; replace with actual metrics
     data = {
@@ -1510,7 +1510,7 @@ def logout():
 
 @app.route('/new_residential_form')
 def new_residential_form():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return redirect(url_for('login'))
     # Load checklist from database (falls back to hardcoded if empty)
     checklist = get_form_checklist_items('Residential', RESIDENTIAL_CHECKLIST_ITEMS)
@@ -1518,7 +1518,7 @@ def new_residential_form():
 
 @app.route('/new_burial_form')
 def new_burial_form():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return redirect(url_for('login'))
     inspection_id = request.args.get('id')
     if inspection_id:
@@ -1551,13 +1551,13 @@ def new_burial_form():
 
 @app.route('/new_water_supply_form')
 def new_water_supply_form():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return redirect(url_for('login'))
     return render_template('water_supply_form.html', checklist=[], inspections=get_inspections())
 
 @app.route('/new_spirit_licence_form')
 def new_spirit_licence_form():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return redirect(url_for('login'))
     # Default inspection data for new form
     inspection = {
@@ -1591,7 +1591,7 @@ def new_spirit_licence_form():
 
 @app.route('/new_swimming_pool_form')
 def new_swimming_pool_form():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return redirect(url_for('login'))
     inspection = {
         'id': '',
@@ -1618,7 +1618,7 @@ def new_swimming_pool_form():
 
 @app.route('/new_small_hotels_form')
 def new_small_hotels_form():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return redirect(url_for('login'))
     today = datetime.now().strftime('%Y-%m-%d')
     # Load checklist from database (falls back to hardcoded if empty)
@@ -1628,7 +1628,7 @@ def new_small_hotels_form():
 
 @app.route('/submit_institutional', methods=['POST'])
 def submit_institutional():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({'status': 'error', 'message': 'Not logged in'}), 401
 
     try:
@@ -1935,7 +1935,7 @@ def institutional_inspection_detail(id):
 
 @app.route('/submit_spirit_licence', methods=['POST'])
 def submit_spirit_licence():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({'status': 'error', 'message': 'Please log in.'}), 401
     data = {
         'establishment_name': request.form.get('establishment_name', ''),
@@ -1995,7 +1995,7 @@ def submit_spirit_licence():
 
 @app.route('/submit/<form_type>', methods=['POST'])
 def submit_form(form_type):
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({'success': False, 'error': 'Not logged in'}), 403
 
     from db_config import get_placeholder
@@ -2057,7 +2057,7 @@ def submit_form(form_type):
 
 @app.route('/submit_residential', methods=['POST'])
 def submit_residential():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({'message': 'Unauthorized: Please log in'}), 401
 
     from db_config import get_placeholder
@@ -2123,7 +2123,7 @@ def submit_residential():
 
 @app.route('/submit_burial', methods=['POST'])
 def submit_burial():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({'message': 'Unauthorized: Please log in'}), 401
 
     data = {
@@ -2154,7 +2154,7 @@ def submit_burial():
 
 @app.route('/submit_meat_processing', methods=['POST'])
 def submit_meat_processing():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({'message': 'Unauthorized: Please log in'}), 401
 
     from db_config import get_placeholder
@@ -2249,7 +2249,7 @@ def submit_meat_processing():
 
 @app.route('/submit_swimming_pools', methods=['POST'])
 def submit_swimming_pools():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({'status': 'error', 'message': 'Please log in.'}), 401
 
     conn = get_db_connection()
@@ -2477,7 +2477,7 @@ def fix_swimming_pool_db():
 
 @app.route('/new_institutional_form')
 def new_institutional_form():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return redirect(url_for('login'))
 
     # Load checklist from database (falls back to hardcoded if empty)
@@ -2516,7 +2516,7 @@ def new_institutional_form():
 
 @app.route('/submit_small_hotels', methods=['POST'])
 def submit_small_hotels():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({"status": "error", "message": "Unauthorized"}), 401
 
     from db_config import get_placeholder
@@ -2923,7 +2923,7 @@ def get_stats():
 
 @app.route('/search', methods=['GET'])
 def search():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return redirect(url_for('login'))
     query = request.args.get('q', '').lower()
     data = get_establishment_data()
@@ -2949,7 +2949,7 @@ def search():
 
 @app.route('/search_residential', methods=['GET'])
 def search_residential():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return redirect(url_for('login'))
     query = request.args.get('term', '').lower()
     conn = get_db_connection()
@@ -5944,7 +5944,7 @@ def draw_checkbox(pdf_canvas, x, y, checked=False):
 
 @app.route('/search_forms', methods=['GET'])
 def search_forms():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return redirect(url_for('login'))
 
     from db_config import execute_query
@@ -6228,7 +6228,7 @@ def update_barbershop_db_schema():
 # Route to render new barbershop inspection form
 @app.route('/new_barbershop_form')
 def new_barbershop_form():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return redirect(url_for('login'))
 
     # Load checklist from database (falls back to hardcoded if empty)
@@ -6267,7 +6267,7 @@ def new_barbershop_form():
 # Route to render new meat processing inspection form
 @app.route('/new_meat_processing_form')
 def new_meat_processing_form():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return redirect(url_for('login'))
 
     # Load checklist from database (falls back to hardcoded if empty)
@@ -6278,7 +6278,7 @@ def new_meat_processing_form():
 
 @app.route('/submit_barbershop', methods=['POST'])
 def submit_barbershop():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({'status': 'error', 'message': 'Please log in.'}), 401
 
     conn = get_db_connection()
@@ -6902,7 +6902,7 @@ def fix_all_forms_to_pass_fail():
 @app.route('/get_inspections_with_status')
 def get_inspections_with_status():
     """Get inspections with calculated Pass/Fail status for dashboard"""
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({'error': 'Unauthorized'}), 401
 
     conn = get_db_connection()
@@ -7533,7 +7533,7 @@ def search_inspections():
 
 @app.route('/api/inspector/tasks', methods=['GET'])
 def get_inspector_tasks():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({'error': 'Unauthorized'}), 401
 
     try:
@@ -7575,7 +7575,7 @@ def get_inspector_tasks():
 
 @app.route('/api/inspector/tasks/<int:task_id>/update', methods=['POST'])
 def update_task_status(task_id):  # Fixed parameter name to match route
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({'error': 'Unauthorized'}), 401
 
     try:
@@ -7607,7 +7607,7 @@ def update_task_status(task_id):  # Fixed parameter name to match route
 
 @app.route('/api/inspector/tasks/<int:task_id>/respond', methods=['POST'])
 def respond_to_task(task_id):
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({'error': 'Unauthorized'}), 401
 
     try:
@@ -7647,7 +7647,7 @@ def respond_to_task(task_id):
 
 @app.route('/api/inspector/tasks/unread_count', methods=['GET'])
 def get_unread_task_count():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({'error': 'Unauthorized'}), 401
 
     try:
@@ -9281,7 +9281,7 @@ def edit_form(form_id):
 
 @app.route('/api/inspector/my_inspections')
 def get_my_inspections():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({'error': 'Unauthorized'}), 401
 
     inspector_name = session.get('inspector')
@@ -9583,7 +9583,7 @@ def get_inspection_counts():
 @app.route('/api/forms/active')
 def get_active_forms():
     """Get active forms for inspector dashboard"""
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({'error': 'Unauthorized'}), 401
 
     conn = get_db_connection()
@@ -10057,7 +10057,7 @@ def get_form_template_by_type(form_type):
 
 @app.route('/new_form')
 def new_form():
-    if 'inspector' not in session:
+    if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return redirect(url_for('login'))
 
     # Load checklist from database (falls back to hardcoded if empty)
