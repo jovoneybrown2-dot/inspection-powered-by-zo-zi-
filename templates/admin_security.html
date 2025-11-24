@@ -6,31 +6,15 @@
     <title>Security Dashboard - Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Convert UTC timestamps to Jamaica time (EST - UTC-5)
-        function convertToJamaicaTime(utcDateString) {
-            if (!utcDateString || utcDateString === 'Never') return utcDateString;
-
-            const utcDate = new Date(utcDateString + ' UTC');
-            const jamaicaDate = new Date(utcDate.getTime() - (5 * 60 * 60 * 1000)); // UTC-5
-
-            const year = jamaicaDate.getFullYear();
-            const month = String(jamaicaDate.getMonth() + 1).padStart(2, '0');
-            const day = String(jamaicaDate.getDate()).padStart(2, '0');
-            const hours = String(jamaicaDate.getHours()).padStart(2, '0');
-            const minutes = String(jamaicaDate.getMinutes()).padStart(2, '0');
-            const seconds = String(jamaicaDate.getSeconds()).padStart(2, '0');
-
-            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds} EST`;
-        }
-
-        // Auto-convert all timestamps on page load
+        // Note: Timestamps are now stored in Jamaica time (EST) on the server
+        // This just adds "EST" label for clarity
         window.addEventListener('DOMContentLoaded', function() {
-            // Convert all text that looks like timestamps
+            // Add EST suffix to all timestamps that don't have it
             document.querySelectorAll('td, p, span').forEach(function(el) {
                 const text = el.textContent.trim();
-                // Match YYYY-MM-DD HH:MM:SS pattern
-                if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(text)) {
-                    el.textContent = convertToJamaicaTime(text);
+                // Match YYYY-MM-DD HH:MM:SS pattern without EST suffix
+                if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?!\s*EST)/.test(text)) {
+                    el.textContent = text + ' EST';
                 }
             });
         });
