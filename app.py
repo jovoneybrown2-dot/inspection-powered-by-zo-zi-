@@ -418,11 +418,36 @@ def admin_system_info():
 
 # ===== SECURITY MONITORING ROUTES =====
 
+@app.route('/admin/verify-security-access', methods=['POST'])
+def verify_security_access():
+    """Verify 6-digit passcode for security dashboard access"""
+    if 'admin' not in session:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    data = request.get_json()
+    passcode = data.get('passcode', '')
+
+    # Get security passcode from environment variable or use default
+    # Admin can set SECURITY_DASHBOARD_CODE environment variable
+    correct_passcode = os.environ.get('SECURITY_DASHBOARD_CODE', '123456')
+
+    if passcode == correct_passcode:
+        # Set session flag for security dashboard access
+        session['security_dashboard_authorized'] = True
+        session.modified = True
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'error': 'Invalid passcode'})
+
 @app.route('/admin/security')
 def admin_security():
     """Comprehensive Security Dashboard"""
     if 'admin' not in session:
         return redirect(url_for('login'))
+
+    # Check if user has been authorized with passcode
+    if not session.get('security_dashboard_authorized'):
+        return redirect(url_for('admin'))
 
     # Get security overview
     overview = security_monitor.get_security_overview()
@@ -462,6 +487,9 @@ def api_security_integrity_check():
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
+    if not session.get('security_dashboard_authorized'):
+        return jsonify({'error': 'Security authorization required'}), 403
+
     violations = security_monitor.check_file_integrity()
 
     return jsonify({
@@ -475,6 +503,9 @@ def api_acknowledge_security_alert(alert_id):
     """Acknowledge a security alert"""
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
+
+    if not session.get('security_dashboard_authorized'):
+        return jsonify({'error': 'Security authorization required'}), 403
 
     admin_user = session.get('admin', 'unknown')
     security_monitor.acknowledge_alert(alert_id, admin_user)
