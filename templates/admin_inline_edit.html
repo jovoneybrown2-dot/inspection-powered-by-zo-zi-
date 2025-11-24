@@ -1,4 +1,4 @@
-<!-- Admin Inline Checklist Editor -->
+<!-- Admin Inline Checklist Editor - Enhanced Version -->
 <style>
     .admin-edit-btn {
         position: fixed;
@@ -48,7 +48,7 @@
         background: white;
         border-radius: 12px;
         padding: 30px;
-        max-width: 900px;
+        max-width: 1000px;
         width: 100%;
         max-height: calc(100vh - 80px);
         overflow-y: auto;
@@ -99,15 +99,7 @@
         border-radius: 8px;
         margin-bottom: 12px;
         border-left: 4px solid #667eea;
-        display: flex;
-        align-items: center;
-        gap: 15px;
         transition: all 0.2s;
-    }
-
-    .admin-checklist-item:hover {
-        background: #e9ecef;
-        transform: translateX(5px);
     }
 
     .admin-checklist-item.critical {
@@ -115,26 +107,150 @@
         background: #fff5f5;
     }
 
-    .admin-checklist-item label {
-        cursor: pointer;
+    .admin-item-header {
         display: flex;
         align-items: center;
         gap: 12px;
-        flex: 1;
-        font-size: 14px;
-        color: #333;
-    }
-
-    .admin-checklist-item input[type="checkbox"] {
-        width: 20px;
-        height: 20px;
-        cursor: pointer;
+        margin-bottom: 10px;
     }
 
     .admin-item-id {
         font-weight: bold;
         color: #667eea;
-        min-width: 35px;
+        min-width: 50px;
+    }
+
+    .admin-item-controls {
+        display: flex;
+        gap: 8px;
+        margin-left: auto;
+    }
+
+    .admin-item-control-btn {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 5px 10px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.2s;
+    }
+
+    .admin-item-control-btn:hover {
+        background: #f0f0f0;
+        border-color: #999;
+    }
+
+    .admin-item-control-btn.delete {
+        color: #dc3545;
+        border-color: #dc3545;
+    }
+
+    .admin-item-control-btn.delete:hover {
+        background: #dc3545;
+        color: white;
+    }
+
+    .admin-item-fields {
+        display: grid;
+        gap: 10px;
+    }
+
+    .admin-field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .admin-field-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #666;
+        text-transform: uppercase;
+    }
+
+    .admin-field-input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+
+    .admin-field-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .admin-field-input.small {
+        width: 100px;
+    }
+
+    .admin-inline-fields {
+        display: flex;
+        gap: 15px;
+        align-items: flex-end;
+    }
+
+    .admin-inline-fields .admin-field-group {
+        flex: 1;
+    }
+
+    .admin-checkbox-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+    }
+
+    .admin-checkbox-wrapper input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    .admin-checkbox-wrapper label {
+        cursor: pointer;
+        margin: 0;
+        font-size: 14px;
+        color: #333;
+    }
+
+    .admin-add-item-section {
+        background: #e8f4f8;
+        border: 2px dashed #667eea;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+
+    .admin-add-item-section h3 {
+        margin: 0 0 15px 0;
+        color: #667eea;
+        font-size: 18px;
+    }
+
+    .admin-add-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-top: 10px;
+    }
+
+    .admin-add-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
 
     .admin-save-btn {
@@ -193,12 +309,34 @@
 <div class="admin-edit-modal" id="adminEditModal">
     <div class="admin-edit-content">
         <div class="admin-edit-header">
-            <h2>✏️ Edit Checklist</h2>
+            <h2>✏️ Edit Checklist Items</h2>
             <button class="admin-close-btn" onclick="closeAdminEdit()">&times;</button>
         </div>
 
         <div class="admin-success-message" id="adminSuccessMessage">
-            ✅ Changes saved! Refresh the page to see updates.
+            ✅ Changes saved! Reload the page to see updates.
+        </div>
+
+        <!-- Add New Item Section -->
+        <div class="admin-add-item-section">
+            <h3>➕ Add New Checklist Item</h3>
+            <div class="admin-field-group">
+                <label class="admin-field-label">Description</label>
+                <input type="text" id="newItemDescription" class="admin-field-input" placeholder="Enter item description">
+            </div>
+            <div class="admin-inline-fields" style="margin-top: 10px;">
+                <div class="admin-field-group">
+                    <label class="admin-field-label">Weight</label>
+                    <input type="number" id="newItemWeight" class="admin-field-input small" value="1" min="1" max="10">
+                </div>
+                <div class="admin-field-group">
+                    <div class="admin-checkbox-wrapper">
+                        <input type="checkbox" id="newItemCritical">
+                        <label for="newItemCritical">Mark as Critical</label>
+                    </div>
+                </div>
+            </div>
+            <button class="admin-add-btn" onclick="addNewItem()">➕ Add Item</button>
         </div>
 
         <div id="adminChecklistContainer">
@@ -206,7 +344,7 @@
         </div>
 
         <button class="admin-save-btn" id="adminSaveBtn" onclick="saveAdminChanges()" disabled>
-            💾 Save Changes
+            💾 Save All Changes
         </button>
     </div>
 </div>
@@ -214,6 +352,7 @@
 <script>
     let adminChecklistData = [];
     let adminFormType = '';
+    let adminItemsToDelete = [];
 
     // Detect form type from page
     function detectFormType() {
@@ -232,12 +371,17 @@
 
     async function openAdminEdit() {
         adminFormType = detectFormType();
+        adminItemsToDelete = [];
         document.getElementById('adminEditModal').classList.add('active');
         await loadAdminChecklist();
     }
 
     function closeAdminEdit() {
         document.getElementById('adminEditModal').classList.remove('active');
+        // Clear new item fields
+        document.getElementById('newItemDescription').value = '';
+        document.getElementById('newItemWeight').value = '1';
+        document.getElementById('newItemCritical').checked = false;
     }
 
     async function loadAdminChecklist() {
@@ -265,26 +409,100 @@
         const container = document.getElementById('adminChecklistContainer');
         container.innerHTML = `
             <div class="admin-checklist-items">
-                ${adminChecklistData.map(item => `
-                    <div class="admin-checklist-item ${item.is_critical ? 'critical' : ''}" data-item-id="${item.id}">
-                        <label>
-                            <input type="checkbox" ${item.is_critical ? 'checked' : ''} onchange="toggleAdminCritical(${item.id})">
-                            <span class="admin-item-id">#${item.item_id || item.id}</span>
-                            <span>${item.description}</span>
-                            <small style="color: #999; margin-left: auto;">(Weight: ${item.weight})</small>
-                        </label>
+                ${adminChecklistData.map((item, index) => `
+                    <div class="admin-checklist-item ${item.is_critical ? 'critical' : ''}" data-item-index="${index}">
+                        <div class="admin-item-header">
+                            <span class="admin-item-id">Item #${item.item_id || item.id}</span>
+                            <div class="admin-item-controls">
+                                <button class="admin-item-control-btn delete" onclick="deleteItem(${index})" title="Delete item">
+                                    🗑️ Delete
+                                </button>
+                            </div>
+                        </div>
+                        <div class="admin-item-fields">
+                            <div class="admin-field-group">
+                                <label class="admin-field-label">Description</label>
+                                <input type="text" class="admin-field-input" value="${item.description}"
+                                       onchange="updateItemDescription(${index}, this.value)">
+                            </div>
+                            <div class="admin-inline-fields">
+                                <div class="admin-field-group">
+                                    <label class="admin-field-label">Weight</label>
+                                    <input type="number" class="admin-field-input small" value="${item.weight}"
+                                           min="1" max="10" onchange="updateItemWeight(${index}, this.value)">
+                                </div>
+                                <div class="admin-field-group">
+                                    <div class="admin-checkbox-wrapper">
+                                        <input type="checkbox" id="critical_${index}" ${item.is_critical ? 'checked' : ''}
+                                               onchange="toggleItemCritical(${index})">
+                                        <label for="critical_${index}">Critical Item (Shaded)</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 `).join('')}
             </div>
         `;
     }
 
-    function toggleAdminCritical(itemId) {
-        const item = adminChecklistData.find(i => i.id === itemId);
-        if (item) {
-            item.is_critical = !item.is_critical;
+    function updateItemDescription(index, value) {
+        adminChecklistData[index].description = value;
+    }
+
+    function updateItemWeight(index, value) {
+        adminChecklistData[index].weight = parseInt(value) || 1;
+    }
+
+    function toggleItemCritical(index) {
+        adminChecklistData[index].is_critical = !adminChecklistData[index].is_critical;
+        renderAdminChecklist();
+    }
+
+    function deleteItem(index) {
+        if (confirm('Are you sure you want to delete this checklist item?')) {
+            const item = adminChecklistData[index];
+            if (item.id) {
+                adminItemsToDelete.push(item.id);
+            }
+            adminChecklistData.splice(index, 1);
             renderAdminChecklist();
         }
+    }
+
+    function addNewItem() {
+        const description = document.getElementById('newItemDescription').value.trim();
+        const weight = parseInt(document.getElementById('newItemWeight').value) || 1;
+        const isCritical = document.getElementById('newItemCritical').checked;
+
+        if (!description) {
+            alert('Please enter a description for the new item');
+            return;
+        }
+
+        // Find the highest item_id
+        const maxItemId = adminChecklistData.reduce((max, item) =>
+            Math.max(max, item.item_id || item.id || 0), 0);
+
+        const newItem = {
+            id: null, // Will be assigned by backend
+            item_id: maxItemId + 1,
+            description: description,
+            weight: weight,
+            is_critical: isCritical ? 1 : 0,
+            form_type: adminFormType,
+            is_new: true
+        };
+
+        adminChecklistData.push(newItem);
+        renderAdminChecklist();
+
+        // Clear the form
+        document.getElementById('newItemDescription').value = '';
+        document.getElementById('newItemWeight').value = '1';
+        document.getElementById('newItemCritical').checked = false;
+
+        alert('New item added! Click "Save All Changes" to persist this change.');
     }
 
     async function saveAdminChanges() {
@@ -302,8 +520,13 @@
                     form_type: adminFormType,
                     items: adminChecklistData.map(item => ({
                         id: item.id,
-                        is_critical: item.is_critical ? 1 : 0
-                    }))
+                        item_id: item.item_id,
+                        description: item.description,
+                        weight: item.weight,
+                        is_critical: item.is_critical ? 1 : 0,
+                        is_new: item.is_new || false
+                    })),
+                    deleted_ids: adminItemsToDelete
                 })
             });
 
@@ -313,10 +536,10 @@
                 document.getElementById('adminSuccessMessage').classList.add('show');
                 setTimeout(() => {
                     document.getElementById('adminSuccessMessage').classList.remove('show');
-                    closeAdminEdit();
-                    // Optionally reload the page to show changes
-                    if (confirm('Changes saved! Reload page to see updates?')) {
+                    if (confirm('Changes saved successfully! Reload page to see updates?')) {
                         window.location.reload();
+                    } else {
+                        closeAdminEdit();
                     }
                 }, 2000);
             } else {
@@ -327,7 +550,7 @@
             alert('Error saving changes. Please try again.');
         } finally {
             saveBtn.disabled = false;
-            saveBtn.textContent = '💾 Save Changes';
+            saveBtn.textContent = '💾 Save All Changes';
         }
     }
 

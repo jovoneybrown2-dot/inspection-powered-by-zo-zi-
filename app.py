@@ -1547,9 +1547,10 @@ def new_burial_form():
                 'received_by': inspection[14],
                 'created_at': inspection[15]
             }
-                admin_mode = session.get('admin_inspector_mode', False)
-    return render_template('burial_form.html', inspection=inspection_data, admin_mode=admin_mode)
-    return render_template('burial_form.html', inspection=None)
+        admin_mode = session.get('admin_inspector_mode', False)
+        return render_template('burial_form.html', inspection=inspection_data, admin_mode=admin_mode)
+    admin_mode = session.get('admin_inspector_mode', False)
+    return render_template('burial_form.html', inspection=None, admin_mode=admin_mode)
 
 @app.route('/new_water_supply_form')
 def new_water_supply_form():
@@ -1627,7 +1628,7 @@ def new_small_hotels_form():
     today = datetime.now().strftime('%Y-%m-%d')
     # Load checklist from database (falls back to hardcoded if empty)
     checklist_items = get_form_checklist_items('Small Hotel', SMALL_HOTELS_CHECKLIST_ITEMS)
-        admin_mode = session.get('admin_inspector_mode', False)
+    admin_mode = session.get('admin_inspector_mode', False)
     return render_template('small_hotels_form.html', checklist_items=checklist_items, today=today, admin_mode=admin_mode)
 
 
@@ -2516,7 +2517,7 @@ def new_institutional_form():
         'received_by': '',
         'scores': {}
     }
-        admin_mode = session.get('admin_inspector_mode', False)
+    admin_mode = session.get('admin_inspector_mode', False)
     return render_template('institutional_form.html', inspection=inspection, checklist=checklist, admin_mode=admin_mode)
 
 
@@ -6280,7 +6281,7 @@ def new_meat_processing_form():
     # Load checklist from database (falls back to hardcoded if empty)
     checklist = get_form_checklist_items('Meat Processing', MEAT_PROCESSING_CHECKLIST_ITEMS)
 
-        admin_mode = session.get('admin_inspector_mode', False)
+    admin_mode = session.get('admin_inspector_mode', False)
     return render_template('meat_processing_form.html', checklist=checklist, admin_mode=admin_mode)
 
 
