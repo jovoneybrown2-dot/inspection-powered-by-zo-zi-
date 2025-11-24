@@ -936,7 +936,7 @@
                         <!-- FOOD (1-2) -->
                         <tr class="category-header"><td colspan="4">FOOD (1-2)</td></tr>
                         {% for item in checklist if 1 <= item.id <= 2 %}
-                        <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
+                        <tr class="{% if item.is_critical or item.critical %}critical-item{% endif %}">
                             <td>{{ item.id }}</td>
                             <td>{{ item.desc }}</td>
                             <td>{{ item.wt }}</td>
@@ -952,7 +952,7 @@
                         <!-- FOOD PROTECTION (3-10) -->
                         <tr class="category-header"><td colspan="4">FOOD PROTECTION (3-10)</td></tr>
                         {% for item in checklist if 3 <= item.id <= 10 %}
-                        <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
+                        <tr class="{% if item.is_critical or item.critical %}critical-item{% endif %}">
                             <td>{{ item.id }}</td>
                             <td>{{ item.desc }}</td>
                             <td>{{ item.wt }}</td>
@@ -968,7 +968,7 @@
                         <!-- FOOD EQUIPMENT & UTENSILS (11-23) -->
                         <tr class="category-header"><td colspan="4">FOOD EQUIPMENT & UTENSILS (11-23)</td></tr>
                         {% for item in checklist if 11 <= item.id <= 23 %}
-                        <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
+                        <tr class="{% if item.is_critical or item.critical %}critical-item{% endif %}">
                             <td>{{ item.id }}</td>
                             <td>{{ item.desc }}</td>
                             <td>{{ item.wt }}</td>
@@ -984,7 +984,7 @@
                         <!-- TOILET & HANDWASHING FACILITIES (24-25) -->
                         <tr class="category-header"><td colspan="4">TOILET & HANDWASHING FACILITIES (24-25)</td></tr>
                         {% for item in checklist if 24 <= item.id <= 25 %}
-                        <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
+                        <tr class="{% if item.is_critical or item.critical %}critical-item{% endif %}">
                             <td>{{ item.id }}</td>
                             <td>{{ item.desc }}</td>
                             <td>{{ item.wt }}</td>
@@ -1000,7 +1000,7 @@
                         <!-- SOLID WASTE MANAGEMENT (26-27) -->
                         <tr class="category-header"><td colspan="4">SOLID WASTE MANAGEMENT (26-27)</td></tr>
                         {% for item in checklist if 26 <= item.id <= 27 %}
-                        <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
+                        <tr class="{% if item.is_critical or item.critical %}critical-item{% endif %}">
                             <td>{{ item.id }}</td>
                             <td>{{ item.desc }}</td>
                             <td>{{ item.wt }}</td>
@@ -1016,7 +1016,7 @@
                         <!-- INSECT, RODENT, ANIMAL CONTROL (28) -->
                         <tr class="category-header"><td colspan="4">INSECT, RODENT, ANIMAL CONTROL (28)</td></tr>
                         {% for item in checklist if item.id == 28 %}
-                        <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
+                        <tr class="{% if item.is_critical or item.critical %}critical-item{% endif %}">
                             <td>{{ item.id }}</td>
                             <td>{{ item.desc }}</td>
                             <td>{{ item.wt }}</td>
@@ -1032,7 +1032,7 @@
                         <!-- PERSONNEL (29-31) - REMOVED ITEM 32 -->
                         <tr class="category-header"><td colspan="4">PERSONNEL (29-31)</td></tr>
                         {% for item in checklist if 29 <= item.id <= 31 %}
-                        <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
+                        <tr class="{% if item.is_critical or item.critical %}critical-item{% endif %}">
                             <td>{{ item.id }}</td>
                             <td>{{ item.desc }}</td>
                             <td>{{ item.wt }}</td>
@@ -1048,7 +1048,7 @@
                         <!-- LIGHTING (32) -->
                         <tr class="category-header"><td colspan="4">LIGHTING (32)</td></tr>
                         {% for item in checklist if item.id == 32 %}
-                        <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
+                        <tr class="{% if item.is_critical or item.critical %}critical-item{% endif %}">
                             <td>{{ item.id }}</td>
                             <td>{{ item.desc }}</td>
                             <td>{{ item.wt }}</td>
@@ -1064,7 +1064,7 @@
                         <!-- VENTILATION (33) -->
                         <tr class="category-header"><td colspan="4">VENTILATION (33)</td></tr>
                         {% for item in checklist if item.id == 33 %}
-                        <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
+                        <tr class="{% if item.is_critical or item.critical %}critical-item{% endif %}">
                             <td>{{ item.id }}</td>
                             <td>{{ item.desc }}</td>
                             <td>{{ item.wt }}</td>
@@ -1080,7 +1080,7 @@
                         <!-- DRESSING ROOMS (34) -->
                         <tr class="category-header"><td colspan="4">DRESSING ROOMS (34)</td></tr>
                         {% for item in checklist if item.id == 34 %}
-                        <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
+                        <tr class="{% if item.is_critical or item.critical %}critical-item{% endif %}">
                             <td>{{ item.id }}</td>
                             <td>{{ item.desc }}</td>
                             <td>{{ item.wt }}</td>
@@ -1096,7 +1096,7 @@
                         <!-- WATER (35) -->
                         <tr class="category-header"><td colspan="4">WATER (35)</td></tr>
                         {% for item in checklist if item.id == 35 %}
-                        <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
+                        <tr class="{% if item.is_critical or item.critical %}critical-item{% endif %}">
                             <td>{{ item.id }}</td>
                             <td>{{ item.desc }}</td>
                             <td>{{ item.wt }}</td>
@@ -1112,7 +1112,7 @@
                         <!-- SEWAGE (36) -->
                         <tr class="category-header"><td colspan="4">SEWAGE (36)</td></tr>
                         {% for item in checklist if item.id == 36 %}
-                        <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
+                        <tr class="{% if item.is_critical or item.critical %}critical-item{% endif %}">
                             <td>{{ item.id }}</td>
                             <td>{{ item.desc }}</td>
                             <td>{{ item.wt }}</td>
@@ -1128,7 +1128,7 @@
                         <!-- PLUMBING (37-38) -->
                         <tr class="category-header"><td colspan="4">PLUMBING (37-38)</td></tr>
                         {% for item in checklist if 37 <= item.id <= 38 %}
-                        <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
+                        <tr class="{% if item.is_critical or item.critical %}critical-item{% endif %}">
                             <td>{{ item.id }}</td>
                             <td>{{ item.desc }}</td>
                             <td>{{ item.wt }}</td>
@@ -1144,7 +1144,7 @@
                         <!-- FLOORS, WALLS, & CEILINGS (39-40) -->
                         <tr class="category-header"><td colspan="4">FLOORS, WALLS, & CEILINGS (39-40)</td></tr>
                         {% for item in checklist if 39 <= item.id <= 40 %}
-                        <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
+                        <tr class="{% if item.is_critical or item.critical %}critical-item{% endif %}">
                             <td>{{ item.id }}</td>
                             <td>{{ item.desc }}</td>
                             <td>{{ item.wt }}</td>
@@ -1160,7 +1160,7 @@
                         <!-- OTHER OPERATIONS (41-44) -->
                         <tr class="category-header"><td colspan="4">OTHER OPERATIONS (41-44)</td></tr>
                         {% for item in checklist if 41 <= item.id <= 44 %}
-                        <tr class="{% if item.wt|float in [4, 5] %}important-weight{% endif %}">
+                        <tr class="{% if item.is_critical or item.critical %}critical-item{% endif %}">
                             <td>{{ item.id }}</td>
                             <td>{{ item.desc }}</td>
                             <td>{{ item.wt }}</td>
