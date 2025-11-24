@@ -13015,6 +13015,95 @@ def api_download_inspection(inspection_type, inspection_id):
         return download_inspection_pdf(inspection_id)
 
 
+@app.route('/api/admin/get_checklist_items', methods=['GET'])
+def api_get_checklist_items():
+    """Get checklist items for inline editing"""
+    if 'admin' not in session:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    form_type = request.args.get('form_type')
+    if not form_type:
+        return jsonify({'success': False, 'error': 'Form type required'}), 400
+
+    conn = get_db_connection()
+    c = conn.cursor()
+
+    from db_config import execute_query
+
+    # Get template ID
+    result = execute_query(conn, 'SELECT id FROM form_templates WHERE form_type = ? AND active = 1', (form_type,))
+    template_row = result.fetchone() if result else None
+
+    if not template_row:
+        conn.close()
+        return jsonify({'success': False, 'error': 'Form template not found'}), 404
+
+    template_id = template_row[0]
+
+    # Get all items
+    result = execute_query(conn, '''SELECT id, item_id, description, weight, is_critical, category
+                 FROM form_items
+                 WHERE form_template_id = ?
+                 ORDER BY item_order''', (template_id,))
+
+    items = []
+    for row in result.fetchall():
+        items.append({
+            'id': row[0],
+            'item_id': row[1],
+            'description': row[2],
+            'weight': row[3],
+            'is_critical': bool(row[4]),
+            'category': row[5]
+        })
+
+    conn.close()
+    return jsonify({'success': True, 'items': items})
+
+
+@app.route('/api/admin/update_checklist_items', methods=['POST'])
+def api_update_checklist_items():
+    """Update checklist items critical flags"""
+    if 'admin' not in session:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    data = request.get_json()
+    form_type = data.get('form_type')
+    items = data.get('items', [])
+
+    if not form_type or not items:
+        return jsonify({'success': False, 'error': 'Invalid data'}), 400
+
+    conn = get_db_connection()
+    c = conn.cursor()
+
+    from db_config import execute_query
+
+    try:
+        # Update each item
+        for item in items:
+            execute_query(conn, 'UPDATE form_items SET is_critical = ? WHERE id = ?',
+                         (item['is_critical'], item['id']))
+
+        # Update form template last_edited info
+        admin_username = session.get('admin')
+        execute_query(conn, '''UPDATE form_templates
+                     SET last_edited_by = ?,
+                         last_edited_date = datetime('now'),
+                         last_edited_role = 'admin'
+                     WHERE form_type = ? AND active = 1''',
+                     (admin_username, form_type))
+
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True, 'message': f'Updated {len(items)} items'})
+
+    except Exception as e:
+        conn.rollback()
+        conn.close()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 # Initialize database and migrate checklists on app startup (works with Gunicorn)
 init_db()
 init_form_management_db()

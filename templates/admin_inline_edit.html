@@ -1,0 +1,340 @@
+<!-- Admin Inline Checklist Editor -->
+<style>
+    .admin-edit-btn {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 70px;
+        height: 70px;
+        font-size: 28px;
+        cursor: pointer;
+        box-shadow: 0 6px 20px rgba(238, 90, 111, 0.5);
+        z-index: 9999;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .admin-edit-btn:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 8px 25px rgba(238, 90, 111, 0.7);
+    }
+
+    .admin-edit-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 10000;
+        overflow-y: auto;
+    }
+
+    .admin-edit-modal.active {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 40px 20px;
+    }
+
+    .admin-edit-content {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        max-width: 900px;
+        width: 100%;
+        max-height: calc(100vh - 80px);
+        overflow-y: auto;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .admin-edit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .admin-edit-header h2 {
+        margin: 0;
+        color: #333;
+        font-size: 24px;
+    }
+
+    .admin-close-btn {
+        background: none;
+        border: none;
+        font-size: 32px;
+        color: #999;
+        cursor: pointer;
+        padding: 0;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.3s;
+    }
+
+    .admin-close-btn:hover {
+        color: #333;
+    }
+
+    .admin-checklist-items {
+        margin-bottom: 25px;
+    }
+
+    .admin-checklist-item {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        border-left: 4px solid #667eea;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        transition: all 0.2s;
+    }
+
+    .admin-checklist-item:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+    }
+
+    .admin-checklist-item.critical {
+        border-left-color: #ff6b6b;
+        background: #fff5f5;
+    }
+
+    .admin-checklist-item label {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1;
+        font-size: 14px;
+        color: #333;
+    }
+
+    .admin-checklist-item input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+
+    .admin-item-id {
+        font-weight: bold;
+        color: #667eea;
+        min-width: 35px;
+    }
+
+    .admin-save-btn {
+        background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+    }
+
+    .admin-save-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(76, 175, 80, 0.6);
+    }
+
+    .admin-save-btn:disabled {
+        background: #cccccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .admin-loading {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+        font-size: 16px;
+    }
+
+    .admin-success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 12px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border-left: 4px solid #28a745;
+        display: none;
+    }
+
+    .admin-success-message.show {
+        display: block;
+    }
+</style>
+
+<!-- Edit Button -->
+<button class="admin-edit-btn" onclick="openAdminEdit()" title="Edit Checklist (Admin Only)">
+    ✏️
+</button>
+
+<!-- Edit Modal -->
+<div class="admin-edit-modal" id="adminEditModal">
+    <div class="admin-edit-content">
+        <div class="admin-edit-header">
+            <h2>✏️ Edit Checklist</h2>
+            <button class="admin-close-btn" onclick="closeAdminEdit()">&times;</button>
+        </div>
+
+        <div class="admin-success-message" id="adminSuccessMessage">
+            ✅ Changes saved! Refresh the page to see updates.
+        </div>
+
+        <div id="adminChecklistContainer">
+            <div class="admin-loading">Loading checklist...</div>
+        </div>
+
+        <button class="admin-save-btn" id="adminSaveBtn" onclick="saveAdminChanges()" disabled>
+            💾 Save Changes
+        </button>
+    </div>
+</div>
+
+<script>
+    let adminChecklistData = [];
+    let adminFormType = '';
+
+    // Detect form type from page
+    function detectFormType() {
+        const title = document.title;
+        if (title.includes('Food')) return 'Food Establishment';
+        if (title.includes('Barbershop')) return 'Barbershop';
+        if (title.includes('Burial')) return 'Burial';
+        if (title.includes('Hotel')) return 'Small Hotel';
+        if (title.includes('Institutional')) return 'Institutional';
+        if (title.includes('Meat')) return 'Meat Processing';
+        if (title.includes('Residential')) return 'Residential';
+        if (title.includes('Spirit')) return 'Spirit Licence Premises';
+        if (title.includes('Pool')) return 'Swimming Pool';
+        return 'Food Establishment';
+    }
+
+    async function openAdminEdit() {
+        adminFormType = detectFormType();
+        document.getElementById('adminEditModal').classList.add('active');
+        await loadAdminChecklist();
+    }
+
+    function closeAdminEdit() {
+        document.getElementById('adminEditModal').classList.remove('active');
+    }
+
+    async function loadAdminChecklist() {
+        const container = document.getElementById('adminChecklistContainer');
+        container.innerHTML = '<div class="admin-loading">Loading checklist...</div>';
+
+        try {
+            const response = await fetch(`/api/admin/get_checklist_items?form_type=${encodeURIComponent(adminFormType)}`);
+            const data = await response.json();
+
+            if (data.success) {
+                adminChecklistData = data.items;
+                renderAdminChecklist();
+                document.getElementById('adminSaveBtn').disabled = false;
+            } else {
+                container.innerHTML = '<div class="admin-loading">❌ Failed to load checklist</div>';
+            }
+        } catch (error) {
+            console.error('Error loading checklist:', error);
+            container.innerHTML = '<div class="admin-loading">❌ Error loading checklist</div>';
+        }
+    }
+
+    function renderAdminChecklist() {
+        const container = document.getElementById('adminChecklistContainer');
+        container.innerHTML = `
+            <div class="admin-checklist-items">
+                ${adminChecklistData.map(item => `
+                    <div class="admin-checklist-item ${item.is_critical ? 'critical' : ''}" data-item-id="${item.id}">
+                        <label>
+                            <input type="checkbox" ${item.is_critical ? 'checked' : ''} onchange="toggleAdminCritical(${item.id})">
+                            <span class="admin-item-id">#${item.item_id || item.id}</span>
+                            <span>${item.description}</span>
+                            <small style="color: #999; margin-left: auto;">(Weight: ${item.weight})</small>
+                        </label>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    function toggleAdminCritical(itemId) {
+        const item = adminChecklistData.find(i => i.id === itemId);
+        if (item) {
+            item.is_critical = !item.is_critical;
+            renderAdminChecklist();
+        }
+    }
+
+    async function saveAdminChanges() {
+        const saveBtn = document.getElementById('adminSaveBtn');
+        saveBtn.disabled = true;
+        saveBtn.textContent = '💾 Saving...';
+
+        try {
+            const response = await fetch('/api/admin/update_checklist_items', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    form_type: adminFormType,
+                    items: adminChecklistData.map(item => ({
+                        id: item.id,
+                        is_critical: item.is_critical ? 1 : 0
+                    }))
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                document.getElementById('adminSuccessMessage').classList.add('show');
+                setTimeout(() => {
+                    document.getElementById('adminSuccessMessage').classList.remove('show');
+                    closeAdminEdit();
+                    // Optionally reload the page to show changes
+                    if (confirm('Changes saved! Reload page to see updates?')) {
+                        window.location.reload();
+                    }
+                }, 2000);
+            } else {
+                alert('Error saving changes: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error saving changes:', error);
+            alert('Error saving changes. Please try again.');
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.textContent = '💾 Save Changes';
+        }
+    }
+
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeAdminEdit();
+        }
+    });
+</script>
