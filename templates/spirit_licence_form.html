@@ -960,5 +960,10 @@
     {% include 'signature_pad.html' %}
 
     {% include 'zozi_badge.html' %}
+
+    <!-- Admin Inline Edit Mode -->
+    {% if admin_mode %}
+    {% include 'admin_inline_edit.html' %}
+    {% endif %}
 </body>
 </html>
