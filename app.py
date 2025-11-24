@@ -12921,6 +12921,13 @@ init_form_management_db()
 auto_migrate_checklists()
 auto_migrate_form_fields()
 
+# Run signature date migration
+try:
+    from migrate_signature_dates import migrate_signature_dates
+    migrate_signature_dates()
+except Exception as e:
+    print(f"⚠ Signature date migration error (may already be applied): {e}")
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5002)
