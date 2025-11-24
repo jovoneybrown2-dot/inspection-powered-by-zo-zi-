@@ -1514,7 +1514,8 @@ def new_residential_form():
         return redirect(url_for('login'))
     # Load checklist from database (falls back to hardcoded if empty)
     checklist = get_form_checklist_items('Residential', RESIDENTIAL_CHECKLIST_ITEMS)
-    return render_template('residential_form.html', checklist=checklist, inspections=get_residential_inspections(), show_form=True, establishment_data=get_establishment_data())
+    admin_mode = session.get('admin_inspector_mode', False)
+    return render_template('residential_form.html', checklist=checklist, inspections=get_residential_inspections(), admin_mode=admin_mode, show_form=True, establishment_data=get_establishment_data())
 
 @app.route('/new_burial_form')
 def new_burial_form():
@@ -1546,7 +1547,8 @@ def new_burial_form():
                 'received_by': inspection[14],
                 'created_at': inspection[15]
             }
-            return render_template('burial_form.html', inspection=inspection_data)
+                admin_mode = session.get('admin_inspector_mode', False)
+    return render_template('burial_form.html', inspection=inspection_data, admin_mode=admin_mode)
     return render_template('burial_form.html', inspection=None)
 
 @app.route('/new_water_supply_form')
@@ -1587,7 +1589,8 @@ def new_spirit_licence_form():
     }
     # Load checklist from database (falls back to hardcoded if empty)
     checklist = get_form_checklist_items('Spirit Licence Premises', SPIRIT_LICENCE_CHECKLIST_ITEMS)
-    return render_template('spirit_licence_form.html', checklist=checklist, inspections=get_inspections(), show_form=True, establishment_data=get_establishment_data(), read_only=False, inspection=inspection)
+    admin_mode = session.get('admin_inspector_mode', False)
+    return render_template('spirit_licence_form.html', checklist=checklist, inspections=get_inspections(), admin_mode=admin_mode, show_form=True, establishment_data=get_establishment_data(), read_only=False, inspection=inspection)
 
 @app.route('/new_swimming_pool_form')
 def new_swimming_pool_form():
@@ -1614,7 +1617,8 @@ def new_swimming_pool_form():
     }
     # Load checklist from database (falls back to hardcoded if empty)
     checklist = get_form_checklist_items('Swimming Pool', SWIMMING_POOL_CHECKLIST_ITEMS)
-    return render_template('swimming_pool_form.html', checklist=checklist, inspections=get_inspections(), inspection=inspection)
+    admin_mode = session.get('admin_inspector_mode', False)
+    return render_template('swimming_pool_form.html', checklist=checklist, inspections=get_inspections(), admin_mode=admin_mode, inspection=inspection)
 
 @app.route('/new_small_hotels_form')
 def new_small_hotels_form():
@@ -1623,7 +1627,8 @@ def new_small_hotels_form():
     today = datetime.now().strftime('%Y-%m-%d')
     # Load checklist from database (falls back to hardcoded if empty)
     checklist_items = get_form_checklist_items('Small Hotel', SMALL_HOTELS_CHECKLIST_ITEMS)
-    return render_template('small_hotels_form.html', checklist_items=checklist_items, today=today)
+        admin_mode = session.get('admin_inspector_mode', False)
+    return render_template('small_hotels_form.html', checklist_items=checklist_items, today=today, admin_mode=admin_mode)
 
 
 @app.route('/submit_institutional', methods=['POST'])
@@ -2511,7 +2516,8 @@ def new_institutional_form():
         'received_by': '',
         'scores': {}
     }
-    return render_template('institutional_form.html', inspection=inspection, checklist=checklist)
+        admin_mode = session.get('admin_inspector_mode', False)
+    return render_template('institutional_form.html', inspection=inspection, checklist=checklist, admin_mode=admin_mode)
 
 
 @app.route('/submit_small_hotels', methods=['POST'])
@@ -6259,7 +6265,8 @@ def new_barbershop_form():
         'action': '',
         'registration_status': ''
     }
-    return render_template('barbershop_form.html', checklist=checklist, inspections=get_inspections(),
+    admin_mode = session.get('admin_inspector_mode', False)
+    return render_template('barbershop_form.html', checklist=checklist, inspections=get_inspections(), admin_mode=admin_mode,
                            show_form=True, establishment_data=get_establishment_data(), read_only=False,
                            inspection=inspection)
 
@@ -6273,7 +6280,8 @@ def new_meat_processing_form():
     # Load checklist from database (falls back to hardcoded if empty)
     checklist = get_form_checklist_items('Meat Processing', MEAT_PROCESSING_CHECKLIST_ITEMS)
 
-    return render_template('meat_processing_form.html', checklist=checklist)
+        admin_mode = session.get('admin_inspector_mode', False)
+    return render_template('meat_processing_form.html', checklist=checklist, admin_mode=admin_mode)
 
 
 @app.route('/submit_barbershop', methods=['POST'])
@@ -10110,9 +10118,11 @@ def new_form():
         'created_at': ''
     }
 
+    admin_mode = session.get('admin_inspector_mode', False)
     return render_template('inspection_form.html',
                            checklist=checklist,
                            inspections=get_inspections(),
+                           admin_mode=admin_mode,
                            show_form=True,
                            establishment_data=get_establishment_data(),
                            read_only=False,
@@ -13063,27 +13073,59 @@ def api_get_checklist_items():
 
 @app.route('/api/admin/update_checklist_items', methods=['POST'])
 def api_update_checklist_items():
-    """Update checklist items critical flags"""
+    """Update, add, or delete checklist items (full CRUD)"""
     if 'admin' not in session:
         return jsonify({'success': False, 'error': 'Unauthorized'}), 401
 
     data = request.get_json()
     form_type = data.get('form_type')
     items = data.get('items', [])
+    deleted_ids = data.get('deleted_ids', [])
 
-    if not form_type or not items:
-        return jsonify({'success': False, 'error': 'Invalid data'}), 400
+    if not form_type:
+        return jsonify({'success': False, 'error': 'Form type required'}), 400
 
     conn = get_db_connection()
     c = conn.cursor()
 
-    from db_config import execute_query
+    from db_config import execute_query, get_placeholder
+    ph = get_placeholder()
 
     try:
-        # Update each item
-        for item in items:
-            execute_query(conn, 'UPDATE form_items SET is_critical = ? WHERE id = ?',
-                         (item['is_critical'], item['id']))
+        # Get template ID
+        result = execute_query(conn, 'SELECT id FROM form_templates WHERE form_type = ? AND active = 1', (form_type,))
+        template_row = result.fetchone() if result else None
+
+        if not template_row:
+            conn.close()
+            return jsonify({'success': False, 'error': 'Form template not found'}), 404
+
+        template_id = template_row[0]
+
+        # Delete items that were marked for deletion
+        for item_id in deleted_ids:
+            execute_query(conn, 'DELETE FROM form_items WHERE id = ?', (item_id,))
+
+        # Process each item (update existing or insert new)
+        for idx, item in enumerate(items):
+            if item.get('is_new', False):
+                # Insert new item
+                execute_query(conn, f'''INSERT INTO form_items
+                             (form_template_id, item_id, description, weight, is_critical, category, item_order)
+                             VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph})''',
+                             (template_id, item['item_id'], item['description'],
+                              item['weight'], item['is_critical'], '', idx))
+            else:
+                # Update existing item
+                if item['id']:
+                    execute_query(conn, '''UPDATE form_items
+                                 SET description = ?,
+                                     weight = ?,
+                                     is_critical = ?,
+                                     item_order = ?
+                                 WHERE id = ?''',
+                                 (item['description'], item['weight'],
+                                  item['is_critical'], idx, item['id']))
 
         # Update form template last_edited info
         admin_username = session.get('admin')
@@ -13096,11 +13138,12 @@ def api_update_checklist_items():
 
         conn.commit()
         conn.close()
-        return jsonify({'success': True, 'message': f'Updated {len(items)} items'})
+        return jsonify({'success': True, 'message': f'Updated {len(items)} items, deleted {len(deleted_ids)} items'})
 
     except Exception as e:
         conn.rollback()
         conn.close()
+        print(f"Error updating checklist items: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
