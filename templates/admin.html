@@ -6044,24 +6044,205 @@ function showFormSuccess(formType, message) {
     </script>
 
     <!-- Security Passcode Modal -->
-    <div id="securityPasscodeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 10000; align-items: center; justify-content: center;">
-        <div style="background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3); max-width: 400px; width: 90%; text-align: center;">
-            <div style="font-size: 48px; margin-bottom: 20px;">🔐</div>
-            <h2 style="font-size: 24px; font-weight: bold; margin-bottom: 10px; color: #333;">Security Authorization Required</h2>
-            <p style="color: #666; margin-bottom: 30px;">Enter the 6-digit security code to access the Security Dashboard</p>
+    <style>
+        @keyframes neonPulse {
+            0%, 100% { box-shadow: 0 0 5px #00f3ff, 0 0 10px #00f3ff, 0 0 20px #00f3ff, 0 0 40px #00f3ff; }
+            50% { box-shadow: 0 0 10px #00f3ff, 0 0 20px #00f3ff, 0 0 30px #00f3ff, 0 0 60px #00f3ff; }
+        }
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes gridMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 40px 40px; }
+        }
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 10px #00f3ff, 0 0 20px #00f3ff, 0 0 30px #00f3ff; }
+            50% { text-shadow: 0 0 20px #00f3ff, 0 0 30px #00f3ff, 0 0 40px #00f3ff, 0 0 50px #00f3ff; }
+        }
+        .security-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 10, 30, 0.95) 0%, rgba(20, 0, 40, 0.95) 100%);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeInScale 0.3s ease-out;
+        }
+        .security-modal-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(0, 243, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: gridMove 2s linear infinite;
+            opacity: 0.3;
+        }
+        .security-modal-content {
+            background: linear-gradient(135deg, rgba(10, 10, 40, 0.95) 0%, rgba(30, 10, 50, 0.95) 100%);
+            padding: 50px;
+            border-radius: 20px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            animation: fadeInScale 0.4s ease-out;
+            box-shadow: 0 0 60px rgba(0, 243, 255, 0.3), 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+        .security-modal-content::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00f3ff, #9d00ff, #ff00ff, #00f3ff);
+            border-radius: 20px;
+            z-index: -1;
+            animation: neonPulse 2s ease-in-out infinite;
+        }
+        .security-lock-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 20px #00f3ff);
+            animation: glow 2s ease-in-out infinite;
+        }
+        .security-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #00f3ff 0%, #9d00ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .security-subtitle {
+            color: #a0a0ff;
+            margin-bottom: 35px;
+            font-size: 14px;
+            text-shadow: 0 0 10px rgba(160, 160, 255, 0.5);
+        }
+        .security-input {
+            width: 100%;
+            padding: 18px;
+            font-size: 28px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(0, 243, 255, 0.5);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            letter-spacing: 12px;
+            font-family: 'Courier New', monospace;
+            color: #00f3ff;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 0 20px rgba(0, 243, 255, 0.1);
+        }
+        .security-input:focus {
+            outline: none;
+            border-color: #00f3ff;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.5), inset 0 0 20px rgba(0, 243, 255, 0.2);
+            background: rgba(0, 243, 255, 0.05);
+        }
+        .security-input::placeholder {
+            color: rgba(0, 243, 255, 0.3);
+            letter-spacing: 2px;
+        }
+        .security-error {
+            color: #ff3366;
+            font-size: 14px;
+            margin-bottom: 25px;
+            min-height: 20px;
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(255, 51, 102, 0.8);
+        }
+        .security-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        .security-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .security-btn-cancel {
+            background: rgba(108, 117, 125, 0.3);
+            color: #fff;
+            border: 2px solid rgba(108, 117, 125, 0.5);
+        }
+        .security-btn-cancel:hover {
+            background: rgba(108, 117, 125, 0.5);
+            border-color: #6c757d;
+            box-shadow: 0 0 20px rgba(108, 117, 125, 0.5);
+        }
+        .security-btn-verify {
+            background: linear-gradient(135deg, #00f3ff 0%, #9d00ff 100%);
+            color: white;
+            border: 2px solid transparent;
+        }
+        .security-btn-verify:hover {
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.6);
+            transform: translateY(-2px);
+        }
+        .security-btn-verify::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        .security-btn-verify:active::before {
+            width: 300px;
+            height: 300px;
+        }
+    </style>
+
+    <div id="securityPasscodeModal" class="security-modal-overlay">
+        <div class="security-modal-grid"></div>
+        <div class="security-modal-content">
+            <div class="security-lock-icon">🔐</div>
+            <h2 class="security-title">Security Authorization</h2>
+            <p class="security-subtitle">Enter 6-digit access code to proceed</p>
 
             <input type="password"
                    id="securityPasscodeInput"
+                   class="security-input"
                    maxlength="6"
-                   placeholder="Enter 6-digit code"
-                   style="width: 100%; padding: 15px; font-size: 24px; text-align: center; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 10px; letter-spacing: 8px; font-family: monospace;"
+                   placeholder="• • • • • •"
                    autocomplete="off">
 
-            <div id="passcodeError" style="color: #dc3545; font-size: 14px; margin-bottom: 20px; min-height: 20px; font-weight: 500;"></div>
+            <div id="passcodeError" class="security-error"></div>
 
-            <div style="display: flex; gap: 10px;">
-                <button onclick="closeSecurityModal()" style="flex: 1; padding: 12px; background: #6c757d; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">Cancel</button>
-                <button onclick="verifySecurityPasscode()" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">Verify</button>
+            <div class="security-buttons">
+                <button onclick="closeSecurityModal()" class="security-btn security-btn-cancel">Cancel</button>
+                <button onclick="verifySecurityPasscode()" class="security-btn security-btn-verify">Verify</button>
             </div>
         </div>
     </div>
