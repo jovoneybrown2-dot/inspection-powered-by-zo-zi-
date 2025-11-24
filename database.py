@@ -912,6 +912,19 @@ def update_database_schema():
     except Exception:  # Catches both SQLite and PostgreSQL errors
         pass
 
+    # Add signature date columns to inspections table
+    signature_date_columns = [
+        'inspector_signature_date',
+        'manager_signature_date',
+        'received_by_date'
+    ]
+    for column in signature_date_columns:
+        try:
+            c.execute(f"ALTER TABLE inspections ADD COLUMN {column} TEXT")
+            print(f"✓ Added {column} column to inspections table")
+        except Exception:  # Catches both SQLite and PostgreSQL errors
+            pass
+
     # Add missing swimming pool score columns
     for item in SWIMMING_POOL_CHECKLIST_ITEMS:
         try:
