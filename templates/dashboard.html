@@ -1199,7 +1199,16 @@
             <img src="{{ url_for('static', filename='wrha.PNG') }}" alt="WRHA Logo">
         </div>
 
-        <div class="welcome-message"><h1 class="welcome-text" id="welcomeTitle">Inspector Dashboard</h1></div>
+        <div class="welcome-message">
+            <h1 class="welcome-text" id="welcomeTitle">Inspector Dashboard{% if admin_mode %} - ADMIN INSPECTOR MODE{% endif %}</h1>
+            {% if admin_mode %}
+            <div style="margin-top: 15px;">
+                <a href="/admin/exit_inspector_mode" style="display: inline-block; padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
+                    ← Back to Admin Dashboard
+                </a>
+            </div>
+            {% endif %}
+        </div>
 
         <!-- Global Search Bar -->
         <div class="global-search-container">

@@ -2656,22 +2656,47 @@ def medical_officer():
 
 @app.route('/dashboard')
 def dashboard():
-    # If admin is logged in, redirect to admin dashboard
-    if 'admin' in session:
+    # Check if admin is in inspector mode
+    admin_inspector_mode = session.get('admin_inspector_mode', False)
+
+    # If admin is logged in and NOT in inspector mode, redirect to admin dashboard
+    if 'admin' in session and not admin_inspector_mode:
         return redirect(url_for('admin'))
 
-    # If inspector not logged in, redirect to login
-    if 'inspector' not in session:
+    # If inspector not logged in and not admin in inspector mode, redirect to login
+    if 'inspector' not in session and not admin_inspector_mode:
         return redirect(url_for('login'))
 
     # Get inspector username from session
-    username = session.get('inspector')
+    username = session.get('inspector') or session.get('admin')
 
     # Get inspections with proper Pass/Fail calculation
     inspections = get_inspections_with_status()
 
-    # Pass BOTH username and inspections to template
-    return render_template('dashboard.html', username=username, inspections=inspections)
+    # Pass username, inspections, and admin_mode to template
+    return render_template('dashboard.html', username=username, inspections=inspections, admin_mode=admin_inspector_mode)
+
+
+@app.route('/admin/inspector_mode')
+def admin_inspector_mode():
+    """Admin switches to inspector mode to view and edit forms directly"""
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+
+    # Set flag that admin is viewing as inspector
+    session['admin_inspector_mode'] = True
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/admin/exit_inspector_mode')
+def admin_exit_inspector_mode():
+    """Admin exits inspector mode and returns to admin dashboard"""
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+
+    # Clear inspector mode flag
+    session['admin_inspector_mode'] = False
+    return redirect(url_for('admin'))
 
 
 def get_inspections_with_status():
