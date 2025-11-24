@@ -1,0 +1,237 @@
+/* Responsive Inspection Forms Styles - For Tablets */
+
+/* Base tablet fixes for all forms */
+@media screen and (max-width: 1024px) and (orientation: portrait) {
+    body {
+        padding: 10px !important;
+        min-height: auto !important;
+    }
+
+    .form-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: auto !important;
+        padding: 0.25in !important;
+        margin: 0 !important;
+        font-size: 12px !important;
+    }
+
+    .form-header {
+        padding: 8px !important;
+        margin-bottom: 15px !important;
+    }
+
+    .form-title {
+        font-size: 14px !important;
+        line-height: 1.3 !important;
+    }
+
+    .form-number {
+        font-size: 12px !important;
+    }
+
+    .info-section {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+
+    .info-box {
+        height: auto !important;
+        min-height: 55px !important;
+        padding: 6px !important;
+    }
+
+    .info-box input,
+    .info-box select {
+        font-size: 12px !important;
+        padding: 4px !important;
+    }
+
+    .info-label {
+        font-size: 11px !important;
+    }
+
+    .wide-box {
+        grid-column: span 1 !important;
+    }
+
+    .inspection-table {
+        font-size: 10px !important;
+        width: 100% !important;
+        display: block !important;
+        overflow-x: auto !important;
+    }
+
+    .inspection-table thead,
+    .inspection-table tbody,
+    .inspection-table tr {
+        display: table !important;
+        width: 100% !important;
+    }
+
+    .inspection-table th,
+    .inspection-table td {
+        padding: 6px 3px !important;
+        font-size: 10px !important;
+    }
+
+    .inspection-table input[type="number"],
+    .inspection-table select {
+        width: 50px !important;
+        font-size: 11px !important;
+        padding: 4px 2px !important;
+    }
+
+    .section-header {
+        font-size: 11px !important;
+    }
+
+    .signature-section {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+    }
+
+    .signature-box {
+        margin-bottom: 15px;
+    }
+
+    .signature-input {
+        font-size: 14px !important;
+        padding: 10px !important;
+    }
+
+    .buttons-section {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    .btn {
+        width: 100% !important;
+        padding: 12px !important;
+        font-size: 14px !important;
+        margin: 0 !important;
+    }
+
+    .scores-section {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+        padding: 10px !important;
+    }
+
+    .score-display {
+        width: 60px !important;
+        font-size: 14px !important;
+    }
+
+    .comments-section textarea {
+        font-size: 12px !important;
+        min-height: 60px !important;
+    }
+
+    /* Photo capture button */
+    .photo-capture-btn {
+        width: 100% !important;
+        font-size: 14px !important;
+        padding: 12px !important;
+    }
+
+    /* Photos grid */
+    .photos-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+}
+
+/* Tablet Landscape Mode */
+@media screen and (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+    .form-container {
+        width: 95% !important;
+        max-width: 95% !important;
+        font-size: 13px !important;
+        padding: 0.3in !important;
+    }
+
+    .info-section {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .inspection-table {
+        font-size: 11px !important;
+    }
+
+    .signature-section {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* Small tablets and large phones */
+@media screen and (max-width: 768px) {
+    .form-container {
+        width: 100% !important;
+        padding: 0.15in !important;
+        font-size: 11px !important;
+    }
+
+    .form-title {
+        font-size: 13px !important;
+    }
+
+    .inspection-table {
+        font-size: 9px !important;
+    }
+
+    .inspection-table th,
+    .inspection-table td {
+        padding: 4px 2px !important;
+        font-size: 9px !important;
+    }
+
+    .inspection-table input[type="number"],
+    .inspection-table select {
+        width: 40px !important;
+        font-size: 10px !important;
+    }
+
+    .score-display {
+        width: 50px !important;
+        font-size: 13px !important;
+    }
+
+    .btn {
+        font-size: 13px !important;
+    }
+
+    .photos-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Fix for select dropdowns on mobile/tablet */
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"><path fill="%23333" d="M6 9L1 4h10z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 12px;
+    padding-right: 25px !important;
+}
+
+/* Fix for date inputs on mobile/tablet */
+input[type="date"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Ensure inputs are readable */
+input, select, textarea {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+}
+
+@media screen and (min-width: 1025px) {
+    input, select, textarea {
+        font-size: inherit !important; /* Reset for desktop */
+    }
+}

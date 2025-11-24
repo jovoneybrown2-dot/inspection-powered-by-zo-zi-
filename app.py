@@ -1994,6 +1994,10 @@ def submit_spirit_licence():
 def submit_form(form_type):
     if 'inspector' not in session:
         return jsonify({'success': False, 'error': 'Not logged in'}), 403
+
+    from db_config import get_placeholder
+    ph = get_placeholder()
+
     try:
         if form_type == 'inspection':
             data = {
@@ -2028,7 +2032,7 @@ def submit_form(form_type):
             c = conn.cursor()
             for item in FOOD_CHECKLIST_ITEMS:
                 score = request.form.get(f'score_{item["id"]}', '0')
-                c.execute("INSERT INTO inspection_items (inspection_id, item_id, details) VALUES (%s, %s, %s)",
+                c.execute(f"INSERT INTO inspection_items (inspection_id, item_id, details) VALUES ({ph}, {ph}, {ph})",
                           (inspection_id, item["id"], score))
             conn.commit()
             conn.close()
@@ -2052,6 +2056,9 @@ def submit_form(form_type):
 def submit_residential():
     if 'inspector' not in session:
         return jsonify({'message': 'Unauthorized: Please log in'}), 401
+
+    from db_config import get_placeholder
+    ph = get_placeholder()
 
     try:
         # Helper function to safely convert to int
@@ -2093,7 +2100,7 @@ def submit_residential():
             score = request.form.get(f'score_{item["id"]}', '0')
             # Also apply safe conversion to checklist scores
             safe_score = safe_int_convert(score, 0)
-            c.execute("INSERT INTO residential_checklist_scores (form_id, item_id, score) VALUES (%s, %s, %s)",
+            c.execute(f"INSERT INTO residential_checklist_scores (form_id, item_id, score) VALUES ({ph}, {ph}, {ph})",
                       (inspection_id, item["id"], safe_score))
         conn.commit()
         conn.close()
@@ -2146,6 +2153,9 @@ def submit_burial():
 def submit_meat_processing():
     if 'inspector' not in session:
         return jsonify({'message': 'Unauthorized: Please log in'}), 401
+
+    from db_config import get_placeholder
+    ph = get_placeholder()
 
     # Helper function to safely convert to float
     def safe_float_convert(value, default=0.0):
@@ -2223,7 +2233,7 @@ def submit_meat_processing():
         for item in MEAT_PROCESSING_CHECKLIST_ITEMS:
             score = request.form.get(f'score_{item["id"]:02d}', '0')
             safe_score = safe_float_convert(score, 0.0)
-            c.execute("INSERT INTO meat_processing_checklist_scores (form_id, item_id, score) VALUES (%s, %s, %s)",
+            c.execute(f"INSERT INTO meat_processing_checklist_scores (form_id, item_id, score) VALUES ({ph}, {ph}, {ph})",
                       (inspection_id, item["id"], safe_score))
         conn.commit()
         conn.close()
@@ -2506,6 +2516,9 @@ def submit_small_hotels():
     if 'inspector' not in session:
         return jsonify({"status": "error", "message": "Unauthorized"}), 401
 
+    from db_config import get_placeholder
+    ph = get_placeholder()
+
     data = request.form
     conn = get_db_connection()
     c = conn.cursor()
@@ -2563,8 +2576,15 @@ def submit_small_hotels():
     critical_score = round((critical_items_passed / total_critical_items) * 100)
     overall_score = round((total_items_passed / total_items) * 100)
 
+    # Get current timestamp based on database type
+    if get_db_type() == 'postgresql':
+        timestamp_val = 'NOW()'
+    else:
+        from datetime import datetime
+        timestamp_val = f"'{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}'"
+
     # Insert inspection with ALL required fields
-    c.execute('''
+    c.execute(f'''
         INSERT INTO inspections (
             establishment_name, address, physical_location, inspector_name,
             inspection_date, comments, result, overall_score, critical_score,
@@ -2572,7 +2592,7 @@ def submit_small_hotels():
             manager_signature_date, received_by, received_by_date,
             photo_data, created_at, form_type
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)
+        VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {timestamp_val}, {ph})
     ''', (
         data.get('establishment_name', ''),
         data.get('address', ''),
@@ -2600,9 +2620,9 @@ def submit_small_hotels():
 
     # Insert ALL checklist items to preserve form data
     for item_id in all_item_ids:
-        c.execute('''
+        c.execute(f'''
             INSERT INTO inspection_items (inspection_id, item_id, obser, error)
-            VALUES (%s, %s, %s, %s)
+            VALUES ({ph}, {ph}, {ph}, {ph})
         ''', (
             inspection_id,
             item_id,
@@ -6332,9 +6352,9 @@ def submit_barbershop():
         # Insert inspection items
         for item in BARBERSHOP_CHECKLIST_ITEMS:
             score = score_updates[f"score_{item['id']}"]
-            cursor.execute('''
+            cursor.execute(f'''
                 INSERT INTO inspection_items (inspection_id, item_id, details)
-                VALUES (%s, %s, %s)
+                VALUES ({placeholder}, {placeholder}, {placeholder})
             ''', (inspection_id, item['id'], str(score)))
 
         conn.commit()
