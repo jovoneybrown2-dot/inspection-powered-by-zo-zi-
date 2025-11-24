@@ -2924,16 +2924,30 @@
                 }
 
                 const metricsData = await metricsResponse.json();
+                console.log(`📊 Metrics data for ${tab}:`, metricsData);
+                console.log(`   - Dates: ${metricsData.dates?.length || 0} data points`);
+                console.log(`   - Total inspections: ${metricsData.total_inspections || 0}`);
+                console.log(`   - Pass: ${metricsData.total_pass || 0}, Fail: ${metricsData.total_fail || 0}`);
+
                 let scoresData = [];
 
                 if (scoresResponse.ok) {
                     scoresData = await scoresResponse.json();
+                    console.log(`📈 Scores data for ${tab}: ${scoresData.length} scores`);
                 } else {
                     console.warn('Could not fetch form scores, using dummy data');
                     scoresData = generateDummyScores();
                 }
 
-                processInspectionData(tab, metricsData, scoresData, timePeriod);
+                // Check if we have actual data or if it's empty
+                if (!metricsData.dates || metricsData.dates.length === 0 || metricsData.total_inspections === 0) {
+                    console.warn(`⚠️ No real data for ${tab}, using dummy data for visualization`);
+                    const dummyData = generateDummyData(timePeriod);
+                    const dummyScores = generateDummyScores();
+                    processInspectionData(tab, dummyData, dummyScores, timePeriod);
+                } else {
+                    processInspectionData(tab, metricsData, scoresData, timePeriod);
+                }
 
             } catch (error) {
                 console.error(`Error loading data for ${tab}:`, error);
@@ -3071,8 +3085,17 @@
         }
 
         function processInspectionData(tab, data, scoresData = [], timePeriod = 'daily') {
+            console.log(`🔄 Processing inspection data for ${tab}:`, {
+                hasDates: !!data?.dates,
+                datesLength: data?.dates?.length,
+                hasPass: !!data?.pass,
+                hasFail: !!data?.fail,
+                totalInspections: data?.total_inspections,
+                timePeriod: timePeriod
+            });
+
             if (!data || !data.dates || !Array.isArray(data.dates)) {
-                console.warn(`Invalid data structure for ${tab}, using dummy data`);
+                console.warn(`⚠️ Invalid data structure for ${tab}, using dummy data`);
                 data = generateDummyData(timePeriod);
                 scoresData = generateDummyScores();
             }
@@ -3085,7 +3108,7 @@
             if (data.total_pass !== undefined && data.total_fail !== undefined) {
                 totalPass = data.total_pass;
                 totalFail = data.total_fail;
-                console.log(`Using API totals for ${tab}: Pass=${totalPass}, Fail=${totalFail}, Total=${totalPass + totalFail}`);
+                console.log(`✅ Using API totals for ${tab}: Pass=${totalPass}, Fail=${totalFail}, Total=${totalPass + totalFail}`);
             } else {
                 if (data.pass && Array.isArray(data.pass)) {
                     totalPass = data.pass.reduce((sum, count) => sum + (count || 0), 0);
@@ -3093,7 +3116,7 @@
                 if (data.fail && Array.isArray(data.fail)) {
                     totalFail = data.fail.reduce((sum, count) => sum + (count || 0), 0);
                 }
-                console.log(`Calculated totals for ${tab}: Pass=${totalPass}, Fail=${totalFail}, Total=${totalPass + totalFail}`);
+                console.log(`📊 Calculated totals for ${tab}: Pass=${totalPass}, Fail=${totalFail}, Total=${totalPass + totalFail}`);
             }
 
             // Enhanced candlestick generation for pattern analysis
@@ -3168,11 +3191,19 @@
             const statistics = calculateStatistics(scoresData);
             currentStatistics[tab] = statistics;
 
+            console.log(`✨ Generated ${chartData.length} candlesticks for ${tab}`);
+            if (chartData.length > 0) {
+                console.log(`   First candle: ${JSON.stringify(chartData[0])}`);
+                console.log(`   Last candle: ${JSON.stringify(chartData[chartData.length - 1])}`);
+            } else {
+                console.error(`❌ No chart data generated for ${tab}!`);
+            }
+
             updateMetricsDisplay(tab, totalPass, totalFail, scoresData);
             updateChart(tab, chartData, timePeriod);
             currentData[tab] = chartData;
 
-            console.log(`Processed ${chartData.length} candlesticks for ${tab} (${timePeriod})`);
+            console.log(`✅ Processed ${chartData.length} candlesticks for ${tab} (${timePeriod})`);
         }
 
         function calculateStatistics(scores) {
