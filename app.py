@@ -2537,10 +2537,11 @@ def submit_small_hotels():
         INSERT INTO inspections (
             establishment_name, address, physical_location, inspector_name,
             inspection_date, comments, result, overall_score, critical_score,
-            inspector_signature, manager_signature, received_by,
+            inspector_signature, inspector_signature_date, manager_signature,
+            manager_signature_date, received_by, received_by_date,
             photo_data, created_at, form_type
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)
     ''', (
         data.get('establishment_name', ''),
         data.get('address', ''),
@@ -2552,8 +2553,11 @@ def submit_small_hotels():
         overall_score,
         critical_score,
         data.get('inspector_signature', ''),
+        data.get('inspector_signature_date', ''),
         data.get('manager_signature', ''),
+        data.get('manager_signature_date', ''),
         data.get('received_by', ''),
+        data.get('received_by_date', ''),
         data.get('photos', '[]'),
         'Small Hotel'
     ))
