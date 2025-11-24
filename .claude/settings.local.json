@@ -33,7 +33,11 @@
       "Bash(done)",
       "Bash(do echo \"=== $file ===\")",
       "Bash(curl -s http://127.0.0.1:5002)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(if [ -f \"$file\" ])",
+      "Bash(if grep -q \"dark-mode.css\" \"$file\")",
+      "Bash(else)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []

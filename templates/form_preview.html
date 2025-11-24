@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preview: {{ form_template[1] }} - Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}">
 </head>
 <body class="bg-gray-100">
-    <button class="theme-toggle-btn" onclick="toggleTheme()">Dark</button>
 
     <div class="container mx-auto p-6">
         <div class="flex justify-between items-center mb-6">
@@ -29,6 +27,5 @@
         </div>
     </div>
     {% include 'zozi_badge.html' %}
-    <script src="{{ url_for('static', filename='js/dark-mode.js') }}"></script>
 </body>
 </html>

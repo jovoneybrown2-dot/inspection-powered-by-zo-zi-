@@ -283,10 +283,8 @@
             display: none;
         }
     </style>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}">
 </head>
 <body class="bg-gray-100">
-    <button class="theme-toggle-btn" onclick="toggleTheme()">Dark</button>
 
     <div class="container mx-auto p-6">
         <form class="absolute top-4 left-4" method="POST" action="/logout">
@@ -1391,6 +1389,5 @@
             });
         </script>
     {% include 'zozi_badge.html' %}
-    <script src="{{ url_for('static', filename='js/dark-mode.js') }}"></script>
 </body>
 </html>

@@ -26,3 +26,5 @@
 {"timestamp": "2025-11-22T17:28:56.483889", "action_type": "audit_send_failed", "error": "No module named 'requests'"}
 {"timestamp": "2025-11-22T21:01:58.387118", "installation_id": "b2676ed3-3c7d-4821-a0eb-ac90d42576fc", "action_type": "user_login", "user": "inspector1", "details": {"success": true, "ip_address": "127.0.0.1"}}
 {"timestamp": "2025-11-22T21:01:58.388666", "action_type": "audit_send_failed", "error": "No module named 'requests'"}
+{"timestamp": "2025-11-22T23:41:26.719459", "installation_id": "b2676ed3-3c7d-4821-a0eb-ac90d42576fc", "action_type": "user_login", "user": "admin", "details": {"success": true, "ip_address": "127.0.0.1"}}
+{"timestamp": "2025-11-22T23:41:26.723210", "action_type": "audit_send_failed", "error": "No module named 'requests'"}
