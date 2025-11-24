@@ -207,7 +207,7 @@
         }
 
         .signature-box {
-            text-align: center;
+            text-align: left;
         }
 
         .signature-box label {
@@ -1488,12 +1488,17 @@
                 }
             });
 
-            // Find all table rows with item IDs and apply critical-item class
+            // Find all table rows and update critical-item class based on database
             const tableRows = document.querySelectorAll('.inspection-table tbody tr');
             tableRows.forEach(row => {
                 const firstCell = row.querySelector('td:first-child');
-                if (firstCell) {
+                if (firstCell && !firstCell.classList.contains('section-header')) {
                     const itemId = firstCell.textContent.trim().toLowerCase();
+
+                    // Remove existing critical-item class first
+                    row.classList.remove('critical-item');
+
+                    // Add critical-item class only if database says it's critical
                     if (criticalMap[itemId]) {
                         row.classList.add('critical-item');
                     }
