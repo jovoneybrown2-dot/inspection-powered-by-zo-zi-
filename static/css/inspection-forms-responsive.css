@@ -1,5 +1,22 @@
 /* Responsive Inspection Forms Styles - For Tablets */
 
+/* Critical Item Shading - Gray background for critical checklist items */
+tr.critical-item,
+.critical-item {
+    background-color: #e5e7eb !important; /* Light gray for critical items */
+}
+
+tr.critical-item td,
+.critical-item td {
+    background-color: #e5e7eb !important;
+}
+
+/* Darker shade for critical items on hover */
+tr.critical-item:hover,
+.critical-item:hover {
+    background-color: #d1d5db !important;
+}
+
 /* Base tablet fixes for all forms */
 @media screen and (max-width: 1024px) and (orientation: portrait) {
     body {

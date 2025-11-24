@@ -1868,13 +1868,16 @@ def institutional_details(form_id):
 
 @app.route('/institutional/inspection/<int:id>')
 def institutional_inspection_detail(id):
+    from db_config import get_placeholder
+    ph = get_placeholder()
+
     if 'inspector' not in session and 'admin' not in session:
         return redirect(url_for('login'))
 
     conn = get_db_connection()
     cursor = get_dict_cursor(conn)
 
-    cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Institutional Health'", (id,))
+    cursor.execute(f"SELECT * FROM inspections WHERE id = {ph} AND form_type = 'Institutional Health'", (id,))
     inspection = cursor.fetchone()
 
     if not inspection:
@@ -1899,7 +1902,7 @@ def institutional_inspection_detail(id):
             print(f"{key}: {value}")
 
     # Get individual scores from inspection_items table
-    cursor.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = %s", (id,))
+    cursor.execute(f"SELECT item_id, details FROM inspection_items WHERE inspection_id = {ph}", (id,))
     item_scores = {}
     for row in cursor.fetchall():
         item_key = row['item_id']
@@ -3845,13 +3848,16 @@ def download_burial_pdf(form_id):
 
 @app.route('/download_swimming_pool_pdf/<int:form_id>')
 def download_swimming_pool_pdf(form_id):
+    from db_config import get_placeholder
+    ph = get_placeholder()
+
     if 'inspector' not in session and 'admin' not in session:
         return redirect(url_for('login'))
 
     conn = get_db_connection()
     cursor = get_dict_cursor(conn)
 
-    cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Swimming Pool'", (form_id,))
+    cursor.execute(f"SELECT * FROM inspections WHERE id = {ph} AND form_type = 'Swimming Pool'", (form_id,))
     inspection = cursor.fetchone()
 
     if not inspection:
@@ -3861,7 +3867,7 @@ def download_swimming_pool_pdf(form_id):
     inspection_dict = dict(inspection)
 
     # Get individual scores
-    cursor.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = %s", (form_id,))
+    cursor.execute(f"SELECT item_id, details FROM inspection_items WHERE inspection_id = {ph}", (form_id,))
     item_scores = {row[0]: float(row[1]) if row[1] and str(row[1]).replace('.', '', 1).isdigit() else 0.0
                    for row in cursor.fetchall()}
     conn.close()
@@ -4599,6 +4605,9 @@ def download_institutional_pdf(form_id):
 
 @app.route('/download_small_hotels_pdf/<int:form_id>')
 def download_small_hotels_pdf(form_id):
+    from db_config import get_placeholder
+    ph = get_placeholder()
+
     if 'inspector' not in session and 'admin' not in session:
         return redirect(url_for('login'))
 
@@ -4606,7 +4615,7 @@ def download_small_hotels_pdf(form_id):
     conn = get_db_connection()
     cursor = get_dict_cursor(conn)
 
-    cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Small Hotel'", (form_id,))
+    cursor.execute(f"SELECT * FROM inspections WHERE id = {ph} AND form_type = 'Small Hotel'", (form_id,))
     inspection_row = cursor.fetchone()
 
     if not inspection_row:
@@ -4616,7 +4625,7 @@ def download_small_hotels_pdf(form_id):
     inspection_dict = dict(inspection_row)
 
     # Get individual scores from inspection_items table
-    cursor.execute("SELECT item_id, obser, error FROM inspection_items WHERE inspection_id = %s", (form_id,))
+    cursor.execute(f"SELECT item_id, obser, error FROM inspection_items WHERE inspection_id = {ph}", (form_id,))
     items = cursor.fetchall()
 
     obser_scores = {}
@@ -5803,6 +5812,9 @@ def download_spirit_licence_pdf(form_id):
 
 @app.route('/swimming_pool/inspection/<int:id>')
 def swimming_pool_inspection_detail(id):
+    from db_config import get_placeholder
+    ph = get_placeholder()
+
     if 'inspector' not in session and 'admin' not in session:
         return redirect(url_for('login'))
 
@@ -5810,7 +5822,7 @@ def swimming_pool_inspection_detail(id):
     cursor = get_dict_cursor(conn)
 
     # Select ALL columns including the individual score columns
-    cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Swimming Pool'", (id,))
+    cursor.execute(f"SELECT * FROM inspections WHERE id = {ph} AND form_type = 'Swimming Pool'", (id,))
     inspection = cursor.fetchone()
 
     if not inspection:
@@ -5859,7 +5871,7 @@ def swimming_pool_inspection_detail(id):
             inspection_dict[score_field] = float(inspection_dict[score_field])
 
     # Also get backup scores from inspection_items table
-    cursor.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = %s", (id,))
+    cursor.execute(f"SELECT item_id, details FROM inspection_items WHERE inspection_id = {ph}", (id,))
     item_scores = {row[0]: float(row[1]) if row[1] and str(row[1]).replace('.', '', 1).isdigit() else 0.0
                    for row in cursor.fetchall()}
 
@@ -6381,13 +6393,16 @@ def submit_barbershop():
 
 @app.route('/barbershop/inspection/<int:id>')
 def barbershop_inspection_detail(id):
+    from db_config import get_placeholder
+    ph = get_placeholder()
+
     if 'inspector' not in session and 'admin' not in session:
         return redirect(url_for('login'))
 
     conn = get_db_connection()
     cursor = get_dict_cursor(conn)
 
-    cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Barbershop'", (id,))
+    cursor.execute(f"SELECT * FROM inspections WHERE id = {ph} AND form_type = 'Barbershop'", (id,))
     inspection = cursor.fetchone()
 
     if not inspection:
@@ -6407,7 +6422,7 @@ def barbershop_inspection_detail(id):
             inspection_dict[score_field] = float(inspection_dict[score_field])
 
     # Get backup scores from inspection_items
-    cursor.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = %s", (id,))
+    cursor.execute(f"SELECT item_id, details FROM inspection_items WHERE inspection_id = {ph}", (id,))
     item_scores = {row['item_id']: float(row['details']) if row['details'] and str(row['details']).replace('.', '', 1).isdigit() else 0.0 for row in cursor.fetchall()}
 
     for item in BARBERSHOP_CHECKLIST_ITEMS:
@@ -7938,6 +7953,9 @@ def get_system_health():
 # Modify the existing tasks route to include notifications
 @app.route('/api/admin/tasks', methods=['GET', 'POST'])
 def handle_tasks():
+    from db_config import get_placeholder
+    ph = get_placeholder()
+
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
     try:
@@ -7996,13 +8014,13 @@ def handle_tasks():
             # Check if assignee is a username/string or ID
             if assignee and not assignee.isdigit():
                 # It's a username, look up the ID
-                cursor.execute('SELECT id FROM users WHERE username = %s', (assignee,))
+                cursor.execute(f'SELECT id FROM users WHERE username = {ph}', (assignee,))
                 user = cursor.fetchone()
                 assignee_id = user[0] if user else None
                 assignee_name = assignee
             elif assignee and assignee.isdigit():
                 # It's a user ID
-                cursor.execute('SELECT username FROM users WHERE id = %s', (int(assignee),))
+                cursor.execute(f'SELECT username FROM users WHERE id = {ph}', (int(assignee),))
                 user = cursor.fetchone()
                 assignee_name = user[0] if user else 'Unknown'
                 assignee_id = int(assignee)
@@ -8179,13 +8197,16 @@ def get_security_metrics():
 
     @app.route('/small_hotels/inspection/<int:id>')
     def small_hotels_inspection_detail(id):
+    from db_config import get_placeholder
+    ph = get_placeholder()
+
         if 'inspector' not in session and 'admin' not in session:
             return redirect(url_for('login'))
 
         conn = get_db_connection()
         cursor = get_dict_cursor(conn)
 
-        cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Small Hotel'", (id,))
+        cursor.execute(f"SELECT * FROM inspections WHERE id = {ph} AND form_type = 'Small Hotel'", (id,))
         inspection = cursor.fetchone()
 
         if not inspection:
@@ -8195,7 +8216,7 @@ def get_security_metrics():
         inspection_dict = dict(inspection)
 
         # Get individual scores from inspection_items table
-        cursor.execute("SELECT item_id, obser, error FROM inspection_items WHERE inspection_id = %s", (id,))
+        cursor.execute(f"SELECT item_id, obser, error FROM inspection_items WHERE inspection_id = {ph}", (id,))
         items = cursor.fetchall()
 
         obser_scores = {}
@@ -10255,13 +10276,16 @@ def migrate_remaining_fixed():
 
 @app.route('/small_hotels/inspection/<int:id>')
 def small_hotels_inspection_detail(id):
+    from db_config import get_placeholder
+    ph = get_placeholder()
+
     if 'inspector' not in session and 'admin' not in session:
         return redirect(url_for('login'))
 
     conn = get_db_connection()
     cursor = get_dict_cursor(conn)
 
-    cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Small Hotel'", (id,))
+    cursor.execute(f"SELECT * FROM inspections WHERE id = {ph} AND form_type = 'Small Hotel'", (id,))
     inspection = cursor.fetchone()
 
     if not inspection:
@@ -10271,7 +10295,7 @@ def small_hotels_inspection_detail(id):
     inspection_dict = dict(inspection)
 
     # Get individual scores from inspection_items table
-    cursor.execute("SELECT item_id, obser, error FROM inspection_items WHERE inspection_id = %s", (id,))
+    cursor.execute(f"SELECT item_id, obser, error FROM inspection_items WHERE inspection_id = {ph}", (id,))
     items = cursor.fetchall()
 
     obser_scores = {}
