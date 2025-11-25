@@ -184,11 +184,38 @@
     .row-delete-btn:hover {
         background: #c82333;
     }
+
+    /* Editable text styling */
+    body.admin-editing-mode .text-editable {
+        cursor: text;
+        min-height: 20px;
+    }
+
+    body.admin-editing-mode .text-editable:focus {
+        outline: 2px solid #667eea !important;
+        background: rgba(255, 246, 143, 0.4) !important;
+    }
+
+    /* Input field highlighting in edit mode */
+    body.admin-editing-mode input:not([type="checkbox"]):not([type="radio"]),
+    body.admin-editing-mode textarea,
+    body.admin-editing-mode select {
+        border: 1px solid rgba(102, 126, 234, 0.5) !important;
+        transition: all 0.2s;
+    }
+
+    body.admin-editing-mode input:focus:not([type="checkbox"]):not([type="radio"]),
+    body.admin-editing-mode textarea:focus,
+    body.admin-editing-mode select:focus {
+        border: 2px solid #667eea !important;
+        background: white !important;
+        outline: none;
+    }
 </style>
 
 <!-- Edit Mode Banner -->
 <div class="edit-mode-banner">
-    ✏️ EDIT MODE ACTIVE - You can now edit checklist items directly on the form
+    ✏️ EDIT MODE ACTIVE - Everything on the form is now editable (labels, headings, checklist items, and all fields)
 </div>
 
 <!-- Success Toast -->
@@ -275,7 +302,41 @@
     }
 
     function makeFormEditable() {
-        // Find the checklist table (look for inspection-table or main table with checklist)
+        // 1. Make all form inputs editable/enabled
+        const allInputs = document.querySelectorAll('input, textarea, select');
+        allInputs.forEach(input => {
+            // Remove readonly and disabled attributes to make them editable
+            input.removeAttribute('readonly');
+            input.removeAttribute('disabled');
+            // Add a visual indicator that it's editable
+            input.style.background = 'rgba(255, 246, 143, 0.2)';
+        });
+
+        // 2. Make all labels editable
+        const allLabels = document.querySelectorAll('label');
+        allLabels.forEach(label => {
+            makeTextEditable(label);
+        });
+
+        // 3. Make all headings editable
+        const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+        headings.forEach(heading => {
+            makeTextEditable(heading);
+        });
+
+        // 4. Make category headers in tables editable
+        const categoryHeaders = document.querySelectorAll('.category-header');
+        categoryHeaders.forEach(header => {
+            makeTextEditable(header);
+        });
+
+        // 5. Make table headers editable
+        const tableHeaders = document.querySelectorAll('th');
+        tableHeaders.forEach(th => {
+            makeTextEditable(th);
+        });
+
+        // 6. Find the checklist table and make checklist items editable
         const tables = document.querySelectorAll('table');
         let checklistTable = null;
 
@@ -289,15 +350,22 @@
         }
 
         if (!checklistTable) {
-            console.error('Could not find checklist table');
+            console.warn('Could not find checklist table');
             return;
         }
 
-        // Add editable fields to each row
+        // Add editable fields to each checklist row
         const rows = checklistTable.querySelectorAll('tbody tr');
-        rows.forEach((row, index) => {
+        let checklistIndex = 0;
+
+        rows.forEach((row) => {
             const cells = row.querySelectorAll('td');
             if (cells.length < 2) return;
+
+            // Skip category header rows
+            if (row.classList.contains('category-header')) {
+                return;
+            }
 
             const itemIdCell = cells[0];
             const descriptionCell = cells[1];
@@ -307,7 +375,7 @@
             itemIdCell.classList.add('editable-cell');
             itemIdCell.innerHTML = `
                 <span class="cell-display">${itemIdText}</span>
-                <input type="number" value="${itemIdText}" data-index="${index}" data-field="item_id" onchange="updateChecklistField(this)" min="1">
+                <input type="number" value="${itemIdText}" data-index="${checklistIndex}" data-field="item_id" onchange="updateChecklistField(this)" min="1">
             `;
 
             // Make description editable
@@ -315,10 +383,10 @@
             descriptionCell.classList.add('editable-cell');
             descriptionCell.innerHTML = `
                 <span class="cell-display">${descText}</span>
-                <textarea data-index="${index}" data-field="description" onchange="updateChecklistField(this)">${descText}</textarea>
+                <textarea data-index="${checklistIndex}" data-field="description" onchange="updateChecklistField(this)">${descText}</textarea>
                 <label class="critical-checkbox">
-                    <input type="checkbox" data-index="${index}" data-field="is_critical"
-                           onchange="updateChecklistField(this)" ${adminChecklistData[index]?.is_critical ? 'checked' : ''}>
+                    <input type="checkbox" data-index="${checklistIndex}" data-field="is_critical"
+                           onchange="updateChecklistField(this)" ${adminChecklistData[checklistIndex]?.is_critical ? 'checked' : ''}>
                     <span>Critical (Shaded)</span>
                 </label>
             `;
@@ -327,11 +395,11 @@
             if (cells.length >= 3) {
                 const weightCell = cells[2];
                 const weightText = weightCell.textContent.trim();
-                if (weightText.match(/^\d+$/)) {
+                if (weightText.match(/^\d+$/) || weightText.match(/^\d+\.\d+$/)) {
                     weightCell.classList.add('editable-cell');
                     weightCell.innerHTML = `
                         <span class="cell-display">${weightText}</span>
-                        <input type="number" value="${weightText}" data-index="${index}" data-field="weight" onchange="updateChecklistField(this)" min="1" max="10">
+                        <input type="number" value="${weightText}" data-index="${checklistIndex}" data-field="weight" onchange="updateChecklistField(this)" min="1" max="10" step="0.1">
                     `;
                 }
             }
@@ -340,8 +408,51 @@
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'row-delete-btn';
             deleteBtn.textContent = '🗑️';
-            deleteBtn.onclick = () => deleteRow(index);
+            deleteBtn.onclick = () => deleteRow(checklistIndex);
             itemIdCell.appendChild(deleteBtn);
+
+            checklistIndex++;
+        });
+    }
+
+    // Helper function to make any text element editable
+    function makeTextEditable(element) {
+        // Skip if element is empty or already editable
+        if (!element.textContent.trim() || element.classList.contains('text-editable')) {
+            return;
+        }
+
+        // Skip elements that contain form controls
+        if (element.querySelector('input, textarea, select, button')) {
+            return;
+        }
+
+        element.classList.add('text-editable');
+        const originalText = element.innerHTML;
+
+        // Store original text
+        element.setAttribute('data-original-text', originalText);
+
+        // Make contenteditable when in edit mode
+        element.setAttribute('contenteditable', 'true');
+        element.style.outline = '1px dashed rgba(102, 126, 234, 0.3)';
+        element.style.padding = '2px 4px';
+        element.style.borderRadius = '3px';
+        element.style.transition = 'all 0.2s';
+
+        // Add hover effect
+        element.addEventListener('mouseenter', function() {
+            if (isEditMode) {
+                this.style.background = 'rgba(255, 246, 143, 0.3)';
+                this.style.outline = '1px dashed rgba(102, 126, 234, 0.6)';
+            }
+        });
+
+        element.addEventListener('mouseleave', function() {
+            if (isEditMode) {
+                this.style.background = 'transparent';
+                this.style.outline = '1px dashed rgba(102, 126, 234, 0.3)';
+            }
         });
     }
 
