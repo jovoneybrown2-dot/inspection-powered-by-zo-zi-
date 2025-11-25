@@ -211,11 +211,57 @@
         background: white !important;
         outline: none;
     }
+
+    /* Shade toggle button for checklist rows */
+    .shade-toggle-btn {
+        display: none;
+        position: absolute;
+        right: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        transition: all 0.2s;
+        z-index: 10;
+    }
+
+    body.admin-editing-mode .shade-toggle-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .shade-toggle-btn:hover {
+        transform: translateY(-50%) scale(1.1);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Checklist editable cell styling */
+    .checklist-editable-cell {
+        transition: all 0.2s;
+    }
+
+    .checklist-editable-cell:focus {
+        outline: 2px solid #667eea !important;
+        background: rgba(255, 246, 143, 0.3) !important;
+    }
+
+    /* Shaded critical row */
+    .shaded-critical {
+        background: rgba(200, 200, 200, 0.3) !important;
+    }
 </style>
 
 <!-- Edit Mode Banner -->
 <div class="edit-mode-banner">
-    ✏️ EDIT MODE ACTIVE - Everything on the form is now editable (labels, headings, checklist items, and all fields)
+    ✏️ EDIT MODE ACTIVE - Everything is editable! Click cells to edit text. Use ☀️/🌑 buttons to shade/unshade checklist items.
 </div>
 
 <!-- Success Toast -->
@@ -336,83 +382,102 @@
             makeTextEditable(th);
         });
 
-        // 6. Find the checklist table and make checklist items editable
+        // 6. Make ALL table cells in checklist editable
+        makeChecklistEditable();
+    }
+
+    function makeChecklistEditable() {
+        // Find all tables and make checklist rows editable
         const tables = document.querySelectorAll('table');
-        let checklistTable = null;
 
-        // Find the table with checklist items
-        for (let table of tables) {
-            const firstCell = table.querySelector('tbody tr td:first-child');
-            if (firstCell && firstCell.textContent.trim().match(/^\d+$/)) {
-                checklistTable = table;
-                break;
-            }
-        }
+        tables.forEach(table => {
+            const rows = table.querySelectorAll('tr');
 
-        if (!checklistTable) {
-            console.warn('Could not find checklist table');
-            return;
-        }
-
-        // Add editable fields to each checklist row
-        const rows = checklistTable.querySelectorAll('tbody tr');
-        let checklistIndex = 0;
-
-        rows.forEach((row) => {
-            const cells = row.querySelectorAll('td');
-            if (cells.length < 2) return;
-
-            // Skip category header rows
-            if (row.classList.contains('category-header')) {
-                return;
-            }
-
-            const itemIdCell = cells[0];
-            const descriptionCell = cells[1];
-
-            // Make item ID editable
-            const itemIdText = itemIdCell.textContent.trim();
-            itemIdCell.classList.add('editable-cell');
-            itemIdCell.innerHTML = `
-                <span class="cell-display">${itemIdText}</span>
-                <input type="number" value="${itemIdText}" data-index="${checklistIndex}" data-field="item_id" onchange="updateChecklistField(this)" min="1">
-            `;
-
-            // Make description editable
-            const descText = descriptionCell.textContent.trim();
-            descriptionCell.classList.add('editable-cell');
-            descriptionCell.innerHTML = `
-                <span class="cell-display">${descText}</span>
-                <textarea data-index="${checklistIndex}" data-field="description" onchange="updateChecklistField(this)">${descText}</textarea>
-                <label class="critical-checkbox">
-                    <input type="checkbox" data-index="${checklistIndex}" data-field="is_critical"
-                           onchange="updateChecklistField(this)" ${adminChecklistData[checklistIndex]?.is_critical ? 'checked' : ''}>
-                    <span>Critical (Shaded)</span>
-                </label>
-            `;
-
-            // Add weight column if it exists (usually 3rd column)
-            if (cells.length >= 3) {
-                const weightCell = cells[2];
-                const weightText = weightCell.textContent.trim();
-                if (weightText.match(/^\d+$/) || weightText.match(/^\d+\.\d+$/)) {
-                    weightCell.classList.add('editable-cell');
-                    weightCell.innerHTML = `
-                        <span class="cell-display">${weightText}</span>
-                        <input type="number" value="${weightText}" data-index="${checklistIndex}" data-field="weight" onchange="updateChecklistField(this)" min="1" max="10" step="0.1">
-                    `;
+            rows.forEach((row, rowIndex) => {
+                // Skip header rows and category header rows
+                if (row.querySelector('th') || row.classList.contains('category-header')) {
+                    // Make category headers editable
+                    if (row.classList.contains('category-header')) {
+                        const cells = row.querySelectorAll('td');
+                        cells.forEach(cell => {
+                            makeTextEditable(cell);
+                        });
+                    }
+                    return;
                 }
-            }
 
-            // Add delete button to first cell
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'row-delete-btn';
-            deleteBtn.textContent = '🗑️';
-            deleteBtn.onclick = () => deleteRow(checklistIndex);
-            itemIdCell.appendChild(deleteBtn);
+                const cells = row.querySelectorAll('td');
+                if (cells.length < 2) return;
 
-            checklistIndex++;
+                // Check if this looks like a checklist row (first cell is a number)
+                const firstCellText = cells[0]?.textContent.trim();
+                if (!firstCellText.match(/^\d+$/)) return;
+
+                // Make the entire row editable
+                row.style.position = 'relative';
+
+                // Make each cell directly editable
+                cells.forEach((cell, cellIndex) => {
+                    // Skip the score column (usually last column with select/dropdown)
+                    if (cell.querySelector('select')) return;
+
+                    // Make cell contenteditable
+                    cell.setAttribute('contenteditable', 'true');
+                    cell.style.outline = '1px dashed rgba(102, 126, 234, 0.3)';
+                    cell.style.padding = '8px';
+                    cell.style.background = 'rgba(255, 246, 143, 0.1)';
+                    cell.style.cursor = 'text';
+                    cell.classList.add('checklist-editable-cell');
+
+                    // Add hover effect
+                    cell.addEventListener('mouseenter', function() {
+                        if (isEditMode) {
+                            this.style.background = 'rgba(255, 246, 143, 0.3)';
+                            this.style.outline = '2px solid rgba(102, 126, 234, 0.6)';
+                        }
+                    });
+
+                    cell.addEventListener('mouseleave', function() {
+                        if (isEditMode) {
+                            this.style.background = 'rgba(255, 246, 143, 0.1)';
+                            this.style.outline = '1px dashed rgba(102, 126, 234, 0.3)';
+                        }
+                    });
+                });
+
+                // Add shade/unshade toggle button
+                const shadeToggle = document.createElement('button');
+                shadeToggle.className = 'shade-toggle-btn';
+                shadeToggle.innerHTML = row.classList.contains('important-weight') || row.style.background === 'rgba(200, 200, 200, 0.3)' ? '🌑' : '☀️';
+                shadeToggle.title = 'Toggle Shade (Critical)';
+                shadeToggle.onclick = () => toggleRowShade(row, shadeToggle);
+
+                // Add to first cell
+                if (cells[0]) {
+                    cells[0].style.position = 'relative';
+                    cells[0].appendChild(shadeToggle);
+                }
+            });
         });
+    }
+
+    function toggleRowShade(row, button) {
+        const isCurrentlyShaded = row.classList.contains('important-weight') ||
+                                  row.classList.contains('shaded-critical');
+
+        if (isCurrentlyShaded) {
+            // Unshade
+            row.classList.remove('important-weight', 'shaded-critical');
+            row.style.background = '';
+            button.innerHTML = '☀️';
+            button.title = 'Shade (Mark as Critical)';
+        } else {
+            // Shade
+            row.classList.add('shaded-critical');
+            row.style.background = 'rgba(200, 200, 200, 0.3)';
+            button.innerHTML = '🌑';
+            button.title = 'Unshade (Remove Critical)';
+        }
     }
 
     // Helper function to make any text element editable
