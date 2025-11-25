@@ -551,6 +551,9 @@
         saveBtn.disabled = true;
 
         try {
+            // Collect all edits from contenteditable cells in the DOM
+            collectChecklistEdits();
+
             // Separate deleted items
             const deletedIds = adminChecklistData
                 .filter(item => item._deleted && item.id)
@@ -558,6 +561,9 @@
 
             // Items to save (not deleted)
             const itemsToSave = adminChecklistData.filter(item => !item._deleted);
+
+            console.log('Saving checklist items:', itemsToSave);
+            console.log('Deleting items:', deletedIds);
 
             const response = await fetch('/api/admin/update_checklist_items', {
                 method: 'POST',
@@ -598,6 +604,64 @@
             saveBtn.textContent = '💾';
             saveBtn.disabled = false;
         }
+    }
+
+    function collectChecklistEdits() {
+        // Collect all edits from contenteditable checklist cells
+        const tables = document.querySelectorAll('table');
+        let checklistIndex = 0;
+
+        tables.forEach(table => {
+            const rows = table.querySelectorAll('tr');
+
+            rows.forEach(row => {
+                // Skip header and category rows
+                if (row.querySelector('th') || row.classList.contains('category-header')) {
+                    return;
+                }
+
+                const cells = row.querySelectorAll('td');
+                if (cells.length < 2) return;
+
+                // Check if this is a checklist row
+                const firstCellText = cells[0]?.textContent.trim();
+                if (!firstCellText.match(/^\d+$/)) return;
+
+                // We have a valid checklist row
+                if (checklistIndex < adminChecklistData.length) {
+                    // Update item_id from first cell (item number)
+                    const itemId = parseInt(cells[0].textContent.trim());
+                    if (!isNaN(itemId)) {
+                        adminChecklistData[checklistIndex].item_id = itemId;
+                    }
+
+                    // Update description from second cell
+                    if (cells[1]) {
+                        adminChecklistData[checklistIndex].description = cells[1].textContent.trim();
+                    }
+
+                    // Update weight from third cell (if it exists and is a number)
+                    if (cells[2] && !cells[2].querySelector('select')) {
+                        const weightText = cells[2].textContent.trim();
+                        const weight = parseFloat(weightText);
+                        if (!isNaN(weight)) {
+                            adminChecklistData[checklistIndex].weight = weight;
+                        }
+                    }
+
+                    // Update critical status based on shading
+                    const isShaded = row.classList.contains('important-weight') ||
+                                    row.classList.contains('shaded-critical');
+                    adminChecklistData[checklistIndex].is_critical = isShaded ? 1 : 0;
+
+                    console.log(`Updated item ${checklistIndex}:`, adminChecklistData[checklistIndex]);
+                }
+
+                checklistIndex++;
+            });
+        });
+
+        console.log('All checklist data collected:', adminChecklistData);
     }
 
     // ESC to cancel
