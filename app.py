@@ -1547,8 +1547,8 @@ def new_burial_form():
                 'received_by': inspection[14],
                 'created_at': inspection[15]
             }
-        admin_mode = session.get('admin_inspector_mode', False)
-        return render_template('burial_form.html', inspection=inspection_data, admin_mode=admin_mode)
+            admin_mode = session.get('admin_inspector_mode', False)
+            return render_template('burial_form.html', inspection=inspection_data, admin_mode=admin_mode)
     admin_mode = session.get('admin_inspector_mode', False)
     return render_template('burial_form.html', inspection=None, admin_mode=admin_mode)
 
@@ -7094,12 +7094,12 @@ def init_db():
                           (f'inspector{i}', f'pass{i}', 'inspector', f'inspector{i}@example.com'))
             conn.commit()
         else:
-            c.execute('INSERT INTO users (username, password, role, email) VALUES (%s, %s, %s, %s)',
+            c.execute('INSERT INTO users (username, password, role, email) VALUES (?, ?, ?, ?)',
                       ('admin', 'adminpass', 'admin', 'admin@example.com'))
-            c.execute('INSERT INTO users (username, password, role, email) VALUES (%s, %s, %s, %s)',
+            c.execute('INSERT INTO users (username, password, role, email) VALUES (?, ?, ?, ?)',
                       ('medofficer', 'medpass', 'medical_officer', 'medofficer@example.com'))
             for i in range(1, 7):
-                c.execute('INSERT INTO users (username, password, role, email) VALUES (%s, %s, %s, %s)',
+                c.execute('INSERT INTO users (username, password, role, email) VALUES (?, ?, ?, ?)',
                           (f'inspector{i}', f'pass{i}', 'inspector', f'inspector{i}@example.com'))
             conn.commit()
     except Exception as e:
@@ -9255,25 +9255,25 @@ def edit_form(form_id):
     if 'admin' not in session:
         return redirect(url_for('login'))
 
+    from db_config import execute_query
     conn = get_db_connection()
-    c = conn.cursor()
 
     # Get form template
-    c.execute('SELECT * FROM form_templates WHERE id = %s', (form_id,))
-    form_template = c.fetchone()
+    result = execute_query(conn, 'SELECT * FROM form_templates WHERE id = ?', (form_id,))
+    form_template = result.fetchone()
 
     if not form_template:
         conn.close()
         return redirect(url_for('form_management'))
 
     # Get form items
-    c.execute('''
+    result = execute_query(conn, '''
         SELECT id, item_order, category, description, weight, is_critical
-        FROM form_items 
-        WHERE form_template_id = %s AND active = 1
+        FROM form_items
+        WHERE form_template_id = ? AND active = 1
         ORDER BY item_order
     ''', (form_id,))
-    items = c.fetchall()
+    items = result.fetchall()
 
     # Get categories
     c.execute('SELECT name FROM form_categories ORDER BY display_order')
@@ -9409,12 +9409,12 @@ def delete_form(form_id):
         return jsonify({'success': False, 'error': 'Unauthorized'}), 401
 
     try:
+        from db_config import execute_query
         conn = get_db_connection()
-        c = conn.cursor()
 
         # Soft delete - just mark as inactive
-        c.execute('UPDATE form_templates SET active = 0 WHERE id = %s', (form_id,))
-        c.execute('UPDATE form_items SET active = 0 WHERE form_template_id = %s', (form_id,))
+        execute_query(conn, 'UPDATE form_templates SET active = 0 WHERE id = ?', (form_id,))
+        execute_query(conn, 'UPDATE form_items SET active = 0 WHERE form_template_id = ?', (form_id,))
 
         conn.commit()
         conn.close()
@@ -10054,11 +10054,11 @@ def get_form_items(form_template_id):
 
 def get_form_template_by_type(form_type):
     """Get form template by type"""
+    from db_config import execute_query
     conn = get_db_connection()
-    c = conn.cursor()
 
-    c.execute('SELECT id FROM form_templates WHERE form_type = %s AND active = 1', (form_type,))
-    row = c.fetchone()
+    result = execute_query(conn, 'SELECT id FROM form_templates WHERE form_type = ? AND active = 1', (form_type,))
+    row = result.fetchone()
 
     conn.close()
     return row[0] if row else None
@@ -10073,14 +10073,14 @@ def new_form():
     checklist = get_form_checklist_items('Food Establishment', FOOD_CHECKLIST_ITEMS)
 
     # Get last_edited info for this form type
+    from db_config import execute_query
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('''
+    result = execute_query(conn, '''
         SELECT last_edited_by, last_edited_date, last_edited_role, version
         FROM form_templates
-        WHERE form_type = %s AND active = 1
+        WHERE form_type = ? AND active = 1
     ''', ('Food Establishment',))
-    form_info = c.fetchone()
+    form_info = result.fetchone()
     conn.close()
 
     last_edited_info = None
@@ -10129,6 +10129,58 @@ def new_form():
                            read_only=False,
                            inspection=inspection,
                            last_edited_info=last_edited_info)
+
+
+@app.route('/admin/verify_forms')
+def verify_forms():
+    """Comprehensive form verification page for admins"""
+    if 'admin' not in session:
+        return redirect(url_for('login'))
+
+    from db_config import execute_query
+    conn = get_db_connection()
+
+    # Get all form templates with details
+    result = execute_query(conn, '''
+        SELECT ft.id, ft.form_type, ft.name, ft.version, ft.active,
+               ft.last_edited_by, ft.last_edited_date, ft.last_edited_role,
+               COUNT(fi.id) as item_count
+        FROM form_templates ft
+        LEFT JOIN form_items fi ON ft.id = fi.form_template_id AND fi.active = 1
+        WHERE ft.active = 1
+        GROUP BY ft.id
+        ORDER BY ft.form_type
+    ''')
+    templates = result.fetchall()
+
+    # Get detailed items for each template
+    forms_data = []
+    for template in templates:
+        template_id = template[0]
+        result = execute_query(conn, '''
+            SELECT item_id, item_order, description, weight, is_critical, category
+            FROM form_items
+            WHERE form_template_id = ? AND active = 1
+            ORDER BY item_order
+        ''', (template_id,))
+        items = result.fetchall()
+
+        forms_data.append({
+            'id': template[0],
+            'form_type': template[1],
+            'name': template[2],
+            'version': template[3],
+            'active': template[4],
+            'last_edited_by': template[5],
+            'last_edited_date': template[6],
+            'last_edited_role': template[7],
+            'item_count': template[8],
+            'checklist_items': items
+        })
+
+    conn.close()
+
+    return render_template('admin_verify_forms.html', forms_data=forms_data)
 
 
 @app.route('/debug/forms_check')
@@ -13132,7 +13184,7 @@ def api_update_checklist_items():
         admin_username = session.get('admin')
         execute_query(conn, '''UPDATE form_templates
                      SET last_edited_by = ?,
-                         last_edited_date = NOW(),
+                         last_edited_date = datetime('now'),
                          last_edited_role = 'admin'
                      WHERE form_type = ? AND active = 1''',
                      (admin_username, form_type))
