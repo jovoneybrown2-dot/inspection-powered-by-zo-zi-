@@ -13132,7 +13132,7 @@ def api_update_checklist_items():
         admin_username = session.get('admin')
         execute_query(conn, '''UPDATE form_templates
                      SET last_edited_by = ?,
-                         last_edited_date = datetime('now'),
+                         last_edited_date = NOW(),
                          last_edited_role = 'admin'
                      WHERE form_type = ? AND active = 1''',
                      (admin_username, form_type))
