@@ -10219,26 +10219,28 @@ def migrate_food_checklist():
     if 'admin' not in session:
         return "Admin access required"
 
+    from db_config import execute_query
     conn = get_db_connection()
-    c = conn.cursor()
 
     # Get Food Establishment template ID
-    c.execute('SELECT id FROM form_templates WHERE form_type = %s', ('Food Establishment',))
-    result = c.fetchone()
+    result = execute_query(conn, 'SELECT id FROM form_templates WHERE form_type = ?', ('Food Establishment',))
+    template_row = result.fetchone()
 
-    if not result:
+    if not template_row:
+        conn.close()
         return "Food Establishment template not found"
 
-    template_id = result[0]
+    template_id = template_row[0]
 
     # Check if items already exist
-    c.execute('SELECT COUNT(*) FROM form_items WHERE form_template_id = %s', (template_id,))
-    existing_count = c.fetchone()[0]
+    result = execute_query(conn, 'SELECT COUNT(*) FROM form_items WHERE form_template_id = ?', (template_id,))
+    existing_count = result.fetchone()[0]
 
     if existing_count > 0:
-        return f"Items already exist: {existing_count} items found"
+        conn.close()
+        return f"<h2>⚠️ Items already exist</h2><p>Found {existing_count} items. <a href='/admin/verify_forms'>View them here</a></p><p><a href='/admin'>Back to Admin</a></p>"
 
-    # Insert your 45 FOOD_CHECKLIST_ITEMS
+    # Insert all 44 FOOD_CHECKLIST_ITEMS
     categories = {
         1: "FOOD", 2: "FOOD",
         3: "FOOD PROTECTION", 4: "FOOD PROTECTION", 5: "FOOD PROTECTION",
@@ -10253,25 +10255,26 @@ def migrate_food_checklist():
         29: "PERSONNEL", 30: "PERSONNEL", 31: "PERSONNEL", 32: "PERSONNEL",
         33: "FACILITIES", 34: "FACILITIES", 35: "FACILITIES", 36: "FACILITIES", 37: "FACILITIES",
         38: "FACILITIES", 39: "FACILITIES", 40: "FACILITIES", 41: "FACILITIES",
-        42: "SAFETY", 43: "GENERAL", 44: "GENERAL", 45: "GENERAL"
+        42: "SAFETY", 43: "GENERAL", 44: "GENERAL"
     }
 
-    # Insert each item from your FOOD_CHECKLIST_ITEMS
+    # Insert each item from FOOD_CHECKLIST_ITEMS
     for item in FOOD_CHECKLIST_ITEMS:
         item_id = item['id']
+        item_order = item['id']
         category = categories.get(item_id, "GENERAL")
         is_critical = 1 if item['wt'] >= 4 else 0
 
-        c.execute(f'''
-            INSERT INTO form_items 
-            (form_template_id, item_order, category, description, weight, is_critical)
-            VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})
-        ''', (template_id, item_id, category, item['desc'], item['wt'], is_critical))
+        execute_query(conn, '''
+            INSERT INTO form_items
+            (form_template_id, item_id, item_order, category, description, weight, is_critical, active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+        ''', (template_id, item_id, item_order, category, item['desc'], item['wt'], is_critical))
 
     conn.commit()
     conn.close()
 
-    return f"Successfully migrated {len(FOOD_CHECKLIST_ITEMS)} items! <a href='/admin/forms'>Check Form Management</a>"
+    return f"<h2>✅ Successfully migrated {len(FOOD_CHECKLIST_ITEMS)} items!</h2><p><a href='/admin/verify_forms'>View them</a> | <a href='/admin'>Back to Admin</a></p>"
 
 
 @app.route('/admin/migrate_remaining_fixed')
@@ -12676,19 +12679,19 @@ def get_form_fields(template_id):
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
+    from db_config import execute_query
     conn = get_db_connection()
-    c = conn.cursor()
 
-    c.execute('''
+    result = execute_query(conn, '''
         SELECT id, field_name, field_label, field_type, field_order,
                required, placeholder, default_value, options, field_group
         FROM form_fields
-        WHERE form_template_id = %s AND active = 1
+        WHERE form_template_id = ? AND active = 1
         ORDER BY field_order
     ''', (template_id,))
 
     fields = []
-    for row in c.fetchall():
+    for row in result.fetchall():
         fields.append({
             'id': row[0],
             'field_name': row[1],
