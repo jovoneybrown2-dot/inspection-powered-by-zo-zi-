@@ -12799,18 +12799,19 @@ def create_form_item():
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
-    from db_config import execute_query
+    from db_config import execute_query, get_placeholder
 
     data = request.json
     conn = get_db_connection()
+    ph = get_placeholder()
 
     # Get the next item_order number
-    c = execute_query(conn, 'SELECT MAX(item_order) FROM form_items WHERE form_template_id = %s',
+    c = execute_query(conn, f'SELECT MAX(item_order) FROM form_items WHERE form_template_id = {ph}',
               (data['form_template_id'],))
     max_order = c.fetchone()[0]
     next_order = (max_order + 1) if max_order else 1
 
-    c = execute_query(conn, '''
+    c = execute_query(conn, f'''
         INSERT INTO form_items (
             form_template_id, item_order, category, description,
             weight, is_critical, active, created_date
