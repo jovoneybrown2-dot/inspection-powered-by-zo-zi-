@@ -10968,8 +10968,29 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
         conn = get_db_connection()
         c = conn.cursor()
 
-        # 1. OVERALL SUMMARY with Pass/Fail Rates
+        # 1. OVERALL SUMMARY with Pass/Fail Rates - UNION ALL INSPECTION TABLES
         if inspection_type == 'all':
+            summary_query = """
+                SELECT
+                    COUNT(*) as total,
+                    SUM(CASE WHEN result IN ('Pass', 'Satisfactory', 'Completed') OR overall_score >= 70 THEN 1 ELSE 0 END) as passed,
+                    SUM(CASE WHEN result IN ('Fail', 'Unsatisfactory') OR overall_score < 70 THEN 1 ELSE 0 END) as failed,
+                    AVG(COALESCE(overall_score, 0)) as avg_score,
+                    MAX(COALESCE(overall_score, 0)) as max_score,
+                    MIN(COALESCE(overall_score, 0)) as min_score
+                FROM (
+                    SELECT result, overall_score, inspection_date FROM inspections
+                    UNION ALL
+                    SELECT result, overall_score, created_at as inspection_date FROM residential_inspections
+                    UNION ALL
+                    SELECT 'Completed' as result, 0 as overall_score, created_at as inspection_date FROM burial_site_inspections
+                    UNION ALL
+                    SELECT result, overall_score, created_at as inspection_date FROM meat_processing_inspections
+                ) AS all_inspections
+                WHERE DATE(inspection_date) BETWEEN %s AND %s
+            """
+            params = (start_date, end_date)
+        elif inspection_type == 'Residential':
             summary_query = """
                 SELECT
                     COUNT(*) as total,
@@ -10978,8 +10999,34 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
                     AVG(overall_score) as avg_score,
                     MAX(overall_score) as max_score,
                     MIN(overall_score) as min_score
-                FROM inspections
-                WHERE DATE(inspection_date) BETWEEN %s AND %s
+                FROM residential_inspections
+                WHERE DATE(created_at) BETWEEN %s AND %s
+            """
+            params = (start_date, end_date)
+        elif inspection_type == 'Burial Site':
+            summary_query = """
+                SELECT
+                    COUNT(*) as total,
+                    COUNT(*) as passed,
+                    0 as failed,
+                    0 as avg_score,
+                    0 as max_score,
+                    0 as min_score
+                FROM burial_site_inspections
+                WHERE DATE(created_at) BETWEEN %s AND %s
+            """
+            params = (start_date, end_date)
+        elif inspection_type == 'Meat Processing':
+            summary_query = """
+                SELECT
+                    COUNT(*) as total,
+                    SUM(CASE WHEN result IN ('Pass', 'Satisfactory') OR overall_score >= 70 THEN 1 ELSE 0 END) as passed,
+                    SUM(CASE WHEN result IN ('Fail', 'Unsatisfactory') OR overall_score < 70 THEN 1 ELSE 0 END) as failed,
+                    AVG(overall_score) as avg_score,
+                    MAX(overall_score) as max_score,
+                    MIN(overall_score) as min_score
+                FROM meat_processing_inspections
+                WHERE DATE(created_at) BETWEEN %s AND %s
             """
             params = (start_date, end_date)
         else:
@@ -11012,20 +11059,81 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
 
         print(f"DEBUG: Found {total_inspections} total inspections")
 
-        # 2. TREND DATA - Daily/Weekly breakdown
-        trend_query = """
-            SELECT
-                DATE(inspection_date) as date,
-                COUNT(*) as total,
-                SUM(CASE WHEN result IN ('Pass', 'Satisfactory') OR overall_score >= 70 THEN 1 ELSE 0 END) as passed,
-                SUM(CASE WHEN result IN ('Fail', 'Unsatisfactory') OR overall_score < 70 THEN 1 ELSE 0 END) as failed,
-                AVG(overall_score) as avg_score
-            FROM inspections
-            WHERE DATE(inspection_date) BETWEEN %s AND %s
-            {}
-            GROUP BY DATE(inspection_date)
-            ORDER BY date
-        """.format("AND form_type = %s" if inspection_type != 'all' else "")
+        # 2. TREND DATA - Daily/Weekly breakdown - UNION ALL INSPECTION TABLES
+        if inspection_type == 'all':
+            trend_query = """
+                SELECT
+                    DATE(inspection_date) as date,
+                    COUNT(*) as total,
+                    SUM(CASE WHEN result IN ('Pass', 'Satisfactory', 'Completed') OR overall_score >= 70 THEN 1 ELSE 0 END) as passed,
+                    SUM(CASE WHEN result IN ('Fail', 'Unsatisfactory') OR overall_score < 70 THEN 1 ELSE 0 END) as failed,
+                    AVG(COALESCE(overall_score, 0)) as avg_score
+                FROM (
+                    SELECT result, overall_score, inspection_date FROM inspections
+                    UNION ALL
+                    SELECT result, overall_score, created_at as inspection_date FROM residential_inspections
+                    UNION ALL
+                    SELECT 'Completed' as result, 0 as overall_score, created_at as inspection_date FROM burial_site_inspections
+                    UNION ALL
+                    SELECT result, overall_score, created_at as inspection_date FROM meat_processing_inspections
+                ) AS all_inspections
+                WHERE DATE(inspection_date) BETWEEN %s AND %s
+                GROUP BY DATE(inspection_date)
+                ORDER BY date
+            """
+        elif inspection_type == 'Residential':
+            trend_query = """
+                SELECT
+                    DATE(created_at) as date,
+                    COUNT(*) as total,
+                    SUM(CASE WHEN result IN ('Pass', 'Satisfactory') OR overall_score >= 70 THEN 1 ELSE 0 END) as passed,
+                    SUM(CASE WHEN result IN ('Fail', 'Unsatisfactory') OR overall_score < 70 THEN 1 ELSE 0 END) as failed,
+                    AVG(overall_score) as avg_score
+                FROM residential_inspections
+                WHERE DATE(created_at) BETWEEN %s AND %s
+                GROUP BY DATE(created_at)
+                ORDER BY date
+            """
+        elif inspection_type == 'Burial Site':
+            trend_query = """
+                SELECT
+                    DATE(created_at) as date,
+                    COUNT(*) as total,
+                    COUNT(*) as passed,
+                    0 as failed,
+                    0 as avg_score
+                FROM burial_site_inspections
+                WHERE DATE(created_at) BETWEEN %s AND %s
+                GROUP BY DATE(created_at)
+                ORDER BY date
+            """
+        elif inspection_type == 'Meat Processing':
+            trend_query = """
+                SELECT
+                    DATE(created_at) as date,
+                    COUNT(*) as total,
+                    SUM(CASE WHEN result IN ('Pass', 'Satisfactory') OR overall_score >= 70 THEN 1 ELSE 0 END) as passed,
+                    SUM(CASE WHEN result IN ('Fail', 'Unsatisfactory') OR overall_score < 70 THEN 1 ELSE 0 END) as failed,
+                    AVG(overall_score) as avg_score
+                FROM meat_processing_inspections
+                WHERE DATE(created_at) BETWEEN %s AND %s
+                GROUP BY DATE(created_at)
+                ORDER BY date
+            """
+        else:
+            trend_query = """
+                SELECT
+                    DATE(inspection_date) as date,
+                    COUNT(*) as total,
+                    SUM(CASE WHEN result IN ('Pass', 'Satisfactory') OR overall_score >= 70 THEN 1 ELSE 0 END) as passed,
+                    SUM(CASE WHEN result IN ('Fail', 'Unsatisfactory') OR overall_score < 70 THEN 1 ELSE 0 END) as failed,
+                    AVG(overall_score) as avg_score
+                FROM inspections
+                WHERE DATE(inspection_date) BETWEEN %s AND %s
+                AND form_type = %s
+                GROUP BY DATE(inspection_date)
+                ORDER BY date
+            """
 
         trend_params = params
         c.execute(trend_query, trend_params)
