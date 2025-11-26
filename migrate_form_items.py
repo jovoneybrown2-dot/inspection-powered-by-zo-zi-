@@ -32,50 +32,79 @@ def get_db_connection():
 # Form checklist items definitions
 FORM_CHECKLISTS = {
     'Food Establishment': [
-        {"id": "01", "category": "Food", "desc": "Food from approved source, sound condition, no spoilage", "wt": 5, "critical": 1},
-        {"id": "02", "category": "Food", "desc": "Original container, properly labelled", "wt": 1, "critical": 0},
-        {"id": "03", "category": "Food Protection", "desc": "Food protected from contamination during storage, preparation, display, service, and transport", "wt": 5, "critical": 1},
-        {"id": "04", "category": "Food Protection", "desc": "Food contact surfaces of equipment and utensils clean, sanitized", "wt": 2, "critical": 0},
-        {"id": "05", "category": "Food Protection", "desc": "Toxic materials properly stored, labeled, and used", "wt": 2, "critical": 0},
-        {"id": "06", "category": "Personnel", "desc": "No person working with symptoms of disease", "wt": 5, "critical": 1},
-        {"id": "07", "category": "Personnel", "desc": "Hands washed and clean, good hygiene practices", "wt": 5, "critical": 1},
-        {"id": "08", "category": "Personnel", "desc": "Clean outer garments, hair restraint", "wt": 1, "critical": 0},
-        {"id": "09", "category": "Food Equipment and Utensils", "desc": "Food contact surfaces designed, constructed, maintained, installed, located", "wt": 2, "critical": 0},
-        {"id": "10", "category": "Food Equipment and Utensils", "desc": "Non-food contact surfaces designed, constructed, maintained, installed, located", "wt": 1, "critical": 0},
-        {"id": "11", "category": "Food Equipment and Utensils", "desc": "Dishwashing facilities properly designed, maintained, accessible", "wt": 2, "critical": 0},
-        {"id": "12", "category": "Food Equipment and Utensils", "desc": "Accurate thermometers, chemical test kits provided, accessible", "wt": 1, "critical": 0},
-        {"id": "13", "category": "Food Equipment and Utensils", "desc": "Adequate facilities for storage and handling of equipment and utensils", "wt": 1, "critical": 0},
-        {"id": "14", "category": "Single Service", "desc": "Single service articles: stored, handled; not reused", "wt": 1, "critical": 0},
-        {"id": "15", "category": "Water Supply", "desc": "Water source approved, adequate, hot and cold", "wt": 4, "critical": 1},
-        {"id": "16", "category": "Sewage", "desc": "Sewage and waste water disposal approved", "wt": 4, "critical": 1},
-        {"id": "17", "category": "Plumbing", "desc": "Installed, maintained; cross connection; backflow; back siphonage", "wt": 2, "critical": 0},
-        {"id": "18", "category": "Toilet and Handwashing", "desc": "Toilets, enclosed, adequate, accessible, designed, installed", "wt": 2, "critical": 0},
-        {"id": "19", "category": "Toilet and Handwashing", "desc": "Handwash facilities adequate, accessible, designed, installed, maintained, supplied", "wt": 4, "critical": 1},
-        {"id": "20", "category": "Garbage and Refuse", "desc": "Containers or receptacles covered, adequate, insect/rodent proof, frequency of disposal", "wt": 2, "critical": 0},
-        {"id": "21", "category": "Garbage and Refuse", "desc": "Storage area and enclosure properly constructed, clean, and pest controlled", "wt": 2, "critical": 0},
-        {"id": "22", "category": "Garbage and Refuse", "desc": "Disposal method approved", "wt": 1, "critical": 0},
-        {"id": "23", "category": "Vermin Control", "desc": "Presence of insects/rodents; outer openings protected; no birds, turtles, other animals", "wt": 4, "critical": 1},
-        {"id": "24", "category": "Floors", "desc": "Constructed, drained, clean, good repair, covering, installation, dustless methods", "wt": 2, "critical": 0},
-        {"id": "25", "category": "Walls and Ceilings", "desc": "Walls, ceiling, attached equipment constructed, good repair, clean, surfaces, dustless methods", "wt": 2, "critical": 0},
-        {"id": "26", "category": "Lighting", "desc": "Lighting provided as required, fixtures shielded", "wt": 1, "critical": 0},
-        {"id": "27", "category": "Ventilation", "desc": "Rooms and equipment - vented as required", "wt": 1, "critical": 0},
-        {"id": "28", "category": "Dressing Rooms", "desc": "Rooms clean, located, lockers provided, facilities", "wt": 1, "critical": 0},
-        {"id": "29", "category": "Premises", "desc": "Maintained free of litter, unnecessary articles, cleaning/maintenance equipment properly stored, no animals", "wt": 1, "critical": 0},
-        {"id": "30", "category": "Storage", "desc": "Dry storage area clean, dry, free of rodents and insects, shelving; temperature; no toxic storage", "wt": 2, "critical": 0},
-        {"id": "31", "category": "Compliance", "desc": "Compliance with plans, licence conditions, NRCA requirements", "wt": 2, "critical": 0},
-        {"id": "32", "category": "Other", "desc": "Animals properly slaughtered; no carcasses of animals that died otherwise than by slaughter", "wt": 4, "critical": 1},
-        {"id": "33", "category": "Other", "desc": "Other violations as noted on violation report", "wt": 2, "critical": 0},
-        {"id": "34", "category": "Food", "desc": "Potentially hazardous food meets temperature requirements during storage, preparation, display, service and transport", "wt": 5, "critical": 1},
-        {"id": "35", "category": "Food Protection", "desc": "Thermometers provided and conspicuously placed in refrigerated units and hot holding units", "wt": 1, "critical": 0},
-        {"id": "36", "category": "Personnel", "desc": "Unnecessary persons allowed in food preparation, storage, equipment washing areas", "wt": 1, "critical": 0},
-        {"id": "37", "category": "Personnel", "desc": "Food handlers have food handlers permits", "wt": 2, "critical": 0},
-        {"id": "38", "category": "Food Equipment and Utensils", "desc": "Cutting boards, blocks in good repair", "wt": 1, "critical": 0},
-        {"id": "39", "category": "Food Equipment and Utensils", "desc": "Manual dishwashing - wash, rinse, sanitize, rinse procedures", "wt": 2, "critical": 0},
-        {"id": "40", "category": "Food Equipment and Utensils", "desc": "Wiping cloths clean, used properly", "wt": 1, "critical": 0},
-        {"id": "41", "category": "Toilet and Handwashing", "desc": "Toilet doors self-closing, toilet tissue provided, waste receptacles covered", "wt": 1, "critical": 0},
-        {"id": "42", "category": "Garbage and Refuse", "desc": "Covered containers or plastic bags used for storage inside establishment", "wt": 1, "critical": 0},
-        {"id": "43", "category": "Premises", "desc": "Unnecessary use of poisonous materials for cleaning, maintenance or pest control", "wt": 2, "critical": 0},
-        {"id": "44", "category": "Other", "desc": "Licence not displayed", "wt": 1, "critical": 0},
+        # FOOD (1-2)
+        {"id": 1, "category": "FOOD", "desc": "Source, Sound Condition, No Spoilage", "wt": 5, "critical": 0},
+        {"id": 2, "category": "FOOD", "desc": "Original Container, Properly Labeled", "wt": 1, "critical": 0},
+
+        # FOOD PROTECTION (3-10)
+        {"id": 3, "category": "FOOD PROTECTION", "desc": "Potentially Hazardous Food Meets Temcjblperature Requirements During Storage, Preparation, Display, Service, Transportation", "wt": 5, "critical": 0},
+        {"id": 4, "category": "FOOD PROTECTION", "desc": "Facilities to Maintain Product Temperature", "wt": 4, "critical": 0},
+        {"id": 5, "category": "FOOD PROTECTION", "desc": "Thermometers Provided and Conspicuous", "wt": 1, "critical": 0},
+        {"id": 6, "category": "FOOD PROTECTION", "desc": "Potentially Hazardous Food Properly Thawed", "wt": 2, "critical": 0},
+        {"id": 7, "category": "FOOD PROTECTION", "desc": "Unwrapped and Potentially Hazardous Food Not Re-Served", "wt": 4, "critical": 0},
+        {"id": 8, "category": "FOOD PROTECTION", "desc": "Food Protection During Storage, Preparation, Display, Service, Transportation", "wt": 2, "critical": 0},
+        {"id": 9, "category": "FOOD PROTECTION", "desc": "Handling of Food (Ice) Minimized", "wt": 1, "critical": 0},
+        {"id": 10, "category": "FOOD PROTECTION", "desc": "In Use Food (Ice) Dispensing Utensils Properly Stored", "wt": 1, "critical": 0},
+
+        # FOOD EQUIPMENT & UTENSILS (11-23)
+        {"id": 11, "category": "FOOD EQUIPMENT & UTENSILS", "desc": "Food Contact Surfaces Designed, Constructed, Maintained, Installed, Located", "wt": 2, "critical": 0},
+        {"id": 12, "category": "FOOD EQUIPMENT & UTENSILS", "desc": "Non-Food Contact Surfaces Designed, Constructed, Maintained, Installed, Located", "wt": 1, "critical": 0},
+        {"id": 13, "category": "FOOD EQUIPMENT & UTENSILS", "desc": "Dishwashing Facilities Designed, Constructed, Maintained, Installed, Located, Operated", "wt": 2, "critical": 0},
+        {"id": 14, "category": "FOOD EQUIPMENT & UTENSILS", "desc": "Accurate Thermometers, Chemical Test Kits Provided", "wt": 1, "critical": 0},
+        {"id": 15, "category": "FOOD EQUIPMENT & UTENSILS", "desc": "Single Service Articles Storage, Dispensing", "wt": 1, "critical": 0},
+        {"id": 16, "category": "FOOD EQUIPMENT & UTENSILS", "desc": "No Re-Use of Single Serve Articles", "wt": 2, "critical": 0},
+        {"id": 17, "category": "FOOD EQUIPMENT & UTENSILS", "desc": "Pre-Flushed, Scraped, Soaked", "wt": 1, "critical": 0},
+        {"id": 18, "category": "FOOD EQUIPMENT & UTENSILS", "desc": "Wash, Rinse Water Clean, Proper Temperature", "wt": 2, "critical": 0},
+        {"id": 19, "category": "FOOD EQUIPMENT & UTENSILS", "desc": "Sanitization Rinse Clean, Temperature, Concentration, Exposure Time, Equipment, Utensils Sanitized", "wt": 4, "critical": 0},
+        {"id": 20, "category": "FOOD EQUIPMENT & UTENSILS", "desc": "Wiping Cloths Clean, Use Restricted", "wt": 1, "critical": 0},
+        {"id": 21, "category": "FOOD EQUIPMENT & UTENSILS", "desc": "Food Contact Surfaces of Equipment and Utensils Clean, Free of Abrasives, Detergents", "wt": 2, "critical": 0},
+        {"id": 22, "category": "FOOD EQUIPMENT & UTENSILS", "desc": "Non-Food Contact Surfaces of Equipment and Utensils Clean", "wt": 1, "critical": 0},
+        {"id": 23, "category": "FOOD EQUIPMENT & UTENSILS", "desc": "Storage, Handling of Clean Equipment/Utensils", "wt": 1, "critical": 0},
+
+        # TOILET & HANDWASHING FACILITIES (24-25)
+        {"id": 24, "category": "TOILET & HANDWASHING FACILITIES", "desc": "Number, Convenient, Accessible, Designed, Installed", "wt": 4, "critical": 0},
+        {"id": 25, "category": "TOILET & HANDWASHING FACILITIES", "desc": "Toilet Rooms Enclosed, Self-Closing Doors, Fixtures: Good Repair, Clean, Hand Cleanser, Sanitary Towels, Hand Drying Devices Provided, Proper Waste Receptacles", "wt": 2, "critical": 0},
+
+        # SOLID WASTE MANAGEMENT (26-27)
+        {"id": 26, "category": "SOLID WASTE MANAGEMENT", "desc": "Containers or Receptacles: Covered, Adequate Number, Insect/Rodent Proof, Frequency, Clean", "wt": 2, "critical": 0},
+        {"id": 27, "category": "SOLID WASTE MANAGEMENT", "desc": "Outside Storage Area Enclosures Properly Constructed, Clean, Controlled Incineration", "wt": 1, "critical": 0},
+
+        # INSECT, RODENT, ANIMAL CONTROL (28)
+        {"id": 28, "category": "INSECT, RODENT, ANIMAL CONTROL", "desc": "Evidence of Insects/Rodents - Outer Openings, Protected, No Birds, Turtles, Other Animals", "wt": 4, "critical": 0},
+
+        # PERSONNEL (29-31)
+        {"id": 29, "category": "PERSONNEL", "desc": "Personnel with Infections Restricted", "wt": 5, "critical": 0},
+        {"id": 30, "category": "PERSONNEL", "desc": "Hands Washed and Clean, Good Hygienic Practices", "wt": 5, "critical": 0},
+        {"id": 31, "category": "PERSONNEL", "desc": "Clean Clothes, Hair Restraints", "wt": 2, "critical": 0},
+
+        # LIGHTING (32)
+        {"id": 32, "category": "LIGHTING", "desc": "Lighting Provided as Required, Fixtures Shielded", "wt": 1, "critical": 0},
+
+        # VENTILATION (33)
+        {"id": 33, "category": "VENTILATION", "desc": "Rooms and Equipment - Venting as Required", "wt": 1, "critical": 0},
+
+        # DRESSING ROOMS (34)
+        {"id": 34, "category": "DRESSING ROOMS", "desc": "Rooms Clean, Lockers Provided, Facilities Clean", "wt": 1, "critical": 0},
+
+        # WATER (35)
+        {"id": 35, "category": "WATER", "desc": "Water Source Safe, Hot & Cold Under Pressure", "wt": 5, "critical": 0},
+
+        # SEWAGE (36)
+        {"id": 36, "category": "SEWAGE", "desc": "Sewage and Waste Water Disposal", "wt": 4, "critical": 0},
+
+        # PLUMBING (37-38)
+        {"id": 37, "category": "PLUMBING", "desc": "Installed, Maintained", "wt": 1, "critical": 0},
+        {"id": 38, "category": "PLUMBING", "desc": "Cross Connection, Back Siphonage, Backflow", "wt": 5, "critical": 0},
+
+        # FLOORS, WALLS, & CEILINGS (39-40)
+        {"id": 39, "category": "FLOORS, WALLS, & CEILINGS", "desc": "Floors: Constructed, Drained, Clean, Good Repair, Covering Installation, Dustless Cleaning Methods", "wt": 1, "critical": 0},
+        {"id": 40, "category": "FLOORS, WALLS, & CEILINGS", "desc": "Walls, Ceiling, Attached Equipment: Constructed, Good Repair, Clean Surfaces, Dustless Cleaning Methods", "wt": 1, "critical": 0},
+
+        # OTHER OPERATIONS (41-44)
+        {"id": 41, "category": "OTHER OPERATIONS", "desc": "Toxic Items Properly Stored, Labeled, Used", "wt": 5, "critical": 0},
+        {"id": 42, "category": "OTHER OPERATIONS", "desc": "Premises Maintained Free of Litter, Unnecessary Articles, Cleaning Maintenance Equipment Properly Stored, Authorized Personnel", "wt": 1, "critical": 0},
+        {"id": 43, "category": "OTHER OPERATIONS", "desc": "Complete Separation for Living/Sleeping Quarters, Laundry", "wt": 1, "critical": 0},
+        {"id": 44, "category": "OTHER OPERATIONS", "desc": "Clean, Soiled Linen Properly Stored", "wt": 1, "critical": 0},
     ],
 
     'Barbershop': [
