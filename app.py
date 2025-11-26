@@ -7297,7 +7297,7 @@ def init_db():
                 VALUES (%s, %s, %s, %s, %s)
                 ON CONFLICT (username) DO UPDATE
                 SET password = EXCLUDED.password, role = EXCLUDED.role, email = EXCLUDED.email, parish = EXCLUDED.parish
-            """, ('admin', 'adminpass', 'admin', 'admin@inspection.local', 'Kingston'))
+            """, ('admin', 'Admin901!secure', 'admin', 'admin@inspection.local', 'Westmoreland'))
 
             # Insert 3 specific inspector users with secure passwords
             c.execute("""
