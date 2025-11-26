@@ -13583,4 +13583,87 @@ except Exception as e:
 
 
 if __name__ == '__main__':
+    # AUTO-FIX: Ensure Food Establishment has correct 44 items on startup
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        ph = get_placeholder()
+
+        # Check if Food Establishment has correct item #1
+        c.execute(f"SELECT id FROM form_templates WHERE form_type = {ph}", ('Food Establishment',))
+        template = c.fetchone()
+
+        if template:
+            template_id = template[0]
+            c.execute(f"SELECT description FROM form_items WHERE form_template_id = {ph} AND item_order = 1", (template_id,))
+            item_1 = c.fetchone()
+
+            # If item #1 is wrong or missing, fix the entire checklist
+            if not item_1 or 'Source, Sound Condition, No Spoilage' not in item_1[0]:
+                print("\n🔧 AUTO-FIX: Correcting Food Establishment checklist...")
+
+                # Delete old items
+                c.execute(f"DELETE FROM form_items WHERE form_template_id = {ph}", (template_id,))
+
+                # Insert correct 44 items
+                CORRECT_ITEMS = [
+                    (1, "FOOD", "Source, Sound Condition, No Spoilage", 5, 0),
+                    (2, "FOOD", "Original Container, Properly Labeled", 1, 0),
+                    (3, "FOOD PROTECTION", "Potentially Hazardous Food Meets Temcjblperature Requirements During Storage, Preparation, Display, Service, Transportation", 5, 0),
+                    (4, "FOOD PROTECTION", "Facilities to Maintain Product Temperature", 4, 0),
+                    (5, "FOOD PROTECTION", "Thermometers Provided and Conspicuous", 1, 0),
+                    (6, "FOOD PROTECTION", "Potentially Hazardous Food Properly Thawed", 2, 0),
+                    (7, "FOOD PROTECTION", "Unwrapped and Potentially Hazardous Food Not Re-Served", 4, 0),
+                    (8, "FOOD PROTECTION", "Food Protection During Storage, Preparation, Display, Service, Transportation", 2, 0),
+                    (9, "FOOD PROTECTION", "Handling of Food (Ice) Minimized", 1, 0),
+                    (10, "FOOD PROTECTION", "In Use Food (Ice) Dispensing Utensils Properly Stored", 1, 0),
+                    (11, "FOOD EQUIPMENT & UTENSILS", "Food Contact Surfaces Designed, Constructed, Maintained, Installed, Located", 2, 0),
+                    (12, "FOOD EQUIPMENT & UTENSILS", "Non-Food Contact Surfaces Designed, Constructed, Maintained, Installed, Located", 1, 0),
+                    (13, "FOOD EQUIPMENT & UTENSILS", "Dishwashing Facilities Designed, Constructed, Maintained, Installed, Located, Operated", 2, 0),
+                    (14, "FOOD EQUIPMENT & UTENSILS", "Accurate Thermometers, Chemical Test Kits Provided", 1, 0),
+                    (15, "FOOD EQUIPMENT & UTENSILS", "Single Service Articles Storage, Dispensing", 1, 0),
+                    (16, "FOOD EQUIPMENT & UTENSILS", "No Re-Use of Single Serve Articles", 2, 0),
+                    (17, "FOOD EQUIPMENT & UTENSILS", "Pre-Flushed, Scraped, Soaked", 1, 0),
+                    (18, "FOOD EQUIPMENT & UTENSILS", "Wash, Rinse Water Clean, Proper Temperature", 2, 0),
+                    (19, "FOOD EQUIPMENT & UTENSILS", "Sanitization Rinse Clean, Temperature, Concentration, Exposure Time, Equipment, Utensils Sanitized", 4, 0),
+                    (20, "FOOD EQUIPMENT & UTENSILS", "Wiping Cloths Clean, Use Restricted", 1, 0),
+                    (21, "FOOD EQUIPMENT & UTENSILS", "Food Contact Surfaces of Equipment and Utensils Clean, Free of Abrasives, Detergents", 2, 0),
+                    (22, "FOOD EQUIPMENT & UTENSILS", "Non-Food Contact Surfaces of Equipment and Utensils Clean", 1, 0),
+                    (23, "FOOD EQUIPMENT & UTENSILS", "Storage, Handling of Clean Equipment/Utensils", 1, 0),
+                    (24, "TOILET & HANDWASHING FACILITIES", "Number, Convenient, Accessible, Designed, Installed", 4, 0),
+                    (25, "TOILET & HANDWASHING FACILITIES", "Toilet Rooms Enclosed, Self-Closing Doors, Fixtures: Good Repair, Clean, Hand Cleanser, Sanitary Towels, Hand Drying Devices Provided, Proper Waste Receptacles", 2, 0),
+                    (26, "SOLID WASTE MANAGEMENT", "Containers or Receptacles: Covered, Adequate Number, Insect/Rodent Proof, Frequency, Clean", 2, 0),
+                    (27, "SOLID WASTE MANAGEMENT", "Outside Storage Area Enclosures Properly Constructed, Clean, Controlled Incineration", 1, 0),
+                    (28, "INSECT, RODENT, ANIMAL CONTROL", "Evidence of Insects/Rodents - Outer Openings, Protected, No Birds, Turtles, Other Animals", 4, 0),
+                    (29, "PERSONNEL", "Personnel with Infections Restricted", 5, 0),
+                    (30, "PERSONNEL", "Hands Washed and Clean, Good Hygienic Practices", 5, 0),
+                    (31, "PERSONNEL", "Clean Clothes, Hair Restraints", 2, 0),
+                    (32, "LIGHTING", "Lighting Provided as Required, Fixtures Shielded", 1, 0),
+                    (33, "VENTILATION", "Rooms and Equipment - Venting as Required", 1, 0),
+                    (34, "DRESSING ROOMS", "Rooms Clean, Lockers Provided, Facilities Clean", 1, 0),
+                    (35, "WATER", "Water Source Safe, Hot & Cold Under Pressure", 5, 0),
+                    (36, "SEWAGE", "Sewage and Waste Water Disposal", 4, 0),
+                    (37, "PLUMBING", "Installed, Maintained", 1, 0),
+                    (38, "PLUMBING", "Cross Connection, Back Siphonage, Backflow", 5, 0),
+                    (39, "FLOORS, WALLS, & CEILINGS", "Floors: Constructed, Drained, Clean, Good Repair, Covering Installation, Dustless Cleaning Methods", 1, 0),
+                    (40, "FLOORS, WALLS, & CEILINGS", "Walls, Ceiling, Attached Equipment: Constructed, Good Repair, Clean Surfaces, Dustless Cleaning Methods", 1, 0),
+                    (41, "OTHER OPERATIONS", "Toxic Items Properly Stored, Labeled, Used", 5, 0),
+                    (42, "OTHER OPERATIONS", "Premises Maintained Free of Litter, Unnecessary Articles, Cleaning Maintenance Equipment Properly Stored, Authorized Personnel", 1, 0),
+                    (43, "OTHER OPERATIONS", "Complete Separation for Living/Sleeping Quarters, Laundry", 1, 0),
+                    (44, "OTHER OPERATIONS", "Clean, Soiled Linen Properly Stored", 1, 0),
+                ]
+
+                for item_order, category, description, weight, is_critical in CORRECT_ITEMS:
+                    c.execute(f"""
+                        INSERT INTO form_items (form_template_id, item_order, category, description, weight, is_critical, item_id)
+                        VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph})
+                    """, (template_id, item_order, category, description, weight, is_critical, str(item_order)))
+
+                conn.commit()
+                print(f"✅ AUTO-FIX: Food Establishment checklist now has 44 correct items including item #1")
+
+        conn.close()
+    except Exception as e:
+        print(f"⚠️  Auto-fix checklist error: {e}")
+
     app.run(debug=True, port=5002)
