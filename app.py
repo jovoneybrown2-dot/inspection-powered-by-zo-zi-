@@ -7210,8 +7210,9 @@ def login_post():
     ip_address = request.remote_addr
 
     conn = get_db_connection()
-    c = execute_query(conn, "SELECT id, username, password, role, email, parish FROM users WHERE username = %s AND password = %s",
-              (username, password))
+    # Support login with either username OR email (for shared database with Zo-Zi Marketplace)
+    c = execute_query(conn, "SELECT id, username, password, role, email, parish FROM users WHERE (username = %s OR email = %s) AND password = %s",
+              (username, username, password))
     user = c.fetchone()
 
     if user and (
@@ -7219,22 +7220,25 @@ def login_post():
             (login_type == 'admin' and user['role'] == 'admin') or
             (login_type == 'medical_officer' and user['role'] == 'medical_officer')):
 
+        # Use username if available, otherwise use email (for Zo-Zi Marketplace users)
+        user_identifier = user['username'] if user['username'] else user['email']
+
         session['user_id'] = user['id']
-        session[login_type] = user['username']  # ✅ FIXED HERE
+        session[login_type] = user_identifier
 
         # Audit log: successful login
-        audit_user_login(user['username'], success=True, ip_address=ip_address)
+        audit_user_login(user_identifier, success=True, ip_address=ip_address)
 
         # Security monitoring: log successful login
         security_monitor.log_login_attempt(
-            username=user['username'],
+            username=user_identifier,
             success=True,
             ip_address=ip_address,
             user_agent=request.headers.get('User-Agent', ''),
             session_id=str(session.get('user_id', ''))
         )
         security_monitor.log_audit(
-            username=user['username'],
+            username=user_identifier,
             action_type='login_success',
             action_description=f'Successful {login_type} login',
             user_role=user['role'],
@@ -7255,12 +7259,12 @@ def login_post():
         # Record login attempt
         execute_query(conn,
             "INSERT INTO login_history (user_id, username, email, role, login_time, ip_address) VALUES (%s, %s, %s, %s, %s, %s)",
-            (user['id'], user['username'], user['email'], user['role'],
+            (user['id'], user_identifier, user['email'], user['role'],
              datetime.now().strftime('%Y-%m-%d %H:%M:%S'), ip_address))
 
         # Mark any old sessions for this user as inactive
         execute_query(conn, "UPDATE user_sessions SET is_active = 0, logout_time = %s WHERE username = %s AND is_active = 1",
-                  (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), user['username']))
+                  (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), user_identifier))
 
         # Track new user session with REAL location (only if GPS coordinates were captured)
         if latitude and longitude:
@@ -7269,22 +7273,22 @@ def login_post():
                 lng_float = float(longitude)
                 execute_query(conn,
                     "INSERT INTO user_sessions (username, user_role, login_time, last_activity, location_lat, location_lng, parish, ip_address, is_active) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                    (user['username'], user['role'],
+                    (user_identifier, user['role'],
                      datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                      datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                      lat_float, lng_float,
                      parish, ip_address, 1))
-                print(f"✅ User session tracked with GPS: {user['username']} at ({lat_float}, {lng_float})")
+                print(f"✅ User session tracked with GPS: {user_identifier} at ({lat_float}, {lng_float})")
             except (ValueError, TypeError) as e:
                 print(f"⚠️ Invalid GPS coordinates, session not tracked: {e}")
         else:
-            print(f"⚠️ No GPS coordinates provided, user {user['username']} will not appear on map")
+            print(f"⚠️ No GPS coordinates provided, user {user_identifier} will not appear on map")
 
         conn.commit()
         conn.close()
 
         # Log audit event
-        log_audit_event(username, 'login', ip_address, f'Successful {login_type} login')
+        log_audit_event(user_identifier, 'login', ip_address, f'Successful {login_type} login')
 
         if login_type == 'inspector':
             return redirect(url_for('dashboard'))
