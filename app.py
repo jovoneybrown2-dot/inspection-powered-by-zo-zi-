@@ -7082,6 +7082,22 @@ def init_db():
         except Exception:
             pass  # Column might already exist
 
+    # Check if username column exists in users table and add it if not
+    # This is needed when sharing database with Zo-Zi Marketplace
+    columns = get_table_columns(c, 'users')
+
+    if 'username' not in columns:
+        try:
+            if get_db_type() == 'postgresql':
+                c.execute('ALTER TABLE users ADD COLUMN username VARCHAR(255)')
+            else:
+                c.execute('ALTER TABLE users ADD COLUMN username TEXT')
+            if get_db_type() != 'postgresql':
+                conn.commit()
+        except Exception as e:
+            logging.error(f"Error adding username column: {str(e)}")
+            pass  # Column might already exist
+
     # Insert default users
     try:
         if get_db_type() == 'postgresql':
