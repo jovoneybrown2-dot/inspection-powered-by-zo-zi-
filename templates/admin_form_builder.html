@@ -499,7 +499,7 @@
                 return;
             }
 
-            container.innerHTML = items.map(item => `
+            container.innerHTML = items.map((item, index) => `
                 <div class="item" id="item-${item.id}">
                     <div class="item-header">
                         <div class="item-info">
@@ -509,6 +509,8 @@
                             ${item.is_critical ? '<span style="background:#dc3545;color:white;padding:2px 8px;border-radius:4px;font-size:11px;margin-left:10px;">CRITICAL</span>' : ''}
                         </div>
                         <div class="item-actions">
+                            <button class="btn btn-secondary" onclick="moveItemUp(${index})" ${index === 0 ? 'disabled' : ''} style="padding:6px 12px;font-size:16px;">↑</button>
+                            <button class="btn btn-secondary" onclick="moveItemDown(${index})" ${index === items.length - 1 ? 'disabled' : ''} style="padding:6px 12px;font-size:16px;">↓</button>
                             <button class="btn btn-warning" onclick="editItem(${item.id})">Edit</button>
                             <button class="btn btn-danger" onclick="deleteItem(${item.id})">Delete</button>
                         </div>
@@ -540,6 +542,9 @@
                     </div>
                 </div>
             `).join('');
+
+            // Store current items for reordering
+            window.currentItems = items;
         }
 
         function createItem() {
@@ -625,6 +630,52 @@
                 incrementVersion();
             })
             .catch(error => showError('Failed to delete item: ' + error));
+        }
+
+        function moveItemUp(index) {
+            if (index <= 0) return;
+
+            // Swap items
+            const items = [...window.currentItems];
+            [items[index], items[index - 1]] = [items[index - 1], items[index]];
+
+            // Update order
+            reorderItems(items);
+        }
+
+        function moveItemDown(index) {
+            if (index >= window.currentItems.length - 1) return;
+
+            // Swap items
+            const items = [...window.currentItems];
+            [items[index], items[index + 1]] = [items[index + 1], items[index]];
+
+            // Update order
+            reorderItems(items);
+        }
+
+        function reorderItems(items) {
+            // Create array of {id, order} for API
+            const reorderData = {
+                items: items.map((item, newIndex) => ({
+                    id: item.id,
+                    order: newIndex + 1  // 1-based indexing
+                }))
+            };
+
+            fetch('/api/admin/forms/items/reorder', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(reorderData)
+            })
+            .then(response => response.json())
+            .then(result => {
+                showSuccess('Items reordered successfully!');
+                loadFormItems();  // Refresh display
+                loadTemplateInfo();  // Refresh last edited info
+                incrementVersion();
+            })
+            .catch(error => showError('Failed to reorder items: ' + error));
         }
 
         // ============================================================================
