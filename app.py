@@ -7133,6 +7133,16 @@ def init_db():
     try:
         audit_columns = get_table_columns(c, 'audit_log')
 
+        # Make action_type nullable (it might have NOT NULL constraint from Zo-Zi)
+        if 'action_type' in audit_columns and get_db_type() == 'postgresql':
+            try:
+                c.execute('ALTER TABLE audit_log ALTER COLUMN action_type DROP NOT NULL')
+                conn.commit()
+                logging.info("✅ Made action_type nullable in audit_log")
+            except Exception as e:
+                logging.error(f"Error making action_type nullable: {str(e)}")
+                pass
+
         if 'action' not in audit_columns:
             try:
                 if get_db_type() == 'postgresql':
@@ -7187,6 +7197,26 @@ def init_db():
             conn.commit()
     except Exception as e:
         logging.error(f"Error updating NULL usernames: {str(e)}")
+        pass
+
+    # Add UNIQUE constraint on username (required for ON CONFLICT in PostgreSQL)
+    # This must be done BEFORE any INSERT with ON CONFLICT (username)
+    try:
+        if get_db_type() == 'postgresql':
+            c.execute("""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM pg_constraint WHERE conname = 'users_username_unique'
+                    ) THEN
+                        ALTER TABLE users ADD CONSTRAINT users_username_unique UNIQUE (username);
+                    END IF;
+                END $$;
+            """)
+            conn.commit()
+            logging.info("✅ UNIQUE constraint on users.username verified/added")
+    except Exception as e:
+        logging.error(f"Error adding UNIQUE constraint on username: {str(e)}")
         pass
 
     # Insert default users
