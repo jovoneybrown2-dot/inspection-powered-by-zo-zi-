@@ -7283,27 +7283,46 @@ def init_db():
         logging.error(f"Error populating usernames for existing users: {str(e)}")
         pass
 
-    # Insert default users
+    # Delete and recreate Inspection app users with specific credentials
     try:
         if get_db_type() == 'postgresql':
-            # For admin, check if user exists with email but different username
-            c.execute('SELECT id, username FROM users WHERE email = %s', ('admin@example.com',))
-            admin_user = c.fetchone()
-            if admin_user and admin_user['username'] != 'admin':
-                # Update existing user to have username 'admin'
-                c.execute('UPDATE users SET username = %s, password = %s, role = %s WHERE email = %s',
-                         ('admin', 'adminpass', 'admin', 'admin@example.com'))
-            else:
-                # Insert new admin user
-                c.execute('INSERT INTO users (username, password, role, email) VALUES (%s, %s, %s, %s) ON CONFLICT (username) DO NOTHING',
-                          ('admin', 'adminpass', 'admin', 'admin@example.com'))
-
-            c.execute('INSERT INTO users (username, password, role, email) VALUES (%s, %s, %s, %s) ON CONFLICT (username) DO NOTHING',
-                      ('medofficer', 'medpass', 'medical_officer', 'medofficer@example.com'))
-            for i in range(1, 7):
-                c.execute('INSERT INTO users (username, password, role, email) VALUES (%s, %s, %s, %s) ON CONFLICT (username) DO NOTHING',
-                          (f'inspector{i}', f'pass{i}', 'inspector', f'inspector{i}@example.com'))
+            # Delete existing Inspection app users to ensure clean state
+            c.execute("DELETE FROM users WHERE username IN ('inspector1', 'inspector2', 'inspector3', 'admin')")
             conn.commit()
+            logging.info("✅ Deleted existing Inspection app users")
+
+            # Insert admin user
+            c.execute("""
+                INSERT INTO users (username, password, role, email, parish)
+                VALUES (%s, %s, %s, %s, %s)
+                ON CONFLICT (username) DO UPDATE
+                SET password = EXCLUDED.password, role = EXCLUDED.role, email = EXCLUDED.email, parish = EXCLUDED.parish
+            """, ('admin', 'adminpass', 'admin', 'admin@inspection.local', 'Kingston'))
+
+            # Insert 3 specific inspector users with secure passwords
+            c.execute("""
+                INSERT INTO users (username, password, role, email, parish)
+                VALUES (%s, %s, %s, %s, %s)
+                ON CONFLICT (username) DO UPDATE
+                SET password = EXCLUDED.password, role = EXCLUDED.role, email = EXCLUDED.email, parish = EXCLUDED.parish
+            """, ('inspector1', 'Insp123!secure', 'inspector', 'inspector1@inspection.local', 'Westmoreland'))
+
+            c.execute("""
+                INSERT INTO users (username, password, role, email, parish)
+                VALUES (%s, %s, %s, %s, %s)
+                ON CONFLICT (username) DO UPDATE
+                SET password = EXCLUDED.password, role = EXCLUDED.role, email = EXCLUDED.email, parish = EXCLUDED.parish
+            """, ('inspector2', 'Insp456!secure', 'inspector', 'inspector2@inspection.local', 'Westmoreland'))
+
+            c.execute("""
+                INSERT INTO users (username, password, role, email, parish)
+                VALUES (%s, %s, %s, %s, %s)
+                ON CONFLICT (username) DO UPDATE
+                SET password = EXCLUDED.password, role = EXCLUDED.role, email = EXCLUDED.email, parish = EXCLUDED.parish
+            """, ('inspector3', 'Insp789!secure', 'inspector', 'inspector3@inspection.local', 'Westmoreland'))
+
+            conn.commit()
+            logging.info("✅ Created Inspection app users: admin, inspector1, inspector2, inspector3")
         else:
             c.execute('INSERT INTO users (username, password, role, email) VALUES (?, ?, ?, ?)',
                       ('admin', 'adminpass', 'admin', 'admin@example.com'))
