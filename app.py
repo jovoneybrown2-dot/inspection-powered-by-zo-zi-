@@ -7082,7 +7082,7 @@ def init_db():
         except Exception:
             pass  # Column might already exist
 
-    # Check if username column exists in users table and add it if not
+    # Check if required columns exist in users table and add them if not
     # This is needed when sharing database with Zo-Zi Marketplace
     columns = get_table_columns(c, 'users')
 
@@ -7096,6 +7096,36 @@ def init_db():
                 conn.commit()
         except Exception as e:
             logging.error(f"Error adding username column: {str(e)}")
+            pass  # Column might already exist
+
+    # Refresh columns list after username addition
+    columns = get_table_columns(c, 'users')
+
+    if 'role' not in columns:
+        try:
+            if get_db_type() == 'postgresql':
+                c.execute("ALTER TABLE users ADD COLUMN role VARCHAR(50) DEFAULT 'inspector'")
+            else:
+                c.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'inspector'")
+            if get_db_type() != 'postgresql':
+                conn.commit()
+        except Exception as e:
+            logging.error(f"Error adding role column: {str(e)}")
+            pass  # Column might already exist
+
+    # Refresh columns list after role addition
+    columns = get_table_columns(c, 'users')
+
+    if 'parish' not in columns:
+        try:
+            if get_db_type() == 'postgresql':
+                c.execute('ALTER TABLE users ADD COLUMN parish VARCHAR(100)')
+            else:
+                c.execute('ALTER TABLE users ADD COLUMN parish TEXT')
+            if get_db_type() != 'postgresql':
+                conn.commit()
+        except Exception as e:
+            logging.error(f"Error adding parish column: {str(e)}")
             pass  # Column might already exist
 
     # Insert default users
