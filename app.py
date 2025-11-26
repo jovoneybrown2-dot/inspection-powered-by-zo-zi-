@@ -10306,6 +10306,18 @@ def new_form():
     # Load checklist from database (falls back to hardcoded if empty)
     checklist = get_form_checklist_items('Food Establishment', FOOD_CHECKLIST_ITEMS)
 
+    # DEBUG: Print first 3 items being sent to template
+    print(f"\n{'='*80}")
+    print(f"DEBUG: /new_form route - Checklist sent to template")
+    print(f"{'='*80}")
+    print(f"Total items: {len(checklist)}")
+    if checklist:
+        print(f"First 3 items:")
+        for item in checklist[:3]:
+            print(f"  ID: {item.get('id')}, Desc: {item.get('desc', item.get('description', ''))[:50]}")
+        print(f"Item IDs present: {[item['id'] for item in checklist[:10]]}")
+    print(f"{'='*80}\n")
+
     # Get last_edited info for this form type
     from db_config import execute_query
     conn = get_db_connection()
