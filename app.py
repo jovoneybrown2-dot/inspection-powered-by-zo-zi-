@@ -7219,6 +7219,70 @@ def init_db():
         logging.error(f"Error adding UNIQUE constraint on username: {str(e)}")
         pass
 
+    # DEBUG: Show existing users in database to diagnose login issues
+    try:
+        c.execute("SELECT id, username, email, role, password FROM users WHERE role IN ('inspector', 'admin', 'medical_officer') ORDER BY id LIMIT 20")
+        existing_users = c.fetchall()
+        print("\n" + "="*80)
+        print("🔍 DEBUG: Existing users in database:")
+        print("="*80)
+        if existing_users:
+            for user in existing_users:
+                print(f"ID: {user[0]:<5} | Username: {str(user[1]):<20} | Email: {str(user[2]):<30} | Role: {user[3]:<20} | Password: {str(user[4])[:20]}...")
+        else:
+            print("No inspector/admin/medical_officer users found in database")
+        print("="*80 + "\n")
+    except Exception as e:
+        logging.error(f"Error querying existing users: {str(e)}")
+        pass
+
+    # Populate usernames for existing Inspection app users who have NULL usernames
+    # This handles users created before the username column was added
+    try:
+        if get_db_type() == 'postgresql':
+            # Update admin users
+            c.execute("""
+                UPDATE users
+                SET username = 'admin', password = 'adminpass'
+                WHERE role = 'admin'
+                  AND (username IS NULL OR username = email)
+                  AND (email LIKE '%admin%' OR id IN (
+                      SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1
+                  ))
+            """)
+
+            # Update medical officer users
+            c.execute("""
+                UPDATE users
+                SET username = 'medofficer', password = 'medpass'
+                WHERE role = 'medical_officer'
+                  AND (username IS NULL OR username = email)
+                  AND (email LIKE '%medofficer%' OR email LIKE '%medical%' OR id IN (
+                      SELECT id FROM users WHERE role = 'medical_officer' ORDER BY id LIMIT 1
+                  ))
+            """)
+
+            # Update inspector users - try to match by email pattern first
+            for i in range(1, 10):
+                c.execute(f"""
+                    UPDATE users
+                    SET username = 'inspector{i}', password = 'pass{i}'
+                    WHERE role = 'inspector'
+                      AND (username IS NULL OR username = email)
+                      AND (email LIKE '%inspector{i}%' OR id = (
+                          SELECT id FROM users WHERE role = 'inspector' ORDER BY id LIMIT 1 OFFSET {i-1}
+                      ))
+                      AND id NOT IN (
+                          SELECT id FROM users WHERE username LIKE 'inspector%' AND username IS NOT NULL
+                      )
+                """)
+
+            conn.commit()
+            logging.info("✅ Populated usernames for existing Inspection app users")
+    except Exception as e:
+        logging.error(f"Error populating usernames for existing users: {str(e)}")
+        pass
+
     # Insert default users
     try:
         if get_db_type() == 'postgresql':
