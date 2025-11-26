@@ -7128,11 +7128,82 @@ def init_db():
             logging.error(f"Error adding parish column: {str(e)}")
             pass  # Column might already exist
 
+    # Check if audit_log table exists and add missing columns
+    # This is needed for shared database with Zo-Zi Marketplace
+    try:
+        audit_columns = get_table_columns(c, 'audit_log')
+
+        if 'action' not in audit_columns:
+            try:
+                if get_db_type() == 'postgresql':
+                    c.execute('ALTER TABLE audit_log ADD COLUMN action VARCHAR(255)')
+                else:
+                    c.execute('ALTER TABLE audit_log ADD COLUMN action TEXT')
+                if get_db_type() != 'postgresql':
+                    conn.commit()
+            except Exception as e:
+                logging.error(f"Error adding action column to audit_log: {str(e)}")
+                pass
+
+        # Refresh columns after action addition
+        audit_columns = get_table_columns(c, 'audit_log')
+
+        if 'ip_address' not in audit_columns:
+            try:
+                if get_db_type() == 'postgresql':
+                    c.execute('ALTER TABLE audit_log ADD COLUMN ip_address VARCHAR(50)')
+                else:
+                    c.execute('ALTER TABLE audit_log ADD COLUMN ip_address TEXT')
+                if get_db_type() != 'postgresql':
+                    conn.commit()
+            except Exception as e:
+                logging.error(f"Error adding ip_address column to audit_log: {str(e)}")
+                pass
+
+        # Refresh columns after ip_address addition
+        audit_columns = get_table_columns(c, 'audit_log')
+
+        if 'details' not in audit_columns:
+            try:
+                if get_db_type() == 'postgresql':
+                    c.execute('ALTER TABLE audit_log ADD COLUMN details TEXT')
+                else:
+                    c.execute('ALTER TABLE audit_log ADD COLUMN details TEXT')
+                if get_db_type() != 'postgresql':
+                    conn.commit()
+            except Exception as e:
+                logging.error(f"Error adding details column to audit_log: {str(e)}")
+                pass
+    except Exception as e:
+        # audit_log table might not exist yet, will be created later
+        logging.info(f"audit_log table check skipped: {str(e)}")
+        pass
+
+    # For shared database: Update existing users with NULL usernames to use email as username
+    # This ensures Zo-Zi Marketplace users can log in to Inspection app
+    try:
+        if get_db_type() == 'postgresql':
+            c.execute("UPDATE users SET username = email WHERE username IS NULL AND email IS NOT NULL")
+            conn.commit()
+    except Exception as e:
+        logging.error(f"Error updating NULL usernames: {str(e)}")
+        pass
+
     # Insert default users
     try:
         if get_db_type() == 'postgresql':
-            c.execute('INSERT INTO users (username, password, role, email) VALUES (%s, %s, %s, %s) ON CONFLICT (username) DO NOTHING',
-                      ('admin', 'adminpass', 'admin', 'admin@example.com'))
+            # For admin, check if user exists with email but different username
+            c.execute('SELECT id, username FROM users WHERE email = %s', ('admin@example.com',))
+            admin_user = c.fetchone()
+            if admin_user and admin_user['username'] != 'admin':
+                # Update existing user to have username 'admin'
+                c.execute('UPDATE users SET username = %s, password = %s, role = %s WHERE email = %s',
+                         ('admin', 'adminpass', 'admin', 'admin@example.com'))
+            else:
+                # Insert new admin user
+                c.execute('INSERT INTO users (username, password, role, email) VALUES (%s, %s, %s, %s) ON CONFLICT (username) DO NOTHING',
+                          ('admin', 'adminpass', 'admin', 'admin@example.com'))
+
             c.execute('INSERT INTO users (username, password, role, email) VALUES (%s, %s, %s, %s) ON CONFLICT (username) DO NOTHING',
                       ('medofficer', 'medpass', 'medical_officer', 'medofficer@example.com'))
             for i in range(1, 7):
