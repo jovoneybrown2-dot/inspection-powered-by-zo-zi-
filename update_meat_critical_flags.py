@@ -6,14 +6,14 @@ Run this on Render after deployment to update the Postgres database.
 
 import os
 import sys
+import sqlite3
 
-# Try to import psycopg2 for Postgres, fall back to sqlite3 for local testing
+# Try to import psycopg2 for Postgres
 try:
     import psycopg2
     from psycopg2 import sql
     USE_POSTGRES = True
 except ImportError:
-    import sqlite3
     USE_POSTGRES = False
 
 def get_connection():
@@ -43,66 +43,77 @@ def update_meat_critical_flags():
     critical_items = ['31', '34', '35', '38', '39', '43', '51']
 
     try:
+        # First, get the template ID
+        if db_type == 'postgres':
+            cursor.execute("SELECT id FROM form_templates WHERE form_type LIKE %s OR name LIKE %s", ('%Meat%', '%Meat%'))
+        else:
+            cursor.execute("SELECT id FROM form_templates WHERE form_type LIKE ? OR name LIKE ?", ('%Meat%', '%Meat%'))
+
+        template = cursor.fetchone()
+        if not template:
+            print("❌ Error: Meat Processing template not found in database!")
+            return
+
+        template_id = template[0]
+        print(f"Found template ID: {template_id}")
+
         # Remove critical flag from specified items
         for item_id in non_critical_items:
-            cursor.execute("""
-                UPDATE form_items
-                SET is_critical = 0
-                WHERE item_id = %s
-                AND form_template_id IN (
-                    SELECT id FROM form_templates WHERE name LIKE %s
-                )
-            """ if db_type == 'postgres' else """
-                UPDATE form_items
-                SET is_critical = 0
-                WHERE item_id = ?
-                AND form_template_id IN (
-                    SELECT id FROM form_templates WHERE name LIKE ?
-                )
-            """, (item_id, '%Meat%'))
-            print(f"  ✓ Item {item_id}: Set to NON-critical")
+            if db_type == 'postgres':
+                cursor.execute("""
+                    UPDATE form_items
+                    SET is_critical = 0
+                    WHERE item_id = %s AND form_template_id = %s
+                """, (item_id, template_id))
+            else:
+                cursor.execute("""
+                    UPDATE form_items
+                    SET is_critical = 0
+                    WHERE item_id = ? AND form_template_id = ?
+                """, (item_id, template_id))
+            print(f"  ✓ Item {item_id}: Set to NON-critical (rows affected: {cursor.rowcount})")
 
         # Add critical flag to specified items
         for item_id in critical_items:
-            cursor.execute("""
-                UPDATE form_items
-                SET is_critical = 1
-                WHERE item_id = %s
-                AND form_template_id IN (
-                    SELECT id FROM form_templates WHERE name LIKE %s
-                )
-            """ if db_type == 'postgres' else """
-                UPDATE form_items
-                SET is_critical = 1
-                WHERE item_id = ?
-                AND form_template_id IN (
-                    SELECT id FROM form_templates WHERE name LIKE ?
-                )
-            """, (item_id, '%Meat%'))
-            print(f"  ✓ Item {item_id}: Set to CRITICAL")
+            if db_type == 'postgres':
+                cursor.execute("""
+                    UPDATE form_items
+                    SET is_critical = 1
+                    WHERE item_id = %s AND form_template_id = %s
+                """, (item_id, template_id))
+            else:
+                cursor.execute("""
+                    UPDATE form_items
+                    SET is_critical = 1
+                    WHERE item_id = ? AND form_template_id = ?
+                """, (item_id, template_id))
+            print(f"  ✓ Item {item_id}: Set to CRITICAL (rows affected: {cursor.rowcount})")
 
         conn.commit()
         print("\n✅ Successfully updated meat processing critical flags!")
 
         # Verify the changes
         print("\nVerifying changes...")
-        cursor.execute("""
-            SELECT item_id, description, is_critical
-            FROM form_items
-            WHERE form_template_id IN (
-                SELECT id FROM form_templates WHERE name LIKE %s
-            )
-            AND item_id IN %s
-            ORDER BY CAST(item_id AS INTEGER)
-        """ if db_type == 'postgres' else """
-            SELECT item_id, description, is_critical
-            FROM form_items
-            WHERE form_template_id IN (
-                SELECT id FROM form_templates WHERE name LIKE ?
-            )
-            AND item_id IN ('13','31','34','35','38','39','43','46','47','51')
-            ORDER BY CAST(item_id AS INTEGER)
-        """, ('%Meat%', tuple(non_critical_items + critical_items)) if db_type == 'postgres' else ('%Meat%',))
+        all_items = non_critical_items + critical_items
+
+        if db_type == 'postgres':
+            placeholders = ', '.join(['%s'] * len(all_items))
+            cursor.execute(f"""
+                SELECT item_id, description, is_critical
+                FROM form_items
+                WHERE form_template_id = %s
+                AND item_id IN ({placeholders})
+                ORDER BY item_id::INTEGER
+            """, (template_id, *all_items))
+        else:
+            placeholders = ', '.join(['?'] * len(all_items))
+            cursor.execute(f"""
+                SELECT item_id, description, is_critical
+                FROM form_items
+                WHERE form_template_id = ?
+                AND item_id IN ({placeholders})
+                ORDER BY CAST(item_id AS INTEGER)
+            """, (template_id, *all_items))
 
         results = cursor.fetchall()
         print("\nUpdated items:")
