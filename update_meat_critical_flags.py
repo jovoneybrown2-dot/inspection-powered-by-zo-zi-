@@ -37,7 +37,7 @@ def update_meat_critical_flags():
     print("Updating meat processing critical flags...")
 
     # Items that should be NON-critical (remove critical flag)
-    non_critical_items = ['13', '14', '16', '22', '36', '42', '44', '46', '47']
+    non_critical_items = ['13', '14', '16', '22', '36', '37', '42', '44', '46', '47']
 
     # Items that should be critical (add critical flag)
     critical_items = ['6', '7', '15', '17', '18', '23', '24', '25', '29', '30', '31', '32', '34', '35', '38', '39', '43', '45', '48', '49', '50', '51']
