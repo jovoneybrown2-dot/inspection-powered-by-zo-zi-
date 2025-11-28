@@ -1909,7 +1909,7 @@ def institutional_details(form_id):
 
     return render_template('institutional_details.html',
                            inspection=inspection,
-                           photo_data=photos)
+                           photo_data=[])  # Photos excluded from PDF downloads
 
 @app.route('/institutional/inspection/<int:id>')
 def institutional_inspection_detail(id):
@@ -1976,7 +1976,7 @@ def institutional_inspection_detail(id):
     return render_template('institutional_inspection_detail.html',
                            inspection=inspection_dict,
                            checklist=get_form_checklist_items('Institutional', INSTITUTIONAL_CHECKLIST_ITEMS),
-                           photo_data=photos)
+                           photo_data=[])  # Photos excluded from PDF downloads
 
 @app.route('/submit_spirit_licence', methods=['POST'])
 def submit_spirit_licence():
@@ -3060,7 +3060,7 @@ def inspection_detail(id):
                 photos = []
 
         return render_template('inspection_detail.html', inspection=inspection_data, checklist=get_form_checklist_items('Food Establishment', FOOD_CHECKLIST_ITEMS),
-                              photo_data=photos)
+                              photo_data=[])  # Photos excluded from PDF downloads
     return "Inspection not found", 404
 
 @app.route('/residential/inspection/<int:form_id>')
@@ -3130,7 +3130,7 @@ def residential_inspection(form_id):
                           created_at=created_at,
                           checklist=get_form_checklist_items('Residential', RESIDENTIAL_CHECKLIST_ITEMS),
                           checklist_scores=checklist_scores,
-                          photo_data=photos)
+                          photo_data=[])  # Photos excluded from PDF downloads
 
 @app.route('/meat_processing/inspection/<int:form_id>')
 def meat_processing_inspection(form_id):
@@ -3178,7 +3178,7 @@ def meat_processing_inspection(form_id):
                               created_at=details['created_at'],
                               checklist=get_form_checklist_items('Meat Processing', MEAT_PROCESSING_CHECKLIST_ITEMS),
                               checklist_scores=details['checklist_scores'],
-                              photo_data=photos)
+                              photo_data=[])  # Photos excluded from PDF downloads
     else:
         return "Inspection not found", 404
 
@@ -3224,7 +3224,7 @@ def burial_inspection_detail(id):
             photos = []
 
     return render_template('burial_inspection_detail.html', inspection=inspection_data,
-                          photo_data=photos)
+                          photo_data=[])  # Photos excluded from PDF downloads
 
 # Replace ALL your PDF download functions with these exact form replicas
 
@@ -3274,7 +3274,7 @@ def download_residential_pdf(form_id):
                                        inspector_signature=details['inspector_signature'],
                                        received_by=details['received_by'],
                                        created_at=details['created_at'],
-                                       photo_data=photos,
+                                       photo_data=[],  # Photos excluded from PDF downloads
                                        checklist=RESIDENTIAL_CHECKLIST_ITEMS,
                                        item_scores=details.get('item_scores', {}))
 
@@ -3312,31 +3312,25 @@ def download_meat_processing_pdf(form_id):
         details = get_meat_processing_inspection_details(form_id)
         if not details:
             return jsonify({'error': 'Inspection not found'}), 404
-        
-        photos = []
-        if details.get('photo_data'):
-            try:
-                photos = json.loads(details.get('photo_data', '[]'))
-            except:
-                photos = []
-        
+
+        # Don't include photos in PDF downloads
         html_string = render_template('meat_processing_inspection_details.html',
-                                       establishment_name=details['establishment_name'],
-                                       owner_operator=details['owner_operator'],
-                                       address=details['address'],
-                                       inspector_name=details['inspector_name'],
-                                       inspection_date=details['inspection_date'],
-                                       inspector_code=details['inspector_code'],
-                                       result=details['result'],
-                                       purpose_of_visit=details['purpose_of_visit'],
-                                       action=details['action'],
-                                       critical_score=details['critical_score'],
-                                       overall_score=details['overall_score'],
-                                       comments=details['comments'],
-                                       inspector_signature=details['inspector_signature'],
-                                       received_by=details['received_by'],
-                                       created_at=details['created_at'],
-                                       photo_data=photos,
+                                       establishment_name=details.get('establishment_name', ''),
+                                       owner_operator=details.get('owner_operator', ''),
+                                       address=details.get('address', ''),
+                                       inspector_name=details.get('inspector_name', ''),
+                                       inspection_date=details.get('inspection_date', ''),
+                                       inspector_code=details.get('inspector_code', ''),
+                                       result=details.get('result', ''),
+                                       purpose_of_visit=details.get('purpose_of_visit', ''),
+                                       action=details.get('action', ''),
+                                       critical_score=details.get('critical_score', 0),
+                                       overall_score=details.get('overall_score', 0),
+                                       comments=details.get('comments', ''),
+                                       inspector_signature=details.get('inspector_signature', ''),
+                                       received_by=details.get('received_by', ''),
+                                       created_at=details.get('created_at', ''),
+                                       photo_data=[],
                                        checklist=MEAT_PROCESSING_CHECKLIST_ITEMS,
                                        item_scores=details.get('item_scores', {}))
         
@@ -3378,7 +3372,7 @@ def download_burial_pdf(form_id):
         
         html_string = render_template('burial_inspection_detail.html', 
                                        inspection=inspection, 
-                                       photo_data=photos,
+                                       photo_data=[],  # Photos excluded from PDF downloads
                                        checklist=BURIAL_SITE_CHECKLIST_ITEMS)
         
         html_string = re.sub(r'<link[^>]*inspection-details-responsive\.css[^>]*>', '', html_string)
@@ -3440,7 +3434,7 @@ def download_swimming_pool_pdf(form_id):
                                        inspection=inspection_dict,
                                        checklist=SWIMMING_POOL_CHECKLIST_ITEMS,
                                        item_scores=item_scores,
-                                       photo_data=photos)
+                                       photo_data=[])  # Photos excluded from PDF downloads
         
         html_string = re.sub(r'<link[^>]*inspection-details-responsive\.css[^>]*>', '', html_string)
         static_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
@@ -3519,7 +3513,7 @@ def download_institutional_pdf(form_id):
     html_string = render_template('institutional_inspection_detail.html',
                                    inspection=inspection_dict,
                                    checklist=get_form_checklist_items('Institutional', INSTITUTIONAL_CHECKLIST_ITEMS),
-                                   photo_data=photos)
+                                   photo_data=[])  # Photos excluded from PDF downloads
 
     # Remove external CSS link tags to prevent HTTP fetching during PDF generation
     import re
@@ -3633,7 +3627,7 @@ def download_small_hotels_pdf(form_id):
         logger.info(f"🎨 Rendering HTML template...")
         html_string = render_template('small_hotels_inspection_detail.html',
                                        inspection=inspection_obj,
-                                       photo_data=photos)
+                                       photo_data=[])  # Photos excluded from PDF downloads
         logger.info(f"✅ HTML rendered ({len(html_string)} chars)")
 
         # Remove external CSS link tags to prevent HTTP fetching during PDF generation
@@ -3757,7 +3751,7 @@ def download_inspection_pdf(form_id):
         html_string = render_template('inspection_detail.html', 
                                        inspection=inspection_data, 
                                        checklist=get_form_checklist_items('Food Establishment', FOOD_CHECKLIST_ITEMS),
-                                       photo_data=photos)
+                                       photo_data=[])  # Photos excluded from PDF downloads
         logger.info(f"✅ HTML rendered ({len(html_string)} chars)")
         
         # Remove external CSS link tags
@@ -3983,7 +3977,7 @@ def swimming_pool_inspection_detail(id):
     return render_template('swimming_pool_inspection_detail.html',
                            inspection=inspection_dict,
                            checklist=get_form_checklist_items('Swimming Pool', SWIMMING_POOL_CHECKLIST_ITEMS),
-                           photo_data=photos)
+                           photo_data=[])  # Photos excluded from PDF downloads
 
 # Debug route for session verification
 @app.route('/debug_session')
@@ -4541,7 +4535,7 @@ def barbershop_inspection_detail(id):
             photos = []
 
     return render_template('barbershop_inspection_detail.html', inspection=inspection_dict, checklist=get_form_checklist_items('Barbershop', BARBERSHOP_CHECKLIST_ITEMS),
-                          photo_data=photos)
+                          photo_data=[])  # Photos excluded from PDF downloads
 
 # Replace your download_barbershop_pdf function with this corrected version
 @app.route('/download_barbershop_pdf/<int:form_id>')
@@ -6596,7 +6590,7 @@ def get_security_metrics():
         return render_template('small_hotels_inspection_detail.html',
                                inspection=inspection_dict,
                                checklist=get_form_checklist_items('Small Hotel', SMALL_HOTELS_CHECKLIST_ITEMS),
-                               photo_data=photos)
+                               photo_data=[])  # Photos excluded from PDF downloads
 
 
     # 3. Route to get all users for contact list
@@ -8769,7 +8763,7 @@ def small_hotels_inspection_detail(id):
 
     return render_template('small_hotels_inspection_detail.html',
                            inspection=inspection_obj,
-                           photo_data=photos)
+                           photo_data=[])  # Photos excluded from PDF downloads
 
 # SIMPLIFIED INSPECTION REPORTS
 @app.route('/api/admin/generate_report', methods=['POST'])
