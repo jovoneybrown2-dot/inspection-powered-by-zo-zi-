@@ -543,7 +543,16 @@ def draw_signature_image(p, signature_data, x, y, max_width=100, max_height=40):
     if isinstance(signature_data, str) and signature_data.startswith('data:image'):
         try:
             # Extract base64 data after the comma
+            if ',' not in signature_data:
+                print(f"Error: Invalid signature data format - missing comma separator")
+                return False
+
             header, encoded = signature_data.split(',', 1)
+
+            # Remove any whitespace from the encoded data
+            encoded = encoded.strip()
+
+            # Decode base64 data
             image_data = base64.b64decode(encoded)
             image_buffer = io.BytesIO(image_data)
 
@@ -556,10 +565,13 @@ def draw_signature_image(p, signature_data, x, y, max_width=100, max_height=40):
             draw_width = img_width * scale
             draw_height = img_height * scale
 
-            p.drawImage(img, x, y - draw_height, width=draw_width, height=draw_height)
+            # Draw the signature image
+            p.drawImage(img, x, y - draw_height + 5, width=draw_width, height=draw_height, preserveAspectRatio=True, mask='auto')
             return True
         except Exception as e:
             print(f"Error drawing signature image: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
     return False
@@ -3603,14 +3615,22 @@ def download_meat_processing_pdf(form_id):
     inspector_sig = details.get('inspector_signature', '')
     if not draw_signature_image(p, inspector_sig, label_x + 130, y, 120, 40):
         p.setFont("Times-Roman", 11)
-        p.drawString(label_x + 130, y, str(inspector_sig)[:30] if inspector_sig else '')
+        # Only show text if it's not base64 image data
+        if inspector_sig and not str(inspector_sig).startswith('data:image'):
+            p.drawString(label_x + 130, y, str(inspector_sig)[:30])
+        elif inspector_sig:
+            p.drawString(label_x + 130, y, "[Signature on file]")
 
     p.setFont("Times-Bold", 12)
     p.drawString(350, y, "Received by:")
     received_sig = details.get('received_by', '')
     if not draw_signature_image(p, received_sig, 430, y, 120, 40):
         p.setFont("Times-Roman", 11)
-        p.drawString(430, y, str(received_sig)[:30] if received_sig else '')
+        # Only show text if it's not base64 image data
+        if received_sig and not str(received_sig).startswith('data:image'):
+            p.drawString(430, y, str(received_sig)[:30])
+        elif received_sig:
+            p.drawString(430, y, "[Signature on file]")
 
     p.save()
     buffer.seek(0)
