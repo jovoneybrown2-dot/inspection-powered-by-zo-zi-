@@ -19,6 +19,9 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.utils import ImageReader
 import base64
 
+# WeasyPrint for HTML to PDF conversion
+from weasyprint import HTML, CSS
+
 # Database Config Import
 from db_config import get_db_connection, get_db_type, get_placeholder
 
@@ -4337,367 +4340,71 @@ def download_swimming_pool_pdf(form_id):
 
 @app.route('/download_institutional_pdf/<int:form_id>')
 def download_institutional_pdf(form_id):
+    from db_config import get_placeholder
+    ph = get_placeholder()
+
     if 'inspector' not in session and 'admin' not in session:
         return redirect(url_for('login'))
 
+    # Get inspection data using the same logic as the detail page
     conn = get_db_connection()
-    c = get_dict_cursor(conn)
-    c.execute("""SELECT * FROM inspections WHERE id = %s AND form_type = 'Institutional Health'""", (form_id,))
-    form_data = c.fetchone()
+    cursor = get_dict_cursor(conn)
 
-    if not form_data:
+    cursor.execute(f"SELECT * FROM inspections WHERE id = {ph} AND form_type = 'Institutional Health'", (form_id,))
+    inspection = cursor.fetchone()
+
+    if not inspection:
         conn.close()
-        return jsonify({'error': 'Inspection not found'}), 404
+        return "Inspection not found", 404
 
-    # Get individual scores from inspection_items table
-    c.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = %s", (form_id,))
-    checklist_scores = {str(row[0]): float(row[1]) if row[1] and str(row[1]).replace('.', '', 1).isdigit() else 0.0
-                        for row in c.fetchall()}
-    conn.close()
+    inspection_dict = dict(inspection)
 
-    buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
-    width, height = letter
-
-    # === EXACT TITLE MATCHING YOUR DETAILS PAGE ===
-    y = height - 50
-    p.setFont("Helvetica-Bold", 18)
-    p.drawCentredString(width / 2, y, "Ministry of Health")
-    y -= 25
-    p.setFont("Helvetica-Bold", 16)
-    p.drawCentredString(width / 2, y, "Institutional Health Inspection Form")
-    y -= 40
-
-    # === MAIN INFORMATION SECTION - PROPER 2-COLUMN LAYOUT ===
-    p.setLineWidth(1)
-
-    # Draw border around the entire information section
-    info_section_height = 120
-    p.rect(50, y - info_section_height, width - 100, info_section_height)
-
-    # Column positioning - wider separation
-    left_x = 70
-    right_x = 350
-    field_width = 200
-    row_height = 35
-
-    p.setFont("Helvetica", 11)
-
-    # Row 1: Name of Establishment | Owner/Operator
-    current_y = y - 25
-    p.drawString(left_x, current_y, "Name of Establishment:")
-    p.rect(left_x, current_y - 20, field_width, 15)
-    p.drawString(left_x + 5, current_y - 12, str(form_data['establishment_name'] or ''))
-
-    p.drawString(right_x, current_y, "Owner/Operator:")
-    p.rect(right_x, current_y - 20, field_width - 50, 15)
-    p.drawString(right_x + 5, current_y - 12, str(form_data['owner'] or ''))
-
-    # Row 2: Address and Parish | Inspector Name
-    current_y -= row_height
-    p.drawString(left_x, current_y, "Address and Parish:")
-    p.rect(left_x, current_y - 20, field_width, 15)
-    p.drawString(left_x + 5, current_y - 12, str(form_data['address'] or ''))
-
-    p.drawString(right_x, current_y, "Inspector Name:")
-    p.rect(right_x, current_y - 20, field_width - 50, 15)
-    p.drawString(right_x + 5, current_y - 12, str(form_data['inspector_name'] or ''))
-
-    # Row 3: Critical Score | Overall Score
-    current_y -= row_height
-    p.drawString(left_x, current_y, "Critical Sc.:")
-    p.rect(left_x + 80, current_y - 20, 60, 15)
-    p.drawString(left_x + 85, current_y - 12, str(form_data['critical_score'] or '0'))
-
-    p.drawString(right_x, current_y, "Overall Sc.:")
-    p.rect(right_x + 80, current_y - 20, 60, 15)
-    p.drawString(right_x + 85, current_y - 12, str(form_data['overall_score'] or '0'))
-
-    y = y - info_section_height - 10
-
-    # === INSTITUTIONAL DETAILS SECTION ===
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y, "INSTITUTIONAL DETAILS")
-    y -= 25
-
-    # 3-column layout for institutional details
-    col1_x, col2_x, col3_x = 50, 230, 410
-    detail_y = y
-
-    institutional_details = [
-        ("Staff Complement:", form_data['staff_complement'] or 'N/A'),
-        ("Building Size:",
-         f"{form_data['building_size_value'] or 'N/A'} {'ft²' if form_data['building_size_ft2'] else 'm²' if form_data['building_size_m2'] else ''}"),
-        ("No. of Occupants:", form_data['num_occupants'] or 'N/A'),
-        ("Telephone No.:", form_data['telephone_no'] or 'N/A'),
-        ("Type of Institution:", form_data['institution_type'] or 'N/A'),
-        ("No. of Building(s):", form_data['num_buildings'] or 'N/A')
-    ]
-
-    p.setFont("Helvetica", 10)
-    for i in range(0, len(institutional_details), 3):  # 3 items per row
-        row_details = institutional_details[i:i + 3]
-
-        for j, (label, value) in enumerate(row_details):
-            x_pos = [col1_x, col2_x, col3_x][j]
-            p.drawString(x_pos, detail_y, label)
-            p.drawString(x_pos, detail_y - 15, str(value))
-
-        detail_y -= 40
-
-    y = detail_y - 20
-
-    # === INSPECTION AND COMPLIANCE INFO ===
-    p.setFont("Helvetica", 11)
-
-    # Left side - Inspection details
-    p.drawString(50, y, f"Purpose of Visit: {form_data['purpose_of_visit'] or 'N/A'}")
-    p.drawString(50, y - 20, f"Inspection Date: {form_data['inspection_date'] or 'N/A'}")
-    p.drawString(50, y - 40, f"Inspector Code: {form_data['inspector_code'] or 'N/A'}")
-
-    # Right side - Compliance details
-    p.drawString(320, y, f"License No.: {form_data['license_no'] or 'N/A'}")
-    p.drawString(320, y - 20, f"Registration Status: {form_data['registration_status'] or 'N/A'}")
-    p.drawString(320, y - 40, f"Action: {form_data['action'] or 'NAI'}")
-
-    y -= 70
-
-    # === PASS/FAIL RESULT ===
-    overall_score = float(form_data['overall_score']) if form_data['overall_score'] else 0
-    critical_score = float(form_data['critical_score']) if form_data['critical_score'] else 0
+    # Recalculate Pass/Fail status based on scores
+    overall_score = inspection_dict.get('overall_score', 0) or 0
+    critical_score = inspection_dict.get('critical_score', 0) or 0
 
     if overall_score >= 70 and critical_score >= 50:
-        result_text = f"PASS: Overall Score = {overall_score}, Critical Score = {critical_score}"
-        p.setFillColor(colors.green)
+        inspection_dict['result'] = 'Pass'
     else:
-        result_text = f"FAIL: Overall Score = {overall_score} (needs 70+), Critical Score = {critical_score} (needs 50+)"
-        p.setFillColor(colors.red)
+        inspection_dict['result'] = 'Fail'
 
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y, result_text)
-    p.setFillColor(colors.black)
-    y -= 40
+    # Get individual scores from inspection_items table
+    cursor.execute(f"SELECT item_id, details FROM inspection_items WHERE inspection_id = {ph}", (form_id,))
+    item_scores = {}
+    for row in cursor.fetchall():
+        item_key = row['item_id']
+        score_value = float(row['details']) if row['details'] and str(row['details']).replace('.', '', 1).isdigit() else 0.0
+        item_scores[item_key] = score_value
 
-    # === INSPECTION CHECKLIST TABLE ===
-    if y < 500:  # Need room for table
-        p.showPage()
-        y = height - 50
+    # Create the scores dictionary that the template expects
+    scores = {}
+    for item in INSTITUTIONAL_CHECKLIST_ITEMS:
+        item_id = item['id']
+        scores[item_id] = item_scores.get(item_id, 0.0)
 
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(50, y, "Inspection Checklist")
-    y -= 25
+    inspection_dict['scores'] = scores
 
-    # Table setup
-    table_x = 50
-    table_width = width - 100
-    header_height = 20
-    row_height = 14
+    conn.close()
 
-    # Table header
-    p.setLineWidth(1)
-    p.rect(table_x, y - header_height, table_width, header_height)
-    p.setFillColor(colors.lightgrey)
-    p.rect(table_x, y - header_height, table_width, header_height, fill=1)
+    # Parse photos from JSON string to Python list
+    photos = []
+    if inspection_dict.get('photo_data'):
+        try:
+            import json
+            photos = json.loads(inspection_dict.get('photo_data', '[]'))
+        except:
+            photos = []
 
-    p.setFillColor(colors.black)
-    p.setFont("Helvetica-Bold", 10)
-    p.drawString(table_x + 10, y - 14, "Item")
-    p.drawString(table_x + 50, y - 14, "Description")
-    p.drawString(table_x + 400, y - 14, "Wt")
-    p.drawString(table_x + 450, y - 14, "Score")
+    # Render the same HTML template as the detail page
+    html_string = render_template('institutional_inspection_detail.html',
+                                   inspection=inspection_dict,
+                                   checklist=get_form_checklist_items('Institutional', INSTITUTIONAL_CHECKLIST_ITEMS),
+                                   photo_data=photos)
 
-    y -= header_height
+    # Convert HTML to PDF
+    pdf = HTML(string=html_string, base_url=request.host_url).write_pdf()
 
-    # Define institutional checklist sections exactly like your form
-    institutional_sections = [
-        ("BUILDING", [
-            {"id": "01", "desc": "Absence of overcrowding", "wt": 5, "critical": True},
-            {"id": "02", "desc": "Structural Integrity", "wt": 2, "critical": False},
-            {"id": "03", "desc": "Housekeeping", "wt": 2, "critical": False},
-            {"id": "04", "desc": "Clean Floor", "wt": 1, "critical": False},
-            {"id": "05", "desc": "Clean Walls", "wt": 1, "critical": False},
-            {"id": "06", "desc": "Clean Ceiling", "wt": 1, "critical": False},
-            {"id": "07", "desc": "Lighting", "wt": 1, "critical": False},
-            {"id": "08", "desc": "Ventilation", "wt": 3, "critical": False}
-        ]),
-        ("WATER SUPPLY", [
-            {"id": "09", "desc": "Adequacy", "wt": 5, "critical": True},
-            {"id": "10", "desc": "Potability", "wt": 5, "critical": True}
-        ]),
-        ("EXCRETA DISPOSAL FACILITIES", [
-            {"id": "11", "desc": "Sanitary excreta disposal", "wt": 5, "critical": True},
-            {"id": "12", "desc": "Adequacy", "wt": 5, "critical": True}
-        ]),
-        ("FOOD HANDLING FACILITIES", [
-            {"id": "13", "desc": "Food Storage", "wt": 5, "critical": True},
-            {"id": "14", "desc": "Kitchen", "wt": 5, "critical": True},
-            {"id": "15", "desc": "Dining Room", "wt": 5, "critical": True},
-            {"id": "16", "desc": "Food handling practices", "wt": 5, "critical": True}
-        ]),
-        ("SOLID WASTE MANAGEMENT", [
-            {"id": "17", "desc": "Storage", "wt": 5, "critical": True},
-            {"id": "18", "desc": "Disposal", "wt": 5, "critical": True}
-        ]),
-        ("PESTS", [
-            {"id": "19", "desc": "Absence", "wt": 5, "critical": True},
-            {"id": "20", "desc": "Control system in place", "wt": 5, "critical": True}
-        ]),
-        ("COMPOUND", [
-            {"id": "21", "desc": "General Cleanliness", "wt": 2, "critical": False},
-            {"id": "22", "desc": "Drainage", "wt": 2, "critical": False},
-            {"id": "23", "desc": "Protected from stray animals", "wt": 2, "critical": False},
-            {"id": "24", "desc": "Vegetation", "wt": 2, "critical": False}
-        ]),
-        ("SAFETY MEASURES", [
-            {"id": "25", "desc": "Provision for physically challenged", "wt": 2, "critical": False},
-            {"id": "26", "desc": "Fire extinguishers", "wt": 5, "critical": True},
-            {"id": "27", "desc": "Access to medical care", "wt": 2, "critical": False},
-            {"id": "28", "desc": "First Aid available", "wt": 2, "critical": False},
-            {"id": "29", "desc": "Emergency exit", "wt": 2, "critical": False},
-            {"id": "30", "desc": "Veterinary certification of pets", "wt": 1, "critical": False}
-        ]),
-        ("REFRIGERATION FOR NON-FOOD", [
-            {"id": "31", "desc": "Adequacy", "wt": 2, "critical": False}
-        ])
-    ]
-
-    p.setFont("Helvetica", 8)
-
-    for section_name, items in institutional_sections:
-        # Check for new page
-        if y < 80:
-            p.showPage()
-            y = height - 50
-            # Redraw header
-            p.setLineWidth(1)
-            p.rect(table_x, y - header_height, table_width, header_height)
-            p.setFillColor(colors.lightgrey)
-            p.rect(table_x, y - header_height, table_width, header_height, fill=1)
-            p.setFillColor(colors.black)
-            p.setFont("Helvetica-Bold", 10)
-            p.drawString(table_x + 10, y - 14, "Item")
-            p.drawString(table_x + 50, y - 14, "Description")
-            p.drawString(table_x + 400, y - 14, "Wt")
-            p.drawString(table_x + 450, y - 14, "Score")
-            y -= header_height
-            p.setFont("Helvetica", 8)
-
-        # Section header
-        p.setFillColor(colors.Color(0.9, 0.9, 0.9))
-        p.rect(table_x, y - row_height, table_width, row_height, fill=1)
-        p.setFillColor(colors.black)
-        p.setFont("Helvetica-Bold", 8)
-        p.drawString(table_x + 10, y - 10, section_name)
-        y -= row_height
-
-        # Section items
-        p.setFont("Helvetica", 8)
-        for item in items:
-            if y < 30:
-                p.showPage()
-                y = height - 50
-
-            # Critical items get light background
-            if item['critical']:
-                p.setFillColor(colors.Color(0.95, 0.95, 0.95))
-                p.rect(table_x, y - row_height, table_width, row_height, fill=1)
-
-            # Row border
-            p.setFillColor(colors.black)
-            p.setLineWidth(0.5)
-            p.rect(table_x, y - row_height, table_width, row_height)
-
-            # Get score for this item
-            score = checklist_scores.get(item['id'], 0)
-
-            # Item content
-            p.drawString(table_x + 10, y - 9, item['id'])
-
-            # Truncate description if too long
-            desc = item['desc']
-            if len(desc) > 45:
-                desc = desc[:42] + "..."
-            p.drawString(table_x + 50, y - 9, desc)
-
-            p.drawString(table_x + 405, y - 9, str(item['wt']))
-            p.drawString(table_x + 455, y - 9, f"{score:.1f}")
-
-            y -= row_height
-
-        y -= 5  # Extra space between sections
-
-    # === COMMENTS SECTION ===
-    if y < 120:
-        p.showPage()
-        y = height - 50
-
-    y -= 20
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y, "Inspector's Comments:")
-    y -= 20
-
-    # Comments box
-    comments_height = 60
-    p.setLineWidth(1)
-    p.rect(50, y - comments_height, width - 100, comments_height)
-
-    p.setFont("Helvetica", 9)
-    comments = form_data['comments'] or 'N/A'
-    if comments and comments != 'N/A':
-        # Word wrap comments
-        lines = []
-        words = comments.split()
-        current_line = ""
-        for word in words:
-            if len(current_line + word) < 70:
-                current_line += word + " "
-            else:
-                lines.append(current_line.strip())
-                current_line = word + " "
-        if current_line:
-            lines.append(current_line.strip())
-
-        for i, line in enumerate(lines[:4]):  # Max 4 lines
-            p.drawString(55, y - 15 - (i * 12), line)
-    else:
-        p.drawString(55, y - 25, "No comments provided.")
-
-    y -= 80
-
-    # === SIGNATURES SECTION ===
-    p.setFont("Helvetica", 10)
-
-    # Inspector signature (left)
-    p.drawString(50, y, "Inspector's Signature:")
-    p.line(160, y - 2, 280, y - 2)
-    inspector_sig = form_data['inspector_signature'] or ''
-    if not draw_signature_image(p, inspector_sig, 165, y, 100, 30):
-        if inspector_sig and not str(inspector_sig).startswith('data:image'):
-            p.drawString(165, y, str(inspector_sig)[:20])
-        elif inspector_sig:
-            p.drawString(165, y, "[Signed]")
-
-    # Received by (right)
-    p.drawString(350, y, "Rec'd By:")
-    p.line(410, y - 2, 530, y - 2)
-    received_sig = form_data['received_by'] or ''
-    if not draw_signature_image(p, received_sig, 415, y, 100, 30):
-        if received_sig and not str(received_sig).startswith('data:image'):
-            p.drawString(415, y, str(received_sig)[:20])
-        elif received_sig:
-            p.drawString(415, y, "[Signed]")
-
-    # Footer note
-    y -= 30
-    p.setFont("Helvetica", 8)
-    p.drawString(50, y, "EHU (Rev. May 2002)")
-
-    p.save()
-    buffer.seek(0)
-    pdf_data = buffer.getvalue()
-    buffer.close()
-
-    response = make_response(pdf_data)
+    response = make_response(pdf)
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = f'attachment; filename=institutional_health_inspection_{form_id}.pdf'
     return response
@@ -4731,22 +4438,29 @@ def download_small_hotels_pdf(form_id):
     obser_scores = {}
     error_scores = {}
     for item in items:
-        obser_scores[item[0]] = item[1] or '0'
-        error_scores[item[0]] = item[2] or '0'
+        obser_scores[item['item_id']] = item['obser'] or '0'
+        error_scores[item['item_id']] = item['error'] or '0'
 
     conn.close()
 
-    # Create the inspection object with all the data your PDF needs
-    inspection = {
+    # Extract and calculate the scores (same as detail page)
+    critical_score = int(inspection_dict.get('critical_score', 0))
+    overall_score = int(inspection_dict.get('overall_score', 0))
+
+    # Determine result based on scores
+    result = 'Pass' if critical_score >= 70 and overall_score >= 70 else 'Fail'
+
+    # Create inspection object that the template expects
+    inspection_obj = {
         'id': form_id,
         'establishment_name': inspection_dict.get('establishment_name', ''),
         'inspector_name': inspection_dict.get('inspector_name', ''),
         'address': inspection_dict.get('address', ''),
         'physical_location': inspection_dict.get('physical_location', ''),
         'inspection_date': inspection_dict.get('inspection_date', ''),
-        'critical_score': int(inspection_dict.get('critical_score', 0)),
-        'overall_score': int(inspection_dict.get('overall_score', 0)),
-        'result': inspection_dict.get('result', 'Unknown'),
+        'critical_score': critical_score,
+        'overall_score': overall_score,
+        'result': result,
         'comments': inspection_dict.get('comments', ''),
         'inspector_signature': inspection_dict.get('inspector_signature', ''),
         'inspector_signature_date': inspection_dict.get('inspector_signature_date', ''),
@@ -4757,482 +4471,25 @@ def download_small_hotels_pdf(form_id):
         'obser': obser_scores,
         'error': error_scores
     }
-    if not inspection:
-        return jsonify({'error': 'Inspection not found'}), 404
 
-    buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
-    width, height = letter
-
-    def draw_table_header(p, table_x, y, table_width, item_width, details_width, obser_width, error_width,
-                          header_height):
-        """Helper function to draw table header"""
-        p.setLineWidth(1)
-        p.setFillColor(colors.Color(0.94, 0.94, 0.94))
-        p.rect(table_x, y - header_height, table_width, header_height, fill=1)
-        p.setFillColor(colors.black)
-        p.rect(table_x, y - header_height, table_width, header_height)
-
-        p.setFont("Helvetica-Bold", 11)
-        p.drawCentredString(table_x + item_width / 2, y - 16, "Item")
-        p.drawCentredString(table_x + item_width + details_width / 2, y - 16, "Details")
-        p.drawCentredString(table_x + item_width + details_width + obser_width / 2, y - 16, "Obser")
-        p.drawCentredString(table_x + item_width + details_width + obser_width + error_width / 2, y - 16, "Error")
-
-        # Column separators
-        p.line(table_x + item_width, y, table_x + item_width, y - header_height)
-        p.line(table_x + item_width + details_width, y, table_x + item_width + details_width, y - header_height)
-        p.line(table_x + item_width + details_width + obser_width, y,
-               table_x + item_width + details_width + obser_width, y - header_height)
-
-        return y - header_height
-
-    # Start from top of page
-    y = height - 40
-
-    # Page number (top right)
-    p.setFont("Helvetica", 12)
-    p.drawString(width - 100, y, "Page 1 of 5")
-
-    y -= 30
-
-    # Header box
-    header_height = 80
-    header_width = width - 100
-    header_x = 50
-
-    p.setLineWidth(2)
-    p.rect(header_x, y - header_height, header_width, header_height)
-
-    # Form number (red)
-    p.setFont("Helvetica-Bold", 14)
-    p.setFillColor(colors.red)
-    p.drawString(width - 140, y - 20, "NO. 58402")
-    p.setFillColor(colors.black)
-
-    # Centered title
-    p.setFont("Helvetica-Bold", 18)
-    title_y = y - 35
-    p.drawCentredString(width / 2, title_y, "MINISTRY OF HEALTH")
-    p.drawCentredString(width / 2, title_y - 20, "Small Hotels Inspection Form - Jamaica")
-
-    y -= header_height + 30
-
-    # Info section
-    info_height = 25
-    col_width = (width - 100) / 3
-    gap = 5
-
-    # Row 1
-    row_y = y
-    p.setLineWidth(1)
-    p.rect(50, row_y - info_height, col_width - gap, info_height)
-    p.setFont("Helvetica-Bold", 10)
-    p.drawString(55, row_y - 8, "Hotel Name")
-    p.setFont("Helvetica", 11)
-    hotel_name = str(inspection.get('establishment_name', ''))[:20]
-    p.drawString(55, row_y - 20, hotel_name)
-
-    date_x = 50 + col_width
-    p.rect(date_x, row_y - info_height, col_width - gap, info_height)
-    p.setFont("Helvetica-Bold", 10)
-    p.drawString(date_x + 5, row_y - 8, "Date")
-    p.setFont("Helvetica", 11)
-    p.drawString(date_x + 5, row_y - 20, str(inspection.get('inspection_date', '')))
-
-    inspector_x = 50 + (2 * col_width)
-    p.rect(inspector_x, row_y - info_height, col_width - gap, info_height)
-    p.setFont("Helvetica-Bold", 10)
-    p.drawString(inspector_x + 5, row_y - 8, "Inspector's ID")
-    p.setFont("Helvetica", 11)
-    p.drawString(inspector_x + 5, row_y - 20, str(inspection.get('inspector_name', '')))
-
-    # Row 2
-    row_y -= info_height + 10
-    address_width = (2 * col_width) - gap
-    p.rect(50, row_y - info_height, address_width, info_height)
-    p.setFont("Helvetica-Bold", 10)
-    p.drawString(55, row_y - 8, "Address")
-    p.setFont("Helvetica", 11)
-    address = str(inspection.get('address', ''))[:35]
-    p.drawString(55, row_y - 20, address)
-
-    phys_x = 50 + address_width + gap
-    phys_width = col_width - gap
-    p.rect(phys_x, row_y - info_height, phys_width, info_height)
-    p.setFont("Helvetica-Bold", 10)
-    p.drawString(phys_x + 5, row_y - 8, "Physical Location")
-    p.setFont("Helvetica", 11)
-    phys_loc = str(inspection.get('physical_location', ''))[:12]
-    p.drawString(phys_x + 5, row_y - 20, phys_loc)
-
-    y = row_y - info_height - 40
-
-    # Table setup
-    table_x = 50
-    table_width = width - 100
-    item_width = int(table_width * 0.08)
-    details_width = int(table_width * 0.62)
-    obser_width = int(table_width * 0.15)
-    error_width = int(table_width * 0.15)
-    row_height = 18
-    header_height = 25
-
-    # Draw initial table header
-    y = draw_table_header(p, table_x, y, table_width, item_width, details_width, obser_width, error_width,
-                          header_height)
-
-    # All sections with complete data
-    sections_data = [
-        ("1 - DOCUMENTATION (8%)", [
-            ("A", "Action plan for foodborne illness occurrence", "1a", False),
-            ("B", "Food Handlers have valid food handlers permits", "1b", True),
-            ("C", "Relevant policy in place to restrict activities of sick employees", "1c", False),
-            ("D", "Establishments have a written policy for the proper disposal of waste", "1d", False),
-            ("E", "Cleaning schedule for equipment utensil etc available", "1e", False),
-            ("F", "Material safety data sheet available for record of hazardous chemicals used", "1f", False),
-            ("G", "Record of hazardous chemicals used", "1g", False),
-            ("H", "Food suppliers list available", "1h", False),
-        ]),
-        ("2 - FOOD HANDLERS (5%)", [
-            ("A", "Clean appropriate protective garments", "2a", True),
-            ("B", "Hands free of jewellery", "2b", False),
-            ("C", "Suitable hair restraints", "2c", False),
-            ("D", "Nails clean, short and unpolished", "2d", False),
-            ("E", "Hands washed as required", "2e", True),
-        ]),
-        ("3 - FOOD STORAGE (13%)", [
-            ("A", "Approved source", "3a", True),
-            ("B", "Correct stocking procedures practiced", "3b", False),
-            ("C", "Food stored on pallets or shelves off the floor", "3c", False),
-            ("D", "No cats, rodents or other animals present in the store", "3d", True),
-            ("E", "Products free of infestation", "3e", False),
-            ("F", "No pesticides or other hazardous chemicals in food stores", "3f", True),
-            ("G", "Satisfactory condition of refrigeration units", "3g", False),
-            ("H", "Refrigerated foods < 4°C", "3h", True),
-            ("I", "Frozen foods -18°C", "3i", True),
-        ]),
-        ("4 - FOOD HOLDING AND PREPARATION PRACTICES (8%)", [
-            ("A", "Foods thawed according to recommended procedures", "4a", True),
-            ("B", "No evidence of cross-contamination during preparation", "4b", True),
-            ("C", "No evidence of cross-contamination during holding in refrigerators/coolers", "4c", True),
-            ("D", "Foods cooled according to recommended procedures", "4d", True),
-            ("E", "Manual dishwashing wash, rinse, sanitize, rinse technique", "4e", True),
-            ("F", "Food contact surfaces washed-rinsed-sanitized before & after each use", "4f", False),
-            ("G", "Wiping cloths handled properly (sanitizing solution used)", "4g", False),
-        ]),
-        ("5 - POST PREPARATION (10%)", [
-            ("A", "Food protected during transportation", "5a", True),
-            ("B", "Dishes identified and labelled", "5b", True),
-            ("C", "Food covered or protected from contamination", "5c", True),
-            ("D", "Sufficient, appropriate utensils on service line", "5d", False),
-            ("E", "Hot holding temperatures > 63°C", "5e", False),
-            ("F", "Cold holding temperatures ≤ 5°C", "5f", False),
-        ]),
-        ("6 - HAND WASHING FACILITIES (3%)", [
-            ("A",
-             "Hand washing facility installed and maintained for every 40 square meters of floor space or in each principal food area",
-             "6a", True),
-            ("B", "Equipped with hot and cold water, soap dispenser and hand drying facility", "6b", True),
-        ]),
-        ("7 - BUILDING (8.5%)", [
-            ("A", "Provides adequate space", "7a", False),
-            ("B", "Food areas kept clean, free from vermin and unpleasant odours", "7b", False),
-            ("C", "Floor, walls and ceiling clean, in good repair", "7c", False),
-            ("D", "Mechanical ventilation operable where required", "7d", False),
-            ("E", "Lighting adequate for food preparation and cleaning", "7e", False),
-            ("F", "General housekeeping satisfactory", "7f", False),
-            ("G", "Animals, insect and pest excluded", "7g", False),
-        ]),
-        ("8 - FOOD CONTACT SURFACES (3%)", [
-            ("A", "Made from material which is non-absorbent and non-toxic", "8a", False),
-            ("B", "Smooth, cleanable, corrosion resistant", "8b", True),
-            ("C", "Proper storage and use of clean utensils", "8c", True),
-        ]),
-        ("9 - FOOD FLOW (5.5%)", [
-            ("A", "Employee traffic pattern avoids food cross-contamination", "9a", True),
-            ("B", "Product flow not at risk for cross-contamination", "9b", True),
-            (
-            "C", "Living quarters, toilets, washrooms, locker separated from areas where food is handled", "9c", False),
-        ]),
-        ("10 - EQUIPMENT AND UTENSILS SANITIZATION (9.5%)", [
-            ("A", "Mechanical dishwashing: Wash-rinse water clean", "10a", False),
-            ("B", "Proper water temperature", "10b", False),
-            ("C", "Proper timing of cycles", "10c", False),
-            ("D", "Sanitizer for low temperature", "10d", False),
-            ("E", "Proper handling of hazardous materials", "10e", False),
-        ]),
-        ("11 - WASTE MANAGEMENT: WASTE CONTAINERS (3%)", [
-            ("A", "Appropriate design, convenient placement", "11a", True),
-            ("B", "Kept covered when not in continuous use", "11b", False),
-            ("C", "Emptied as often as necessary", "11c", True),
-        ]),
-        ("12 - SOLID WASTE STORAGE AREA (4%)", [
-            ("A", "Insect and vermin-proof containers provided where required", "12a", True),
-            ("B", "The area around each waste container kept clean", "12b", False),
-            ("C", "Effluent from waste bins disposed of in a sanitary manner", "12c", False),
-            ("D", "Frequency of garbage removal adequate", "12d", False),
-        ]),
-        ("13 - DISPOSAL OF SOLID WASTE", [
-            ("A", "Garbage, refuse properly disposed of, facilities maintained", "13a", True),
-            ("B", "Stored away from living quarters and food areas", "13b", False),
-        ]),
-        ("14 - HAZARDOUS MATERIALS STORAGE, HANDLING AND DISPOSAL (4%)", [
-            ("A", "Hazardous materials stored in properly labelled containers", "14a", False),
-            ("B", "Stored away from living quarters and food areas", "14b", True),
-        ]),
-        ("15 - SANITARY FACILITIES (4%)", [
-            ("A", "Approved Sewage Disposal System", "15a", True),
-            ("B",
-             "Sanitary maintenance of facilities and protection against the entrance of vermin, rodents, dust, and fumes",
-             "15b", True),
-        ]),
-        ("16 - PEST CONTROL (2%)", [
-            ("A", "Adequate provision against the entrance of insects, vermin, rodents, dust and fumes", "16a", False),
-        ]),
-        ("17 - WATER SUPPLY (3%)", [
-            ("A", "Approved source(s) sufficient pressure and capacity", "17a", False),
-            ("B", "Water quality satisfactory", "17b", False),
-        ]),
-        ("18 - ICE (1.5%)", [
-            ("A", "Satisfactory ice storage conditions", "18a", False),
-        ]),
-        ("19 - GREY WATER FACILITIES (1%)", [
-            ("A", "Traps and vent in good condition", "19a", True),
-            ("B", "Floor drains clear and drain freely", "19b", True),
-        ]),
-        ("20 - MANHOLES (0.5%)", [
-            ("A", "Properly constructed with vents and traps where necessary", "20a", False),
-        ]),
-    ]
-
-    page_num = 1
-
-    for section_name, items in sections_data:
-        # Check for new page
-        if y < 100:
-            p.showPage()
-            page_num += 1
-            y = height - 50
-
-            # Update page number
-            p.setFont("Helvetica", 12)
-            p.drawString(width - 100, y, f"Page {page_num} of 5")
-            y -= 30
-
-            # Redraw table header
-            y = draw_table_header(p, table_x, y, table_width, item_width, details_width, obser_width, error_width,
-                                  header_height)
-
-        # Section header
-        p.setFillColor(colors.white)
-        p.rect(table_x, y - row_height, table_width, row_height, fill=1)
-        p.setFillColor(colors.black)
-        p.rect(table_x, y - row_height, table_width, row_height)
-
-        p.setFont("Helvetica-Bold", 10)
-        p.drawString(table_x + 10, y - 12, section_name)
-        y -= row_height
-
-        # Section items
-        for item_letter, description, item_id, is_critical in items:
-            if y < 30:
-                p.showPage()
-                page_num += 1
-                y = height - 50
-
-                p.setFont("Helvetica", 12)
-                p.drawString(width - 100, y, f"Page {page_num} of 5")
-                y -= 30
-
-                y = draw_table_header(p, table_x, y, table_width, item_width, details_width, obser_width, error_width,
-                                      header_height)
-
-            # Critical item background
-            if is_critical:
-                p.setFillColor(colors.Color(0.9, 0.9, 0.9))
-                p.rect(table_x, y - row_height, table_width, row_height, fill=1)
-
-            p.setFillColor(colors.black)
-            p.rect(table_x, y - row_height, table_width, row_height)
-
-            # Column separators
-            p.line(table_x + item_width, y, table_x + item_width, y - row_height)
-            p.line(table_x + item_width + details_width, y, table_x + item_width + details_width, y - row_height)
-            p.line(table_x + item_width + details_width + obser_width, y,
-                   table_x + item_width + details_width + obser_width, y - row_height)
-
-            # Content
-            p.setFont("Helvetica", 9)
-            p.drawCentredString(table_x + item_width / 2, y - 12, item_letter)
-
-            desc = description[:45] + "..." if len(description) > 45 else description
-            p.drawString(table_x + item_width + 5, y - 12, desc)
-
-            # Get actual data
-            obser_value = str(inspection.get('obser', {}).get(item_id, '0'))
-            error_value = str(inspection.get('error', {}).get(item_id, '0'))
-
-            p.drawCentredString(table_x + item_width + details_width + obser_width / 2, y - 12, obser_value)
-            p.drawCentredString(table_x + item_width + details_width + obser_width + error_width / 2, y - 12,
-                                error_value)
-
-            y -= row_height
-
-        y -= 8  # Space between sections
-
-    # Final page for scores and signatures
-    p.showPage()
-    y = height - 100
-
-    # Page number
-    p.setFont("Helvetica", 12)
-    p.drawString(width - 100, y, "Page 5 of 5")
-    y -= 50
-
-    # Scores section
-    box_width = 180
-    box_height = 60
-    gap_between_boxes = 40
-    total_width = (2 * box_width) + gap_between_boxes
-    start_x = (width - total_width) / 2
-
-    # Critical Score
-    p.setLineWidth(2)
-    p.rect(start_x, y - box_height, box_width, box_height)
-    p.setFillColor(colors.Color(0.97, 0.97, 0.97))
-    p.rect(start_x, y - box_height, box_width, box_height, fill=1)
-    p.setFillColor(colors.black)
-
-    p.setFont("Helvetica-Bold", 14)
-    p.drawCentredString(start_x + box_width / 2, y - 20, "Critical Score:")
-    p.setFont("Helvetica-Bold", 20)
-    critical_score = f"{inspection.get('critical_score', 0)}%"
-    p.drawCentredString(start_x + box_width / 2, y - 45, critical_score)
-
-    # Overall Score
-    overall_x = start_x + box_width + gap_between_boxes
-    p.rect(overall_x, y - box_height, box_width, box_height)
-    p.setFillColor(colors.Color(0.97, 0.97, 0.97))
-    p.rect(overall_x, y - box_height, box_width, box_height, fill=1)
-    p.setFillColor(colors.black)
-
-    p.setFont("Helvetica-Bold", 14)
-    p.drawCentredString(overall_x + box_width / 2, y - 20, "Overall Score:")
-    p.setFont("Helvetica-Bold", 20)
-    overall_score = f"{inspection.get('overall_score', 0)}%"
-    p.drawCentredString(overall_x + box_width / 2, y - 45, overall_score)
-
-    y -= box_height + 40
-
-    # Result
-    result = inspection.get('result', 'Unknown')
-    result_width = 150
-    result_height = 50
-    result_x = (width - result_width) / 2
-
-    result_color = colors.green if result == 'Pass' else colors.red
-
-    p.setStrokeColor(result_color)
-    p.setLineWidth(2)
-    p.rect(result_x, y - result_height, result_width, result_height)
-
-    p.setFont("Helvetica-Bold", 16)
-    p.setFillColor(result_color)
-    p.drawCentredString(result_x + result_width / 2, y - 20, "RESULT:")
-    p.drawCentredString(result_x + result_width / 2, y - 40, result)
-    p.setFillColor(colors.black)
-
-    y -= result_height + 40
-
-    # Comments
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y, "Inspector's Comments:")
-    y -= 20
-
-    comments_height = 60
-    p.setLineWidth(1)
-    p.rect(50, y - comments_height, width - 100, comments_height)
-
-    comments = inspection.get('comments', 'No comments provided.')
-    if comments:
-        p.setFont("Helvetica", 10)
-        # Simple word wrap
-        words = comments.split()
-        lines = []
-        current_line = ""
-        for word in words:
-            if len(current_line + " " + word) <= 70:
-                current_line += " " + word if current_line else word
-            else:
-                lines.append(current_line)
-                current_line = word
-        if current_line:
-            lines.append(current_line)
-
-        comment_y = y - 15
-        for line in lines[:3]:  # Max 3 lines
-            p.drawString(55, comment_y, line)
-            comment_y -= 15
-
-    y -= comments_height + 30
-
-    # Signatures
-    sig_width = (width - 100) / 3
-    sig_height = 60
-
-    p.setLineWidth(1)
-    p.rect(50, y - sig_height, width - 100, sig_height)
-    p.line(50 + sig_width, y, 50 + sig_width, y - sig_height)
-    p.line(50 + 2 * sig_width, y, 50 + 2 * sig_width, y - sig_height)
-    p.line(50, y - 30, width - 50, y - 30)
-
-    # Headers
-    p.setFont("Helvetica-Bold", 10)
-    p.drawCentredString(50 + sig_width / 2, y - 15, "Inspector Signature")
-    p.drawCentredString(50 + 1.5 * sig_width, y - 15, "Manager Signature")
-    p.drawCentredString(50 + 2.5 * sig_width, y - 15, "Received By")
-
-    # Signature values
-    p.setFont("Helvetica", 9)
-    inspector_sig = inspection.get('inspector_signature', '')
-    if not draw_signature_image(p, inspector_sig, 50 + sig_width / 2 - 40, y - 35, 80, 25):
-        if inspector_sig and not str(inspector_sig).startswith('data:image'):
-            p.drawCentredString(50 + sig_width / 2, y - 25, str(inspector_sig)[:15])
-        elif inspector_sig:
-            p.drawCentredString(50 + sig_width / 2, y - 25, "[Signed]")
-
-    manager_sig = inspection.get('manager_signature', '')
-    if not draw_signature_image(p, manager_sig, 50 + 1.5 * sig_width - 40, y - 35, 80, 25):
-        if manager_sig and not str(manager_sig).startswith('data:image'):
-            p.drawCentredString(50 + 1.5 * sig_width, y - 25, str(manager_sig)[:15])
-        elif manager_sig:
-            p.drawCentredString(50 + 1.5 * sig_width, y - 25, "[Signed]")
-
-    received_sig = inspection.get('received_by', '')
-    if not draw_signature_image(p, received_sig, 50 + 2.5 * sig_width - 40, y - 35, 80, 25):
-        if received_sig and not str(received_sig).startswith('data:image'):
-            p.drawCentredString(50 + 2.5 * sig_width, y - 25, str(received_sig)[:15])
-        elif received_sig:
-            p.drawCentredString(50 + 2.5 * sig_width, y - 25, "[Signed]")
-
-    # Date labels and values
-    p.setFont("Helvetica-Bold", 8)
-    p.drawCentredString(50 + sig_width / 2, y - 40, "Date")
-    p.drawCentredString(50 + 1.5 * sig_width, y - 40, "Date")
-    p.drawCentredString(50 + 2.5 * sig_width, y - 40, "Date")
-
-    p.setFont("Helvetica", 8)
-    p.drawCentredString(50 + sig_width / 2, y - 52, str(inspection.get('inspector_signature_date', '')))
-    p.drawCentredString(50 + 1.5 * sig_width, y - 52, str(inspection.get('manager_signature_date', '')))
-    p.drawCentredString(50 + 2.5 * sig_width, y - 52, str(inspection.get('received_by_date', '')))
-
-    p.save()
-    buffer.seek(0)
-    pdf_data = buffer.getvalue()
-    buffer.close()
-
-    response = make_response(pdf_data)
+    # Parse photos from JSON string to Python list
+    import json
+    photos = []
+    if inspection_dict.get('photo_data'):
+        try:
+            photos = json.loads(inspection_dict.get('photo_data', '[]'))
+        except:
+            photos = []
+
+    # Render the same HTML template as the detail page
+    html_string = render_template('small_hotels_inspection_detail.html',
+                                   inspection=inspection_obj,
+                                   photo_data=photos)
+
+    # Convert HTML to PDF
+    pdf = HTML(string=html_string, base_url=request.host_url).write_pdf()
+
+    response = make_response(pdf)
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = f'attachment; filename=small_hotels_inspection_{form_id}.pdf'
     return response
@@ -5668,277 +4925,75 @@ def download_spirit_licence_pdf(form_id):
     if 'inspector' not in session and 'admin' not in session:
         return redirect(url_for('login'))
 
-    # Get inspection details
-    inspection = get_spirit_licence_inspection_details(form_id)
+    # Get inspection data using the same logic as the detail page
+    conn = get_db_connection()
+    c = get_dict_cursor(conn)
+
+    c.execute("""SELECT * FROM inspections
+                 WHERE id = %s AND form_type = 'Spirit Licence Premises'""", (form_id,))
+    inspection = c.fetchone()
+    conn.close()
+
     if not inspection:
         return jsonify({'error': 'Inspection not found'}), 404
 
-    buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
-    width, height = letter
+    # Parse scores safely (same as detail page)
+    scores_str = inspection['scores'] if inspection['scores'] else ''
+    if scores_str:
+        try:
+            scores = [int(float(x)) for x in scores_str.split(',')]
+            while len(scores) < 25:
+                scores.append(0)
+        except ValueError:
+            scores = [0] * 25
+    else:
+        scores = [0] * 25
 
-    def draw_table_header(p, table_x, y, table_width, col_widths, header_height):
-        """Helper function to draw table header"""
-        p.setLineWidth(1)
-        p.setFillColor(colors.Color(0.96, 0.96, 0.96))
-        p.rect(table_x, y - header_height, table_width, header_height, fill=1)
-        p.setFillColor(colors.black)
-        p.rect(table_x, y - header_height, table_width, header_height)
+    # Helper function to safely get values from Row object
+    def safe_get(row, key, default=''):
+        try:
+            value = row[key]
+            return value if value is not None else default
+        except (KeyError, IndexError):
+            return default
 
-        p.setFont("Helvetica-Bold", 11)
-        p.drawCentredString(table_x + col_widths[0] / 2, y - 16, "Item")
-        p.drawCentredString(table_x + col_widths[0] + col_widths[1] / 2, y - 16, "Wt.")
-        p.drawCentredString(table_x + col_widths[0] + col_widths[1] + col_widths[2] / 2, y - 16, "Score")
-        p.drawCentredString(table_x + col_widths[0] + col_widths[1] + col_widths[2] + col_widths[3] / 2, y - 16,
-                            "Inspector's Comments")
+    inspection_data = {
+        'id': inspection['id'],
+        'establishment_name': safe_get(inspection, 'establishment_name'),
+        'owner': safe_get(inspection, 'owner'),
+        'address': safe_get(inspection, 'address'),
+        'license_no': safe_get(inspection, 'license_no'),
+        'inspector_name': safe_get(inspection, 'inspector_name'),
+        'inspection_date': safe_get(inspection, 'inspection_date'),
+        'inspection_time': safe_get(inspection, 'inspection_time'),
+        'type_of_establishment': safe_get(inspection, 'type_of_establishment'),
+        'purpose_of_visit': safe_get(inspection, 'purpose_of_visit'),
+        'action': safe_get(inspection, 'action'),
+        'result': safe_get(inspection, 'result'),
+        'scores': {str(i): scores[i-1] for i in range(1, 26)},
+        'comments': safe_get(inspection, 'comments'),
+        'inspector_signature': safe_get(inspection, 'inspector_signature'),
+        'received_by': safe_get(inspection, 'received_by'),
+        'overall_score': safe_get(inspection, 'overall_score', 0),
+        'critical_score': safe_get(inspection, 'critical_score', 0),
+        'form_type': safe_get(inspection, 'form_type'),
+        'no_of_employees': safe_get(inspection, 'no_of_employees'),
+        'no_with_fhc': safe_get(inspection, 'no_with_fhc', 0),
+        'no_wo_fhc': safe_get(inspection, 'no_wo_fhc', 0),
+        'status': safe_get(inspection, 'status'),
+        'created_at': safe_get(inspection, 'created_at'),
+        'photo_data': safe_get(inspection, 'photo_data', '[]')
+    }
 
-        # Column separators
-        x_pos = table_x
-        for width_col in col_widths[:-1]:
-            x_pos += width_col
-            p.line(x_pos, y, x_pos, y - header_height)
+    # Render the same HTML template as the detail page
+    html_string = render_template('spirit_licence_inspection_detail.html',
+                                 checklist=[], inspection=inspection_data,
+                                 photo_data=[])
 
-        return y - header_height
+    # Convert HTML to PDF
+    pdf = HTML(string=html_string, base_url=request.host_url).write_pdf()
 
-    # Start from top
-    y = height - 40
-
-    # Title
-    p.setFont("Helvetica-Bold", 22)
-    p.drawCentredString(width / 2, y, "Spirit Licence Premises Inspection Details")
-    y -= 40
-
-    # Two-column layout for establishment details
-    left_col_x = 50
-    right_col_x = 300
-    col_width = 250
-    row_height = 25
-
-    # Left column details
-    details_left = [
-        ("Name of Establishment:", inspection.get('establishment_name', '')),
-        ("Owner/Operator:", inspection.get('owner_operator', '')),
-        ("Address of Establishment:", inspection.get('address', '')),
-        ("Purpose of Visit:", inspection.get('purpose_of_visit', '')),
-    ]
-
-    # Right column details
-    details_right = [
-        ("Type of Establishment:", inspection.get('type_of_establishment', '')),
-        ("Inspector Name:", inspection.get('inspector_name', '')),
-        ("Inspection Date:", inspection.get('inspection_date', '')),
-        ("Critical Score:", inspection.get('critical_score', '0')),
-        ("Overall Score:", inspection.get('overall_score', '0')),
-        ("Status:", inspection.get('status', '')),
-        ("No. of Employees:", inspection.get('no_of_employees', '')),
-        ("No. with FHC:", inspection.get('no_with_fhc', '')),
-        ("No. W/O FHC:", inspection.get('no_wo_fhc', '')),
-    ]
-
-    # Draw left column
-    current_y = y
-    for label, value in details_left:
-        p.setFont("Helvetica-Bold", 10)
-        p.drawString(left_col_x, current_y, label)
-        p.setFont("Helvetica", 10)
-        p.rect(left_col_x, current_y - 20, col_width, 18)
-        p.drawString(left_col_x + 5, current_y - 15, str(value)[:30])
-        current_y -= row_height
-
-    # Draw right column
-    current_y = y
-    for label, value in details_right:
-        p.setFont("Helvetica-Bold", 10)
-        p.drawString(right_col_x, current_y, label)
-        p.setFont("Helvetica", 10)
-        p.rect(right_col_x, current_y - 20, col_width, 18)
-
-        # Special formatting for status and scores
-        if label == "Status:":
-            status_color = colors.green if str(value) == 'Satisfactory' else colors.red
-            p.setFillColor(status_color)
-            p.drawString(right_col_x + 5, current_y - 15, str(value))
-            p.setFillColor(colors.black)
-        else:
-            p.drawString(right_col_x + 5, current_y - 15, str(value)[:30])
-        current_y -= row_height
-
-    # Move to checklist section
-    y = current_y - 40
-
-    # Inspection Checklist title
-    p.setFont("Helvetica-Bold", 16)
-    p.drawString(50, y, "Inspection Checklist")
-    y -= 30
-
-    # Table setup
-    table_x = 50
-    table_width = width - 100
-    col_widths = [250, 40, 60, 160]  # Item, Wt, Score, Comments
-    header_height = 25
-    row_height = 18
-
-    # Draw initial table header
-    y = draw_table_header(p, table_x, y, table_width, col_widths, header_height)
-
-    # Get scores and comments
-    scores = inspection.get('scores', {})
-    parsed_comments = inspection.get('parsed_comments', {})
-
-    # Organize checklist items by categories matching the HTML form structure
-    # Based on the HTML form: Building=1,2; Walls=3; Floors=4,5; Service Counter=6,7; Lighting=8;
-    # Washing and Sanitization=9,10,11; Water Supply=12,13; Storage=14,15,16;
-    # Sanitary=17,18,19,20,21; Solid Waste=22,23,24; Pest Control=25
-    categories = [
-        ("Building", [1, 2]),
-        ("Walls", [3]),
-        ("Floors", [4, 5]),
-        ("Service Counter", [6, 7]),
-        ("Lighting", [8]),
-        ("Washing and Sanitization Facilities", [9, 10, 11]),
-        ("Water Supply", [12, 13]),
-        ("Storage Facilities", [14, 15, 16]),
-        ("Sanitary Facilities", [17, 18, 19, 20, 21]),
-        ("Solid Waste Management", [22, 23, 24]),
-        ("Pest Control", [25]),
-    ]
-
-    # Create a lookup for checklist items
-    checklist_lookup = {item['id']: item for item in SPIRIT_LICENCE_CHECKLIST_ITEMS}
-
-    page_num = 1
-
-    for category_name, items in categories:
-        # Check for new page
-        if y < 100:
-            p.showPage()
-            page_num += 1
-            y = height - 50
-
-            # Redraw table header
-            y = draw_table_header(p, table_x, y, table_width, col_widths, header_height)
-
-        # Category header (matching your HTML header-row class)
-        p.setFillColor(colors.Color(0.94, 0.94, 0.94))
-        p.rect(table_x, y - row_height, table_width, row_height, fill=1)
-        p.setFillColor(colors.black)
-        p.rect(table_x, y - row_height, table_width, row_height)
-
-        p.setFont("Helvetica-Bold", 10)
-        p.drawString(table_x + 10, y - 12, category_name)
-        y -= row_height
-
-        # Category items
-        for item_id in items:
-            if y < 30:
-                p.showPage()
-                page_num += 1
-                y = height - 50
-
-                # Redraw header
-                y = draw_table_header(p, table_x, y, table_width, col_widths, header_height)
-
-            # Get item data from checklist
-            item_data = checklist_lookup.get(item_id)
-            if not item_data:
-                continue
-
-            description = item_data['description']
-            weight = item_data['wt']
-            is_critical = weight >= 5  # Critical items have weight 5 or higher
-
-            # Critical item background (matching your HTML .critical class)
-            if is_critical:
-                p.setFillColor(colors.Color(0.9, 0.9, 0.9))
-                p.rect(table_x, y - row_height, table_width, row_height, fill=1)
-
-            p.setFillColor(colors.black)
-            p.rect(table_x, y - row_height, table_width, row_height)
-
-            # Column separators
-            x_pos = table_x
-            for width_col in col_widths[:-1]:
-                x_pos += width_col
-                p.line(x_pos, y, x_pos, y - row_height)
-
-            # Content
-            p.setFont("Helvetica", 9)
-
-            # Item description
-            desc = description[:35] + "..." if len(description) > 35 else description
-            p.drawString(table_x + 5, y - 12, desc)
-
-            # Weight
-            p.drawCentredString(table_x + col_widths[0] + col_widths[1] / 2, y - 12, str(weight))
-
-            # Score (bold)
-            score = scores.get(str(item_id), '0')
-            p.setFont("Helvetica-Bold", 10)
-            p.drawCentredString(table_x + col_widths[0] + col_widths[1] + col_widths[2] / 2, y - 12, str(score))
-
-            # Comment
-            p.setFont("Helvetica", 8)
-            comment = parsed_comments.get(str(item_id), '')
-            comment_text = comment[:25] + "..." if len(comment) > 25 else comment
-            p.drawString(table_x + col_widths[0] + col_widths[1] + col_widths[2] + 5, y - 12, comment_text)
-
-            y -= row_height
-
-        y -= 5  # Space between categories
-
-    # Signatures section
-    if y < 80:
-        p.showPage()
-        y = height - 100
-
-    y -= 20
-
-    # Signature table
-    sig_table_height = 60
-    p.setLineWidth(1)
-    p.rect(table_x, y - sig_table_height, table_width, sig_table_height)
-
-    # Horizontal line to separate rows
-    p.line(table_x, y - sig_table_height / 2, table_x + table_width, y - sig_table_height / 2)
-
-    # Vertical line to separate columns
-    p.line(table_x + table_width / 2, y, table_x + table_width / 2, y - sig_table_height)
-
-    # Inspector's Signature
-    p.setFont("Helvetica-Bold", 10)
-    p.drawString(table_x + 10, y - 15, "Inspector's Signature:")
-    p.setFont("Helvetica", 10)
-    inspector_sig = inspection.get('inspector_signature', '')
-    if not draw_signature_image(p, inspector_sig, table_x + table_width / 2 + 10, y - 20, 100, 25):
-        if inspector_sig and not str(inspector_sig).startswith('data:image'):
-            p.drawString(table_x + table_width / 2 + 10, y - 15, str(inspector_sig)[:20])
-        elif inspector_sig:
-            p.drawString(table_x + table_width / 2 + 10, y - 15, "[Signed]")
-
-    # Rec'd By
-    p.setFont("Helvetica-Bold", 10)
-    p.drawString(table_x + 10, y - 45, "Rec'd By:")
-    p.setFont("Helvetica", 10)
-    received_by = inspection.get('received_by', '')
-    if not draw_signature_image(p, received_by, table_x + table_width / 2 + 10, y - 50, 100, 25):
-        if received_by and not str(received_by).startswith('data:image'):
-            p.drawString(table_x + table_width / 2 + 10, y - 45, str(received_by)[:20])
-        elif received_by:
-            p.drawString(table_x + table_width / 2 + 10, y - 45, "[Signed]")
-
-    y -= sig_table_height + 20
-
-    # Footer
-    p.setFont("Helvetica", 8)
-    p.drawCentredString(width / 2, y, "Spirit Licence Premises Inspection Form")
-    p.drawCentredString(width / 2, y - 12, f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-
-    p.save()
-    buffer.seek(0)
-    pdf_data = buffer.getvalue()
-    buffer.close()
-
-    response = make_response(pdf_data)
+    response = make_response(pdf)
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = f'attachment; filename=spirit_licence_inspection_{form_id}.pdf'
     return response

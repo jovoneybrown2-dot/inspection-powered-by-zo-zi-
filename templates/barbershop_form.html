@@ -121,10 +121,35 @@
 
         .score-dropdown {
             width: 100%;
-            border: none;
-            background: transparent;
+            border: 2px solid #333;
+            background: white;
             text-align: center;
-            font-size: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 5px;
+            cursor: pointer;
+            color: #000;
+            -webkit-appearance: menulist;
+            -moz-appearance: menulist;
+            appearance: menulist;
+        }
+
+        .score-dropdown:hover {
+            border-color: #4CAF50;
+            background-color: #f0f0f0;
+        }
+
+        .score-dropdown:focus {
+            outline: 2px solid #4CAF50;
+            border-color: #4CAF50;
+        }
+
+        .score-dropdown option {
+            font-size: 16px;
+            font-weight: bold;
+            color: #000;
+            background: white;
+            padding: 5px;
         }
 
         /* Header styling */
