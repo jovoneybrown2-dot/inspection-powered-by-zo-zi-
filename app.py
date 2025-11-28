@@ -3870,14 +3870,24 @@ def download_burial_pdf(form_id):
 
     # Inspector's Signature (left side)
     p.drawString(label_x, y, "Inspector's Signature:")
-    p.setFont("Times-Roman", 14)
-    p.drawString(label_x + 150, y, str(inspection.get('inspector_signature', '')))
+    inspector_sig = inspection.get('inspector_signature', '')
+    if not draw_signature_image(p, inspector_sig, label_x + 150, y, 120, 40):
+        p.setFont("Times-Roman", 14)
+        if inspector_sig and not str(inspector_sig).startswith('data:image'):
+            p.drawString(label_x + 150, y, str(inspector_sig)[:30])
+        elif inspector_sig:
+            p.drawString(label_x + 150, y, "[Signature on file]")
 
     # Received by (right side)
     p.setFont("Times-Bold", 14)
     p.drawString(350, y, "Received by:")
-    p.setFont("Times-Roman", 14)
-    p.drawString(450, y, str(inspection.get('received_by', '')))
+    received_sig = inspection.get('received_by', '')
+    if not draw_signature_image(p, received_sig, 450, y, 120, 40):
+        p.setFont("Times-Roman", 14)
+        if received_sig and not str(received_sig).startswith('data:image'):
+            p.drawString(450, y, str(received_sig)[:30])
+        elif received_sig:
+            p.drawString(450, y, "[Signature on file]")
 
     y -= 30
 
@@ -4283,9 +4293,26 @@ def download_swimming_pool_pdf(form_id):
 
     # Values
     p.setFont("Helvetica", 9)
-    p.drawCentredString(50 + sig_width / 2, current_y - 45, str(inspection_dict.get('inspector_signature', '')))
-    p.drawCentredString(50 + 1.5 * sig_width, current_y - 45, str(inspection_dict.get('manager_signature', '')))
-    p.drawCentredString(50 + 2.5 * sig_width, current_y - 45, str(inspection_dict.get('received_by', '')))
+    inspector_sig = inspection_dict.get('inspector_signature', '')
+    if not draw_signature_image(p, inspector_sig, 50 + sig_width / 2 - 40, current_y - 55, 80, 30):
+        if inspector_sig and not str(inspector_sig).startswith('data:image'):
+            p.drawCentredString(50 + sig_width / 2, current_y - 45, str(inspector_sig)[:20])
+        elif inspector_sig:
+            p.drawCentredString(50 + sig_width / 2, current_y - 45, "[Signed]")
+
+    manager_sig = inspection_dict.get('manager_signature', '')
+    if not draw_signature_image(p, manager_sig, 50 + 1.5 * sig_width - 40, current_y - 55, 80, 30):
+        if manager_sig and not str(manager_sig).startswith('data:image'):
+            p.drawCentredString(50 + 1.5 * sig_width, current_y - 45, str(manager_sig)[:20])
+        elif manager_sig:
+            p.drawCentredString(50 + 1.5 * sig_width, current_y - 45, "[Signed]")
+
+    received_sig = inspection_dict.get('received_by', '')
+    if not draw_signature_image(p, received_sig, 50 + 2.5 * sig_width - 40, current_y - 55, 80, 30):
+        if received_sig and not str(received_sig).startswith('data:image'):
+            p.drawCentredString(50 + 2.5 * sig_width, current_y - 45, str(received_sig)[:20])
+        elif received_sig:
+            p.drawCentredString(50 + 2.5 * sig_width, current_y - 45, "[Signed]")
 
     p.save()
     buffer.seek(0)
@@ -4632,12 +4659,22 @@ def download_institutional_pdf(form_id):
     # Inspector signature (left)
     p.drawString(50, y, "Inspector's Signature:")
     p.line(160, y - 2, 280, y - 2)
-    p.drawString(165, y, str(form_data['inspector_signature'] or ''))
+    inspector_sig = form_data['inspector_signature'] or ''
+    if not draw_signature_image(p, inspector_sig, 165, y, 100, 30):
+        if inspector_sig and not str(inspector_sig).startswith('data:image'):
+            p.drawString(165, y, str(inspector_sig)[:20])
+        elif inspector_sig:
+            p.drawString(165, y, "[Signed]")
 
     # Received by (right)
     p.drawString(350, y, "Rec'd By:")
     p.line(410, y - 2, 530, y - 2)
-    p.drawString(415, y, str(form_data['received_by'] or ''))
+    received_sig = form_data['received_by'] or ''
+    if not draw_signature_image(p, received_sig, 415, y, 100, 30):
+        if received_sig and not str(received_sig).startswith('data:image'):
+            p.drawString(415, y, str(received_sig)[:20])
+        elif received_sig:
+            p.drawString(415, y, "[Signed]")
 
     # Footer note
     y -= 30
@@ -5147,9 +5184,26 @@ def download_small_hotels_pdf(form_id):
 
     # Signature values
     p.setFont("Helvetica", 9)
-    p.drawCentredString(50 + sig_width / 2, y - 25, str(inspection.get('inspector_signature', '')))
-    p.drawCentredString(50 + 1.5 * sig_width, y - 25, str(inspection.get('manager_signature', '')))
-    p.drawCentredString(50 + 2.5 * sig_width, y - 25, str(inspection.get('received_by', '')))
+    inspector_sig = inspection.get('inspector_signature', '')
+    if not draw_signature_image(p, inspector_sig, 50 + sig_width / 2 - 40, y - 35, 80, 25):
+        if inspector_sig and not str(inspector_sig).startswith('data:image'):
+            p.drawCentredString(50 + sig_width / 2, y - 25, str(inspector_sig)[:15])
+        elif inspector_sig:
+            p.drawCentredString(50 + sig_width / 2, y - 25, "[Signed]")
+
+    manager_sig = inspection.get('manager_signature', '')
+    if not draw_signature_image(p, manager_sig, 50 + 1.5 * sig_width - 40, y - 35, 80, 25):
+        if manager_sig and not str(manager_sig).startswith('data:image'):
+            p.drawCentredString(50 + 1.5 * sig_width, y - 25, str(manager_sig)[:15])
+        elif manager_sig:
+            p.drawCentredString(50 + 1.5 * sig_width, y - 25, "[Signed]")
+
+    received_sig = inspection.get('received_by', '')
+    if not draw_signature_image(p, received_sig, 50 + 2.5 * sig_width - 40, y - 35, 80, 25):
+        if received_sig and not str(received_sig).startswith('data:image'):
+            p.drawCentredString(50 + 2.5 * sig_width, y - 25, str(received_sig)[:15])
+        elif received_sig:
+            p.drawCentredString(50 + 2.5 * sig_width, y - 25, "[Signed]")
 
     # Date labels and values
     p.setFont("Helvetica-Bold", 8)
@@ -5483,16 +5537,24 @@ def download_inspection_pdf(form_id):
     p.setFont("Helvetica-Bold", 10)
     p.drawString(sig_x + 5, y - 15, "Inspector's Signature:")
     p.setFont("Helvetica", 10)
-    inspector_sig = str(inspection.get('inspector_signature', ''))[:20]
-    p.drawString(sig_x + 5, y - 35, inspector_sig)
+    inspector_sig = inspection.get('inspector_signature', '')
+    if not draw_signature_image(p, inspector_sig, sig_x + 5, y - 40, 100, 30):
+        if inspector_sig and not str(inspector_sig).startswith('data:image'):
+            p.drawString(sig_x + 5, y - 35, str(inspector_sig)[:20])
+        elif inspector_sig:
+            p.drawString(sig_x + 5, y - 35, "[Signed]")
 
     # Received By box
     p.rect(sig_x, y - 100, sig_width, 45)
     p.setFont("Helvetica-Bold", 10)
     p.drawString(sig_x + 5, y - 65, "Received By:")
     p.setFont("Helvetica", 10)
-    received_by = str(inspection.get('received_by', ''))[:20]
-    p.drawString(sig_x + 5, y - 85, received_by)
+    received_by = inspection.get('received_by', '')
+    if not draw_signature_image(p, received_by, sig_x + 5, y - 90, 100, 30):
+        if received_by and not str(received_by).startswith('data:image'):
+            p.drawString(sig_x + 5, y - 85, str(received_by)[:20])
+        elif received_by:
+            p.drawString(sig_x + 5, y - 85, "[Signed]")
 
     y -= 140
 
@@ -5835,15 +5897,23 @@ def download_spirit_licence_pdf(form_id):
     p.setFont("Helvetica-Bold", 10)
     p.drawString(table_x + 10, y - 15, "Inspector's Signature:")
     p.setFont("Helvetica", 10)
-    inspector_sig = str(inspection.get('inspector_signature', ''))[:25]
-    p.drawString(table_x + table_width / 2 + 10, y - 15, inspector_sig)
+    inspector_sig = inspection.get('inspector_signature', '')
+    if not draw_signature_image(p, inspector_sig, table_x + table_width / 2 + 10, y - 20, 100, 25):
+        if inspector_sig and not str(inspector_sig).startswith('data:image'):
+            p.drawString(table_x + table_width / 2 + 10, y - 15, str(inspector_sig)[:20])
+        elif inspector_sig:
+            p.drawString(table_x + table_width / 2 + 10, y - 15, "[Signed]")
 
     # Rec'd By
     p.setFont("Helvetica-Bold", 10)
     p.drawString(table_x + 10, y - 45, "Rec'd By:")
     p.setFont("Helvetica", 10)
-    received_by = str(inspection.get('received_by', ''))[:25]
-    p.drawString(table_x + table_width / 2 + 10, y - 45, received_by)
+    received_by = inspection.get('received_by', '')
+    if not draw_signature_image(p, received_by, table_x + table_width / 2 + 10, y - 50, 100, 25):
+        if received_by and not str(received_by).startswith('data:image'):
+            p.drawString(table_x + table_width / 2 + 10, y - 45, str(received_by)[:20])
+        elif received_by:
+            p.drawString(table_x + table_width / 2 + 10, y - 45, "[Signed]")
 
     y -= sig_table_height + 20
 
@@ -6820,12 +6890,22 @@ def download_barbershop_pdf(form_id):
     # Inspector signature
     p.drawString(50, y, "Inspector's Signature:")
     p.line(160, y - 2, 300, y - 2)
-    p.drawString(165, y, form_data['inspector_signature'] or '')
+    inspector_sig = form_data['inspector_signature'] or ''
+    if not draw_signature_image(p, inspector_sig, 165, y, 120, 30):
+        if inspector_sig and not str(inspector_sig).startswith('data:image'):
+            p.drawString(165, y, str(inspector_sig)[:20])
+        elif inspector_sig:
+            p.drawString(165, y, "[Signed]")
 
     # Received by signature
     p.drawString(350, y, "Rec'd By:")
     p.line(410, y - 2, 550, y - 2)
-    p.drawString(415, y, form_data['received_by'] or '')
+    received_sig = form_data['received_by'] or ''
+    if not draw_signature_image(p, received_sig, 415, y, 120, 30):
+        if received_sig and not str(received_sig).startswith('data:image'):
+            p.drawString(415, y, str(received_sig)[:20])
+        elif received_sig:
+            p.drawString(415, y, "[Signed]")
 
     p.save()
     buffer.seek(0)
