@@ -3301,6 +3301,9 @@ def download_residential_pdf(form_id):
         # Remove external CSS links
         html_string = re.sub(r'<link[^>]*inspection-details-responsive[^>]*>', '', html_string)
 
+        # Hide action buttons in PDF
+        html_string = re.sub(r'</head>', '<style>.action-buttons { display: none !important; }</style></head>', html_string)
+
         # Generate PDF
         static_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
         css_file = os.path.join(static_path, 'css', 'inspection-details-responsive.css')
@@ -3368,6 +3371,10 @@ def download_meat_processing_pdf(form_id):
                                        photo_data=[])  # Only difference: no photos in PDF
         
         html_string = re.sub(r'<link[^>]*inspection-details-responsive\.css[^>]*>', '', html_string)
+
+        # Hide action buttons in PDF
+        html_string = re.sub(r'</head>', '<style>.action-buttons { display: none !important; }</style></head>', html_string)
+
         static_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
         css_file = os.path.join(static_path, 'css', 'inspection-details-responsive.css')
         base_url = f'file://{static_path}/'
@@ -3409,6 +3416,10 @@ def download_burial_pdf(form_id):
                                        checklist=BURIAL_SITE_CHECKLIST_ITEMS)
         
         html_string = re.sub(r'<link[^>]*inspection-details-responsive\.css[^>]*>', '', html_string)
+
+        # Hide action buttons in PDF
+        html_string = re.sub(r'</head>', '<style>.action-buttons { display: none !important; }</style></head>', html_string)
+
         static_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
         css_file = os.path.join(static_path, 'css', 'inspection-details-responsive.css')
         base_url = f'file://{static_path}/'
@@ -3470,6 +3481,10 @@ def download_swimming_pool_pdf(form_id):
                                        photo_data=[])  # Photos excluded from PDF downloads
         
         html_string = re.sub(r'<link[^>]*inspection-details-responsive\.css[^>]*>', '', html_string)
+
+        # Hide action buttons in PDF
+        html_string = re.sub(r'</head>', '<style>.action-buttons { display: none !important; }</style></head>', html_string)
+
         static_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
         css_file = os.path.join(static_path, 'css', 'inspection-details-responsive.css')
         base_url = f'file://{static_path}/'
@@ -3555,6 +3570,9 @@ def download_institutional_pdf(form_id):
         '<!-- CSS link removed for PDF generation -->',
         html_string
     )
+
+    # Hide action buttons in PDF
+    html_string = re.sub(r'</head>', '<style>.action-buttons { display: none !important; }</style></head>', html_string)
 
     # Convert HTML to PDF using local CSS file to avoid HTTP timeout
     static_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
@@ -3672,6 +3690,9 @@ def download_small_hotels_pdf(form_id):
             html_string
         )
         logger.info(f"🔧 Removed external CSS links from HTML")
+
+        # Hide action buttons in PDF
+        html_string = re.sub(r'</head>', '<style>.action-buttons { display: none !important; }</style></head>', html_string)
 
         # Convert HTML to PDF using local CSS file to avoid HTTP timeout
         static_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
@@ -3795,7 +3816,10 @@ def download_inspection_pdf(form_id):
             html_string
         )
         logger.info(f"🔧 Removed external CSS links from HTML")
-        
+
+        # Hide action buttons in PDF
+        html_string = re.sub(r'</head>', '<style>.action-buttons { display: none !important; }</style></head>', html_string)
+
         # Convert HTML to PDF
         static_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
         css_file = os.path.join(static_path, 'css', 'inspection-details-responsive.css')
@@ -3908,6 +3932,9 @@ def download_spirit_licence_pdf(form_id):
         '<!-- CSS link removed for PDF generation -->',
         html_string
     )
+
+    # Hide action buttons in PDF
+    html_string = re.sub(r'</head>', '<style>.action-buttons { display: none !important; }</style></head>', html_string)
 
     # Convert HTML to PDF using local CSS file to avoid HTTP timeout
     static_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
