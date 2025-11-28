@@ -2,6 +2,9 @@
 import os
 import sqlite3
 import io
+import re
+        # json imported at top
+import logging
 from datetime import datetime
 
 # Flask Imports
@@ -88,6 +91,9 @@ def get_table_columns(cursor, table_name):
 
 app = Flask(__name__, template_folder='templates')
 app.secret_key = os.urandom(24)
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(name)s:%(message)s')
 
 def get_dict_cursor(conn):
     """Get a cursor that returns dictionary-like rows for both SQLite and PostgreSQL"""
@@ -1902,7 +1908,7 @@ def institutional_details(form_id):
     photos = []
     if inspection.photos:
         try:
-            import json
+        # json imported at top
             photos = json.loads(inspection.photos)
         except:
             photos = []
@@ -1968,7 +1974,7 @@ def institutional_inspection_detail(id):
     photos = []
     if inspection_dict.get('photo_data'):
         try:
-            import json
+        # json imported at top
             photos = json.loads(inspection_dict.get('photo_data', '[]'))
         except:
             photos = []
@@ -3051,7 +3057,7 @@ def inspection_detail(id):
         }
 
         # Parse photos from JSON string to Python list
-        import json
+        # json imported at top
         photos = []
         if inspection_data.get('photo_data'):
             try:
@@ -3097,7 +3103,7 @@ def residential_inspection(form_id):
         checklist_scores = {item['id']: '0' for item in RESIDENTIAL_CHECKLIST_ITEMS}
 
     # Parse photos from JSON string to Python list
-    import json
+        # json imported at top
     photos = []
     if details and details.get('photo_data'):
         try:
@@ -3139,7 +3145,7 @@ def meat_processing_inspection(form_id):
     details = get_meat_processing_inspection_details(form_id)
     if details:
         # Parse photos from JSON string to Python list
-        import json
+        # json imported at top
         photos = []
         if details.get('photo_data'):
             try:
@@ -3182,9 +3188,6 @@ def meat_processing_inspection(form_id):
     else:
         return "Inspection not found", 404
 
-import logging
-logging.basicConfig(level=logging.DEBUG)
-
 @app.route('/burial/inspection/<int:id>')
 def burial_inspection_detail(id):
     if 'inspector' not in session and 'admin' not in session:
@@ -3215,7 +3218,7 @@ def burial_inspection_detail(id):
     logging.debug(f"Rendering burial inspection detail for id: {id}")
 
     # Parse photos from JSON string to Python list
-    import json
+        # json imported at top
     photos = []
     if inspection_data.get('photo_data'):
         try:
@@ -3231,7 +3234,7 @@ def burial_inspection_detail(id):
 
 @app.route('/download_residential_pdf/<int:form_id>')
 def download_residential_pdf(form_id):
-    import logging, json
+    # logging and json imported at top
     logger = logging.getLogger(__name__)
     logger.info(f"📄 PDF download requested for Residential inspection ID: {form_id}")
 
@@ -3302,7 +3305,7 @@ def download_residential_pdf(form_id):
 
 @app.route('/download_meat_processing_pdf/<int:form_id>')
 def download_meat_processing_pdf(form_id):
-    import logging, json
+    # logging and json imported at top
     logger = logging.getLogger(__name__)
     
     if 'inspector' not in session and 'admin' not in session:
@@ -3365,7 +3368,7 @@ def download_meat_processing_pdf(form_id):
 
 @app.route('/download_burial_pdf/<int:form_id>')
 def download_burial_pdf(form_id):
-    import logging, json
+    # logging and json imported at top
     logger = logging.getLogger(__name__)
     
     if 'inspector' not in session and 'admin' not in session:
@@ -3406,7 +3409,7 @@ def download_burial_pdf(form_id):
 
 @app.route('/download_swimming_pool_pdf/<int:form_id>')
 def download_swimming_pool_pdf(form_id):
-    import logging, json
+    # logging and json imported at top
     from db_config import get_placeholder
     logger = logging.getLogger(__name__)
     ph = get_placeholder()
@@ -3517,7 +3520,7 @@ def download_institutional_pdf(form_id):
     photos = []
     if inspection_dict.get('photo_data'):
         try:
-            import json
+        # json imported at top
             photos = json.loads(inspection_dict.get('photo_data', '[]'))
         except:
             photos = []
@@ -3555,7 +3558,7 @@ def download_institutional_pdf(form_id):
 @app.route('/download_small_hotels_pdf/<int:form_id>')
 def download_small_hotels_pdf(form_id):
     import logging
-    import json
+        # json imported at top
     from db_config import get_placeholder
 
     logger = logging.getLogger(__name__)
@@ -3696,7 +3699,7 @@ def download_small_hotels_pdf(form_id):
 @app.route('/download_inspection_pdf/<int:form_id>')
 def download_inspection_pdf(form_id):
     import logging
-    import json
+        # json imported at top
     
     logger = logging.getLogger(__name__)
     logger.info(f"📄 PDF download requested for Food Establishment inspection ID: {form_id}")
@@ -3979,7 +3982,7 @@ def swimming_pool_inspection_detail(id):
             print(f"Using fallback for {score_field}: {item_scores[item['id']]}")
 
     # Parse photos from JSON string to Python list
-    import json
+        # json imported at top
     photos = []
     if inspection_dict.get('photo_data'):
         try:
@@ -4539,7 +4542,7 @@ def barbershop_inspection_detail(id):
     conn.close()
 
     # Parse photos from JSON string to Python list
-    import json
+        # json imported at top
     photos = []
     if inspection_dict.get('photo_data'):
         try:
@@ -6592,7 +6595,7 @@ def get_security_metrics():
         conn.close()
 
         # Parse photos from JSON string to Python list
-        import json
+        # json imported at top
         photos = []
         if inspection_dict.get('photo_data'):
             try:
@@ -8766,7 +8769,7 @@ def small_hotels_inspection_detail(id):
     }
 
     # Parse photos from JSON string to Python list
-    import json
+        # json imported at top
     photos = []
     if inspection_dict.get('photo_data'):
         try:
