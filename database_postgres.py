@@ -482,16 +482,13 @@ def get_spirit_licence_inspection_details(form_id):
 
     inspection_dict = dict(inspection)
 
-    # Parse scores from the scores string
-    scores_str = inspection_dict.get('scores', '')
-    if scores_str:
-        score_list = scores_str.split(',')
-        scores = {}
-        for i, score in enumerate(score_list, 1):
-            scores[str(i)] = score
-        inspection_dict['scores'] = scores
-    else:
-        inspection_dict['scores'] = {}
+    # Get scores from inspection_items table
+    cursor.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = %s", (form_id,))
+    items = cursor.fetchall()
+    scores = {}
+    for item in items:
+        scores[str(item['item_id'])] = item['details'] or '0'
+    inspection_dict['scores'] = scores
 
     # Parse comments into a dictionary for easier access
     comments_str = inspection_dict.get('comments', '')

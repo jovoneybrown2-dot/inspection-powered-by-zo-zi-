@@ -3559,7 +3559,9 @@ def download_meat_processing_pdf(form_id):
             p.showPage()
             y = height - 50
 
-        score = checklist_scores.get(item['id'], 0)
+        # Use zero-padded key to match the database storage format
+        score_key = str(item['id']).zfill(2)
+        score = checklist_scores.get(score_key, 0)
 
         p.setFont("Times-Roman", 9)
         p.rect(table_x, y - row_height, table_width, row_height)
@@ -3928,10 +3930,19 @@ def download_swimming_pool_pdf(form_id):
 
     inspection_dict = dict(inspection)
 
-    # Get individual scores
-    cursor.execute(f"SELECT item_id, details FROM inspection_items WHERE inspection_id = {ph}", (form_id,))
-    item_scores = {row[0]: float(row[1]) if row[1] and str(row[1]).replace('.', '', 1).isdigit() else 0.0
-                   for row in cursor.fetchall()}
+    # Get individual scores from the score columns in the inspections table
+    item_scores = {}
+    for item in SWIMMING_POOL_CHECKLIST_ITEMS:
+        score_key = f"score_{item['id']}"
+        score_value = inspection_dict.get(score_key, 0)
+        # Convert score to float if it's not None
+        if score_value is not None:
+            try:
+                item_scores[item['id']] = float(score_value)
+            except (ValueError, TypeError):
+                item_scores[item['id']] = 0.0
+        else:
+            item_scores[item['id']] = 0.0
     conn.close()
 
     buffer = io.BytesIO()
@@ -6593,9 +6604,19 @@ def download_barbershop_pdf(form_id):
         conn.close()
         return jsonify({'error': 'Inspection not found'}), 404
 
-    c.execute("SELECT item_id, details FROM inspection_items WHERE inspection_id = %s", (form_id,))
-    checklist_scores = {str(row[0]): float(row[1]) if row[1] and row[1].replace('.', '', 1).isdigit() else 0.0 for row
-                        in c.fetchall()}
+    # Get scores from the score columns in the inspections table
+    checklist_scores = {}
+    for item in BARBERSHOP_CHECKLIST_ITEMS:
+        score_key = f"score_{item['id']}"
+        score_value = form_data.get(score_key, 0)
+        # Convert score to float if it's not None
+        if score_value is not None:
+            try:
+                checklist_scores[item['id']] = float(score_value)
+            except (ValueError, TypeError):
+                checklist_scores[item['id']] = 0.0
+        else:
+            checklist_scores[item['id']] = 0.0
     conn.close()
 
     # Debug: Print what we have in the database
