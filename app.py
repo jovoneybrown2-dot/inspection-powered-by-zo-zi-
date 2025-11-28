@@ -4401,8 +4401,23 @@ def download_institutional_pdf(form_id):
                                    checklist=get_form_checklist_items('Institutional', INSTITUTIONAL_CHECKLIST_ITEMS),
                                    photo_data=photos)
 
-    # Convert HTML to PDF
-    pdf = HTML(string=html_string, base_url=request.host_url).write_pdf()
+    # Remove external CSS link tags to prevent HTTP fetching during PDF generation
+    import re
+    html_string = re.sub(
+        r'<link[^>]*href=["\'][^"\']*inspection-details-responsive\.css["\'][^>]*>',
+        '<!-- CSS link removed for PDF generation -->',
+        html_string
+    )
+
+    # Convert HTML to PDF using local CSS file to avoid HTTP timeout
+    static_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
+    css_file = os.path.join(static_path, 'css', 'inspection-details-responsive.css')
+    base_url = f'file://{static_path}/'
+
+    # Load CSS from local file and pass to write_pdf
+    pdf = HTML(string=html_string, base_url=base_url).write_pdf(
+        stylesheets=[CSS(filename=css_file)]
+    )
 
     response = make_response(pdf)
     response.headers['Content-Type'] = 'application/pdf'
@@ -4412,87 +4427,143 @@ def download_institutional_pdf(form_id):
 
 @app.route('/download_small_hotels_pdf/<int:form_id>')
 def download_small_hotels_pdf(form_id):
+    import logging
+    import json
     from db_config import get_placeholder
+
+    logger = logging.getLogger(__name__)
+    logger.info(f"📄 PDF download requested for Small Hotels inspection ID: {form_id}")
+
     ph = get_placeholder()
 
     if 'inspector' not in session and 'admin' not in session:
+        logger.warning(f"⚠️ Unauthorized PDF download attempt for inspection {form_id}")
         return redirect(url_for('login'))
 
-    # Get the inspection data directly from database instead of calling the detail function
-    conn = get_db_connection()
-    cursor = get_dict_cursor(conn)
+    try:
+        # Get the inspection data directly from database instead of calling the detail function
+        logger.info(f"🔍 Fetching inspection data from database...")
+        conn = get_db_connection()
+        cursor = get_dict_cursor(conn)
 
-    cursor.execute(f"SELECT * FROM inspections WHERE id = {ph} AND form_type = 'Small Hotel'", (form_id,))
-    inspection_row = cursor.fetchone()
+        cursor.execute(f"SELECT * FROM inspections WHERE id = {ph} AND form_type = 'Small Hotel'", (form_id,))
+        inspection_row = cursor.fetchone()
 
-    if not inspection_row:
+        if not inspection_row:
+            conn.close()
+            logger.error(f"❌ Inspection {form_id} not found in database")
+            return jsonify({'error': 'Inspection not found'}), 404
+
+        inspection_dict = dict(inspection_row)
+        logger.info(f"✅ Inspection data retrieved: {inspection_dict.get('establishment_name', 'Unknown')}")
+
+        # Get individual scores from inspection_items table
+        cursor.execute(f"SELECT item_id, obser, error FROM inspection_items WHERE inspection_id = {ph}", (form_id,))
+        items = cursor.fetchall()
+
+        obser_scores = {}
+        error_scores = {}
+        for item in items:
+            obser_scores[item['item_id']] = item['obser'] or '0'
+            error_scores[item['item_id']] = item['error'] or '0'
+
         conn.close()
-        return jsonify({'error': 'Inspection not found'}), 404
+        logger.info(f"✅ Retrieved {len(items)} inspection items")
 
-    inspection_dict = dict(inspection_row)
+        # Extract and calculate the scores (same as detail page)
+        critical_score = int(inspection_dict.get('critical_score', 0))
+        overall_score = int(inspection_dict.get('overall_score', 0))
 
-    # Get individual scores from inspection_items table
-    cursor.execute(f"SELECT item_id, obser, error FROM inspection_items WHERE inspection_id = {ph}", (form_id,))
-    items = cursor.fetchall()
+        # Determine result based on scores
+        result = 'Pass' if critical_score >= 70 and overall_score >= 70 else 'Fail'
 
-    obser_scores = {}
-    error_scores = {}
-    for item in items:
-        obser_scores[item['item_id']] = item['obser'] or '0'
-        error_scores[item['item_id']] = item['error'] or '0'
+        # Create inspection object that the template expects
+        inspection_obj = {
+            'id': form_id,
+            'establishment_name': inspection_dict.get('establishment_name', ''),
+            'inspector_name': inspection_dict.get('inspector_name', ''),
+            'address': inspection_dict.get('address', ''),
+            'physical_location': inspection_dict.get('physical_location', ''),
+            'inspection_date': inspection_dict.get('inspection_date', ''),
+            'critical_score': critical_score,
+            'overall_score': overall_score,
+            'result': result,
+            'comments': inspection_dict.get('comments', ''),
+            'inspector_signature': inspection_dict.get('inspector_signature', ''),
+            'inspector_signature_date': inspection_dict.get('inspector_signature_date', ''),
+            'manager_signature': inspection_dict.get('manager_signature', ''),
+            'manager_signature_date': inspection_dict.get('manager_signature_date', ''),
+            'received_by': inspection_dict.get('received_by', ''),
+            'received_by_date': inspection_dict.get('received_by_date', ''),
+            'obser': obser_scores,
+            'error': error_scores
+        }
 
-    conn.close()
+        # Parse photos from JSON string to Python list
+        photos = []
+        if inspection_dict.get('photo_data'):
+            try:
+                photos = json.loads(inspection_dict.get('photo_data', '[]'))
+                logger.info(f"📸 Loaded {len(photos)} photos")
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to parse photo_data: {e}")
+                photos = []
 
-    # Extract and calculate the scores (same as detail page)
-    critical_score = int(inspection_dict.get('critical_score', 0))
-    overall_score = int(inspection_dict.get('overall_score', 0))
+        # Render the same HTML template as the detail page
+        logger.info(f"🎨 Rendering HTML template...")
+        html_string = render_template('small_hotels_inspection_detail.html',
+                                       inspection=inspection_obj,
+                                       photo_data=photos)
+        logger.info(f"✅ HTML rendered ({len(html_string)} chars)")
 
-    # Determine result based on scores
-    result = 'Pass' if critical_score >= 70 and overall_score >= 70 else 'Fail'
+        # Remove external CSS link tags to prevent HTTP fetching during PDF generation
+        # WeasyPrint will try to fetch these even if we provide stylesheets parameter
+        import re
+        html_string = re.sub(
+            r'<link[^>]*href=["\'][^"\']*inspection-details-responsive\.css["\'][^>]*>',
+            '<!-- CSS link removed for PDF generation -->',
+            html_string
+        )
+        logger.info(f"🔧 Removed external CSS links from HTML")
 
-    # Create inspection object that the template expects
-    inspection_obj = {
-        'id': form_id,
-        'establishment_name': inspection_dict.get('establishment_name', ''),
-        'inspector_name': inspection_dict.get('inspector_name', ''),
-        'address': inspection_dict.get('address', ''),
-        'physical_location': inspection_dict.get('physical_location', ''),
-        'inspection_date': inspection_dict.get('inspection_date', ''),
-        'critical_score': critical_score,
-        'overall_score': overall_score,
-        'result': result,
-        'comments': inspection_dict.get('comments', ''),
-        'inspector_signature': inspection_dict.get('inspector_signature', ''),
-        'inspector_signature_date': inspection_dict.get('inspector_signature_date', ''),
-        'manager_signature': inspection_dict.get('manager_signature', ''),
-        'manager_signature_date': inspection_dict.get('manager_signature_date', ''),
-        'received_by': inspection_dict.get('received_by', ''),
-        'received_by_date': inspection_dict.get('received_by_date', ''),
-        'obser': obser_scores,
-        'error': error_scores
-    }
+        # Convert HTML to PDF using local CSS file to avoid HTTP timeout
+        static_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
+        css_file = os.path.join(static_path, 'css', 'inspection-details-responsive.css')
+        base_url = f'file://{static_path}/'
 
-    # Parse photos from JSON string to Python list
-    import json
-    photos = []
-    if inspection_dict.get('photo_data'):
-        try:
-            photos = json.loads(inspection_dict.get('photo_data', '[]'))
-        except:
-            photos = []
+        logger.info(f"📁 Static path: {static_path}")
+        logger.info(f"📄 CSS file: {css_file}")
+        logger.info(f"🔗 Base URL: {base_url}")
 
-    # Render the same HTML template as the detail page
-    html_string = render_template('small_hotels_inspection_detail.html',
-                                   inspection=inspection_obj,
-                                   photo_data=photos)
+        # Check if CSS file exists
+        if not os.path.exists(css_file):
+            logger.error(f"❌ CSS file not found: {css_file}")
+            # Try to generate PDF without external CSS
+            logger.info("🔄 Attempting PDF generation without external CSS...")
+            pdf = HTML(string=html_string, base_url=base_url).write_pdf()
+        else:
+            logger.info(f"✅ CSS file found, generating PDF with stylesheet...")
+            # Load CSS from local file and pass to write_pdf
+            pdf = HTML(string=html_string, base_url=base_url).write_pdf(
+                stylesheets=[CSS(filename=css_file)]
+            )
 
-    # Convert HTML to PDF
-    pdf = HTML(string=html_string, base_url=request.host_url).write_pdf()
+        logger.info(f"✅ PDF generated successfully ({len(pdf)} bytes)")
 
-    response = make_response(pdf)
-    response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = f'attachment; filename=small_hotels_inspection_{form_id}.pdf'
-    return response
+        response = make_response(pdf)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename=small_hotels_inspection_{form_id}.pdf'
+
+        logger.info(f"📤 Sending PDF response with headers: {dict(response.headers)}")
+        return response
+
+    except Exception as e:
+        logger.error(f"❌ Error generating PDF for inspection {form_id}: {str(e)}", exc_info=True)
+        return jsonify({
+            'error': 'Failed to generate PDF',
+            'message': str(e),
+            'inspection_id': form_id
+        }), 500
 
 
 @app.route('/download_inspection_pdf/<int:form_id>')
@@ -4990,8 +5061,23 @@ def download_spirit_licence_pdf(form_id):
                                  checklist=[], inspection=inspection_data,
                                  photo_data=[])
 
-    # Convert HTML to PDF
-    pdf = HTML(string=html_string, base_url=request.host_url).write_pdf()
+    # Remove external CSS link tags to prevent HTTP fetching during PDF generation
+    import re
+    html_string = re.sub(
+        r'<link[^>]*href=["\'][^"\']*inspection-details-responsive\.css["\'][^>]*>',
+        '<!-- CSS link removed for PDF generation -->',
+        html_string
+    )
+
+    # Convert HTML to PDF using local CSS file to avoid HTTP timeout
+    static_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
+    css_file = os.path.join(static_path, 'css', 'inspection-details-responsive.css')
+    base_url = f'file://{static_path}/'
+
+    # Load CSS from local file and pass to write_pdf
+    pdf = HTML(string=html_string, base_url=base_url).write_pdf(
+        stylesheets=[CSS(filename=css_file)]
+    )
 
     response = make_response(pdf)
     response.headers['Content-Type'] = 'application/pdf'
