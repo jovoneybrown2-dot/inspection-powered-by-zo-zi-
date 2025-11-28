@@ -3246,40 +3246,57 @@ def download_residential_pdf(form_id):
         if not details:
             return jsonify({'error': 'Inspection not found'}), 404
 
-        # Parse photos
-        photos = []
-        if details.get('photo_data'):
-            try:
-                photos = json.loads(details.get('photo_data', '[]'))
-            except:
-                photos = []
+        # Extract variables EXACTLY like the view route (lines 3078-3099)
+        premises_name = details['premises_name']
+        owner = details['owner']
+        address = details['address']
+        inspector_name = details['inspector_name']
+        inspection_date = details['inspection_date']
+        inspector_code = details['inspector_code']
+        treatment_facility = details['treatment_facility']
+        vector = details['vector']
+        result = details['result']
+        onsite_system = details['onsite_system']
+        building_construction_type = details['building_construction_type']
+        purpose_of_visit = details['purpose_of_visit']
+        action = details['action']
+        no_of_bedrooms = details['no_of_bedrooms']
+        total_population = details['total_population']
+        critical_score = details['critical_score']
+        overall_score = details['overall_score']
+        comments = details['comments']
+        inspector_signature = details['inspector_signature']
+        received_by = details['received_by']
+        created_at = details['created_at']
+        checklist_scores = details['checklist_scores']
 
-        # Render HTML template
+        # Render with EXACT same variables as view route (lines 3114-3139)
         html_string = render_template('residential_inspection_details.html',
-                                       premises_name=details['premises_name'],
-                                       owner=details['owner'],
-                                       address=details['address'],
-                                       inspector_name=details['inspector_name'],
-                                       inspection_date=details['inspection_date'],
-                                       inspector_code=details['inspector_code'],
-                                       treatment_facility=details['treatment_facility'],
-                                       vector=details['vector'],
-                                       result=details['result'],
-                                       onsite_system=details['onsite_system'],
-                                       building_construction_type=details['building_construction_type'],
-                                       purpose_of_visit=details['purpose_of_visit'],
-                                       action=details['action'],
-                                       no_of_bedrooms=details['no_of_bedrooms'],
-                                       total_population=details['total_population'],
-                                       critical_score=details['critical_score'],
-                                       overall_score=details['overall_score'],
-                                       comments=details['comments'],
-                                       inspector_signature=details['inspector_signature'],
-                                       received_by=details['received_by'],
-                                       created_at=details['created_at'],
-                                       photo_data=[],  # Photos excluded from PDF downloads
-                                       checklist=RESIDENTIAL_CHECKLIST_ITEMS,
-                                       item_scores=details.get('item_scores', {}))
+                                       form_id=form_id,
+                                       premises_name=premises_name,
+                                       owner=owner,
+                                       address=address,
+                                       inspector_name=inspector_name,
+                                       inspection_date=inspection_date,
+                                       inspector_code=inspector_code,
+                                       treatment_facility=treatment_facility,
+                                       vector=vector,
+                                       result=result,
+                                       onsite_system=onsite_system,
+                                       building_construction_type=building_construction_type,
+                                       purpose_of_visit=purpose_of_visit,
+                                       action=action,
+                                       no_of_bedrooms=no_of_bedrooms,
+                                       total_population=total_population,
+                                       critical_score=critical_score,
+                                       overall_score=overall_score,
+                                       comments=comments,
+                                       inspector_signature=inspector_signature,
+                                       received_by=received_by,
+                                       created_at=created_at,
+                                       checklist=get_form_checklist_items('Residential', RESIDENTIAL_CHECKLIST_ITEMS),
+                                       checklist_scores=checklist_scores,
+                                       photo_data=[])  # Only difference: no photos in PDF
 
         # Remove external CSS links
         html_string = re.sub(r'<link[^>]*inspection-details-responsive[^>]*>', '', html_string)
