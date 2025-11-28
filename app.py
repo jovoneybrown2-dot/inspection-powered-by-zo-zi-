@@ -3313,26 +3313,39 @@ def download_meat_processing_pdf(form_id):
         if not details:
             return jsonify({'error': 'Inspection not found'}), 404
 
-        # Don't include photos in PDF downloads
+        # Render with EXACT same variables as view route (line 3150-3181)
         html_string = render_template('meat_processing_inspection_details.html',
-                                       establishment_name=details.get('establishment_name', ''),
-                                       owner_operator=details.get('owner_operator', ''),
-                                       address=details.get('address', ''),
-                                       inspector_name=details.get('inspector_name', ''),
-                                       inspection_date=details.get('inspection_date', ''),
-                                       inspector_code=details.get('inspector_code', ''),
-                                       result=details.get('result', ''),
-                                       purpose_of_visit=details.get('purpose_of_visit', ''),
-                                       action=details.get('action', ''),
-                                       critical_score=details.get('critical_score', 0),
-                                       overall_score=details.get('overall_score', 0),
-                                       comments=details.get('comments', ''),
-                                       inspector_signature=details.get('inspector_signature', ''),
-                                       received_by=details.get('received_by', ''),
-                                       created_at=details.get('created_at', ''),
-                                       photo_data=[],
-                                       checklist=MEAT_PROCESSING_CHECKLIST_ITEMS,
-                                       item_scores=details.get('item_scores', {}))
+                                       form_id=form_id,
+                                       establishment_name=details['establishment_name'],
+                                       owner_operator=details['owner_operator'],
+                                       address=details['address'],
+                                       inspector_name=details['inspector_name'],
+                                       establishment_no=details['establishment_no'],
+                                       overall_score=details['overall_score'],
+                                       food_contact_surfaces=details['food_contact_surfaces'],
+                                       water_samples=details['water_samples'],
+                                       product_samples=details['product_samples'],
+                                       types_of_products=details['types_of_products'],
+                                       staff_fhp=details['staff_fhp'],
+                                       staff_compliment=details.get('staff_compliment', 0),
+                                       water_public=details['water_public'],
+                                       water_private=details['water_private'],
+                                       type_processing=details['type_processing'],
+                                       type_slaughter=details['type_slaughter'],
+                                       purpose_of_visit=details['purpose_of_visit'],
+                                       inspection_date=details['inspection_date'],
+                                       inspector_code=details['inspector_code'],
+                                       result=details['result'],
+                                       telephone_no=details['telephone_no'],
+                                       registration_status=details['registration_status'],
+                                       action=details['action'],
+                                       comments=details['comments'],
+                                       inspector_signature=details['inspector_signature'],
+                                       received_by=details['received_by'],
+                                       created_at=details['created_at'],
+                                       checklist=get_form_checklist_items('Meat Processing', MEAT_PROCESSING_CHECKLIST_ITEMS),
+                                       checklist_scores=details['checklist_scores'],
+                                       photo_data=[])  # Only difference: no photos in PDF
         
         html_string = re.sub(r'<link[^>]*inspection-details-responsive\.css[^>]*>', '', html_string)
         static_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
