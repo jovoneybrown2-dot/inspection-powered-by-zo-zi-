@@ -138,55 +138,47 @@
 
         .score-dropdown {
             width: 100%;
-            border: 3px solid #333;
-            background: white;
-            text-align: center;
-            text-align-last: center;
-            font-size: 20px;
-            font-weight: 900;
-            padding: 10px 8px;
+            border: 4px solid #000 !important;
+            background: #fff !important;
+            text-align: center !important;
+            text-align-last: center !important;
+            font-size: 24px !important;
+            font-weight: 900 !important;
+            padding: 12px 10px !important;
             cursor: pointer;
-            color: #000;
-            line-height: 1.5;
-            height: 45px;
+            color: #000 !important;
+            line-height: 1.2 !important;
+            height: 50px !important;
+            box-sizing: border-box;
+            display: block;
+            -webkit-appearance: menulist-button !important;
+            -moz-appearance: menulist-button !important;
         }
 
         .score-dropdown:hover {
-            border-color: #4CAF50;
-            background-color: #f5f5f5;
+            border-color: #2196F3 !important;
+            background-color: #f0f8ff !important;
         }
 
         .score-dropdown:focus {
-            outline: 3px solid #4CAF50;
-            border-color: #4CAF50;
-            background-color: #fffde7;
+            outline: 4px solid #2196F3 !important;
+            border-color: #2196F3 !important;
+            background-color: #fffde7 !important;
         }
 
         .score-dropdown option {
-            font-size: 20px;
-            font-weight: 900;
-            color: #000;
-            background: white;
-            padding: 12px;
+            font-size: 22px !important;
+            font-weight: 900 !important;
+            color: #000 !important;
+            background: white !important;
+            padding: 15px !important;
             text-align: center;
         }
 
-        .score-dropdown option:checked,
-        .score-dropdown option:hover {
-            background-color: #4CAF50 !important;
-            color: white !important;
-            font-weight: 900;
-        }
-
-        /* Force visibility of selected value */
-        select.score-dropdown:not([multiple]) {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            background-image: url('data:image/svg+xml;utf8,<svg fill="%23333" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
-            background-repeat: no-repeat;
-            background-position: right 5px center;
-            padding-right: 30px;
+        /* Ensure selected value is visible */
+        .score-dropdown::-ms-value {
+            color: #000 !important;
+            background: #fff !important;
         }
 
         .section-header {
@@ -1399,7 +1391,23 @@
         }
 
         document.querySelectorAll('.score-dropdown').forEach(dropdown => {
-            dropdown.addEventListener('change', updateScores);
+            dropdown.addEventListener('change', function() {
+                updateScores();
+                // Highlight the dropdown when a value is selected to make it obvious
+                if (this.value !== '0') {
+                    this.style.backgroundColor = '#e3f2fd';
+                    this.style.borderColor = '#1976d2';
+                } else {
+                    this.style.backgroundColor = '#fff';
+                    this.style.borderColor = '#000';
+                }
+            });
+
+            // Initialize visual state
+            if (dropdown.value !== '0') {
+                dropdown.style.backgroundColor = '#e3f2fd';
+                dropdown.style.borderColor = '#1976d2';
+            }
         });
 
         updateScores();
