@@ -2232,7 +2232,17 @@ def submit_meat_processing():
     # Process photos if included
     photos_json = request.form.get('photos', '[]')
     logging.info(f"📸 PHOTO DEBUG - Received photos JSON (length: {len(photos_json)})")
-    logging.info(f"📸 PHOTO DEBUG - First 200 chars: {photos_json[:200] if photos_json else 'None'}")
+    logging.info(f"📸 PHOTO DEBUG - First 500 chars: {photos_json[:500] if photos_json else 'None'}")
+
+    # Validate JSON
+    try:
+        photos_array = json.loads(photos_json) if photos_json else []
+        logging.info(f"📸 PHOTO DEBUG - Successfully parsed {len(photos_array)} photos from JSON")
+        if photos_array:
+            logging.info(f"📸 PHOTO DEBUG - First photo keys: {photos_array[0].keys() if photos_array else 'N/A'}")
+    except Exception as e:
+        logging.error(f"📸 PHOTO DEBUG - Failed to parse photos JSON: {e}")
+        photos_json = '[]'
 
     # Load checklist from database to get critical flags
     checklist = get_form_checklist_items('Meat Processing', MEAT_PROCESSING_CHECKLIST_ITEMS)
@@ -11804,6 +11814,7 @@ if __name__ == '__main__':
                 print(f"✅ AUTO-FIX: Food Establishment checklist now has 44 correct items including item #1")
 
         conn.close()
+
     except Exception as e:
         print(f"⚠️  Auto-fix checklist error: {e}")
 

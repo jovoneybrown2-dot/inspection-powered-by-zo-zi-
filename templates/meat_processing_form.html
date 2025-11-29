@@ -138,47 +138,34 @@
 
         .score-dropdown {
             width: 100%;
-            border: 4px solid #000 !important;
-            background: #fff !important;
-            text-align: center !important;
-            text-align-last: center !important;
-            font-size: 24px !important;
-            font-weight: 900 !important;
-            padding: 12px 10px !important;
+            border: 1px solid #ccc;
+            background: white;
+            text-align: center;
+            text-align-last: center;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 6px 8px;
             cursor: pointer;
-            color: #000 !important;
-            line-height: 1.2 !important;
-            height: 50px !important;
-            box-sizing: border-box;
-            display: block;
-            -webkit-appearance: menulist-button !important;
-            -moz-appearance: menulist-button !important;
+            color: #000;
+            height: 36px;
+            border-radius: 4px;
         }
 
         .score-dropdown:hover {
-            border-color: #2196F3 !important;
-            background-color: #f0f8ff !important;
+            border-color: #999;
         }
 
         .score-dropdown:focus {
-            outline: 4px solid #2196F3 !important;
-            border-color: #2196F3 !important;
-            background-color: #fffde7 !important;
+            outline: 2px solid #4CAF50;
+            border-color: #4CAF50;
         }
 
         .score-dropdown option {
-            font-size: 22px !important;
-            font-weight: 900 !important;
-            color: #000 !important;
-            background: white !important;
-            padding: 15px !important;
-            text-align: center;
-        }
-
-        /* Ensure selected value is visible */
-        .score-dropdown::-ms-value {
-            color: #000 !important;
-            background: #fff !important;
+            font-size: 16px;
+            font-weight: bold;
+            color: #000;
+            background: white;
+            padding: 8px;
         }
 
         .section-header {
@@ -1391,23 +1378,7 @@
         }
 
         document.querySelectorAll('.score-dropdown').forEach(dropdown => {
-            dropdown.addEventListener('change', function() {
-                updateScores();
-                // Highlight the dropdown when a value is selected to make it obvious
-                if (this.value !== '0') {
-                    this.style.backgroundColor = '#e3f2fd';
-                    this.style.borderColor = '#1976d2';
-                } else {
-                    this.style.backgroundColor = '#fff';
-                    this.style.borderColor = '#000';
-                }
-            });
-
-            // Initialize visual state
-            if (dropdown.value !== '0') {
-                dropdown.style.backgroundColor = '#e3f2fd';
-                dropdown.style.borderColor = '#1976d2';
-            }
+            dropdown.addEventListener('change', updateScores);
         });
 
         updateScores();

@@ -508,10 +508,13 @@ def get_spirit_licence_inspection_details(form_id):
 
 def save_meat_processing_inspection(data):
     """Save meat processing inspection"""
+    import logging
+    logging.info(f"📸 DB DEBUG - save_meat_processing_inspection called with photo_data length: {len(data.get('photo_data', '[]'))}")
     conn = get_connection()
     cursor = conn.cursor()
     try:
         if data.get('id'):
+            logging.info(f"📸 DB DEBUG - Updating existing inspection {data['id']}")
             cursor.execute("""
                 UPDATE meat_processing_inspections
                 SET establishment_name = %s, owner_operator = %s, address = %s, inspector_name = %s,
@@ -533,6 +536,7 @@ def save_meat_processing_inspection(data):
                 data.get('photo_data', '[]'), data['id']
             ))
             inspection_id = data['id']
+            logging.info(f"📸 DB DEBUG - Updated inspection {inspection_id} with photo_data: {data.get('photo_data', '[]')[:100]}...")
         else:
             cursor.execute("""
                 INSERT INTO meat_processing_inspections (
@@ -557,8 +561,10 @@ def save_meat_processing_inspection(data):
                 data.get('photo_data', '[]')
             ))
             inspection_id = cursor.fetchone()[0]
+            logging.info(f"📸 DB DEBUG - Inserted inspection {inspection_id} with photo_data: {data.get('photo_data', '[]')[:100]}...")
 
         conn.commit()
+        logging.info(f"📸 DB DEBUG - Committed transaction for inspection {inspection_id}")
 
         # Save checklist scores if provided
         if 'checklist_scores' in data:
@@ -596,14 +602,23 @@ def get_meat_processing_inspections():
 
 def get_meat_processing_inspection_details(inspection_id):
     """Get meat processing inspection details"""
+    import logging
+    logging.info(f"📸 DB DEBUG - get_meat_processing_inspection_details called for inspection {inspection_id}")
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM meat_processing_inspections WHERE id = %s", (inspection_id,))
     inspection = cursor.fetchone()
+    logging.info(f"📸 DB DEBUG - Retrieved inspection row with {len(inspection) if inspection else 0} columns")
     if inspection:
         cursor.execute("SELECT item_id, score FROM meat_processing_checklist_scores WHERE form_id = %s", (inspection_id,))
         # Convert integer keys to zero-padded string keys to match template expectations
         checklist_scores = {str(item_id).zfill(2): score for item_id, score in cursor.fetchall()}
+
+        # Extract and log photo_data before closing connection
+        photo_data_value = inspection[28] if len(inspection) > 28 else '[]'
+        logging.info(f"📸 DB DEBUG - Retrieved photo_data from DB (type: {type(photo_data_value)}, length: {len(str(photo_data_value)) if photo_data_value else 0})")
+        logging.info(f"📸 DB DEBUG - photo_data first 200 chars: {str(photo_data_value)[:200] if photo_data_value else 'None'}")
+
         cursor.close()
         conn.close()
         return {
@@ -635,7 +650,7 @@ def get_meat_processing_inspection_details(inspection_id):
             'inspector_signature': inspection[25] if len(inspection) > 25 else '',
             'received_by': inspection[26] if len(inspection) > 26 else '',
             'created_at': inspection[27] if len(inspection) > 27 else '',
-            'photo_data': inspection[28] if len(inspection) > 28 else '[]',
+            'photo_data': photo_data_value,
             'checklist_scores': checklist_scores
         }
     cursor.close()
