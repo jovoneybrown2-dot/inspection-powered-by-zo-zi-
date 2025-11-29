@@ -3184,7 +3184,7 @@ def meat_processing_inspection(form_id):
                               created_at=details['created_at'],
                               checklist=get_form_checklist_items('Meat Processing', MEAT_PROCESSING_CHECKLIST_ITEMS),
                               checklist_scores=details['checklist_scores'],
-                              photo_data=[])  # Photos excluded from PDF downloads
+                              photo_data=photos)  # Pass actual photos to template
     else:
         return "Inspection not found", 404
 

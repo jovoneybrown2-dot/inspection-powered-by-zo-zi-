@@ -141,14 +141,17 @@
             border: 2px solid #333;
             background: white;
             text-align: center;
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
-            padding: 5px;
+            padding: 8px 5px;
             cursor: pointer;
             color: #000;
             -webkit-appearance: menulist;
             -moz-appearance: menulist;
             appearance: menulist;
+            line-height: 1.2;
+            height: auto;
+            min-height: 36px;
         }
 
         .score-dropdown:hover {
@@ -162,11 +165,16 @@
         }
 
         .score-dropdown option {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
             color: #000;
             background: white;
-            padding: 5px;
+            padding: 10px;
+        }
+
+        .score-dropdown option:checked {
+            background-color: #4CAF50;
+            color: white;
         }
 
         .section-header {
