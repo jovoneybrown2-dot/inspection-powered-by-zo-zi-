@@ -3,7 +3,7 @@ import os
 import sqlite3
 import io
 import re
-        # json imported at top
+import json
 import logging
 from datetime import datetime
 
@@ -11814,7 +11814,6 @@ if __name__ == '__main__':
                 print(f"✅ AUTO-FIX: Food Establishment checklist now has 44 correct items including item #1")
 
         conn.close()
-
     except Exception as e:
         print(f"⚠️  Auto-fix checklist error: {e}")
 
