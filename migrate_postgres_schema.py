@@ -122,6 +122,14 @@ def run_migration():
             else:
                 print("✅ meat_processing_inspections already has critical_score column")
 
+            if 'photo_data' not in meat_columns:
+                print("Adding photo_data column to meat_processing_inspections...")
+                cursor.execute("ALTER TABLE meat_processing_inspections ADD COLUMN photo_data TEXT DEFAULT '[]'")
+                conn.commit()
+                print("✅ Added photo_data column to meat_processing_inspections")
+            else:
+                print("✅ meat_processing_inspections already has photo_data column")
+
         print("\n" + "="*60)
         print("✅ ALL MIGRATIONS COMPLETED SUCCESSFULLY")
         print("="*60)

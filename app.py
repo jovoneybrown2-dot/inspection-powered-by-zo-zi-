@@ -2231,6 +2231,8 @@ def submit_meat_processing():
 
     # Process photos if included
     photos_json = request.form.get('photos', '[]')
+    logging.info(f"📸 PHOTO DEBUG - Received photos JSON (length: {len(photos_json)})")
+    logging.info(f"📸 PHOTO DEBUG - First 200 chars: {photos_json[:200] if photos_json else 'None'}")
 
     # Load checklist from database to get critical flags
     checklist = get_form_checklist_items('Meat Processing', MEAT_PROCESSING_CHECKLIST_ITEMS)
@@ -2280,6 +2282,7 @@ def submit_meat_processing():
 
     try:
         inspection_id = save_meat_processing_inspection(data)
+        logging.info(f"📸 PHOTO DEBUG - Saved inspection {inspection_id} with photo_data length: {len(data.get('photo_data', '[]'))}")
 
         # Save checklist scores
         conn = get_db_connection()
@@ -3147,11 +3150,19 @@ def meat_processing_inspection(form_id):
         # Parse photos from JSON string to Python list
         # json imported at top
         photos = []
-        if details.get('photo_data'):
+        photo_data_raw = details.get('photo_data')
+        logging.info(f"📸 PHOTO DEBUG - Retrieved photo_data for inspection {form_id}: {type(photo_data_raw)}, length: {len(str(photo_data_raw)) if photo_data_raw else 0}")
+        logging.info(f"📸 PHOTO DEBUG - First 200 chars: {str(photo_data_raw)[:200] if photo_data_raw else 'None'}")
+
+        if photo_data_raw:
             try:
-                photos = json.loads(details.get('photo_data', '[]'))
-            except:
+                photos = json.loads(photo_data_raw)
+                logging.info(f"📸 PHOTO DEBUG - Successfully parsed {len(photos)} photos")
+            except Exception as e:
+                logging.error(f"📸 PHOTO DEBUG - Failed to parse photos: {e}")
                 photos = []
+
+        logging.info(f"📸 PHOTO DEBUG - Passing {len(photos)} photos to template")
 
         return render_template('meat_processing_inspection_details.html',
                               form_id=form_id,
