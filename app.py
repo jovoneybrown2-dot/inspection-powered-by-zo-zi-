@@ -2216,6 +2216,9 @@ def submit_burial():
     if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({'message': 'Unauthorized: Please log in'}), 401
 
+    # Get inspector name from session
+    inspector_name = session.get('inspector', '')
+
     data = {
         'id': request.form.get('id', ''),
         'inspection_date': request.form.get('inspection_date', ''),
@@ -2231,6 +2234,7 @@ def submit_burial():
         'proposed_grave_type': request.form.get('proposed_grave_type', ''),
         'general_remarks': request.form.get('general_remarks', ''),
         'inspector_signature': request.form.get('inspector_signature', ''),
+        'inspector_name': inspector_name,  # Add inspector_name from session
         'received_by': request.form.get('received_by', ''),
         'photo_data': request.form.get('photos', '[]')
     }

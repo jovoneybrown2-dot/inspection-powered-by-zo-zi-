@@ -130,6 +130,31 @@ def run_migration():
             else:
                 print("✅ meat_processing_inspections already has photo_data column")
 
+        # Add inspector_name to burial_site_inspections
+        print("Checking burial_site_inspections table...")
+        cursor.execute("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables
+                WHERE table_name = 'burial_site_inspections'
+            )
+        """)
+        burial_table_exists = cursor.fetchone()[0]
+
+        if burial_table_exists:
+            cursor.execute("""
+                SELECT column_name FROM information_schema.columns
+                WHERE table_name='burial_site_inspections'
+            """)
+            burial_columns = [row[0] for row in cursor.fetchall()]
+
+            if 'inspector_name' not in burial_columns:
+                print("Adding inspector_name column to burial_site_inspections...")
+                cursor.execute("ALTER TABLE burial_site_inspections ADD COLUMN inspector_name TEXT DEFAULT ''")
+                conn.commit()
+                print("✅ Added inspector_name column to burial_site_inspections")
+            else:
+                print("✅ burial_site_inspections already has inspector_name column")
+
         print("\n" + "="*60)
         print("✅ ALL MIGRATIONS COMPLETED SUCCESSFULLY")
         print("="*60)

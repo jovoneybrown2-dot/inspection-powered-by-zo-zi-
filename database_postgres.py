@@ -69,25 +69,25 @@ def save_burial_inspection(data):
                          site_description = %s, proximity_water_source = %s, proximity_perimeter_boundaries = %s,
                          proximity_road_pathway = %s, proximity_trees = %s, proximity_houses_buildings = %s,
                          proposed_grave_type = %s, general_remarks = %s, inspector_signature = %s,
-                         received_by = %s, created_at = %s
+                         inspector_name = %s, received_by = %s, created_at = %s
                          WHERE id = %s''',
                       (data['inspection_date'], data['applicant_name'], data['deceased_name'], data['burial_location'],
                        data['site_description'], data['proximity_water_source'], data['proximity_perimeter_boundaries'],
                        data['proximity_road_pathway'], data['proximity_trees'], data['proximity_houses_buildings'],
                        data['proposed_grave_type'], data['general_remarks'], data['inspector_signature'],
-                       data['received_by'], data.get('created_at', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
-                       data['id']))
+                       data.get('inspector_name', ''), data['received_by'],
+                       data.get('created_at', datetime.now().strftime('%Y-%m-%d %H:%M:%S')), data['id']))
         else:
             cursor.execute('''INSERT INTO burial_site_inspections (inspection_date, applicant_name, deceased_name, burial_location,
                         site_description, proximity_water_source, proximity_perimeter_boundaries, proximity_road_pathway,
                         proximity_trees, proximity_houses_buildings, proposed_grave_type, general_remarks,
-                        inspector_signature, received_by, created_at)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
+                        inspector_signature, inspector_name, received_by, created_at)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
                       (data['inspection_date'], data['applicant_name'], data['deceased_name'], data['burial_location'],
                        data['site_description'], data['proximity_water_source'], data['proximity_perimeter_boundaries'],
                        data['proximity_road_pathway'], data['proximity_trees'], data['proximity_houses_buildings'],
                        data['proposed_grave_type'], data['general_remarks'], data['inspector_signature'],
-                       data['received_by'], datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+                       data.get('inspector_name', ''), data['received_by'], datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
         conn.commit()
     except Exception as e:
         print(f"Database error: {e}")
@@ -214,12 +214,12 @@ def get_inspections_by_inspector(inspector_name, inspection_type='all'):
         # Burial site inspections
         try:
             cursor.execute("""
-                SELECT id, deceased_name as establishment_name, '' as inspector_name, inspection_date,
+                SELECT id, deceased_name as establishment_name, inspector_name, inspection_date,
                        'Burial' as type_of_establishment, created_at, 'Completed' as result, 'Burial' as form_type
                 FROM burial_site_inspections
-                WHERE inspection_date IS NOT NULL
+                WHERE inspector_name = %s
                 ORDER BY created_at DESC
-            """)
+            """, (inspector_name,))
             all_inspections.extend(cursor.fetchall())
         except Exception as e:
             print(f"Error fetching burial inspections: {e}")
@@ -246,11 +246,12 @@ def get_inspections_by_inspector(inspector_name, inspection_type='all'):
                 """, (inspector_name,))
             elif inspection_type == 'Burial':
                 cursor.execute("""
-                    SELECT id, deceased_name as establishment_name, '' as inspector_name, inspection_date,
+                    SELECT id, deceased_name as establishment_name, inspector_name, inspection_date,
                            'Burial' as type_of_establishment, created_at, 'Completed' as result, 'Burial' as form_type
                     FROM burial_site_inspections
+                    WHERE inspector_name = %s
                     ORDER BY inspection_date DESC
-                """)
+                """, (inspector_name,))
             else:
                 cursor.execute("""
                     SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment,
