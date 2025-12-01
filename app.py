@@ -2154,6 +2154,10 @@ def submit_residential():
             except (ValueError, TypeError):
                 return default
 
+        # Get photos from form
+        photos_json = request.form.get('photos', '[]')
+        logging.info(f"📸 RESIDENTIAL - Received photos: {len(photos_json)} bytes")
+
         data = {
             'premises_name': request.form['premises_name'],
             'owner': request.form['owner'],
@@ -2175,10 +2179,13 @@ def submit_residential():
             'comments': request.form.get('comments', ''),
             'inspector_signature': request.form['inspector_signature'],
             'received_by': request.form.get('received_by', ''),
-            'photo_data': request.form.get('photos', '[]'),
+            'photo_data': photos_json,
             'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
+
+        logging.info(f"📸 RESIDENTIAL - Saving inspection with photo_data length: {len(data.get('photo_data', '[]'))}")
         inspection_id = save_residential_inspection(data)
+        logging.info(f"📸 RESIDENTIAL - Inspection {inspection_id} saved successfully")
 
         conn = get_db_connection()
         c = conn.cursor()

@@ -98,6 +98,9 @@ def save_burial_inspection(data):
 
 def save_residential_inspection(data):
     """Save residential inspection"""
+    import logging
+    logging.info(f"📸 DB - Saving residential with photo_data length: {len(data.get('photo_data', '[]'))}")
+
     conn = get_connection()
     cursor = conn.cursor()
     inspection_id = None
@@ -430,6 +433,7 @@ def get_residential_inspection_details(inspection_id):
             'inspector_signature': inspection[19] or '',
             'received_by': inspection[20] or '',
             'created_at': inspection[21] or '',
+            'photo_data': inspection[22] or '[]',  # Added photo_data column
             'checklist_scores': checklist_scores
         }
     cursor.close()
