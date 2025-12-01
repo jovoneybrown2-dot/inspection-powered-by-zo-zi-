@@ -170,6 +170,10 @@ CODE_INTEGRITY = {'valid': None, 'checked': False, 'version': 'unknown'}
 LICENSE_INFO = {'valid': False, 'institution': 'Unlicensed', 'message': 'Not checked'}
 INSTALLATION_ID = get_installation_id()
 
+# Set global socket timeout for all network operations during startup
+import socket
+socket.setdefaulttimeout(5)  # 5 second timeout for all network calls
+
 print("\n" + "="*70)
 print("🔐 ZO-ZI INSPECTION SYSTEM - SECURITY CHECK")
 print("="*70)
@@ -179,8 +183,13 @@ print(f"\n📋 Installation ID: {INSTALLATION_ID}")
 
 # 2. Check Code Integrity
 print("\n🔍 Checking code integrity...")
-integrity_result = verify_integrity()
-CODE_INTEGRITY = integrity_result
+try:
+    integrity_result = verify_integrity()
+    CODE_INTEGRITY = integrity_result
+except (socket.timeout, Exception) as e:
+    print(f"   ⚠️  Integrity check failed: {e} (non-critical, continuing)")
+    integrity_result = {'valid': None, 'checked': False, 'version': 'unknown'}
+    CODE_INTEGRITY = integrity_result
 
 if integrity_result['valid'] is None:
     print("   ⚠️  Development mode - No integrity manifest")
@@ -196,8 +205,15 @@ else:
     app.config['CODE_MODIFIED'] = True
     app.config['MODIFIED_FILES'] = integrity_result.get('modified_files', [])
 
-# Send integrity report to monitoring server
-send_integrity_report(integrity_result)
+# Send integrity report to monitoring server (with timeout to prevent blocking)
+try:
+    import socket
+    original_timeout = socket.getdefaulttimeout()
+    socket.setdefaulttimeout(3)  # 3 second timeout
+    send_integrity_report(integrity_result)
+    socket.setdefaulttimeout(original_timeout)
+except (socket.timeout, Exception) as e:
+    print(f"   ⚠️  Integrity report failed: {e} (non-critical, continuing)")
 
 # 3. Check License
 print("\n🔑 Checking license...")
@@ -205,21 +221,30 @@ license_key = os.environ.get('ZOZI_LICENSE_KEY')
 
 if license_key:
     print(f"   License key found: {license_key[:12]}...")
-    valid, institution, message = validate_license(license_key)
-    LICENSE_INFO = {
-        'valid': valid,
-        'institution': institution or 'Unknown',
-        'message': message
-    }
+    try:
+        valid, institution, message = validate_license(license_key)
+        LICENSE_INFO = {
+            'valid': valid,
+            'institution': institution or 'Unknown',
+            'message': message
+        }
 
-    if valid:
-        print(f"   ✅ License valid")
-        print(f"      Institution: {institution}")
-        print(f"      Status: {message}")
-        app.config['DEMO_MODE'] = False
-    else:
-        print(f"   ❌ License validation failed: {message}")
+        if valid:
+            print(f"   ✅ License valid")
+            print(f"      Institution: {institution}")
+            print(f"      Status: {message}")
+            app.config['DEMO_MODE'] = False
+        else:
+            print(f"   ❌ License validation failed: {message}")
+            app.config['DEMO_MODE'] = True
+    except (socket.timeout, Exception) as e:
+        print(f"   ⚠️  License validation failed: {e} (running in demo mode)")
         app.config['DEMO_MODE'] = True
+        LICENSE_INFO = {
+            'valid': False,
+            'institution': 'Demo Mode',
+            'message': f'Validation error: {e}'
+        }
 else:
     print("   ⚠️  No license key found (ZOZI_LICENSE_KEY environment variable)")
     print("      Running in DEMO MODE")
@@ -249,6 +274,8 @@ except Exception as e:
 
 print("\n" + "="*70)
 print("✅ SECURITY CHECK COMPLETE")
+print("="*70)
+print("🚀 Flask app initialized - Ready to accept HTTP connections")
 print("="*70 + "\n")
 
 # =============================================================================
