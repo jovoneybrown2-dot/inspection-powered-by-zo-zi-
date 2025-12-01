@@ -4057,7 +4057,7 @@ def swimming_pool_inspection_detail(id):
 
     # Also get backup scores from inspection_items table
     cursor.execute(f"SELECT item_id, details FROM inspection_items WHERE inspection_id = {ph}", (id,))
-    item_scores = {row[0]: float(row[1]) if row[1] and str(row[1]).replace('.', '', 1).isdigit() else 0.0
+    item_scores = {row['item_id']: float(row['details']) if row['details'] and str(row['details']).replace('.', '', 1).isdigit() else 0.0
                    for row in cursor.fetchall()}
 
     conn.close()
