@@ -1982,7 +1982,7 @@ def institutional_inspection_detail(id):
     return render_template('institutional_inspection_detail.html',
                            inspection=inspection_dict,
                            checklist=get_form_checklist_items('Institutional', INSTITUTIONAL_CHECKLIST_ITEMS),
-                           photo_data=[])  # Photos excluded from PDF downloads
+                           photo_data=photos)
 
 @app.route('/submit_spirit_licence', methods=['POST'])
 def submit_spirit_licence():
@@ -3079,7 +3079,7 @@ def inspection_detail(id):
                 photos = []
 
         return render_template('inspection_detail.html', inspection=inspection_data, checklist=get_form_checklist_items('Food Establishment', FOOD_CHECKLIST_ITEMS),
-                              photo_data=[])  # Photos excluded from PDF downloads
+                              photo_data=photos)  # Pass actual photos to template
     return "Inspection not found", 404
 
 @app.route('/residential/inspection/<int:form_id>')
@@ -3149,7 +3149,7 @@ def residential_inspection(form_id):
                           created_at=created_at,
                           checklist=get_form_checklist_items('Residential', RESIDENTIAL_CHECKLIST_ITEMS),
                           checklist_scores=checklist_scores,
-                          photo_data=[])  # Photos excluded from PDF downloads
+                          photo_data=photos)
 
 @app.route('/meat_processing/inspection/<int:form_id>')
 def meat_processing_inspection(form_id):
@@ -3248,7 +3248,7 @@ def burial_inspection_detail(id):
             photos = []
 
     return render_template('burial_inspection_detail.html', inspection=inspection_data,
-                          photo_data=[])  # Photos excluded from PDF downloads
+                          photo_data=photos)
 
 # Replace ALL your PDF download functions with these exact form replicas
 
@@ -3972,6 +3972,28 @@ def download_spirit_licence_pdf(form_id):
     response.headers['Content-Disposition'] = f'attachment; filename=spirit_licence_inspection_{form_id}.pdf'
     return response
 
+@app.route('/spirit_licence/inspection/<int:id>')
+def spirit_licence_inspection_detail(id):
+    if 'inspector' not in session and 'admin' not in session:
+        return redirect(url_for('login'))
+
+    details = get_spirit_licence_inspection_details(id)
+    if not details:
+        return "Spirit Licence inspection not found", 404
+
+    # Parse photos from JSON string to Python list
+    photos = []
+    if details.get('photo_data'):
+        try:
+            photos = json.loads(details.get('photo_data', '[]'))
+        except:
+            photos = []
+
+    return render_template('spirit_licence_inspection_detail.html',
+                          inspection=details,
+                          checklist=get_form_checklist_items('Spirit Licence', SPIRIT_LICENCE_CHECKLIST_ITEMS),
+                          photo_data=photos)
+
 @app.route('/swimming_pool/inspection/<int:id>')
 def swimming_pool_inspection_detail(id):
     from db_config import get_placeholder
@@ -4058,7 +4080,7 @@ def swimming_pool_inspection_detail(id):
     return render_template('swimming_pool_inspection_detail.html',
                            inspection=inspection_dict,
                            checklist=get_form_checklist_items('Swimming Pool', SWIMMING_POOL_CHECKLIST_ITEMS),
-                           photo_data=[])  # Photos excluded from PDF downloads
+                           photo_data=photos)
 
 # Debug route for session verification
 @app.route('/debug_session')
@@ -4616,7 +4638,7 @@ def barbershop_inspection_detail(id):
             photos = []
 
     return render_template('barbershop_inspection_detail.html', inspection=inspection_dict, checklist=get_form_checklist_items('Barbershop', BARBERSHOP_CHECKLIST_ITEMS),
-                          photo_data=[])  # Photos excluded from PDF downloads
+                          photo_data=photos)
 
 # Replace your download_barbershop_pdf function with this corrected version
 @app.route('/download_barbershop_pdf/<int:form_id>')
@@ -6671,7 +6693,7 @@ def get_security_metrics():
         return render_template('small_hotels_inspection_detail.html',
                                inspection=inspection_dict,
                                checklist=get_form_checklist_items('Small Hotel', SMALL_HOTELS_CHECKLIST_ITEMS),
-                               photo_data=[])  # Photos excluded from PDF downloads
+                               photo_data=photos)
 
 
     # 3. Route to get all users for contact list
@@ -8844,7 +8866,7 @@ def small_hotels_inspection_detail(id):
 
     return render_template('small_hotels_inspection_detail.html',
                            inspection=inspection_obj,
-                           photo_data=[])  # Photos excluded from PDF downloads
+                           photo_data=photos)
 
 # SIMPLIFIED INSPECTION REPORTS
 @app.route('/api/admin/generate_report', methods=['POST'])
