@@ -139,17 +139,20 @@
         .score-dropdown {
             width: 100%;
             border: 1px solid #ccc;
-            background: white;
+            background-color: white !important;
             text-align: center;
             text-align-last: center;
             font-size: 16px;
             font-weight: bold;
             padding: 5px;
             cursor: pointer;
-            color: #000 !important;
+            color: black !important;
             height: auto;
             min-height: 30px;
             line-height: normal;
+            -webkit-appearance: menulist;
+            -moz-appearance: menulist;
+            appearance: menulist;
         }
 
         .score-dropdown:hover {
@@ -164,8 +167,14 @@
         .score-dropdown option {
             font-size: 16px;
             font-weight: bold;
-            color: #000 !important;
-            background: white;
+            color: black !important;
+            background-color: white !important;
+        }
+
+        /* Force selected value visibility */
+        select.score-dropdown {
+            color: black !important;
+            background: white !important;
         }
 
         .section-header {
