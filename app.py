@@ -11840,4 +11840,7 @@ if __name__ == '__main__':
     except Exception as e:
         print(f"⚠️  Auto-fix checklist error: {e}")
 
-    app.run(debug=True, port=5002)
+if __name__ == '__main__':
+    # Only run Flask dev server if executed directly (not via Gunicorn)
+    port = int(os.environ.get('PORT', 5002))
+    app.run(debug=True, host='0.0.0.0', port=port)
