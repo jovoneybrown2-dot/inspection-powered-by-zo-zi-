@@ -41,15 +41,16 @@ def save_inspection(data):
     cursor.execute('''INSERT INTO inspections (establishment_name, address, inspector_name, inspection_date, inspection_time,
                  type_of_establishment, no_of_employees, purpose_of_visit, action, result, food_inspected, food_condemned,
                  critical_score, overall_score, comments, inspector_signature, received_by, form_type, scores, created_at,
-                 inspector_code, license_no, owner)
-                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                 inspector_code, license_no, owner, photo_data)
+                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                  RETURNING id''',
               (data['establishment_name'], data['address'], data['inspector_name'], data['inspection_date'],
                inspection_time, data['type_of_establishment'], no_of_employees,
                data['purpose_of_visit'], data['action'], data['result'], data['food_inspected'],
                data['food_condemned'], critical_score, overall_score, data['comments'],
                data['inspector_signature'], data['received_by'], data['form_type'], data['scores'],
-               data['created_at'], data['inspector_code'], data['license_no'], data['owner']))
+               data['created_at'], data['inspector_code'], data['license_no'], data['owner'],
+               data.get('photo_data', '[]')))
 
     inspection_id = cursor.fetchone()[0]
     conn.commit()
@@ -109,7 +110,7 @@ def save_residential_inspection(data):
                                 result = %s, onsite_system = %s, building_construction_type = %s, purpose_of_visit = %s,
                                 action = %s, no_of_bedrooms = %s, total_population = %s, critical_score = %s,
                                 overall_score = %s, comments = %s, inspector_signature = %s, received_by = %s,
-                                created_at = %s
+                                photo_data = %s, created_at = %s
                             WHERE id = %s
                         """,
                         (data['premises_name'], data['owner'], data['address'], data['inspector_name'],
@@ -117,7 +118,7 @@ def save_residential_inspection(data):
                          data['result'], data['onsite_system'], data['building_construction_type'], data['purpose_of_visit'],
                          data['action'], data.get('no_of_bedrooms', ''), data.get('total_population', ''),
                          data.get('critical_score', 0), data.get('overall_score', 0), data['comments'],
-                         data['inspector_signature'], data['received_by'],
+                         data['inspector_signature'], data['received_by'], data.get('photo_data', '[]'),
                          data.get('created_at', datetime.now().strftime('%Y-%m-%d %H:%M:%S')), data['id']))
             inspection_id = data['id']
         else:
@@ -126,9 +127,9 @@ def save_residential_inspection(data):
                     premises_name, owner, address, inspector_name,
                     inspection_date, inspector_code, treatment_facility, vector, result, onsite_system,
                     building_construction_type, purpose_of_visit, action, no_of_bedrooms, total_population,
-                    critical_score, overall_score, comments, inspector_signature, received_by, created_at
+                    critical_score, overall_score, comments, inspector_signature, received_by, photo_data, created_at
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (
                 data['premises_name'], data['owner'], data['address'], data['inspector_name'],
@@ -136,7 +137,7 @@ def save_residential_inspection(data):
                 data['result'], data['onsite_system'], data['building_construction_type'], data['purpose_of_visit'],
                 data['action'], data.get('no_of_bedrooms', ''), data.get('total_population', ''),
                 data.get('critical_score', 0), data.get('overall_score', 0), data['comments'],
-                data['inspector_signature'], data['received_by'],
+                data['inspector_signature'], data['received_by'], data.get('photo_data', '[]'),
                 datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             ))
             inspection_id = cursor.fetchone()[0]

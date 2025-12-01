@@ -55,7 +55,8 @@ if get_db_type() == 'postgresql':
         get_burial_inspection_details,
         save_meat_processing_inspection,
         get_meat_processing_inspections,
-        get_meat_processing_inspection_details
+        get_meat_processing_inspection_details,
+        get_spirit_licence_inspection_details
     )
 else:
     # Use SQLite database module
