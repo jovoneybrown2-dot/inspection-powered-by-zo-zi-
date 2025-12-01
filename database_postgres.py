@@ -395,7 +395,8 @@ def get_burial_inspection_details(inspection_id):
             'general_remarks': inspection[12] or '',
             'inspector_signature': inspection[13] or '',
             'received_by': inspection[14] or '',
-            'created_at': inspection[15] or ''
+            'created_at': inspection[15] or '',
+            'photo_data': inspection[16] or '[]'  # Added photo_data column
         }
     return None
 
