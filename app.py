@@ -1725,7 +1725,7 @@ def submit_institutional():
         establishment_name = request.form.get('establishment_name', '')
         owner_operator = request.form.get('owner_operator', '')
         address = request.form.get('address', '')
-        inspector_name = request.form.get('inspector_name', '')
+        inspector_name = session.get('inspector', '')  # Use session inspector
 
         # Institutional specific fields
         staff_complement = request.form.get('staff_complement', '')
@@ -2025,7 +2025,7 @@ def submit_spirit_licence():
         'owner': request.form.get('owner_operator', ''),
         'address': request.form.get('address', ''),
         'license_no': '13697',
-        'inspector_name': request.form.get('inspector_name', ''),
+        'inspector_name': session.get('inspector', ''),  # Use session inspector
         'inspection_date': request.form.get('inspection_date', ''),
         'inspection_time': '',
         'type_of_establishment': request.form.get('type_of_establishment', 'Spirit Licence Premises'),
@@ -2091,7 +2091,7 @@ def submit_form(form_type):
                 'address': request.form.get('address'),
                 'owner': request.form.get('owner'),
                 'license_no': request.form.get('license_no'),
-                'inspector_name': request.form.get('inspector_name'),
+                'inspector_name': session.get('inspector', ''),  # Use session inspector
                 'inspector_code': request.form.get('inspector_code'),
                 'inspection_date': request.form.get('inspection_date'),
                 'inspection_time': request.form.get('inspection_time'),
@@ -2162,7 +2162,7 @@ def submit_residential():
             'premises_name': request.form['premises_name'],
             'owner': request.form['owner'],
             'address': request.form['address'],
-            'inspector_name': request.form['inspector_name'],
+            'inspector_name': session.get('inspector', ''),  # Use session inspector
             'inspection_date': request.form['inspection_date'],
             'inspector_code': request.form['inspector_code'],
             'treatment_facility': request.form['treatment_facility'],
@@ -2306,7 +2306,7 @@ def submit_meat_processing():
         'establishment_name': request.form.get('establishment_name', ''),
         'owner_operator': request.form.get('owner_operator', ''),
         'address': request.form.get('address', ''),
-        'inspector_name': request.form.get('inspector_name', ''),
+        'inspector_name': session.get('inspector', ''),  # Use session inspector
         'establishment_no': request.form.get('establishment_no', ''),
         'overall_score': overall_score,
         'critical_score': critical_score,
@@ -2389,7 +2389,7 @@ def submit_swimming_pools():
     # Extract form data
     operator = request.form.get('operator')
     date_inspection = request.form.get('date_inspection')
-    inspector_id = request.form.get('inspector_id')
+    inspector_name = session.get('inspector', '')  # Use session inspector
     pool_class = request.form.get('pool_class')
     address = request.form.get('address')
     physical_location = request.form.get('physical_location')
@@ -2459,7 +2459,7 @@ def submit_swimming_pools():
     all_placeholders = f"{base_placeholders}, {score_placeholders}"
 
     base_values = (
-        operator, operator, address, physical_location, pool_class, inspector_id,
+        operator, operator, address, physical_location, pool_class, inspector_name,
         date_inspection, 'Swimming Pool', result, datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         inspector_comments, ','.join(scores), overall_score, critical_score,
         inspector_signature, manager_signature, manager_date, photo_data
@@ -2708,7 +2708,7 @@ def submit_small_hotels():
         data.get('establishment_name', ''),
         data.get('address', ''),
         data.get('physical_location', ''),
-        data.get('inspector_name', ''),
+        session.get('inspector', ''),  # Use session inspector
         data.get('inspection_date', ''),
         data.get('comments', ''),
         'Pass' if overall_score >= 70 else 'Fail',
@@ -4497,7 +4497,7 @@ def submit_barbershop():
         'owner': request.form.get('owner', ''),
         'address': request.form.get('address', ''),
         'license_no': request.form.get('license_no', ''),
-        'inspector_name': request.form.get('inspector_name', ''),
+        'inspector_name': session.get('inspector', ''),  # Use session inspector
         'inspection_date': request.form.get('inspection_date', ''),
         'inspection_time': request.form.get('inspection_time', ''),
         'type_of_establishment': 'Barbershop',
