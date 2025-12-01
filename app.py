@@ -230,9 +230,11 @@ else:
         'message': 'No license key provided'
     }
 
-# 4. Send startup telemetry
+# 4. Send startup telemetry (non-blocking to avoid deployment timeout)
 print("\n📡 Sending startup telemetry...")
 try:
+    import socket
+    socket.setdefaulttimeout(3)  # 3 second timeout for network calls
     send_telemetry('app_started', {
         'version': CODE_INTEGRITY.get('version'),
         'integrity_valid': CODE_INTEGRITY.get('valid'),
@@ -240,8 +242,10 @@ try:
         'institution': LICENSE_INFO['institution']
     })
     print("   ✅ Telemetry sent")
+except socket.timeout:
+    print("   ⏱️  Telemetry timeout (non-critical, continuing)")
 except Exception as e:
-    print(f"   ⚠️  Telemetry failed: {e}")
+    print(f"   ⚠️  Telemetry failed: {e} (non-critical, continuing)")
 
 print("\n" + "="*70)
 print("✅ SECURITY CHECK COMPLETE")
