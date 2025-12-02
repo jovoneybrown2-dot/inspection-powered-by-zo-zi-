@@ -2592,11 +2592,30 @@
                     },
                     rightPriceScale: {
                         borderColor: '#2a2e39',
+                        visible: true,
+                        scaleMargins: {
+                            top: 0.1,
+                            bottom: 0.1,
+                        },
                     },
                     timeScale: {
                         borderColor: '#2a2e39',
                         timeVisible: true,
                         secondsVisible: false,
+                        visible: true,
+                        fixLeftEdge: false,
+                        fixRightEdge: false,
+                    },
+                    handleScroll: {
+                        vertTouchDrag: true,
+                        mouseWheel: true,
+                        pressedMouseMove: true,
+                        horzTouchDrag: true
+                    },
+                    handleScale: {
+                        axisPressedMouseMove: true,
+                        mouseWheel: true,
+                        pinch: true,
                     },
                 });
 
@@ -2610,6 +2629,14 @@
                         mode: null
                     }
                 };
+
+                // Add resize observer to handle container size changes
+                const resizeObserver = new ResizeObserver(() => {
+                    chart.applyOptions({
+                        width: container.offsetWidth,
+                    });
+                });
+                resizeObserver.observe(container);
 
                 console.log(`Chart created for: ${tabName}`);
             } catch (error) {
@@ -3132,6 +3159,10 @@
                 const total = passCount + failCount;
                 const currentPassRate = total > 0 ? (passCount / total) * 100 : previousClose;
 
+                if (i < 3) {
+                    console.log(`📅 Date ${i}: ${date}, Pass: ${passCount}, Fail: ${failCount}, Rate: ${currentPassRate.toFixed(2)}%`);
+                }
+
                 // Create realistic OHLC data for candlestick patterns
                 let open, high, low, close;
 
@@ -3379,7 +3410,11 @@
                         chartObj.series = chartObj.chart.addCandlestickSeries({
                             upColor: '#26a69a',
                             downColor: '#ef5350',
-                            borderVisible: false,
+                            borderVisible: true,
+                            borderColor: '#378658',
+                            borderUpColor: '#26a69a',
+                            borderDownColor: '#ef5350',
+                            wickVisible: true,
                             wickUpColor: '#26a69a',
                             wickDownColor: '#ef5350',
                             priceFormat: {
@@ -3388,6 +3423,7 @@
                                 minMove: 0.01,
                             },
                         });
+                        console.log(`📊 Setting ${data.length} candlesticks on chart`, data.slice(0, 3));
                         chartObj.series.setData(data);
                         break;
 
@@ -3428,7 +3464,16 @@
                         break;
                 }
 
-                chartObj.chart.timeScale().fitContent();
+                // Force chart to fit all data and make it visible
+                if (data && data.length > 0) {
+                    chartObj.chart.timeScale().fitContent();
+
+                    // Also set visible range explicitly to ensure all data is shown
+                    setTimeout(() => {
+                        chartObj.chart.timeScale().resetTimeScale();
+                        chartObj.chart.timeScale().fitContent();
+                    }, 100);
+                }
 
                 console.log(`Chart updated with ${data.length} data points for ${timePeriod} timeframe`);
             } catch (error) {
