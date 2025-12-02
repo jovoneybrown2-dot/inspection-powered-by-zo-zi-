@@ -90,6 +90,15 @@ def get_table_columns(cursor, table_name):
         cursor.execute(f"PRAGMA table_info({table_name})")
         return [column[1] for column in cursor.fetchall()]
 
+def get_current_inspector_name():
+    """Get the current user's inspector name - handles both regular inspectors and admins in inspector mode"""
+    if session.get('admin_inspector_mode', False):
+        # Admin is in inspector mode - use their admin username
+        return session.get('admin', '')
+    else:
+        # Regular inspector
+        return session.get('inspector', '')
+
 app = Flask(__name__, template_folder='templates')
 app.secret_key = os.urandom(24)
 
@@ -1725,7 +1734,7 @@ def submit_institutional():
         establishment_name = request.form.get('establishment_name', '')
         owner_operator = request.form.get('owner_operator', '')
         address = request.form.get('address', '')
-        inspector_name = session.get('inspector', '')  # Use session inspector
+        inspector_name = get_current_inspector_name()
 
         # Institutional specific fields
         staff_complement = request.form.get('staff_complement', '')
@@ -2025,7 +2034,7 @@ def submit_spirit_licence():
         'owner': request.form.get('owner_operator', ''),
         'address': request.form.get('address', ''),
         'license_no': '13697',
-        'inspector_name': session.get('inspector', ''),  # Use session inspector
+        'inspector_name': get_current_inspector_name(),
         'inspection_date': request.form.get('inspection_date', ''),
         'inspection_time': '',
         'type_of_establishment': request.form.get('type_of_establishment', 'Spirit Licence Premises'),
@@ -2091,7 +2100,7 @@ def submit_form(form_type):
                 'address': request.form.get('address'),
                 'owner': request.form.get('owner'),
                 'license_no': request.form.get('license_no'),
-                'inspector_name': session.get('inspector', ''),  # Use session inspector
+                'inspector_name': get_current_inspector_name(),
                 'inspector_code': request.form.get('inspector_code'),
                 'inspection_date': request.form.get('inspection_date'),
                 'inspection_time': request.form.get('inspection_time'),
@@ -2162,7 +2171,7 @@ def submit_residential():
             'premises_name': request.form['premises_name'],
             'owner': request.form['owner'],
             'address': request.form['address'],
-            'inspector_name': session.get('inspector', ''),  # Use session inspector
+            'inspector_name': get_current_inspector_name(),
             'inspection_date': request.form['inspection_date'],
             'inspector_code': request.form['inspector_code'],
             'treatment_facility': request.form['treatment_facility'],
@@ -2216,9 +2225,6 @@ def submit_burial():
     if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({'message': 'Unauthorized: Please log in'}), 401
 
-    # Get inspector name from session
-    inspector_name = session.get('inspector', '')
-
     data = {
         'id': request.form.get('id', ''),
         'inspection_date': request.form.get('inspection_date', ''),
@@ -2234,7 +2240,7 @@ def submit_burial():
         'proposed_grave_type': request.form.get('proposed_grave_type', ''),
         'general_remarks': request.form.get('general_remarks', ''),
         'inspector_signature': request.form.get('inspector_signature', ''),
-        'inspector_name': inspector_name,  # Add inspector_name from session
+        'inspector_name': get_current_inspector_name(),
         'received_by': request.form.get('received_by', ''),
         'photo_data': request.form.get('photos', '[]')
     }
@@ -2306,7 +2312,7 @@ def submit_meat_processing():
         'establishment_name': request.form.get('establishment_name', ''),
         'owner_operator': request.form.get('owner_operator', ''),
         'address': request.form.get('address', ''),
-        'inspector_name': session.get('inspector', ''),  # Use session inspector
+        'inspector_name': get_current_inspector_name(),
         'establishment_no': request.form.get('establishment_no', ''),
         'overall_score': overall_score,
         'critical_score': critical_score,
@@ -2389,7 +2395,7 @@ def submit_swimming_pools():
     # Extract form data
     operator = request.form.get('operator')
     date_inspection = request.form.get('date_inspection')
-    inspector_name = session.get('inspector', '')  # Use session inspector
+    inspector_name = get_current_inspector_name()
     pool_class = request.form.get('pool_class')
     address = request.form.get('address')
     physical_location = request.form.get('physical_location')
@@ -2708,7 +2714,7 @@ def submit_small_hotels():
         data.get('establishment_name', ''),
         data.get('address', ''),
         data.get('physical_location', ''),
-        session.get('inspector', ''),  # Use session inspector
+        get_current_inspector_name(),
         data.get('inspection_date', ''),
         data.get('comments', ''),
         'Pass' if overall_score >= 70 else 'Fail',
@@ -4497,7 +4503,7 @@ def submit_barbershop():
         'owner': request.form.get('owner', ''),
         'address': request.form.get('address', ''),
         'license_no': request.form.get('license_no', ''),
-        'inspector_name': session.get('inspector', ''),  # Use session inspector
+        'inspector_name': get_current_inspector_name(),
         'inspection_date': request.form.get('inspection_date', ''),
         'inspection_time': request.form.get('inspection_time', ''),
         'type_of_establishment': 'Barbershop',
@@ -7753,7 +7759,8 @@ def get_my_inspections():
     if 'inspector' not in session and not session.get('admin_inspector_mode', False):
         return jsonify({'error': 'Unauthorized'}), 401
 
-    inspector_name = session.get('inspector')
+    # Get current inspector name (handles both inspectors and admins in inspector mode)
+    inspector_name = get_current_inspector_name()
     inspection_type = request.args.get('type', 'all')
 
     try:
