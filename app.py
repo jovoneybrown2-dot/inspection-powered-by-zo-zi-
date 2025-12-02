@@ -114,61 +114,97 @@ def get_dict_cursor(conn):
         return conn.cursor()
 
 # Auto-initialize database if it doesn't exist (for Gunicorn/Render deployment)
-if not os.path.exists('inspections.db'):
-    print("Database not found. Initializing...")
-    init_db()
-    print("Database initialized successfully!")
+# Run in background thread to not block Gunicorn startup
+def init_database_async():
+    """Initialize database and run migrations in background"""
+    import threading
+    import time
 
-# Run PostgreSQL migrations if using PostgreSQL
-if get_db_type() == 'postgresql':
-    try:
-        print("Running PostgreSQL migrations...")
-        from migrate_postgres_schema import run_migration
-        run_migration()
-    except Exception as e:
-        print(f"Migration warning: {e}")
+    def run_init():
+        # Give Gunicorn 2 seconds to bind to port first
+        time.sleep(2)
+
+        try:
+            if not os.path.exists('inspections.db'):
+                print("Database not found. Initializing...")
+                init_db()
+                print("Database initialized successfully!")
+        except Exception as e:
+            print(f"⚠️ Database init error: {e}")
+
+        # Run PostgreSQL migrations if using PostgreSQL
+        if get_db_type() == 'postgresql':
+            try:
+                print("Running PostgreSQL migrations...")
+                from migrate_postgres_schema import run_migration
+                run_migration()
+                print("✅ PostgreSQL migrations completed")
+            except Exception as e:
+                print(f"⚠️ Migration warning: {e}")
+
+    thread = threading.Thread(target=run_init, daemon=True)
+    thread.start()
+
+# Start background initialization
+init_database_async()
 
 # Run SQLite migrations for existing databases
-if os.path.exists('inspections.db'):
-    try:
-        conn = get_db_connection()
-        c = conn.cursor()
+# Moved to background thread to not block startup
+def run_sqlite_migrations_async():
+    """Run SQLite migrations in background"""
+    import threading
+    import time
 
-        # Migrate inspections table
-        columns = get_table_columns(c, 'inspections')
-        if 'photo_data' not in columns:
-            print("Adding photo_data column to inspections table...")
-            c.execute("ALTER TABLE inspections ADD COLUMN photo_data TEXT")
-            conn.commit()
-            print("Migration completed: photo_data column added to inspections")
+    def run_sqlite_migrations():
+        time.sleep(2.5)
 
-        # Migrate burial_site_inspections table
-        columns = get_table_columns(c, 'burial_site_inspections')
-        if 'photo_data' not in columns:
-            print("Adding photo_data column to burial_site_inspections table...")
-            c.execute("ALTER TABLE burial_site_inspections ADD COLUMN photo_data TEXT")
-            conn.commit()
-            print("Migration completed: photo_data column added to burial_site_inspections")
+        if os.path.exists('inspections.db'):
+            try:
+                print("🔄 Running SQLite migrations...")
+                conn = get_db_connection()
+                c = conn.cursor()
 
-        # Migrate residential_inspections table
-        columns = get_table_columns(c, 'residential_inspections')
-        if 'photo_data' not in columns:
-            print("Adding photo_data column to residential_inspections table...")
-            c.execute("ALTER TABLE residential_inspections ADD COLUMN photo_data TEXT")
-            conn.commit()
-            print("Migration completed: photo_data column added to residential_inspections")
+                # Migrate inspections table
+                columns = get_table_columns(c, 'inspections')
+                if 'photo_data' not in columns:
+                    print("Adding photo_data column to inspections table...")
+                    c.execute("ALTER TABLE inspections ADD COLUMN photo_data TEXT")
+                    conn.commit()
+                    print("Migration completed: photo_data column added to inspections")
 
-        # Migrate meat_processing_inspections table
-        columns = get_table_columns(c, 'meat_processing_inspections')
-        if 'photo_data' not in columns:
-            print("Adding photo_data column to meat_processing_inspections table...")
-            c.execute("ALTER TABLE meat_processing_inspections ADD COLUMN photo_data TEXT")
-            conn.commit()
-            print("Migration completed: photo_data column added to meat_processing_inspections")
+                # Migrate burial_site_inspections table
+                columns = get_table_columns(c, 'burial_site_inspections')
+                if 'photo_data' not in columns:
+                    print("Adding photo_data column to burial_site_inspections table...")
+                    c.execute("ALTER TABLE burial_site_inspections ADD COLUMN photo_data TEXT")
+                    conn.commit()
+                    print("Migration completed: photo_data column added to burial_site_inspections")
 
-        conn.close()
-    except Exception as e:
-        print(f"Migration error: {e}")
+                # Migrate residential_inspections table
+                columns = get_table_columns(c, 'residential_inspections')
+                if 'photo_data' not in columns:
+                    print("Adding photo_data column to residential_inspections table...")
+                    c.execute("ALTER TABLE residential_inspections ADD COLUMN photo_data TEXT")
+                    conn.commit()
+                    print("Migration completed: photo_data column added to residential_inspections")
+
+                # Migrate meat_processing_inspections table
+                columns = get_table_columns(c, 'meat_processing_inspections')
+                if 'photo_data' not in columns:
+                    print("Adding photo_data column to meat_processing_inspections table...")
+                    c.execute("ALTER TABLE meat_processing_inspections ADD COLUMN photo_data TEXT")
+                    conn.commit()
+                    print("Migration completed: photo_data column added to meat_processing_inspections")
+
+                conn.close()
+                print("✅ SQLite migrations completed")
+            except Exception as e:
+                print(f"⚠️ SQLite migration error: {e}")
+
+    thread = threading.Thread(target=run_sqlite_migrations, daemon=True)
+    thread.start()
+
+run_sqlite_migrations_async()
 
 # =============================================================================
 # SECURITY INITIALIZATION - Zo-Zi Protection System
@@ -11792,17 +11828,39 @@ def api_update_checklist_items():
 
 
 # Initialize database and migrate checklists on app startup (works with Gunicorn)
-init_db()
-init_form_management_db()
-auto_migrate_checklists()
-auto_migrate_form_fields()
+# Run in background thread to not block Gunicorn startup
+def init_app_migrations_async():
+    """Run all app-level migrations in background"""
+    import threading
+    import time
 
-# Run signature date migration
-try:
-    from migrate_signature_dates import migrate_signature_dates
-    migrate_signature_dates()
-except Exception as e:
-    print(f"⚠ Signature date migration error (may already be applied): {e}")
+    def run_migrations():
+        # Give Gunicorn 3 seconds to bind to port first
+        time.sleep(3)
+
+        try:
+            print("🔄 Running app-level migrations...")
+            init_db()
+            init_form_management_db()
+            auto_migrate_checklists()
+            auto_migrate_form_fields()
+
+            # Run signature date migration
+            try:
+                from migrate_signature_dates import migrate_signature_dates
+                migrate_signature_dates()
+            except Exception as e:
+                print(f"⚠️ Signature date migration error (may already be applied): {e}")
+
+            print("✅ App-level migrations completed")
+        except Exception as e:
+            print(f"⚠️ App migration error: {e}")
+
+    thread = threading.Thread(target=run_migrations, daemon=True)
+    thread.start()
+
+# Start background migrations
+init_app_migrations_async()
 
 
 if __name__ == '__main__':
