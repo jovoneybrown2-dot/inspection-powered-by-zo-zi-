@@ -129,22 +129,96 @@
 
 /* Status Badges */
 .status-badge {
-    padding: 5px 10px;
-    border-radius: 12px;
-    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 11px;
     font-weight: bold;
     text-transform: uppercase;
+    display: inline-block;
+    letter-spacing: 0.5px;
 }
 
-/* Pass / Fail and others in blue tones */
 .status-pass {
-    background-color: #cce5ff;
-    color: #004085;
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
 }
 
 .status-fail {
     background-color: #f8d7da;
     color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status-satisfactory {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-unsatisfactory {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status-completed {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.status-unknown {
+    background-color: #e2e3e5;
+    color: #383d41;
+    border: 1px solid #d6d8db;
+}
+
+/* Action Buttons in My Inspections */
+.action-buttons {
+    white-space: nowrap;
+}
+
+.action-btn {
+    padding: 6px 12px;
+    margin: 0 3px;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: white;
+}
+
+.view-btn {
+    background-color: #007bff;
+}
+
+.view-btn:hover {
+    background-color: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+}
+
+.print-btn {
+    background-color: #28a745;
+}
+
+.print-btn:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(40,167,69,0.3);
+}
+
+.download-btn {
+    background-color: #17a2b8;
+}
+
+.download-btn:hover {
+    background-color: #138496;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(23,162,184,0.3);
 }
 
 .status-completed {
@@ -3059,15 +3133,16 @@ async function loadMyInspections(type = 'all') {
 
         if (data.inspections && data.inspections.length > 0) {
             const table = document.createElement('table');
+            table.className = 'my-inspections-table';
             table.innerHTML = `
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Type</th>
-                        <th>Establishment/Premises</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th style="width: 60px;">ID</th>
+                        <th style="width: 150px;">Type</th>
+                        <th style="width: 250px;">Establishment/Premises</th>
+                        <th style="width: 120px;">Date</th>
+                        <th style="width: 120px;">Status</th>
+                        <th style="width: 280px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -3077,16 +3152,28 @@ async function loadMyInspections(type = 'all') {
 
             data.inspections.forEach(inspection => {
                 const row = document.createElement('tr');
+
+                // Determine status class
+                let statusClass = 'status-badge ';
+                const result = inspection.result ? inspection.result.toLowerCase() : 'unknown';
+                if (result === 'pass' || result === 'completed' || result === 'satisfactory') {
+                    statusClass += 'status-pass';
+                } else if (result === 'fail' || result === 'unsatisfactory') {
+                    statusClass += 'status-fail';
+                } else {
+                    statusClass += 'status-unknown';
+                }
+
                 row.innerHTML = `
-                    <td>${inspection.id}</td>
-                    <td>${inspection.type}</td>
+                    <td style="text-align: center; font-weight: bold;">${inspection.id}</td>
+                    <td><strong>${inspection.type}</strong></td>
                     <td>${inspection.establishment_name || inspection.premises_name || 'N/A'}</td>
                     <td>${new Date(inspection.created_at).toLocaleDateString()}</td>
-                    <td><span class="status-${inspection.result ? inspection.result.toLowerCase() : 'unknown'}">${inspection.result || 'N/A'}</span></td>
-                    <td>
-                        <button onclick="viewInspection('${inspection.type}', ${inspection.id})" class="task-btn" style="background: #007bff; margin-right: 5px;">View</button>
-                        <button onclick="printInspection('${inspection.type}', ${inspection.id})" class="task-btn" style="background: #28a745; margin-right: 5px;">Print</button>
-                        <button onclick="downloadInspection('${inspection.type}', ${inspection.id})" class="task-btn" style="background: #17a2b8;">Download</button>
+                    <td style="text-align: center;"><span class="${statusClass}">${inspection.result || 'N/A'}</span></td>
+                    <td class="action-buttons">
+                        <button onclick="viewInspection('${inspection.type}', ${inspection.id})" class="action-btn view-btn">View</button>
+                        <button onclick="printInspection('${inspection.type}', ${inspection.id})" class="action-btn print-btn">Print</button>
+                        <button onclick="downloadInspection('${inspection.type}', ${inspection.id})" class="action-btn download-btn">Download</button>
                     </td>
                 `;
                 tbody.appendChild(row);
