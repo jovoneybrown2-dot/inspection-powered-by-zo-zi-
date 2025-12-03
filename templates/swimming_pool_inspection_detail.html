@@ -711,7 +711,7 @@
                 <td>Inspector's Signature</td>
                 <td><span class="input-field">{{ inspection.inspector_signature|default('') }}</span></td>
                 <td>Date</td>
-                <td><span class="input-field">{{ inspection.inspector_date|default(inspection.created_at|default('')|truncate(10, True, '')) }}</span></td>
+                <td><span class="input-field">{{ inspection.inspector_date|default((inspection.created_at|string)[:10] if inspection.created_at else '') }}</span></td>
             </tr>
             <tr>
                 <td>Manager's Signature</td>
