@@ -208,6 +208,14 @@ def init_db():
         # Column already exists
         pass
 
+    # Migration: Add first_login column if it doesn't exist
+    try:
+        c.execute("ALTER TABLE users ADD COLUMN first_login INTEGER DEFAULT 1")
+        print("✓ Added first_login column to users table")
+    except Exception:  # Catches both SQLite and PostgreSQL errors
+        # Column already exists
+        pass
+
     # Insert users
     users = [
         ('inspector1', 'Insp123!secure', 'inspector'),
@@ -221,7 +229,7 @@ def init_db():
     if get_db_type() == 'postgresql':
         c.executemany(f"INSERT INTO users (username, password, role) VALUES (%s, %s, %s) ON CONFLICT (username) DO NOTHING", users)
     else:
-        c.executemany("INSERT OR IGNORE INTO users (username, password, role) VALUES (%s, %s, %s)", users)
+        c.executemany("INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)", users)
 
     # Login history table (required by login route)
     c.execute(f'''CREATE TABLE IF NOT EXISTS login_history
@@ -344,7 +352,7 @@ def init_db():
         if get_db_type() == 'postgresql':
             c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (%s, %s, %s) ON CONFLICT (name) DO NOTHING', template)
         else:
-            c.execute('INSERT OR IGNORE INTO form_templates (name, description, form_type) VALUES (%s, %s, %s)', template)
+            c.execute('INSERT OR IGNORE INTO form_templates (name, description, form_type) VALUES (?, ?, ?)', template)
 
     # Only commit if not using autocommit (SQLite)
     if get_db_type() != 'postgresql':

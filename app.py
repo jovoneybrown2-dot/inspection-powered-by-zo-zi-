@@ -5663,7 +5663,7 @@ def login_post():
 
     conn = get_db_connection()
     # Support login with either username OR email (for shared database with Zo-Zi Marketplace)
-    c = execute_query(conn, "SELECT id, username, password, role, email, parish FROM users WHERE (username = %s OR email = %s) AND password = %s",
+    c = execute_query(conn, "SELECT id, username, password, role, email, parish, first_login FROM users WHERE (username = %s OR email = %s) AND password = %s",
               (username, username, password))
     user = c.fetchone()
 
@@ -5671,6 +5671,17 @@ def login_post():
             (login_type == 'inspector' and user['role'] == 'inspector') or
             (login_type == 'admin' and user['role'] == 'admin') or
             (login_type == 'medical_officer' and user['role'] == 'medical_officer')):
+
+        # Check if this is first login
+        first_login = user.get('first_login', 0) == 1
+
+        if first_login:
+            # User needs to change password before logging in
+            conn.close()
+            return jsonify({
+                'first_login': True,
+                'message': 'Please change your password'
+            })
 
         # Use username if available, otherwise use email (for Zo-Zi Marketplace users)
         user_identifier = user['username'] if user['username'] else user['email']
@@ -5742,12 +5753,19 @@ def login_post():
         # Log audit event
         log_audit_event(user_identifier, 'login', ip_address, f'Successful {login_type} login')
 
+        # Determine redirect URL
         if login_type == 'inspector':
-            return redirect(url_for('dashboard'))
+            redirect_url = url_for('dashboard')
         elif login_type == 'admin':
-            return redirect(url_for('admin'))
+            redirect_url = url_for('admin')
         else:  # medical_officer
-            return redirect(url_for('medical_officer'))
+            redirect_url = url_for('medical_officer')
+
+        # Return JSON response for AJAX handling
+        return jsonify({
+            'success': True,
+            'redirect': redirect_url
+        })
 
     conn.close()
 
@@ -5773,7 +5791,142 @@ def login_post():
         error_message='Invalid username or password'
     )
 
-    return render_template('login.html', error='Invalid credentials')
+    return jsonify({
+        'success': False,
+        'error': 'Invalid credentials'
+    })
+
+
+@app.route('/change_first_login_password', methods=['POST'])
+def change_first_login_password():
+    """Handle password change for first-time login users"""
+    from db_config import execute_query
+
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        new_password = data.get('new_password')
+        login_type = data.get('login_type')
+        latitude = data.get('latitude', '')
+        longitude = data.get('longitude', '')
+        ip_address = request.remote_addr
+
+        if not username or not new_password or not login_type:
+            return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+
+        # Validate password length
+        if len(new_password) < 6:
+            return jsonify({'success': False, 'error': 'Password must be at least 6 characters'}), 400
+
+        conn = get_db_connection()
+        try:
+            # Get user details
+            c = execute_query(conn, "SELECT id, username, role, email, parish, first_login FROM users WHERE username = %s",
+                            (username,))
+            user = c.fetchone()
+
+            if not user:
+                return jsonify({'success': False, 'error': 'User not found'}), 404
+
+            # Verify this is a first login
+            if user.get('first_login', 0) != 1:
+                return jsonify({'success': False, 'error': 'Not a first-time login'}), 400
+
+            # Verify role matches
+            if user['role'] != login_type and not (login_type == 'inspector' and user['role'] == 'inspector'):
+                return jsonify({'success': False, 'error': 'Role mismatch'}), 400
+
+            # Update password and set first_login to 0
+            execute_query(conn, "UPDATE users SET password = %s, first_login = 0 WHERE username = %s",
+                        (new_password, username))
+            conn.commit()
+
+            # Use username if available, otherwise use email
+            user_identifier = user['username'] if user['username'] else user['email']
+
+            # Create session for the user
+            session['user_id'] = user['id']
+            session[login_type] = user_identifier
+
+            # Audit log: successful login after password change
+            audit_user_login(user_identifier, success=True, ip_address=ip_address)
+
+            # Security monitoring: log successful login
+            security_monitor.log_login_attempt(
+                username=user_identifier,
+                success=True,
+                ip_address=ip_address,
+                user_agent=request.headers.get('User-Agent', ''),
+                session_id=str(session.get('user_id', ''))
+            )
+            security_monitor.log_audit(
+                username=user_identifier,
+                action_type='first_login_password_change',
+                action_description=f'First login password change and {login_type} login',
+                user_role=user['role'],
+                ip_address=ip_address,
+                user_agent=request.headers.get('User-Agent', '')
+            )
+
+            # Get user's parish from database
+            try:
+                parish = user['parish']
+            except (KeyError, IndexError):
+                parish = None
+
+            # Record login attempt
+            execute_query(conn,
+                "INSERT INTO login_history (user_id, username, email, role, login_time, ip_address) VALUES (%s, %s, %s, %s, %s, %s)",
+                (user['id'], user_identifier, user['email'], user['role'],
+                 datetime.now().strftime('%Y-%m-%d %H:%M:%S'), ip_address))
+
+            # Mark any old sessions for this user as inactive
+            execute_query(conn, "UPDATE user_sessions SET is_active = 0, logout_time = %s WHERE username = %s AND is_active = 1",
+                        (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), user_identifier))
+
+            # Track new user session with REAL location (only if GPS coordinates were captured)
+            if latitude and longitude:
+                try:
+                    lat_float = float(latitude)
+                    lng_float = float(longitude)
+                    execute_query(conn,
+                        "INSERT INTO user_sessions (username, user_role, login_time, last_activity, location_lat, location_lng, parish, ip_address, is_active) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                        (user_identifier, user['role'],
+                         datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                         datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                         lat_float, lng_float,
+                         parish, ip_address, 1))
+                    print(f"✅ User session tracked with GPS: {user_identifier} at ({lat_float}, {lng_float})")
+                except (ValueError, TypeError) as e:
+                    print(f"⚠️ Invalid GPS coordinates, session not tracked: {e}")
+            else:
+                print(f"⚠️ No GPS coordinates provided, user {user_identifier} will not appear on map")
+
+            conn.commit()
+
+            # Log audit event
+            log_audit_event(user_identifier, 'first_login_password_change', ip_address,
+                          f'Changed password on first login and completed {login_type} login')
+
+            # Determine redirect URL
+            if login_type == 'inspector':
+                redirect_url = url_for('dashboard')
+            elif login_type == 'admin':
+                redirect_url = url_for('admin')
+            else:  # medical_officer
+                redirect_url = url_for('medical_officer')
+
+            return jsonify({
+                'success': True,
+                'redirect': redirect_url
+            })
+
+        finally:
+            conn.close()
+
+    except Exception as e:
+        print(f"Error changing first login password: {e}")
+        return jsonify({'success': False, 'error': 'An error occurred'}), 500
 
 
 @app.route('/parish_leaderboard')
@@ -7356,10 +7509,10 @@ def add_user():
             if c.fetchone():
                 return jsonify({'success': False, 'error': 'Email already exists'}), 400
 
-            # Insert new user
+            # Insert new user with first_login flag set to 1
             c.execute('''
-                INSERT INTO users (username, email, password, role, is_flagged) 
-                VALUES (%s, %s, %s, %s, 0)
+                INSERT INTO users (username, email, password, role, is_flagged, first_login)
+                VALUES (%s, %s, %s, %s, 0, 1)
             ''', (username, email, password, role))
 
             conn.commit()

@@ -122,6 +122,61 @@
             background: rgba(0, 0, 0, 0.9);
             color: #ffffff;
         }
+
+        /* Password Change Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            width: 400px;
+            border: 2px solid #00ffff;
+        }
+
+        .modal-header {
+            color: #00ffff;
+            font-size: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 5px #00ffff;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-footer button {
+            flex: 1;
+        }
+
+        .password-requirements {
+            color: #aaa;
+            font-size: 12px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -136,7 +191,7 @@
         {% if error %}
             <p class="error">{{ error }}</p>
         {% endif %}
-        <form method="POST" action="/login">
+        <form method="POST" action="/login" id="loginForm">
             <div class="login-type">
                 <label for="login_type">Login Type:</label>
                 <select id="login_type" name="login_type" required>
@@ -155,7 +210,36 @@
         </form>
     </div>
 
+    <!-- Password Change Modal -->
+    <div id="passwordChangeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                Change Your Password
+            </div>
+            <div class="modal-body">
+                <p style="color: #fff; margin-bottom: 15px; font-size: 14px;">
+                    This is your first login. Please change your password to continue.
+                </p>
+                <p id="passwordError" class="error" style="display: none;"></p>
+                <form id="passwordChangeForm">
+                    <label for="new_password">New Password:</label>
+                    <input type="password" id="new_password" name="new_password" required minlength="6">
+                    <div class="password-requirements">
+                        Password must be at least 6 characters long
+                    </div>
+                    <label for="confirm_password">Confirm Password:</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required minlength="6">
+                    <div class="modal-footer">
+                        <button type="submit">Change Password</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
+        let pendingLoginData = null;
+
         // Remove flash by showing page when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
             document.documentElement.classList.add('loaded');
@@ -176,6 +260,95 @@
             } else {
                 console.warn('Geolocation not supported by browser');
             }
+
+            // Handle login form submission
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const formData = new FormData(this);
+
+                fetch('/login', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.first_login) {
+                        // Store login data for after password change
+                        pendingLoginData = {
+                            username: formData.get('username'),
+                            login_type: formData.get('login_type'),
+                            latitude: formData.get('latitude'),
+                            longitude: formData.get('longitude')
+                        };
+                        // Show password change modal
+                        document.getElementById('passwordChangeModal').classList.add('show');
+                    } else if (data.success) {
+                        // Login successful, redirect
+                        window.location.href = data.redirect;
+                    } else {
+                        // Show error
+                        alert(data.error || 'Login failed');
+                    }
+                })
+                .catch(error => {
+                    console.error('Login error:', error);
+                    alert('An error occurred during login');
+                });
+            });
+
+            // Handle password change form submission
+            document.getElementById('passwordChangeForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const newPassword = document.getElementById('new_password').value;
+                const confirmPassword = document.getElementById('confirm_password').value;
+                const errorElement = document.getElementById('passwordError');
+
+                // Validate passwords match
+                if (newPassword !== confirmPassword) {
+                    errorElement.textContent = 'Passwords do not match';
+                    errorElement.style.display = 'block';
+                    return;
+                }
+
+                // Validate password length
+                if (newPassword.length < 6) {
+                    errorElement.textContent = 'Password must be at least 6 characters';
+                    errorElement.style.display = 'block';
+                    return;
+                }
+
+                // Send password change request
+                fetch('/change_first_login_password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: pendingLoginData.username,
+                        new_password: newPassword,
+                        login_type: pendingLoginData.login_type,
+                        latitude: pendingLoginData.latitude,
+                        longitude: pendingLoginData.longitude
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Password changed, redirect to dashboard
+                        window.location.href = data.redirect;
+                    } else {
+                        errorElement.textContent = data.error || 'Failed to change password';
+                        errorElement.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Password change error:', error);
+                    errorElement.textContent = 'An error occurred';
+                    errorElement.style.display = 'block';
+                });
+            });
         });
     </script>
     {% include 'zozi_badge.html' %}
