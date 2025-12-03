@@ -989,24 +989,12 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="item-number">21</td>
-                        <td class="item-text">Items in storage properly labeled and packed</td>
-                        <td class="score-cell">2</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_22" data-critical="false">
-                                <option value="0">0</option>
-                                <option value="2">2</option>
-                            </select>
-                        </td>
-                        <td class="item-number">42</td>
-                        <td class="item-text">Air filters/dust collectors, checked, cleaned/replaced regularly</td>
-                        <td class="score-cell">2</td>
-                        <td class="score-cell">
-                            <select class="score-dropdown" name="score_42" data-critical="false">
-                                <option value="0">0</option>
-                                <option value="2">2</option>
-                            </select>
-                        </td>
+                        {{ render_item(21) }}
+                        {{ render_item(42) }}
+                    </tr>
+                    <tr>
+                        {{ render_item(22) }}
+                        <td colspan="4"></td>
                     </tr>
                     <tr>
                         <td colspan="4" class="section-header">SANITARY FACILITIES</td>
