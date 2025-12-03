@@ -1,10 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git add:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nFix PDF downloads to display actual inspector-selected scores\n\nFixed score retrieval in PDF generation for all inspection types to ensure \nscores displayed in downloaded PDFs match what inspectors selected on forms:\n\n- Barbershop: Changed from querying inspection_items table to reading \n  score_XX columns from inspections table\n- Swimming Pool: Changed from querying inspection_items table to reading \n  score_XX columns from inspections table  \n- Meat Processing: Fixed score lookup to use zero-padded keys (01, 02, etc.)\n  to match database storage format\n- Spirit Licence: Changed from parsing scores string to querying \n  inspection_items table where scores are actually stored\n\nFood Establishment, Institutional, Small Hotels, and Residential PDFs were \nalready correctly retrieving scores from their respective storage locations.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git push:*)",
-      "Bash(git commit:*)"
+      "Bash(for route in submit_institutional submit_spirit_licence submit_small_hotels submit_barbershop)",
+      "Bash(do echo \"=== $route ===\")",
+      "Bash(grep:*)",
+      "Bash(done)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nFix dropdown score visibility with clean simple styling\n\nChanges to .score-dropdown CSS:\n- Reduced border to 1px solid #ccc (clean, normal dropdown appearance)\n- Reduced font-size to 16px (readable, not oversized)\n- Reduced font-weight to bold (not extra-bold 900)\n- Reduced padding to 5px (compact, normal)\n- Changed height to auto with min-height 30px (flexible sizing)\n- Added line-height: normal (prevents text cutoff)\n- Simplified hover to just border color change\n- Simplified focus outline to 1px\n- Removed option:checked styling (browser default works better)\n\nResult: Selected dropdown values now clearly visible in BLACK text with clean professional appearance.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit:*)",
+      "Bash(python:*)",
+      "Bash(sqlite3:*)"
     ],
     "deny": [],
     "ask": []
