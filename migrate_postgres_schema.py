@@ -95,6 +95,11 @@ def run_migration():
             cursor.execute("ALTER TABLE users ADD COLUMN is_flagged INTEGER DEFAULT 0")
             conn.commit()
 
+        if 'first_login' not in user_columns:
+            print("Adding first_login column to users...")
+            cursor.execute("ALTER TABLE users ADD COLUMN first_login INTEGER DEFAULT 1")
+            conn.commit()
+
         print("✅ users table updated successfully")
 
         # Add critical_score to meat_processing_inspections
