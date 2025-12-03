@@ -3588,15 +3588,31 @@ def download_swimming_pool_pdf(form_id):
         
         html_string = re.sub(r'<link[^>]*inspection-details-responsive\.css[^>]*>', '', html_string)
 
-        # Hide action buttons in PDF
-        html_string = re.sub(r'</head>', '<style>.action-buttons { display: none !important; }</style></head>', html_string)
+        # Hide action buttons and add PDF-friendly CSS
+        pdf_css = '''
+        <style>
+        .action-buttons { display: none !important; }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #333; padding: 8px; text-align: left; }
+        th { background-color: #f0f0f0; font-weight: bold; }
+        .signature-section { page-break-inside: avoid; }
+        @page { size: A4; margin: 1cm; }
+        </style>
+        '''
+        html_string = re.sub(r'</head>', pdf_css + '</head>', html_string)
 
         static_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
-        css_file = os.path.join(static_path, 'css', 'inspection-details-responsive.css')
         base_url = f'file://{static_path}/'
-        
-        pdf = HTML(string=html_string, base_url=base_url).write_pdf(stylesheets=[CSS(filename=css_file)] if os.path.exists(css_file) else [])
-        
+
+        # Generate PDF without external stylesheets to avoid WeasyPrint bugs
+        try:
+            pdf = HTML(string=html_string, base_url=base_url).write_pdf()
+        except Exception as e:
+            # If WeasyPrint fails, try without base_url
+            logger.warning(f"WeasyPrint error, trying without base_url: {e}")
+            pdf = HTML(string=html_string).write_pdf()
+
         response = make_response(pdf)
         response.headers['Content-Type'] = 'application/pdf'
         response.headers['Content-Disposition'] = f'attachment; filename=swimming_pool_inspection_{form_id}.pdf'
