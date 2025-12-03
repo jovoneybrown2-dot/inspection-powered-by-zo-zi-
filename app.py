@@ -5673,7 +5673,10 @@ def login_post():
             (login_type == 'medical_officer' and user['role'] == 'medical_officer')):
 
         # Check if this is first login
-        first_login = user.get('first_login', 0) == 1
+        try:
+            first_login = user['first_login'] == 1
+        except (KeyError, IndexError, TypeError):
+            first_login = False
 
         if first_login:
             # User needs to change password before logging in
@@ -5829,7 +5832,12 @@ def change_first_login_password():
                 return jsonify({'success': False, 'error': 'User not found'}), 404
 
             # Verify this is a first login
-            if user.get('first_login', 0) != 1:
+            try:
+                first_login_check = user['first_login']
+            except (KeyError, IndexError, TypeError):
+                first_login_check = 0
+
+            if first_login_check != 1:
                 return jsonify({'success': False, 'error': 'Not a first-time login'}), 400
 
             # Verify role matches
