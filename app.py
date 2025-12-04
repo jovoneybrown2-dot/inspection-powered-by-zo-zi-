@@ -2372,7 +2372,7 @@ def submit_meat_processing():
     overall_score = 0.0
     for item in checklist:
         item_id = item.get('id')
-        score_value = safe_float_convert(request.form.get(f'score_{item_id:02d}', '0'), 0.0)
+        score_value = safe_float_convert(request.form.get(f'score_{item_id}', '0'), 0.0)
         overall_score += score_value
 
         # Check if item is critical (shaded)
@@ -2418,7 +2418,7 @@ def submit_meat_processing():
         conn = get_db_connection()
         c = conn.cursor()
         for item in MEAT_PROCESSING_CHECKLIST_ITEMS:
-            score = request.form.get(f'score_{item["id"]:02d}', '0')
+            score = request.form.get(f'score_{item["id"]}', '0')
             safe_score = safe_float_convert(score, 0.0)
             c.execute(f"INSERT INTO meat_processing_checklist_scores (form_id, item_id, score) VALUES ({ph}, {ph}, {ph})",
                       (inspection_id, item["id"], safe_score))
