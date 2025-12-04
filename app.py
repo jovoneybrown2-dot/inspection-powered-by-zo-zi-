@@ -837,7 +837,7 @@ MEAT_PROCESSING_CHECKLIST_ITEMS = [
     # CHILL ROOM (24-27)
     {"id": "24", "desc": "Chill room maintained at required temperature (4°C)", "wt": 3, "category": "CHILL ROOM", "critical": True},
     {"id": "25", "desc": "Carcass stored to facilitate air flow", "wt": 2, "category": "CHILL ROOM", "critical": True},
-    {"id": "26", "desc": "Absence of condensation, mold, etc. and properly maintained and operated", "wt": 2, "category": "CHILL ROOM", "critical": True},
+    {"id": "26", "desc": "Absence of condensation, mold, etc. and properly maintained and operated", "wt": 2, "category": "CHILL ROOM", "critical": False},
     {"id": "27", "desc": "Chill room fitted with functional thermometer", "wt": 1, "category": "CHILL ROOM", "critical": False},
 
     # FREEZER ROOM (28-29)
