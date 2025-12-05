@@ -9456,12 +9456,17 @@ def clear_acknowledged_alerts():
 # Enhanced Comprehensive Report Generator Functions
 def generate_comprehensive_metrics(inspection_type, start_date, end_date, conn):
     """Generate detailed metrics for comprehensive reports"""
+    from db_config import get_db_type, get_placeholder
     c = conn.cursor()
     metrics = {}
+    db_type = get_db_type()
+    ph = get_placeholder()
 
     # 1. INSPECTION TYPE BREAKDOWN (All 8 Types)
     try:
-        type_breakdown_query = """
+        # Use appropriate date casting for database type
+        date_cast = "DATE(inspection_date)" if db_type == 'sqlite' else "inspection_date::date"
+        type_breakdown_query = f"""
             SELECT
                 form_type,
                 COUNT(*) as total,
@@ -9470,7 +9475,7 @@ def generate_comprehensive_metrics(inspection_type, start_date, end_date, conn):
                 MAX(overall_score) as max_score,
                 MIN(overall_score) as min_score
             FROM inspections
-            WHERE DATE(inspection_date) BETWEEN %s AND %s
+            WHERE {date_cast} BETWEEN {ph} AND {ph}
             GROUP BY form_type
             ORDER BY total DESC
         """
@@ -9486,7 +9491,8 @@ def generate_comprehensive_metrics(inspection_type, start_date, end_date, conn):
         } for row in c.fetchall()]
 
         # Add Residential
-        c.execute("""
+        date_cast_res = "DATE(created_at)" if db_type == 'sqlite' else "created_at::date"
+        res_query = f"""
             SELECT
                 COUNT(*) as total,
                 SUM(CASE WHEN result IN ('Pass', 'Satisfactory') OR overall_score >= 70 THEN 1 ELSE 0 END) as passed,
@@ -9494,8 +9500,9 @@ def generate_comprehensive_metrics(inspection_type, start_date, end_date, conn):
                 MAX(overall_score) as max_score,
                 MIN(overall_score) as min_score
             FROM residential_inspections
-            WHERE DATE(created_at) BETWEEN %s AND %s
-        """, (start_date, end_date))
+            WHERE {date_cast_res} BETWEEN {ph} AND {ph}
+        """
+        c.execute(res_query, (start_date, end_date))
         res_row = c.fetchone()
         if res_row and res_row[0] > 0:
             metrics['type_breakdown'].append({
@@ -9509,7 +9516,7 @@ def generate_comprehensive_metrics(inspection_type, start_date, end_date, conn):
             })
 
         # Add Meat Processing
-        c.execute("""
+        meat_query = f"""
             SELECT
                 COUNT(*) as total,
                 SUM(CASE WHEN result IN ('Pass', 'Satisfactory') OR overall_score >= 70 THEN 1 ELSE 0 END) as passed,
@@ -9517,8 +9524,9 @@ def generate_comprehensive_metrics(inspection_type, start_date, end_date, conn):
                 MAX(overall_score) as max_score,
                 MIN(overall_score) as min_score
             FROM meat_processing_inspections
-            WHERE DATE(created_at) BETWEEN %s AND %s
-        """, (start_date, end_date))
+            WHERE {date_cast_res} BETWEEN {ph} AND {ph}
+        """
+        c.execute(meat_query, (start_date, end_date))
         meat_row = c.fetchone()
         if meat_row and meat_row[0] > 0:
             metrics['type_breakdown'].append({
@@ -9532,11 +9540,12 @@ def generate_comprehensive_metrics(inspection_type, start_date, end_date, conn):
             })
 
         # Add Burial Site
-        c.execute("""
+        burial_query = f"""
             SELECT COUNT(*) as total
             FROM burial_site_inspections
-            WHERE DATE(created_at) BETWEEN %s AND %s
-        """, (start_date, end_date))
+            WHERE {date_cast_res} BETWEEN {ph} AND {ph}
+        """
+        c.execute(burial_query, (start_date, end_date))
         burial_row = c.fetchone()
         if burial_row and burial_row[0] > 0:
             metrics['type_breakdown'].append({
@@ -9554,14 +9563,14 @@ def generate_comprehensive_metrics(inspection_type, start_date, end_date, conn):
 
     # 2. PARISH-LEVEL BREAKDOWN
     try:
-        parish_query = """
+        parish_query = f"""
             SELECT
                 parish,
                 COUNT(*) as total,
                 SUM(CASE WHEN result IN ('Pass', 'Satisfactory') OR overall_score >= 70 THEN 1 ELSE 0 END) as passed,
                 AVG(overall_score) as avg_score
             FROM inspections
-            WHERE DATE(inspection_date) BETWEEN %s AND %s
+            WHERE {date_cast} BETWEEN {ph} AND {ph}
             AND parish IS NOT NULL AND parish != ''
             GROUP BY parish
             ORDER BY total DESC
@@ -9580,14 +9589,20 @@ def generate_comprehensive_metrics(inspection_type, start_date, end_date, conn):
 
     # 3. DAY OF WEEK PATTERNS
     try:
-        dow_query = """
+        # SQLite uses strftime('%w'), PostgreSQL uses EXTRACT(DOW FROM date)
+        if db_type == 'sqlite':
+            dow_select = "CAST(strftime('%w', inspection_date) AS INTEGER) as day_of_week"
+        else:
+            dow_select = "EXTRACT(DOW FROM inspection_date)::integer as day_of_week"
+
+        dow_query = f"""
             SELECT
-                CAST(strftime('%w', inspection_date) AS INTEGER) as day_of_week,
+                {dow_select},
                 COUNT(*) as total,
                 SUM(CASE WHEN result IN ('Pass', 'Satisfactory') THEN 1 ELSE 0 END) as passed,
                 AVG(overall_score) as avg_score
             FROM inspections
-            WHERE DATE(inspection_date) BETWEEN %s AND %s
+            WHERE {date_cast} BETWEEN {ph} AND {ph}
             GROUP BY day_of_week
             ORDER BY day_of_week
         """
@@ -9606,14 +9621,20 @@ def generate_comprehensive_metrics(inspection_type, start_date, end_date, conn):
 
     # 4. MONTHLY TRENDS
     try:
-        monthly_query = """
+        # SQLite uses strftime('%Y-%m'), PostgreSQL uses TO_CHAR(date, 'YYYY-MM')
+        if db_type == 'sqlite':
+            month_select = "strftime('%Y-%m', inspection_date) as month"
+        else:
+            month_select = "TO_CHAR(inspection_date, 'YYYY-MM') as month"
+
+        monthly_query = f"""
             SELECT
-                strftime('%Y-%m', inspection_date) as month,
+                {month_select},
                 COUNT(*) as total,
                 SUM(CASE WHEN result IN ('Pass', 'Satisfactory') OR overall_score >= 70 THEN 1 ELSE 0 END) as passed,
                 AVG(overall_score) as avg_score
             FROM inspections
-            WHERE DATE(inspection_date) BETWEEN %s AND %s
+            WHERE {date_cast} BETWEEN {ph} AND {ph}
             GROUP BY month
             ORDER BY month
         """
@@ -9631,17 +9652,25 @@ def generate_comprehensive_metrics(inspection_type, start_date, end_date, conn):
 
     # 5. INSPECTOR WORKLOAD & EFFICIENCY
     try:
-        workload_query = """
+        # Date casting for days worked calculation
+        if db_type == 'sqlite':
+            days_worked = "COUNT(DISTINCT DATE(inspection_date))"
+            insp_per_day = "ROUND(CAST(COUNT(*) AS FLOAT) / COUNT(DISTINCT DATE(inspection_date)), 1)"
+        else:
+            days_worked = "COUNT(DISTINCT inspection_date::date)"
+            insp_per_day = "ROUND(CAST(COUNT(*) AS FLOAT) / COUNT(DISTINCT inspection_date::date), 1)"
+
+        workload_query = f"""
             SELECT
                 inspector_name,
                 COUNT(*) as total_inspections,
-                COUNT(DISTINCT DATE(inspection_date)) as days_worked,
-                ROUND(CAST(COUNT(*) AS FLOAT) / COUNT(DISTINCT DATE(inspection_date)), 1) as inspections_per_day,
+                {days_worked} as days_worked,
+                {insp_per_day} as inspections_per_day,
                 AVG(overall_score) as avg_score,
                 SUM(CASE WHEN result IN ('Pass', 'Satisfactory') THEN 1 ELSE 0 END) as passed,
                 COUNT(DISTINCT form_type) as types_handled
             FROM inspections
-            WHERE DATE(inspection_date) BETWEEN %s AND %s
+            WHERE {date_cast} BETWEEN {ph} AND {ph}
             AND inspector_name IS NOT NULL AND inspector_name != ''
             GROUP BY inspector_name
             HAVING COUNT(*) > 0
@@ -9664,16 +9693,22 @@ def generate_comprehensive_metrics(inspection_type, start_date, end_date, conn):
 
     # 6. CRITICAL VIOLATIONS ANALYSIS
     try:
-        critical_query = """
+        # Cast for integer comparison
+        if db_type == 'sqlite':
+            int_cast = "CAST(ii.details AS INTEGER)"
+        else:
+            int_cast = "CAST(ii.details AS INTEGER)"
+
+        critical_query = f"""
             SELECT
                 ii.item_id,
                 i.form_type,
                 COUNT(*) as total_checks,
-                SUM(CASE WHEN CAST(ii.details AS INTEGER) = 0 THEN 1 ELSE 0 END) as violations,
+                SUM(CASE WHEN {int_cast} = 0 THEN 1 ELSE 0 END) as violations,
                 COUNT(DISTINCT i.establishment_name) as establishments_affected
             FROM inspection_items ii
             JOIN inspections i ON ii.inspection_id = i.id
-            WHERE DATE(i.inspection_date) BETWEEN %s AND %s
+            WHERE {date_cast} BETWEEN {ph} AND {ph}
             GROUP BY ii.item_id, i.form_type
             HAVING violations > 0
             ORDER BY violations DESC
@@ -9695,15 +9730,21 @@ def generate_comprehensive_metrics(inspection_type, start_date, end_date, conn):
     # 7. COMPLIANCE TRAJECTORY (Improving vs Declining Establishments)
     try:
         # Get establishments with multiple inspections to track trajectory
-        trajectory_query = """
+        # Date calculation for "30 days ago"
+        if db_type == 'sqlite':
+            date_30_days_ago = "DATE('now', '-30 days')"
+        else:
+            date_30_days_ago = "CURRENT_DATE - INTERVAL '30 days'"
+
+        trajectory_query = f"""
             SELECT
                 establishment_name,
                 form_type,
                 COUNT(*) as inspection_count,
-                AVG(CASE WHEN DATE(inspection_date) >= DATE('now', '-30 days') THEN overall_score ELSE NULL END) as recent_avg,
-                AVG(CASE WHEN DATE(inspection_date) < DATE('now', '-30 days') THEN overall_score ELSE NULL END) as older_avg
+                AVG(CASE WHEN {date_cast} >= {date_30_days_ago} THEN overall_score ELSE NULL END) as recent_avg,
+                AVG(CASE WHEN {date_cast} < {date_30_days_ago} THEN overall_score ELSE NULL END) as older_avg
             FROM inspections
-            WHERE DATE(inspection_date) BETWEEN %s AND %s
+            WHERE {date_cast} BETWEEN {ph} AND {ph}
             AND establishment_name IS NOT NULL AND establishment_name != ''
             GROUP BY establishment_name, form_type
             HAVING inspection_count >= 2
@@ -9738,14 +9779,14 @@ def generate_comprehensive_metrics(inspection_type, start_date, end_date, conn):
 
     # 8. STATISTICAL ANALYSIS
     try:
-        stats_query = """
+        stats_query = f"""
             SELECT
                 AVG(overall_score) as mean,
                 COUNT(*) as count,
                 SUM(overall_score) as sum_scores,
                 SUM(overall_score * overall_score) as sum_squares
             FROM inspections
-            WHERE DATE(inspection_date) BETWEEN %s AND %s
+            WHERE {date_cast} BETWEEN {ph} AND {ph}
             AND overall_score IS NOT NULL
         """
         c.execute(stats_query, (start_date, end_date))
@@ -9758,13 +9799,14 @@ def generate_comprehensive_metrics(inspection_type, start_date, end_date, conn):
             std_dev = variance ** 0.5 if variance > 0 else 0
 
             # Get percentiles
-            c.execute("""
+            percentile_query = f"""
                 SELECT overall_score
                 FROM inspections
-                WHERE DATE(inspection_date) BETWEEN %s AND %s
+                WHERE {date_cast} BETWEEN {ph} AND {ph}
                 AND overall_score IS NOT NULL
                 ORDER BY overall_score
-            """, (start_date, end_date))
+            """
+            c.execute(percentile_query, (start_date, end_date))
             scores = [r[0] for r in c.fetchall()]
 
             def percentile(data, p):
