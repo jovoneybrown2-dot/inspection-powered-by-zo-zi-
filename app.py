@@ -9454,6 +9454,402 @@ def clear_acknowledged_alerts():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # Enhanced Comprehensive Report Generator Functions
+def generate_comprehensive_metrics(inspection_type, start_date, end_date, conn):
+    """Generate detailed metrics for comprehensive reports"""
+    c = conn.cursor()
+    metrics = {}
+
+    # 1. INSPECTION TYPE BREAKDOWN (All 8 Types)
+    try:
+        type_breakdown_query = """
+            SELECT
+                form_type,
+                COUNT(*) as total,
+                SUM(CASE WHEN result IN ('Pass', 'Satisfactory') OR overall_score >= 70 THEN 1 ELSE 0 END) as passed,
+                AVG(overall_score) as avg_score,
+                MAX(overall_score) as max_score,
+                MIN(overall_score) as min_score
+            FROM inspections
+            WHERE DATE(inspection_date) BETWEEN %s AND %s
+            GROUP BY form_type
+            ORDER BY total DESC
+        """
+        c.execute(type_breakdown_query, (start_date, end_date))
+        metrics['type_breakdown'] = [{
+            'type': row[0],
+            'total': row[1],
+            'passed': row[2],
+            'pass_rate': round((row[2] / row[1] * 100) if row[1] > 0 else 0, 1),
+            'avg_score': round(row[3], 1) if row[3] else 0,
+            'max_score': round(row[4], 1) if row[4] else 0,
+            'min_score': round(row[5], 1) if row[5] else 0
+        } for row in c.fetchall()]
+
+        # Add Residential
+        c.execute("""
+            SELECT
+                COUNT(*) as total,
+                SUM(CASE WHEN result IN ('Pass', 'Satisfactory') OR overall_score >= 70 THEN 1 ELSE 0 END) as passed,
+                AVG(overall_score) as avg_score,
+                MAX(overall_score) as max_score,
+                MIN(overall_score) as min_score
+            FROM residential_inspections
+            WHERE DATE(created_at) BETWEEN %s AND %s
+        """, (start_date, end_date))
+        res_row = c.fetchone()
+        if res_row and res_row[0] > 0:
+            metrics['type_breakdown'].append({
+                'type': 'Residential',
+                'total': res_row[0],
+                'passed': res_row[1],
+                'pass_rate': round((res_row[1] / res_row[0] * 100) if res_row[0] > 0 else 0, 1),
+                'avg_score': round(res_row[2], 1) if res_row[2] else 0,
+                'max_score': round(res_row[3], 1) if res_row[3] else 0,
+                'min_score': round(res_row[4], 1) if res_row[4] else 0
+            })
+
+        # Add Meat Processing
+        c.execute("""
+            SELECT
+                COUNT(*) as total,
+                SUM(CASE WHEN result IN ('Pass', 'Satisfactory') OR overall_score >= 70 THEN 1 ELSE 0 END) as passed,
+                AVG(overall_score) as avg_score,
+                MAX(overall_score) as max_score,
+                MIN(overall_score) as min_score
+            FROM meat_processing_inspections
+            WHERE DATE(created_at) BETWEEN %s AND %s
+        """, (start_date, end_date))
+        meat_row = c.fetchone()
+        if meat_row and meat_row[0] > 0:
+            metrics['type_breakdown'].append({
+                'type': 'Meat Processing',
+                'total': meat_row[0],
+                'passed': meat_row[1],
+                'pass_rate': round((meat_row[1] / meat_row[0] * 100) if meat_row[0] > 0 else 0, 1),
+                'avg_score': round(meat_row[2], 1) if meat_row[2] else 0,
+                'max_score': round(meat_row[3], 1) if meat_row[3] else 0,
+                'min_score': round(meat_row[4], 1) if meat_row[4] else 0
+            })
+
+        # Add Burial Site
+        c.execute("""
+            SELECT COUNT(*) as total
+            FROM burial_site_inspections
+            WHERE DATE(created_at) BETWEEN %s AND %s
+        """, (start_date, end_date))
+        burial_row = c.fetchone()
+        if burial_row and burial_row[0] > 0:
+            metrics['type_breakdown'].append({
+                'type': 'Burial Site',
+                'total': burial_row[0],
+                'passed': burial_row[0],
+                'pass_rate': 100.0,
+                'avg_score': 0,
+                'max_score': 0,
+                'min_score': 0
+            })
+    except Exception as e:
+        print(f"Error in type breakdown: {e}")
+        metrics['type_breakdown'] = []
+
+    # 2. PARISH-LEVEL BREAKDOWN
+    try:
+        parish_query = """
+            SELECT
+                parish,
+                COUNT(*) as total,
+                SUM(CASE WHEN result IN ('Pass', 'Satisfactory') OR overall_score >= 70 THEN 1 ELSE 0 END) as passed,
+                AVG(overall_score) as avg_score
+            FROM inspections
+            WHERE DATE(inspection_date) BETWEEN %s AND %s
+            AND parish IS NOT NULL AND parish != ''
+            GROUP BY parish
+            ORDER BY total DESC
+        """
+        c.execute(parish_query, (start_date, end_date))
+        metrics['parish_breakdown'] = [{
+            'parish': row[0],
+            'total': row[1],
+            'passed': row[2],
+            'pass_rate': round((row[2] / row[1] * 100) if row[1] > 0 else 0, 1),
+            'avg_score': round(row[3], 1) if row[3] else 0
+        } for row in c.fetchall()]
+    except Exception as e:
+        print(f"Error in parish breakdown: {e}")
+        metrics['parish_breakdown'] = []
+
+    # 3. DAY OF WEEK PATTERNS
+    try:
+        dow_query = """
+            SELECT
+                CAST(strftime('%w', inspection_date) AS INTEGER) as day_of_week,
+                COUNT(*) as total,
+                SUM(CASE WHEN result IN ('Pass', 'Satisfactory') THEN 1 ELSE 0 END) as passed,
+                AVG(overall_score) as avg_score
+            FROM inspections
+            WHERE DATE(inspection_date) BETWEEN %s AND %s
+            GROUP BY day_of_week
+            ORDER BY day_of_week
+        """
+        c.execute(dow_query, (start_date, end_date))
+        day_names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+        metrics['day_of_week_pattern'] = [{
+            'day': day_names[row[0]],
+            'total': row[1],
+            'passed': row[2],
+            'pass_rate': round((row[2] / row[1] * 100) if row[1] > 0 else 0, 1),
+            'avg_score': round(row[3], 1) if row[3] else 0
+        } for row in c.fetchall()]
+    except Exception as e:
+        print(f"Error in day of week pattern: {e}")
+        metrics['day_of_week_pattern'] = []
+
+    # 4. MONTHLY TRENDS
+    try:
+        monthly_query = """
+            SELECT
+                strftime('%Y-%m', inspection_date) as month,
+                COUNT(*) as total,
+                SUM(CASE WHEN result IN ('Pass', 'Satisfactory') OR overall_score >= 70 THEN 1 ELSE 0 END) as passed,
+                AVG(overall_score) as avg_score
+            FROM inspections
+            WHERE DATE(inspection_date) BETWEEN %s AND %s
+            GROUP BY month
+            ORDER BY month
+        """
+        c.execute(monthly_query, (start_date, end_date))
+        metrics['monthly_trends'] = [{
+            'month': row[0],
+            'total': row[1],
+            'passed': row[2],
+            'pass_rate': round((row[2] / row[1] * 100) if row[1] > 0 else 0, 1),
+            'avg_score': round(row[3], 1) if row[3] else 0
+        } for row in c.fetchall()]
+    except Exception as e:
+        print(f"Error in monthly trends: {e}")
+        metrics['monthly_trends'] = []
+
+    # 5. INSPECTOR WORKLOAD & EFFICIENCY
+    try:
+        workload_query = """
+            SELECT
+                inspector_name,
+                COUNT(*) as total_inspections,
+                COUNT(DISTINCT DATE(inspection_date)) as days_worked,
+                ROUND(CAST(COUNT(*) AS FLOAT) / COUNT(DISTINCT DATE(inspection_date)), 1) as inspections_per_day,
+                AVG(overall_score) as avg_score,
+                SUM(CASE WHEN result IN ('Pass', 'Satisfactory') THEN 1 ELSE 0 END) as passed,
+                COUNT(DISTINCT form_type) as types_handled
+            FROM inspections
+            WHERE DATE(inspection_date) BETWEEN %s AND %s
+            AND inspector_name IS NOT NULL AND inspector_name != ''
+            GROUP BY inspector_name
+            HAVING COUNT(*) > 0
+            ORDER BY total_inspections DESC
+        """
+        c.execute(workload_query, (start_date, end_date))
+        metrics['inspector_workload'] = [{
+            'inspector': row[0],
+            'total': row[1],
+            'days_worked': row[2],
+            'inspections_per_day': round(row[3], 1) if row[3] else 0,
+            'avg_score': round(row[4], 1) if row[4] else 0,
+            'passed': row[5],
+            'pass_rate': round((row[5] / row[1] * 100) if row[1] > 0 else 0, 1),
+            'types_handled': row[6]
+        } for row in c.fetchall()]
+    except Exception as e:
+        print(f"Error in inspector workload: {e}")
+        metrics['inspector_workload'] = []
+
+    # 6. CRITICAL VIOLATIONS ANALYSIS
+    try:
+        critical_query = """
+            SELECT
+                ii.item_id,
+                i.form_type,
+                COUNT(*) as total_checks,
+                SUM(CASE WHEN CAST(ii.details AS INTEGER) = 0 THEN 1 ELSE 0 END) as violations,
+                COUNT(DISTINCT i.establishment_name) as establishments_affected
+            FROM inspection_items ii
+            JOIN inspections i ON ii.inspection_id = i.id
+            WHERE DATE(i.inspection_date) BETWEEN %s AND %s
+            GROUP BY ii.item_id, i.form_type
+            HAVING violations > 0
+            ORDER BY violations DESC
+            LIMIT 30
+        """
+        c.execute(critical_query, (start_date, end_date))
+        metrics['critical_violations'] = [{
+            'item_id': row[0],
+            'form_type': row[1],
+            'total_checks': row[2],
+            'violations': row[3],
+            'violation_rate': round((row[3] / row[2] * 100) if row[2] > 0 else 0, 1),
+            'establishments_affected': row[4]
+        } for row in c.fetchall()]
+    except Exception as e:
+        print(f"Error in critical violations: {e}")
+        metrics['critical_violations'] = []
+
+    # 7. COMPLIANCE TRAJECTORY (Improving vs Declining Establishments)
+    try:
+        # Get establishments with multiple inspections to track trajectory
+        trajectory_query = """
+            SELECT
+                establishment_name,
+                form_type,
+                COUNT(*) as inspection_count,
+                AVG(CASE WHEN DATE(inspection_date) >= DATE('now', '-30 days') THEN overall_score ELSE NULL END) as recent_avg,
+                AVG(CASE WHEN DATE(inspection_date) < DATE('now', '-30 days') THEN overall_score ELSE NULL END) as older_avg
+            FROM inspections
+            WHERE DATE(inspection_date) BETWEEN %s AND %s
+            AND establishment_name IS NOT NULL AND establishment_name != ''
+            GROUP BY establishment_name, form_type
+            HAVING inspection_count >= 2
+            AND recent_avg IS NOT NULL AND older_avg IS NOT NULL
+            ORDER BY (recent_avg - older_avg) DESC
+        """
+        c.execute(trajectory_query, (start_date, end_date))
+        all_trajectories = c.fetchall()
+
+        improving = []
+        declining = []
+        for row in all_trajectories:
+            trajectory_item = {
+                'establishment': row[0],
+                'type': row[1],
+                'inspections': row[2],
+                'recent_avg': round(row[3], 1) if row[3] else 0,
+                'older_avg': round(row[4], 1) if row[4] else 0,
+                'change': round((row[3] - row[4]), 1) if (row[3] and row[4]) else 0
+            }
+            if trajectory_item['change'] > 0:
+                improving.append(trajectory_item)
+            elif trajectory_item['change'] < 0:
+                declining.append(trajectory_item)
+
+        metrics['improving_establishments'] = improving[:10]
+        metrics['declining_establishments'] = declining[:10]
+    except Exception as e:
+        print(f"Error in compliance trajectory: {e}")
+        metrics['improving_establishments'] = []
+        metrics['declining_establishments'] = []
+
+    # 8. STATISTICAL ANALYSIS
+    try:
+        stats_query = """
+            SELECT
+                AVG(overall_score) as mean,
+                COUNT(*) as count,
+                SUM(overall_score) as sum_scores,
+                SUM(overall_score * overall_score) as sum_squares
+            FROM inspections
+            WHERE DATE(inspection_date) BETWEEN %s AND %s
+            AND overall_score IS NOT NULL
+        """
+        c.execute(stats_query, (start_date, end_date))
+        row = c.fetchone()
+        if row and row[1] > 0:
+            mean = row[0]
+            count = row[1]
+            # Calculate standard deviation
+            variance = (row[3] / count) - (mean * mean)
+            std_dev = variance ** 0.5 if variance > 0 else 0
+
+            # Get percentiles
+            c.execute("""
+                SELECT overall_score
+                FROM inspections
+                WHERE DATE(inspection_date) BETWEEN %s AND %s
+                AND overall_score IS NOT NULL
+                ORDER BY overall_score
+            """, (start_date, end_date))
+            scores = [r[0] for r in c.fetchall()]
+
+            def percentile(data, p):
+                if not data:
+                    return 0
+                k = (len(data) - 1) * p / 100
+                f = int(k)
+                c = k - f
+                if f + 1 < len(data):
+                    return data[f] + c * (data[f + 1] - data[f])
+                return data[f]
+
+            metrics['statistical_analysis'] = {
+                'mean': round(mean, 1),
+                'std_dev': round(std_dev, 1),
+                'median': round(percentile(scores, 50), 1),
+                'percentile_25': round(percentile(scores, 25), 1),
+                'percentile_75': round(percentile(scores, 75), 1),
+                'percentile_90': round(percentile(scores, 90), 1),
+                'count': count
+            }
+        else:
+            metrics['statistical_analysis'] = {}
+    except Exception as e:
+        print(f"Error in statistical analysis: {e}")
+        metrics['statistical_analysis'] = {}
+
+    # 9. ACTIONABLE RECOMMENDATIONS
+    recommendations = []
+    try:
+        # High failure rate parishes
+        if metrics.get('parish_breakdown'):
+            worst_parishes = [p for p in metrics['parish_breakdown'] if p['pass_rate'] < 60]
+            if worst_parishes:
+                recommendations.append({
+                    'priority': 'HIGH',
+                    'category': 'Geographic',
+                    'recommendation': f"Focus resources on {', '.join([p['parish'] for p in worst_parishes[:3]])} parishes with pass rates below 60%"
+                })
+
+        # Overworked inspectors
+        if metrics.get('inspector_workload'):
+            overworked = [i for i in metrics['inspector_workload'] if i['inspections_per_day'] > 8]
+            if overworked:
+                recommendations.append({
+                    'priority': 'MEDIUM',
+                    'category': 'Workload',
+                    'recommendation': f"{len(overworked)} inspector(s) conducting >8 inspections/day - consider workload redistribution"
+                })
+
+        # Declining establishments
+        if metrics.get('declining_establishments') and len(metrics['declining_establishments']) > 0:
+            recommendations.append({
+                'priority': 'HIGH',
+                'category': 'Compliance',
+                'recommendation': f"{len(metrics['declining_establishments'])} establishments showing declining scores - schedule follow-up inspections"
+            })
+
+        # Common critical violations
+        if metrics.get('critical_violations') and len(metrics['critical_violations']) > 0:
+            top_violation = metrics['critical_violations'][0]
+            if top_violation['violation_rate'] > 40:
+                recommendations.append({
+                    'priority': 'HIGH',
+                    'category': 'Training',
+                    'recommendation': f"Item {top_violation['item_id']} has {top_violation['violation_rate']}% violation rate - develop targeted training program"
+                })
+
+        # Inspector diversity
+        if metrics.get('inspector_workload'):
+            single_type = [i for i in metrics['inspector_workload'] if i['types_handled'] == 1 and i['total'] > 10]
+            if len(single_type) > 2:
+                recommendations.append({
+                    'priority': 'LOW',
+                    'category': 'Training',
+                    'recommendation': f"{len(single_type)} inspectors specialized in single type - consider cross-training"
+                })
+
+        metrics['recommendations'] = recommendations
+    except Exception as e:
+        print(f"Error generating recommendations: {e}")
+        metrics['recommendations'] = []
+
+    return metrics
+
 def generate_basic_summary_report(inspection_type, start_date, end_date):
     try:
         print(f"DEBUG: Generating comprehensive report for {inspection_type} from {start_date} to {end_date}")
@@ -9740,6 +10136,9 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
             'pass_count': row[6]
         } for row in sorted(all_establishments, key=lambda x: x[3])[:10]]
 
+        # Get comprehensive metrics (all the new advanced analytics)
+        comprehensive_metrics = generate_comprehensive_metrics(inspection_type, start_date, end_date, conn)
+
         conn.close()
 
         return {
@@ -9759,7 +10158,18 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
             'common_failures': failed_items,
             'top_establishments': top_establishments,
             'failing_establishments': failing_establishments,
-            'date_range': f"{start_date} to {end_date}"
+            'date_range': f"{start_date} to {end_date}",
+            # NEW: Comprehensive advanced metrics
+            'type_breakdown': comprehensive_metrics.get('type_breakdown', []),
+            'parish_breakdown': comprehensive_metrics.get('parish_breakdown', []),
+            'day_of_week_pattern': comprehensive_metrics.get('day_of_week_pattern', []),
+            'monthly_trends': comprehensive_metrics.get('monthly_trends', []),
+            'inspector_workload': comprehensive_metrics.get('inspector_workload', []),
+            'critical_violations': comprehensive_metrics.get('critical_violations', []),
+            'improving_establishments': comprehensive_metrics.get('improving_establishments', []),
+            'declining_establishments': comprehensive_metrics.get('declining_establishments', []),
+            'statistical_analysis': comprehensive_metrics.get('statistical_analysis', {}),
+            'recommendations': comprehensive_metrics.get('recommendations', [])
         }
     except Exception as e:
         print(f"DEBUG: Error in generate_basic_summary_report: {str(e)}")
