@@ -5232,10 +5232,14 @@ document.addEventListener('click', function(e) {
 
         // Display report in the UI
         function displayReport(reportData, reportType) {
+            console.log('displayReport called with:', reportType, reportData);
+
             const reportContent = document.getElementById('reportContent');
             const reportTitle = document.getElementById('reportTitle');
             const reportSubtitle = document.getElementById('reportSubtitle');
             const reportBody = document.getElementById('reportBody');
+
+            console.log('Report elements:', {reportContent, reportTitle, reportSubtitle, reportBody});
 
             // Set title
             const reportTitles = {
@@ -5255,6 +5259,17 @@ document.addEventListener('click', function(e) {
 
             // Build report body HTML
             let html = '';
+
+            // Check if reportData is valid
+            if (!reportData) {
+                console.error('No report data provided!');
+                html = '<div class="bg-red-100 p-4 rounded">No report data available</div>';
+                reportBody.innerHTML = html;
+                reportContent.style.display = 'block';
+                return;
+            }
+
+            console.log('Report data keys:', Object.keys(reportData));
 
             // Summary cards
             if (reportData.summary) {
@@ -5656,8 +5671,49 @@ document.addEventListener('click', function(e) {
                 html += '</div></div>';
             }
 
+            console.log('Generated HTML length:', html.length);
+            console.log('First 500 chars of HTML:', html.substring(0, 500));
+
+            // If no content was generated, show a message
+            if (html.length === 0) {
+                html = `
+                    <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4">
+                        <p class="font-bold">No data available for the selected criteria</p>
+                        <p class="text-sm">Try selecting a different date range or inspection type.</p>
+                    </div>
+                    <div class="mt-4">
+                        <h4 class="font-bold mb-2">Report Data Received:</h4>
+                        <pre class="bg-gray-100 p-4 rounded overflow-auto text-xs">${JSON.stringify(reportData, null, 2)}</pre>
+                    </div>
+                `;
+            }
+
             reportBody.innerHTML = html;
+
+            // Hide other sections explicitly
+            const dashboardInitial = document.getElementById('dashboardInitial');
+            const dashboardContent = document.getElementById('dashboardContent');
+            const dashboardLoading = document.getElementById('dashboardLoading');
+
+            if (dashboardInitial) dashboardInitial.style.display = 'none';
+            if (dashboardContent) dashboardContent.style.display = 'none';
+            if (dashboardLoading) dashboardLoading.style.display = 'none';
+
+            // Make absolutely sure reportContent is visible
             reportContent.style.display = 'block';
+            reportContent.style.visibility = 'visible';
+            reportContent.style.opacity = '1';
+            reportContent.style.position = 'relative';
+            reportContent.style.zIndex = '10';
+
+            console.log('Report display set to:', reportContent.style.display);
+            console.log('reportBody innerHTML set, length:', reportBody.innerHTML.length);
+            console.log('reportContent getBoundingClientRect:', reportContent.getBoundingClientRect());
+
+            // Scroll to the report
+            setTimeout(() => {
+                reportContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
         }
 
         // Export report as PDF
