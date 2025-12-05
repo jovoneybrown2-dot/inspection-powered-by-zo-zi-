@@ -9710,7 +9710,7 @@ def generate_comprehensive_metrics(inspection_type, start_date, end_date, conn):
             JOIN inspections i ON ii.inspection_id = i.id
             WHERE {date_cast} BETWEEN {ph} AND {ph}
             GROUP BY ii.item_id, i.form_type
-            HAVING violations > 0
+            HAVING SUM(CASE WHEN {int_cast} = 0 THEN 1 ELSE 0 END) > 0
             ORDER BY violations DESC
             LIMIT 30
         """
@@ -9747,9 +9747,10 @@ def generate_comprehensive_metrics(inspection_type, start_date, end_date, conn):
             WHERE {date_cast} BETWEEN {ph} AND {ph}
             AND establishment_name IS NOT NULL AND establishment_name != ''
             GROUP BY establishment_name, form_type
-            HAVING inspection_count >= 2
-            AND recent_avg IS NOT NULL AND older_avg IS NOT NULL
-            ORDER BY (recent_avg - older_avg) DESC
+            HAVING COUNT(*) >= 2
+            AND AVG(CASE WHEN {date_cast} >= {date_30_days_ago} THEN overall_score ELSE NULL END) IS NOT NULL
+            AND AVG(CASE WHEN {date_cast} < {date_30_days_ago} THEN overall_score ELSE NULL END) IS NOT NULL
+            ORDER BY (AVG(CASE WHEN {date_cast} >= {date_30_days_ago} THEN overall_score ELSE NULL END) - AVG(CASE WHEN {date_cast} < {date_30_days_ago} THEN overall_score ELSE NULL END)) DESC
         """
         c.execute(trajectory_query, (start_date, end_date))
         all_trajectories = c.fetchall()
@@ -10131,7 +10132,7 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
             WHERE {date_cast_func}(i.inspection_date) BETWEEN {ph} AND {ph}
             {"AND i.form_type = " + ph if inspection_type != 'all' else ""}
             GROUP BY ii.item_id, i.form_type
-            HAVING failures > 0
+            HAVING SUM(CASE WHEN CAST(ii.details AS INTEGER) = 0 THEN 1 ELSE 0 END) > 0
             ORDER BY failures DESC, total_checks DESC
             LIMIT 20
         """
