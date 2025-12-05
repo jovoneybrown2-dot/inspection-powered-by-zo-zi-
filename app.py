@@ -9693,24 +9693,24 @@ def generate_comprehensive_metrics(inspection_type, start_date, end_date, conn):
 
     # 6. CRITICAL VIOLATIONS ANALYSIS
     try:
-        # Cast for integer comparison
+        # Cast for numeric comparison (handles both "2.0" and "2")
         if db_type == 'sqlite':
-            int_cast = "CAST(ii.details AS INTEGER)"
+            num_cast = "CAST(ii.details AS REAL)"
         else:
-            int_cast = "CAST(ii.details AS INTEGER)"
+            num_cast = "CAST(ii.details AS NUMERIC)"
 
         critical_query = f"""
             SELECT
                 ii.item_id,
                 i.form_type,
                 COUNT(*) as total_checks,
-                SUM(CASE WHEN {int_cast} = 0 THEN 1 ELSE 0 END) as violations,
+                SUM(CASE WHEN {num_cast} = 0 THEN 1 ELSE 0 END) as violations,
                 COUNT(DISTINCT i.establishment_name) as establishments_affected
             FROM inspection_items ii
             JOIN inspections i ON ii.inspection_id = i.id
             WHERE {date_cast} BETWEEN {ph} AND {ph}
             GROUP BY ii.item_id, i.form_type
-            HAVING SUM(CASE WHEN {int_cast} = 0 THEN 1 ELSE 0 END) > 0
+            HAVING SUM(CASE WHEN {num_cast} = 0 THEN 1 ELSE 0 END) > 0
             ORDER BY violations DESC
             LIMIT 30
         """
@@ -10121,18 +10121,24 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
 
         # 4. MOST FAILED CHECKLIST ITEMS
         # Get all inspection_items with failures
+        # Cast to NUMERIC to handle both "2.0" and "2" formats
+        if db_type == 'sqlite':
+            num_cast = "CAST(ii.details AS REAL)"
+        else:
+            num_cast = "CAST(ii.details AS NUMERIC)"
+
         checklist_query = f"""
             SELECT
                 ii.item_id,
                 COUNT(*) as total_checks,
-                SUM(CASE WHEN CAST(ii.details AS INTEGER) = 0 THEN 1 ELSE 0 END) as failures,
+                SUM(CASE WHEN {num_cast} = 0 THEN 1 ELSE 0 END) as failures,
                 i.form_type
             FROM inspection_items ii
             JOIN inspections i ON ii.inspection_id = i.id
             WHERE {date_cast_func}(i.inspection_date) BETWEEN {ph} AND {ph}
             {"AND i.form_type = " + ph if inspection_type != 'all' else ""}
             GROUP BY ii.item_id, i.form_type
-            HAVING SUM(CASE WHEN CAST(ii.details AS INTEGER) = 0 THEN 1 ELSE 0 END) > 0
+            HAVING SUM(CASE WHEN {num_cast} = 0 THEN 1 ELSE 0 END) > 0
             ORDER BY failures DESC, total_checks DESC
             LIMIT 20
         """
