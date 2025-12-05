@@ -361,7 +361,76 @@
         bottom: 10px;
         right: 20px;
     }
+
+    /* Mobile-responsive tables */
+    .overflow-x-auto {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        font-size: 12px !important;
+    }
+
+    table th,
+    table td {
+        padding: 8px 4px !important;
+        white-space: nowrap;
+    }
+
+    /* Make modal more mobile-friendly */
+    .modal-content {
+        width: 95% !important;
+        max-width: 100% !important;
+        padding: 15px !important;
+        max-height: 90vh !important;
+    }
+
+    /* Responsive text sizing */
+    h2, h3, h4 {
+        font-size: 1.25rem !important;
+    }
+
+    /* Touch-friendly buttons */
+    button, select, input[type="date"] {
+        min-height: 44px;
+        font-size: 14px !important;
+    }
+
+    /* Better grid spacing on mobile */
+    .grid {
+        gap: 0.5rem !important;
+    }
+
+    /* Adjust report body for mobile */
+    #reportBody table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
 }
+
+/* Tablet responsiveness (768px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .modal-content {
+        width: 90% !important;
+        max-width: 95% !important;
+    }
+
+    table {
+        font-size: 13px;
+    }
+
+    table th,
+    table td {
+        padding: 10px 6px;
+    }
+
+    /* Slightly larger touch targets for tablets */
+    button, select, input[type="date"] {
+        min-height: 40px;
+    }
+}
+
         body {
             font-family: Arial, sans-serif;
             background: url('{{ url_for("static", filename="heart2.jpg") }}') no-repeat center center fixed;
@@ -1716,13 +1785,13 @@
 
     <!-- Custom Reports Modal -->
     <div id="custom_reports_modal" class="modal">
-        <div class="modal-content" style="max-width: 1200px; width: 95%;">
+        <div class="modal-content" style="max-width: 100%; width: 95%; max-height: 95vh;">
             <span class="modal-close" onclick="closeModal('custom_reports')">×</span>
-            <h2 class="text-3xl font-bold mb-6 text-center text-blue-800">📊 Inspection Analytics Dashboard</h2>
+            <h2 class="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-center text-blue-800">📊 Inspection Analytics Dashboard</h2>
 
             <!-- Controls Section -->
-            <div class="bg-gray-50 p-4 rounded-lg mb-6">
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div class="bg-gray-50 p-2 md:p-4 rounded-lg mb-4 md:mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2 md:gap-4">
                     <!-- Report Type Selection -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Report Type</label>
@@ -1807,7 +1876,7 @@
             <!-- Dashboard Content -->
             <div id="dashboardContent" style="display: none;">
                 <!-- Summary Cards -->
-                <div id="summaryCards" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div id="summaryCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
                     <!-- Cards will be generated here -->
                 </div>
 
@@ -1859,12 +1928,12 @@
             </div>
 
             <!-- Initial State -->
-            <div id="dashboardInitial" class="text-center py-12">
-                <div class="text-6xl mb-4">📊</div>
-                <h3 class="text-xl font-bold text-gray-700 mb-2">Advanced Inspection Analytics & Reporting</h3>
-                <p class="text-gray-600 mb-6">Select report type, inspection type, and time period above, then click "Generate Report"</p>
+            <div id="dashboardInitial" class="text-center py-6 md:py-12 px-2">
+                <div class="text-4xl md:text-6xl mb-3 md:mb-4">📊</div>
+                <h3 class="text-lg md:text-xl font-bold text-gray-700 mb-2">Advanced Inspection Analytics & Reporting</h3>
+                <p class="text-sm md:text-base text-gray-600 mb-4 md:mb-6">Select report type, inspection type, and time period above, then click "Generate Report"</p>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left max-w-4xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 text-left max-w-4xl mx-auto">
                     <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
                         <h4 class="font-bold text-blue-900 mb-2">📄 Executive Reports</h4>
                         <ul class="text-sm text-blue-700 space-y-1">
@@ -1900,12 +1969,12 @@
 
             <!-- Report Display Area -->
             <div id="reportContent" style="display: none;">
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <div id="reportHeader" class="mb-6 pb-4 border-b">
-                        <h3 id="reportTitle" class="text-2xl font-bold text-gray-800"></h3>
-                        <p id="reportSubtitle" class="text-gray-600 mt-2"></p>
+                <div class="bg-white p-3 md:p-6 rounded-lg shadow-md">
+                    <div id="reportHeader" class="mb-4 md:mb-6 pb-3 md:pb-4 border-b">
+                        <h3 id="reportTitle" class="text-lg md:text-2xl font-bold text-gray-800"></h3>
+                        <p id="reportSubtitle" class="text-xs md:text-sm text-gray-600 mt-2"></p>
                     </div>
-                    <div id="reportBody">
+                    <div id="reportBody" class="text-sm md:text-base">
                         <!-- Report content will be injected here -->
                     </div>
                 </div>
