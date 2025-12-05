@@ -5299,6 +5299,65 @@ document.addEventListener('click', function(e) {
                 html += '</div>';
             }
 
+            // INTELLIGENT SUMMARY AND ADVICE
+            if (reportData.intelligent_summary) {
+                const summary = reportData.intelligent_summary;
+
+                html += '<div class="mb-6 space-y-4">';
+
+                // Executive Summary Section
+                if (summary.executive_summary && summary.executive_summary.length > 0) {
+                    html += `
+                        <div class="bg-gradient-to-r from-indigo-50 to-blue-50 border-l-4 border-indigo-500 p-5 rounded-lg shadow-md">
+                            <h4 class="text-xl font-bold mb-3 text-indigo-900 flex items-center">
+                                <span class="mr-2">🔍</span> Executive Summary
+                            </h4>
+                            <div class="space-y-3">
+                    `;
+
+                    summary.executive_summary.forEach((statement, idx) => {
+                        const bgColor = idx === 0 ? 'bg-white' : 'bg-indigo-50/50';
+                        html += `
+                            <div class="${bgColor} p-3 rounded border-l-2 border-indigo-300">
+                                <p class="text-gray-800 leading-relaxed">${statement}</p>
+                            </div>
+                        `;
+                    });
+
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Recommended Actions Section
+                if (summary.recommended_actions && summary.recommended_actions.length > 0) {
+                    html += `
+                        <div class="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-500 p-5 rounded-lg shadow-md">
+                            <h4 class="text-xl font-bold mb-3 text-amber-900 flex items-center">
+                                <span class="mr-2">💡</span> Recommended Actions
+                            </h4>
+                            <div class="space-y-2">
+                    `;
+
+                    summary.recommended_actions.forEach((action, idx) => {
+                        html += `
+                            <div class="bg-white p-3 rounded border-l-2 border-amber-400 flex items-start">
+                                <span class="inline-block w-6 h-6 bg-amber-500 text-white rounded-full text-center font-bold text-sm mr-3 flex-shrink-0 leading-6">${idx + 1}</span>
+                                <p class="text-gray-800 leading-relaxed flex-1">${action}</p>
+                            </div>
+                        `;
+                    });
+
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                }
+
+                html += '</div>';
+            }
+
             // Trend Data Chart
             if (reportData.trend_data && reportData.trend_data.length > 0) {
                 html += '<div class="mb-6"><h4 class="text-lg font-bold mb-3">📈 Pass/Fail Trend Over Time</h4>';

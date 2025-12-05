@@ -836,7 +836,7 @@ MEAT_PROCESSING_CHECKLIST_ITEMS = [
 
     # CHILL ROOM (24-27)
     {"id": "24", "desc": "Chill room maintained at required temperature (4°C)", "wt": 3, "category": "CHILL ROOM", "critical": True},
-    {"id": "25", "desc": "Carcass stored to facilitate air flow", "wt": 2, "category": "CHILL ROOM", "critical": True},
+    {"id": "25", "desc": "Carcass stored to facilitate air flow", "wt": 2, "category": "CHILL ROOM", "critical": False},
     {"id": "26", "desc": "Absence of condensation, mold, etc. and properly maintained and operated", "wt": 2, "category": "CHILL ROOM", "critical": False},
     {"id": "27", "desc": "Chill room fitted with functional thermometer", "wt": 1, "category": "CHILL ROOM", "critical": False},
 
@@ -9893,6 +9893,194 @@ def generate_comprehensive_metrics(inspection_type, start_date, end_date, conn):
 
     return metrics
 
+def generate_report_summary(report_data, inspection_type, start_date, end_date):
+    """Generate intelligent natural language summaries and advice based on report data"""
+    summaries = []
+    advice = []
+
+    # Extract key metrics from report data
+    summary = report_data.get('summary', {})
+    total = summary.get('total', 0)
+    passed = summary.get('passed', 0)
+    failed = summary.get('failed', 0)
+    avg_score = summary.get('avg_score', 0)
+    pass_rate = (passed / total * 100) if total > 0 else 0
+
+    comprehensive = report_data.get('comprehensive_metrics', {})
+
+    # 1. OVERALL COMPLIANCE ASSESSMENT
+    if total == 0:
+        summaries.append("No inspections found for the selected period.")
+        advice.append("Consider expanding the date range or checking if inspections have been completed.")
+    else:
+        # Pass rate analysis
+        if pass_rate >= 80:
+            summaries.append(f"Excellent compliance observed with {pass_rate:.1f}% pass rate across {total} inspections. The majority of establishments are meeting required standards.")
+            advice.append("Maintain current inspection practices and consider using high-performing establishments as case studies for training.")
+        elif pass_rate >= 60:
+            summaries.append(f"Moderate compliance at {pass_rate:.1f}% pass rate across {total} inspections. There is room for improvement in overall standards.")
+            advice.append("Implement targeted follow-up inspections for failed establishments and provide compliance assistance resources.")
+        elif pass_rate >= 40:
+            summaries.append(f"Concerning compliance level at {pass_rate:.1f}% pass rate across {total} inspections. More than half of establishments are not meeting standards.")
+            advice.append("Urgent action required: Conduct intensive training sessions for establishment operators and increase inspection frequency for failing establishments.")
+        else:
+            summaries.append(f"Critical compliance crisis with only {pass_rate:.1f}% pass rate across {total} inspections. The vast majority of establishments are failing to meet basic standards.")
+            advice.append("IMMEDIATE INTERVENTION NEEDED: Consider implementing enforcement actions, mandatory corrective action plans, and emergency training programs.")
+
+        # Score analysis
+        if avg_score > 0:
+            if avg_score >= 85:
+                summaries.append(f"Average inspection score of {avg_score:.1f} indicates strong overall performance.")
+            elif avg_score >= 70:
+                summaries.append(f"Average inspection score of {avg_score:.1f} shows acceptable performance with opportunities for improvement.")
+            elif avg_score >= 50:
+                summaries.append(f"Average inspection score of {avg_score:.1f} is below acceptable thresholds, indicating widespread compliance issues.")
+            else:
+                summaries.append(f"Average inspection score of {avg_score:.1f} reveals severe compliance deficiencies across establishments.")
+
+    # 2. INSPECTION TYPE BREAKDOWN ANALYSIS
+    type_breakdown = comprehensive.get('type_breakdown', [])
+    if len(type_breakdown) > 1:
+        # Find type with lowest pass rate
+        worst_type = min(type_breakdown, key=lambda x: x.get('pass_rate', 100))
+        best_type = max(type_breakdown, key=lambda x: x.get('pass_rate', 0))
+
+        if worst_type.get('pass_rate', 0) < 50:
+            summaries.append(f"{worst_type.get('form_type', 'Unknown')} inspections show the lowest compliance at {worst_type.get('pass_rate', 0):.1f}% pass rate ({worst_type.get('failed', 0)} of {worst_type.get('total', 0)} failed).")
+            advice.append(f"Priority focus: Develop specialized training and resources for {worst_type.get('form_type', 'this')} establishment operators.")
+
+        if best_type.get('pass_rate', 0) > 75 and worst_type.get('form_type') != best_type.get('form_type'):
+            summaries.append(f"{best_type.get('form_type', 'Unknown')} inspections perform best at {best_type.get('pass_rate', 0):.1f}% pass rate.")
+            advice.append(f"Study successful practices from {best_type.get('form_type', 'high-performing')} establishments and apply lessons to other inspection types.")
+
+    # 3. CRITICAL VIOLATIONS ANALYSIS
+    critical_items = comprehensive.get('critical_items', [])
+    if critical_items:
+        top_critical = critical_items[0]
+        total_critical_violations = sum(item.get('violations', 0) for item in critical_items[:5])
+
+        summaries.append(f"Critical violations detected: Item '{top_critical.get('item_id', 'Unknown')}' has the highest failure rate with {top_critical.get('violations', 0)} violations across {top_critical.get('inspections', 0)} inspections.")
+
+        if total_critical_violations > total * 0.5:
+            advice.append("CRITICAL: Over half of inspections have critical violations. Implement mandatory pre-inspection checklists and increase enforcement penalties.")
+        else:
+            advice.append(f"Address critical violation patterns through targeted corrective action plans focusing on items: {', '.join([item.get('item_id', 'Unknown') for item in critical_items[:3]])}.")
+
+    # 4. PARISH-LEVEL DISPARITIES
+    parish_breakdown = comprehensive.get('parish_breakdown', [])
+    if len(parish_breakdown) > 1:
+        worst_parish = min(parish_breakdown, key=lambda x: x.get('pass_rate', 100))
+        best_parish = max(parish_breakdown, key=lambda x: x.get('pass_rate', 0))
+
+        disparity = best_parish.get('pass_rate', 0) - worst_parish.get('pass_rate', 0)
+
+        if disparity > 30:
+            summaries.append(f"Significant regional disparity: {worst_parish.get('parish', 'Unknown')} parish has {worst_parish.get('pass_rate', 0):.1f}% pass rate while {best_parish.get('parish', 'Unknown')} has {best_parish.get('pass_rate', 0):.1f}%.")
+            advice.append(f"Investigate root causes of poor performance in {worst_parish.get('parish', 'Unknown')} parish. Consider resource allocation, inspector training, or regional economic factors.")
+        elif disparity > 15:
+            summaries.append(f"Moderate regional variation observed: {worst_parish.get('parish', 'Unknown')} parish ({worst_parish.get('pass_rate', 0):.1f}%) trails {best_parish.get('parish', 'Unknown')} parish ({best_parish.get('pass_rate', 0):.1f}%).")
+            advice.append(f"Provide additional support and training resources to establishments in {worst_parish.get('parish', 'Unknown')} parish.")
+
+    # 5. INSPECTOR PERFORMANCE ANALYSIS
+    inspector_stats = comprehensive.get('inspector_stats', [])
+    if len(inspector_stats) >= 2:
+        # Check for consistency
+        pass_rates = [insp.get('pass_rate', 0) for insp in inspector_stats if insp.get('inspections', 0) >= 5]
+
+        if pass_rates:
+            variance = max(pass_rates) - min(pass_rates)
+
+            if variance > 40:
+                summaries.append(f"High variance in inspector pass rates (ranging from {min(pass_rates):.1f}% to {max(pass_rates):.1f}%) suggests potential inconsistency in inspection standards.")
+                advice.append("Implement inter-rater reliability training and standardization protocols. Consider conducting joint inspections for calibration.")
+            elif variance > 25:
+                summaries.append(f"Moderate variance in inspector pass rates observed. Some inconsistency in inspection application may exist.")
+                advice.append("Review inspection protocols with all inspectors to ensure consistent application of standards.")
+
+        # Workload analysis
+        total_inspections = sum(insp.get('inspections', 0) for insp in inspector_stats)
+        avg_inspections = total_inspections / len(inspector_stats) if inspector_stats else 0
+
+        overloaded = [insp for insp in inspector_stats if insp.get('inspections', 0) > avg_inspections * 1.5]
+        underloaded = [insp for insp in inspector_stats if insp.get('inspections', 0) < avg_inspections * 0.5 and insp.get('inspections', 0) > 0]
+
+        if overloaded:
+            summaries.append(f"{len(overloaded)} inspector(s) handling significantly more inspections than average, potentially affecting thoroughness.")
+            advice.append("Rebalance inspection workload to ensure quality and prevent inspector burnout.")
+
+        if underloaded and len(inspector_stats) > 2:
+            advice.append(f"Consider redistributing {len(underloaded)} underutilized inspector(s) to high-demand areas or inspection types.")
+
+    # 6. TREND ANALYSIS
+    monthly_trends = comprehensive.get('monthly_trends', [])
+    if len(monthly_trends) >= 3:
+        # Calculate if trending up or down
+        recent_months = monthly_trends[-3:]
+        older_months = monthly_trends[:3] if len(monthly_trends) >= 6 else monthly_trends[:len(monthly_trends)-3]
+
+        recent_avg = sum(m.get('pass_rate', 0) for m in recent_months) / len(recent_months) if recent_months else 0
+        older_avg = sum(m.get('pass_rate', 0) for m in older_months) / len(older_months) if older_months else 0
+
+        if recent_avg > older_avg + 10:
+            summaries.append(f"Positive trend: Compliance improving over time (recent {recent_avg:.1f}% vs earlier {older_avg:.1f}%).")
+            advice.append("Current strategies are working. Continue and strengthen successful compliance programs.")
+        elif recent_avg < older_avg - 10:
+            summaries.append(f"Negative trend: Compliance declining over time (recent {recent_avg:.1f}% vs earlier {older_avg:.1f}%).")
+            advice.append("URGENT: Investigate causes of declining compliance. Review recent policy changes, economic factors, or inspector training gaps.")
+        else:
+            summaries.append("Compliance rates remain relatively stable over the reporting period.")
+
+    # 7. COMPLIANCE TRAJECTORY
+    trajectory = comprehensive.get('trajectory', {})
+    improving = trajectory.get('improving', [])
+    declining = trajectory.get('declining', [])
+
+    if improving and declining:
+        if len(declining) > len(improving) * 2:
+            summaries.append(f"{len(declining)} establishments show declining compliance vs only {len(improving)} improving - concerning trend.")
+            advice.append("Implement mandatory re-inspection program for declining establishments with escalating enforcement actions.")
+        elif len(improving) > len(declining) * 2:
+            summaries.append(f"{len(improving)} establishments improving vs {len(declining)} declining - positive overall trajectory.")
+            advice.append("Recognize and publicize improving establishments. Study their success factors for broader application.")
+        else:
+            summaries.append(f"Mixed trajectory: {len(improving)} establishments improving, {len(declining)} declining.")
+            advice.append("Focus intervention resources on declining establishments while maintaining support for those showing improvement.")
+
+    # 8. MOST COMMON FAILURES
+    checklist_failures = report_data.get('checklist_failures', [])
+    if checklist_failures:
+        top_3_failures = checklist_failures[:3]
+        total_top_failures = sum(item.get('failures', 0) for item in top_3_failures)
+
+        summaries.append(f"Top recurring failures: Items {', '.join([item.get('item_id', 'Unknown') for item in top_3_failures])} account for {total_top_failures} total violations.")
+        advice.append(f"Develop targeted compliance guides and training materials specifically addressing items: {', '.join([item.get('item_id', 'Unknown') for item in top_3_failures])}.")
+
+    # 9. DAY OF WEEK PATTERNS
+    dow_patterns = comprehensive.get('day_of_week', [])
+    if dow_patterns:
+        best_day = max(dow_patterns, key=lambda x: x.get('pass_rate', 0))
+        worst_day = min(dow_patterns, key=lambda x: x.get('pass_rate', 100))
+
+        if best_day.get('pass_rate', 0) - worst_day.get('pass_rate', 0) > 20:
+            summaries.append(f"Day-of-week variation detected: {worst_day.get('day_name', 'Unknown')} shows lowest pass rate ({worst_day.get('pass_rate', 0):.1f}%) vs {best_day.get('day_name', 'Unknown')} ({best_day.get('pass_rate', 0):.1f}%).")
+            advice.append(f"Investigate if {worst_day.get('day_name', 'certain')} day inspections are scheduled at suboptimal times or if establishments have different operating conditions on different days.")
+
+    # 10. STATISTICAL SUMMARY
+    stats = comprehensive.get('statistics', {})
+    if stats:
+        std_dev = stats.get('std_dev', 0)
+        if std_dev > 20:
+            summaries.append(f"High score variability (std dev: {std_dev:.1f}) indicates inconsistent establishment performance across the board.")
+            advice.append("Wide performance gaps suggest need for tiered compliance approach: intensive support for low performers, maintenance for high performers.")
+
+    # Compile final summary
+    return {
+        'executive_summary': summaries,
+        'recommended_actions': advice,
+        'summary_count': len(summaries),
+        'advice_count': len(advice)
+    }
+
 def generate_basic_summary_report(inspection_type, start_date, end_date):
     try:
         print(f"DEBUG: Generating comprehensive report for {inspection_type} from {start_date} to {end_date}")
@@ -10200,14 +10388,19 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
 
         conn.close()
 
-        return {
+        # Build report data structure
+        report_data = {
             'title': f'Comprehensive Inspection Report - {inspection_type}',
             'summary': {
+                'total': total_inspections,
                 'total_inspections': total_inspections,
+                'passed': passed_inspections,
                 'passed_inspections': passed_inspections,
+                'failed': failed_inspections,
                 'failed_inspections': failed_inspections,
                 'pass_percentage': round(pass_percentage, 1),
                 'fail_percentage': round(fail_percentage, 1),
+                'avg_score': round(avg_score, 1),
                 'average_score': round(avg_score, 1),
                 'highest_score': round(max_score, 1),
                 'lowest_score': round(min_score, 1)
@@ -10215,10 +10408,31 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
             'trend_data': trend_data,
             'top_inspectors': top_inspectors,
             'common_failures': failed_items,
+            'checklist_failures': failed_items,
             'top_establishments': top_establishments,
             'failing_establishments': failing_establishments,
             'date_range': f"{start_date} to {end_date}",
             # NEW: Comprehensive advanced metrics
+            'comprehensive_metrics': {
+                'type_breakdown': comprehensive_metrics.get('type_breakdown', []),
+                'parish_breakdown': comprehensive_metrics.get('parish_breakdown', []),
+                'day_of_week': comprehensive_metrics.get('day_of_week_pattern', []),
+                'day_of_week_pattern': comprehensive_metrics.get('day_of_week_pattern', []),
+                'monthly_trends': comprehensive_metrics.get('monthly_trends', []),
+                'inspector_stats': comprehensive_metrics.get('inspector_workload', []),
+                'inspector_workload': comprehensive_metrics.get('inspector_workload', []),
+                'critical_items': comprehensive_metrics.get('critical_violations', []),
+                'critical_violations': comprehensive_metrics.get('critical_violations', []),
+                'trajectory': {
+                    'improving': comprehensive_metrics.get('improving_establishments', []),
+                    'declining': comprehensive_metrics.get('declining_establishments', [])
+                },
+                'improving_establishments': comprehensive_metrics.get('improving_establishments', []),
+                'declining_establishments': comprehensive_metrics.get('declining_establishments', []),
+                'statistics': comprehensive_metrics.get('statistical_analysis', {}),
+                'statistical_analysis': comprehensive_metrics.get('statistical_analysis', {}),
+                'recommendations': comprehensive_metrics.get('recommendations', [])
+            },
             'type_breakdown': comprehensive_metrics.get('type_breakdown', []),
             'parish_breakdown': comprehensive_metrics.get('parish_breakdown', []),
             'day_of_week_pattern': comprehensive_metrics.get('day_of_week_pattern', []),
@@ -10230,6 +10444,12 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
             'statistical_analysis': comprehensive_metrics.get('statistical_analysis', {}),
             'recommendations': comprehensive_metrics.get('recommendations', [])
         }
+
+        # Generate intelligent summary and advice
+        summary_analysis = generate_report_summary(report_data, inspection_type, start_date, end_date)
+        report_data['intelligent_summary'] = summary_analysis
+
+        return report_data
     except Exception as e:
         print(f"DEBUG: Error in generate_basic_summary_report: {str(e)}")
         import traceback
