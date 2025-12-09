@@ -171,17 +171,24 @@ def get_db_connection():
     return conn
 
 
-def release_db_connection(conn):
+def release_db_connection(conn, error=False):
     """
     Return a PostgreSQL connection to the pool, or close SQLite connection.
 
+    If there was an error, the connection is closed instead of returned to pool
+    to prevent bad connections from contaminating the pool.
+
     Args:
         conn: Database connection to release
+        error: True if connection had an error (will be discarded)
 
     Example:
         conn = get_db_connection()
         try:
             # ... use connection ...
+        except Exception as e:
+            release_db_connection(conn, error=True)
+            raise
         finally:
             release_db_connection(conn)
     """
@@ -191,12 +198,30 @@ def release_db_connection(conn):
     database_url = os.getenv('DATABASE_URL', '')
 
     if database_url and (database_url.startswith('postgres://') or database_url.startswith('postgresql://')):
-        # Return PostgreSQL connection to pool
+        # Return PostgreSQL connection to pool (or close if errored)
         if _connection_pool is not None:
-            _connection_pool.putconn(conn)
+            try:
+                if error:
+                    # Connection had an error - close it instead of returning to pool
+                    print(f"⚠️ Discarding bad connection from pool")
+                    conn.close()
+                    # Don't putconn - let pool create a fresh one
+                else:
+                    # Connection is good - return to pool
+                    _connection_pool.putconn(conn)
+            except Exception as e:
+                # If putconn fails, just close the connection
+                print(f"⚠️ Error returning connection to pool: {e}")
+                try:
+                    conn.close()
+                except:
+                    pass
     else:
         # Close SQLite connection
-        conn.close()
+        try:
+            conn.close()
+        except:
+            pass
 
 
 @contextmanager
