@@ -5729,18 +5729,21 @@ def login_post():
             error_occurred = True
             release_db_connection(conn, error=error_occurred)
 
-            # Check if this is an SSL error worth retrying
+            # Check if this is a transient connection error worth retrying
             error_msg = str(e).lower()
-            is_ssl_error = any(keyword in error_msg for keyword in [
-                'ssl error', 'decryption failed', 'bad record mac'
+            is_transient_error = any(keyword in error_msg for keyword in [
+                'ssl error', 'decryption failed', 'bad record mac',
+                'server closed', 'connection unexpectedly', 'connection reset',
+                'broken pipe', 'connection refused', 'timeout'
             ])
 
-            if is_ssl_error and attempt < max_retries - 1:
-                print(f"⚠️  SSL error on login attempt {attempt + 1}/{max_retries}, retrying...")
+            if is_transient_error and attempt < max_retries - 1:
+                print(f"⚠️  Connection error on login attempt {attempt + 1}/{max_retries}: {e}")
+                print(f"   Retrying with fresh connection...")
                 time.sleep(0.1 * (attempt + 1))  # Brief exponential backoff
                 continue
             else:
-                # Not SSL error or out of retries - propagate the error
+                # Not a transient error or out of retries - propagate the error
                 raise
 
     # Continue with existing login logic

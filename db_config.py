@@ -75,26 +75,28 @@ def _init_connection_pool():
             if parsed.scheme == 'postgres':
                 database_url = database_url.replace('postgres://', 'postgresql://', 1)
 
-            # Add SSL configuration to DATABASE_URL if not present
+            # Add SSL and keepalive configuration to DATABASE_URL if not present
             # Use 'disable' mode to avoid SSL handshake failures
             # Render.com PostgreSQL supports both SSL and non-SSL connections
             if 'sslmode' not in database_url:
                 separator = '&' if '?' in database_url else '?'
-                database_url = f"{database_url}{separator}sslmode=disable&connect_timeout=10"
+                # Add keepalive parameters to prevent stale connections
+                database_url = f"{database_url}{separator}sslmode=disable&connect_timeout=10&keepalives=1&keepalives_idle=30&keepalives_interval=10&keepalives_count=5"
 
             # Create threaded connection pool
             print(f"🔌 Initializing PostgreSQL connection pool...")
             print(f"   Host: {parsed.hostname}:{parsed.port}")
             print(f"   Database: {parsed.path.lstrip('/')}")
             print(f"   SSL Mode: disabled (avoiding SSL handshake failures)")
+            print(f"   Keepalives: enabled (prevents stale connections)")
 
             _connection_pool = psycopg2.pool.ThreadedConnectionPool(
-                minconn=2,   # Reduce minimum to avoid SSL issues on startup
-                maxconn=20,  # Allow up to 20 concurrent connections
+                minconn=1,   # Minimum connections (reduces stale connection risk)
+                maxconn=10,  # Maximum connections (sufficient for typical load)
                 dsn=database_url
             )
 
-            print("✅ PostgreSQL connection pool initialized (2-20 connections)")
+            print("✅ PostgreSQL connection pool initialized (1-10 connections)")
             return _connection_pool
 
         except ImportError as e:
