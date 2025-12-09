@@ -896,36 +896,36 @@ SPIRIT_LICENCE_CHECKLIST_ITEMS = [
     {'id': 2, 'description': 'No smoking sign displayed at entrance to premises', 'wt': 3},
     {'id': 3, 'description': 'Sound, clean and in good repair', 'wt': 3},
 
-    {'id': 5, 'description': 'Constructed of impervious, non-slip material', 'wt': 3},
-    {'id': 6, 'description': 'Clean, drained and in good repair', 'wt': 3},
+    {'id': 4, 'description': 'Constructed of impervious, non-slip material', 'wt': 3},
+    {'id': 5, 'description': 'Clean, drained and in good repair', 'wt': 3},
 
-    {'id': 8, 'description': 'Constructed of impervious material', 'wt': 3},
-    {'id': 9, 'description': 'Designed, clean and in good repair', 'wt': 3},
+    {'id': 6, 'description': 'Constructed of impervious material', 'wt': 3},
+    {'id': 7, 'description': 'Designed, clean and in good repair', 'wt': 3},
 
-    {'id': 11, 'description': 'Lighting provided as required', 'wt': 3},
-    {'id': 12, 'description': 'Washing and Sanitization Facilities', 'wt': 5},
-    {'id': 13, 'description': 'Fitted with at least double compartment sink', 'wt': 5},
-    {'id': 14, 'description': 'Soap and sanitizer provided', 'wt': 5},
-    {'id': 15, 'description': 'Equipped handwashing facility provided', 'wt': 5},
+    {'id': 8, 'description': 'Lighting provided as required', 'wt': 3},
 
-    {'id': 17, 'description': 'Potable', 'wt': 5},
-    {'id': 18, 'description': 'Piped', 'wt': 5},
+    {'id': 9, 'description': 'Fitted with at least double compartment sink', 'wt': 5},
+    {'id': 10, 'description': 'Soap and sanitizer provided', 'wt': 5},
+    {'id': 11, 'description': 'Equipped handwashing facility provided', 'wt': 5},
 
-    {'id': 20, 'description': 'Clean and adequate storage of glasses & utensils', 'wt': 5},
-    {'id': 21, 'description': 'Free of insects and other vermins', 'wt': 5},
-    {'id': 22, 'description': 'Being used for its intended purpose', 'wt': 5},
+    {'id': 12, 'description': 'Potable', 'wt': 5},
+    {'id': 13, 'description': 'Piped', 'wt': 5},
 
-    {'id': 24, 'description': 'Toilet facility provided', 'wt': 5},
-    {'id': 25, 'description': 'Adequate, accessible with lavatory basin and soap', 'wt': 5},
-    {'id': 26, 'description': 'Satisfactory', 'wt': 5},
-    {'id': 27, 'description': 'Urinal(s) provided', 'wt': 3},
-    {'id': 28, 'description': 'Satisfactory', 'wt': 3},
+    {'id': 14, 'description': 'Clean and adequate storage of glasses & utensils', 'wt': 5},
+    {'id': 15, 'description': 'Free of insects and other vermins', 'wt': 5},
+    {'id': 16, 'description': 'Being used for its intended purpose', 'wt': 5},
 
-    {'id': 30, 'description': 'Covered, adequate, pest proof and clean receptacles', 'wt': 4},
-    {'id': 31, 'description': 'Provision made for satisfactory disposal of waste', 'wt': 3},
-    {'id': 32, 'description': 'Premises free of litter and unnecessary articles', 'wt': 2},
+    {'id': 17, 'description': 'Toilet facility provided', 'wt': 5},
+    {'id': 18, 'description': 'Adequate, accessible with lavatory basin and soap', 'wt': 5},
+    {'id': 19, 'description': 'Satisfactory', 'wt': 5},
+    {'id': 20, 'description': 'Urinal(s) provided', 'wt': 3},
+    {'id': 21, 'description': 'Satisfactory', 'wt': 3},
 
-    {'id': 34, 'description': 'Premises free of rodents, insects and vermins', 'wt': 5}
+    {'id': 22, 'description': 'Covered, adequate, pest proof and clean receptacles', 'wt': 4},
+    {'id': 23, 'description': 'Provision made for satisfactory disposal of waste', 'wt': 3},
+    {'id': 24, 'description': 'Premises free of litter and unnecessary articles', 'wt': 2},
+
+    {'id': 25, 'description': 'Premises free of rodents, insects and vermins', 'wt': 5}
 ]
 
 # Swimming Pool Checklist - CORRECTED WEIGHTS
