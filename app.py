@@ -26,7 +26,7 @@ import base64
 from weasyprint import HTML, CSS
 
 # Database Config Import
-from db_config import get_db_connection, get_db_type, get_placeholder
+from db_config import get_db_connection, get_db_type, get_placeholder, release_db_connection
 
 # Security Modules Import
 from integrity_check import verify_integrity, get_installation_id
@@ -196,7 +196,7 @@ def run_sqlite_migrations_async():
                     conn.commit()
                     print("Migration completed: photo_data column added to meat_processing_inspections")
 
-                conn.close()
+                release_db_connection(conn)
                 print("✅ SQLite migrations completed")
             except Exception as e:
                 print(f"⚠️ SQLite migration error: {e}")
@@ -1178,7 +1178,7 @@ def get_form_checklist_items(form_type, fallback_list=None):
 
         if not template:
             print(f"⚠️  No template found for {form_type}, using hardcoded list")
-            conn.close()
+            release_db_connection(conn)
             return fallback_list if fallback_list else []
 
         template_id = template[0]
@@ -1206,7 +1206,7 @@ def get_form_checklist_items(form_type, fallback_list=None):
             }
             items.append(item)
 
-        conn.close()
+        release_db_connection(conn)
 
         # If database has items, use them; otherwise use fallback
         if items:
@@ -1243,7 +1243,7 @@ def get_form_field_properties(form_type):
 
         if not template:
             print(f"⚠️  No template found for {form_type}")
-            conn.close()
+            release_db_connection(conn)
             return {}
 
         template_id = template[0]
@@ -1269,7 +1269,7 @@ def get_form_field_properties(form_type):
                 'field_group': row[7]
             }
 
-        conn.close()
+        release_db_connection(conn)
 
         if fields:
             print(f"✓ Loaded {len(fields)} field properties from database for {form_type}")
@@ -1303,7 +1303,7 @@ def debug_stats():
     c.execute("SELECT COUNT(*) FROM burial_site_inspections")
     burial = c.fetchone()[0]
 
-    conn.close()
+    release_db_connection(conn)
 
     return f"""
     <h2>Debug Stats:</h2>
@@ -1320,7 +1320,7 @@ def get_establishment_data():
     c = conn.cursor()
     c.execute("SELECT establishment_name, owner, license_no, id FROM inspections")
     data = c.fetchall()
-    conn.close()
+    release_db_connection(conn)
     return data
 
 @app.route('/')
@@ -1355,7 +1355,7 @@ def admin():
         ORDER BY created_at DESC
     """)
     forms = c.fetchall()
-    conn.close()
+    release_db_connection(conn)
     return render_template('admin.html', forms=forms)
 
 
@@ -1393,7 +1393,7 @@ def admin_form_scores():
         return jsonify([]), 500
 
     finally:
-        conn.close()
+        release_db_connection(conn)
 
 
 def get_table_name_for_form_type(form_type):
@@ -1453,12 +1453,12 @@ def admin_metrics():
             """
             c.execute(query, (form_type,))
             results = c.fetchall()
-            conn.close()
+            release_db_connection(conn)
             return jsonify(process_metrics(results, time_frame))
 
     c.execute(query)
     results = c.fetchall()
-    conn.close()
+    release_db_connection(conn)
     return jsonify(process_metrics(results, time_frame))
 
 
@@ -1534,7 +1534,7 @@ def admin_form_distribution():
 
         c.execute(query)
         results = c.fetchall()
-        conn.close()
+        release_db_connection(conn)
 
         # Process results into pie chart format
         form_totals = {}
@@ -1619,9 +1619,9 @@ def generate_report():
         for date, count in results:
             data['dates'].append(date)
             data['counts'].append(count)
-        conn.close()
+        release_db_connection(conn)
         return jsonify(data)
-    conn.close()
+    release_db_connection(conn)
     return jsonify({'error': 'Invalid metric'}), 400
 
 @app.route('/api/system_health', methods=['GET'])
@@ -1656,7 +1656,7 @@ def logout():
                 c.execute("UPDATE user_sessions SET is_active = 0, logout_time = %s WHERE username = %s AND is_active = 1",
                           (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), username))
                 conn.commit()
-            conn.close()
+            release_db_connection(conn)
         except Exception as e:
             print(f"Error updating user session on logout: {e}")
 
@@ -1684,7 +1684,7 @@ def new_burial_form():
         c = conn.cursor()
         c.execute("SELECT * FROM burial_site_inspections WHERE id = %s", (inspection_id,))
         inspection = c.fetchone()
-        conn.close()
+        release_db_connection(conn)
         if inspection:
             inspection_data = {
                 'id': inspection[0],
@@ -1952,7 +1952,7 @@ def submit_institutional():
         print(f"Total scores saved: {scores_saved}")
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
 
         return jsonify({
             'status': 'success',
@@ -2007,7 +2007,7 @@ def fix_institutional_status():
             f"Updated inspection {inspection_id}: Overall={overall_score}, Critical={critical_score}, Result={result}")
 
     conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
     return f"Updated {updated_count} institutional inspection records! <a href='/dashboard'>Back to Dashboard</a>"
 
@@ -2044,7 +2044,7 @@ def institutional_inspection_detail(id):
     inspection = cursor.fetchone()
 
     if not inspection:
-        conn.close()
+        release_db_connection(conn)
         return "Inspection not found", 404
 
     inspection_dict = dict(inspection)
@@ -2080,7 +2080,7 @@ def institutional_inspection_detail(id):
 
     inspection_dict['scores'] = scores
 
-    conn.close()
+    release_db_connection(conn)
 
     # Parse photos from JSON string to Python list
     photos = []
@@ -2141,7 +2141,7 @@ def submit_spirit_licence():
             c.execute("INSERT INTO inspection_items (inspection_id, item_id, details) VALUES (%s, %s, %s)",
                       (inspection_id, item['id'], score))
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
 
         # Check and create alert if score below threshold
         check_and_create_alert(
@@ -2201,7 +2201,7 @@ def submit_form(form_type):
                 c.execute(f"INSERT INTO inspection_items (inspection_id, item_id, details) VALUES ({ph}, {ph}, {ph})",
                           (inspection_id, item["id"], score))
             conn.commit()
-            conn.close()
+            release_db_connection(conn)
 
             # Check and create alert if score below threshold
             check_and_create_alert(
@@ -2276,7 +2276,7 @@ def submit_residential():
             c.execute(f"INSERT INTO residential_checklist_scores (form_id, item_id, score) VALUES ({ph}, {ph}, {ph})",
                       (inspection_id, item["id"], safe_score))
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
 
         # Check and create alert if score below threshold
         check_and_create_alert(
@@ -2423,7 +2423,7 @@ def submit_meat_processing():
             c.execute(f"INSERT INTO meat_processing_checklist_scores (form_id, item_id, score) VALUES ({ph}, {ph}, {ph})",
                       (inspection_id, item["id"], safe_score))
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
 
         return jsonify({'status': 'success', 'message': 'Submit successfully', 'inspection_id': inspection_id})
     except Exception as e:
@@ -2595,7 +2595,7 @@ def submit_swimming_pools():
         ''', (inspection_id, item['id'], str(score)))
 
     conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
     print(f"=== FINAL SUCCESS: Inspection {inspection_id} completely saved ===")
     return jsonify({'status': 'success', 'message': 'Inspection submitted successfully'})
@@ -2629,7 +2629,7 @@ def update_database_schema():
                 pass  # Column might already exist
 
     conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
     return "Database schema updated! <a href='/admin'>Back to Admin Dashboard</a>"
 
@@ -2655,7 +2655,7 @@ def fix_swimming_pool_db():
                 print(f"Error adding score_{item['id']}: {e}")
 
     conn.commit()
-    conn.close()
+    release_db_connection(conn)
     return f"Database updated! Added {columns_added} new columns."
 
 
@@ -2819,7 +2819,7 @@ def submit_small_hotels():
         ))
 
     conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
     return jsonify({
         "status": "success",
@@ -3011,7 +3011,7 @@ def get_inspections_with_status():
     # Sort all inspections by created_at in descending order
     inspections.sort(key=lambda x: x['created_at'] or '', reverse=True)
 
-    conn.close()
+    release_db_connection(conn)
     return inspections
 
 
@@ -3062,7 +3062,7 @@ def fix_inspection_results():
             f"Updated inspection {inspection_id}: {form_type} - Overall: {overall_score}, Critical: {critical_score} → {new_result}")
 
     conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
     return f"Updated {updated_count} inspection results! <a href='/dashboard'>Back to Dashboard</a>"
 
@@ -3092,7 +3092,7 @@ def get_stats():
     institutional = c.fetchone()[0]
     c.execute("SELECT COUNT(*) FROM meat_processing_inspections")
     meat_processing = c.fetchone()[0]
-    conn.close()
+    release_db_connection(conn)
     return jsonify({
         'total': total + residential + burial + meat_processing,  # Include all in total
         'food': food,
@@ -3118,7 +3118,7 @@ def search():
     burial_records = c.fetchall()
     c.execute("SELECT id, establishment_name, owner, license_no FROM inspections WHERE form_type = 'Barbershop' AND (LOWER(establishment_name) LIKE ? OR LOWER(owner) LIKE ? OR LOWER(license_no) LIKE ?)", (f'%{query}%', f'%{query}%', f'%{query}%'))
     barbershop_records = c.fetchall()
-    conn.close()
+    release_db_connection(conn)
     suggestions = []
     for establishment_name, owner, license_no, id in data:
         if query in (establishment_name or '').lower() or query in (owner or '').lower() or query in (license_no or '').lower():
@@ -3146,7 +3146,7 @@ def search_residential():
     """, (f'%{query}%', f'%{query}%', f'%{query}%'))
     records = c.fetchall()
     suggestions = [{'id': row[0], 'premises_name': row[1], 'owner': row[2], 'created_at': row[3], 'result': row[4]} for row in records]
-    conn.close()
+    release_db_connection(conn)
     return jsonify({'suggestions': suggestions})
 
 @app.route('/inspection/<int:id>')
@@ -3157,7 +3157,7 @@ def inspection_detail(id):
     c = conn.cursor()
     c.execute("SELECT id, establishment_name, owner, address, license_no, inspector_name, inspection_date, inspection_time, type_of_establishment, purpose_of_visit, action, result, scores, comments, created_at, form_type, inspector_code, no_of_employees, food_inspected, food_condemned, photo_data, received_by, inspector_signature FROM inspections WHERE id = %s", (id,))
     inspection = c.fetchone()
-    conn.close()
+    release_db_connection(conn)
 
     if inspection:
         scores = [int(float(x)) for x in inspection[12].split(',')] if inspection[12] else [0] * 45
@@ -3593,7 +3593,7 @@ def download_swimming_pool_pdf(form_id):
         inspection = cursor.fetchone()
         
         if not inspection:
-            conn.close()
+            release_db_connection(conn)
             return jsonify({'error': 'Inspection not found'}), 404
         
         inspection_dict = dict(inspection)
@@ -3606,7 +3606,7 @@ def download_swimming_pool_pdf(form_id):
                 item_scores[item['id']] = float(score_value) if score_value else 0.0
             except:
                 item_scores[item['id']] = 0.0
-        conn.close()
+        release_db_connection(conn)
         
         photos = []
         if inspection_dict.get('photo_data'):
@@ -3673,7 +3673,7 @@ def download_institutional_pdf(form_id):
     inspection = cursor.fetchone()
 
     if not inspection:
-        conn.close()
+        release_db_connection(conn)
         return "Inspection not found", 404
 
     inspection_dict = dict(inspection)
@@ -3703,7 +3703,7 @@ def download_institutional_pdf(form_id):
 
     inspection_dict['scores'] = scores
 
-    conn.close()
+    release_db_connection(conn)
 
     # Parse photos from JSON string to Python list
     photos = []
@@ -3772,7 +3772,7 @@ def download_small_hotels_pdf(form_id):
         inspection_row = cursor.fetchone()
 
         if not inspection_row:
-            conn.close()
+            release_db_connection(conn)
             logger.error(f"❌ Inspection {form_id} not found in database")
             return jsonify({'error': 'Inspection not found'}), 404
 
@@ -3789,7 +3789,7 @@ def download_small_hotels_pdf(form_id):
             obser_scores[item['item_id']] = item['obser'] or '0'
             error_scores[item['item_id']] = item['error'] or '0'
 
-        conn.close()
+        release_db_connection(conn)
         logger.info(f"✅ Retrieved {len(items)} inspection items")
 
         # Extract and calculate the scores (same as detail page)
@@ -3909,7 +3909,7 @@ def download_inspection_pdf(form_id):
         c = conn.cursor()
         c.execute("SELECT id, establishment_name, owner, address, license_no, inspector_name, inspection_date, inspection_time, type_of_establishment, purpose_of_visit, action, result, scores, comments, created_at, form_type, inspector_code, no_of_employees, food_inspected, food_condemned, photo_data, received_by, inspector_signature FROM inspections WHERE id = %s", (form_id,))
         inspection = c.fetchone()
-        conn.close()
+        release_db_connection(conn)
         
         if not inspection:
             logger.error(f"❌ Inspection {form_id} not found in database")
@@ -4024,7 +4024,7 @@ def download_spirit_licence_pdf(form_id):
     c.execute("""SELECT * FROM inspections
                  WHERE id = %s AND form_type = 'Spirit Licence Premises'""", (form_id,))
     inspection = c.fetchone()
-    conn.close()
+    release_db_connection(conn)
 
     if not inspection:
         return jsonify({'error': 'Inspection not found'}), 404
@@ -4146,7 +4146,7 @@ def swimming_pool_inspection_detail(id):
     inspection = cursor.fetchone()
 
     if not inspection:
-        conn.close()
+        release_db_connection(conn)
         return "Inspection not found", 404
 
     # Convert to dictionary for easier template access
@@ -4195,7 +4195,7 @@ def swimming_pool_inspection_detail(id):
     item_scores = {row['item_id']: float(row['details']) if row['details'] and str(row['details']).replace('.', '', 1).isdigit() else 0.0
                    for row in cursor.fetchall()}
 
-    conn.close()
+    release_db_connection(conn)
 
     # If individual columns don't exist, use item_scores as fallback
     for item in SWIMMING_POOL_CHECKLIST_ITEMS:
@@ -4390,7 +4390,7 @@ def search_forms():
                 WHERE (LOWER(establishment_name) LIKE %s OR LOWER(owner_operator) LIKE %s)
             """, (f'%{query}%', f'%{query}%'))
         else:
-            conn.close()
+            release_db_connection(conn)
             return jsonify({'forms': []}), 404
 
         records = c.fetchall()
@@ -4471,7 +4471,7 @@ def search_forms():
 
             forms.append(form_data)
 
-    conn.close()
+    release_db_connection(conn)
     return jsonify({'forms': forms})
 
 
@@ -4517,7 +4517,7 @@ def update_barbershop_db_schema():
                 conn.rollback()  # Rollback on error
                 logging.error(f"Error adding {column}: {e}")
 
-    conn.close()
+    release_db_connection(conn)
     return columns_added
 
 # Route to render new barbershop inspection form
@@ -4692,7 +4692,7 @@ def submit_barbershop():
             ''', (inspection_id, item['id'], str(score)))
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
 
         # Check and create alert if score below threshold
         check_and_create_alert(
@@ -4710,7 +4710,7 @@ def submit_barbershop():
         })
 
     except sqlite3.Error as e:
-        conn.close()
+        release_db_connection(conn)
         return jsonify({'status': 'error', 'message': f'Database error: {str(e)}'}), 500
 
 @app.route('/barbershop/inspection/<int:id>')
@@ -4728,7 +4728,7 @@ def barbershop_inspection_detail(id):
     inspection = cursor.fetchone()
 
     if not inspection:
-        conn.close()
+        release_db_connection(conn)
         return "Inspection not found", 404
 
     inspection_dict = dict(inspection)
@@ -4762,7 +4762,7 @@ def barbershop_inspection_detail(id):
     # Add the scores dictionary to inspection_dict
     inspection_dict['scores'] = scores
 
-    conn.close()
+    release_db_connection(conn)
 
     # Parse photos from JSON string to Python list
         # json imported at top
@@ -4788,7 +4788,7 @@ def download_barbershop_pdf(form_id):
     form_data = c.fetchone()
 
     if not form_data:
-        conn.close()
+        release_db_connection(conn)
         return jsonify({'error': 'Inspection not found'}), 404
 
     # Get scores from the score columns in the inspections table
@@ -4804,7 +4804,7 @@ def download_barbershop_pdf(form_id):
                 checklist_scores[item['id']] = 0.0
         else:
             checklist_scores[item['id']] = 0.0
-    conn.close()
+    release_db_connection(conn)
 
     # Debug: Print what we have in the database
     print("=== BARBERSHOP PDF DEBUG ===")
@@ -5197,7 +5197,7 @@ def fix_all_forms_to_pass_fail():
     total_updated = residential_updated + main_updated
 
     conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
     return f"""
     <h1>✅ Fixed ALL Forms to Pass/Fail!</h1>
@@ -5286,7 +5286,7 @@ def get_inspections_with_status():
 
         inspections.append(inspection_data)
 
-    conn.close()
+    release_db_connection(conn)
     return jsonify({'inspections': inspections})
 
 
@@ -5329,7 +5329,7 @@ def init_messages_db():
 
     if get_db_type() != 'postgresql':
         conn.commit()
-    conn.close()
+    release_db_connection(conn)
     print("Messages table initialized successfully")
 
 
@@ -5654,7 +5654,7 @@ def init_db():
     except Exception as e:
         logging.error(f"Database integrity error: {str(e)}")
 
-    conn.close()
+    release_db_connection(conn)
 
 
 # Replace your existing login_post() function with this updated version
@@ -5705,7 +5705,7 @@ def get_parish_coordinates(parish):
 
 @app.route('/login', methods=['POST'])
 def login_post():
-    from db_config import execute_query
+    from db_config import execute_query, release_db_connection
 
     username = request.form['username']
     password = request.form['password']
@@ -5713,29 +5713,29 @@ def login_post():
     ip_address = request.remote_addr
 
     conn = get_db_connection()
-    # Support login with either username OR email (for shared database with Zo-Zi Marketplace)
-    c = execute_query(conn, "SELECT id, username, password, role, email, parish, first_login FROM users WHERE (username = %s OR email = %s) AND password = %s",
-              (username, username, password))
-    user = c.fetchone()
+    try:
+        # Support login with either username OR email (for shared database with Zo-Zi Marketplace)
+        c = execute_query(conn, "SELECT id, username, password, role, email, parish, first_login FROM users WHERE (username = %s OR email = %s) AND password = %s",
+                  (username, username, password))
+        user = c.fetchone()
 
-    if user and (
-            (login_type == 'inspector' and user['role'] == 'inspector') or
-            (login_type == 'admin' and user['role'] == 'admin') or
-            (login_type == 'medical_officer' and user['role'] == 'medical_officer')):
+        if user and (
+                (login_type == 'inspector' and user['role'] == 'inspector') or
+                (login_type == 'admin' and user['role'] == 'admin') or
+                (login_type == 'medical_officer' and user['role'] == 'medical_officer')):
 
-        # Check if this is first login
-        try:
-            first_login = user['first_login'] == 1
-        except (KeyError, IndexError, TypeError):
-            first_login = False
+            # Check if this is first login
+            try:
+                first_login = user['first_login'] == 1
+            except (KeyError, IndexError, TypeError):
+                first_login = False
 
-        if first_login:
-            # User needs to change password before logging in
-            conn.close()
-            return jsonify({
-                'first_login': True,
-                'message': 'Please change your password'
-            })
+            if first_login:
+                # User needs to change password before logging in
+                return jsonify({
+                    'first_login': True,
+                    'message': 'Please change your password'
+                })
 
         # Use username if available, otherwise use email (for Zo-Zi Marketplace users)
         user_identifier = user['username'] if user['username'] else user['email']
@@ -5802,7 +5802,6 @@ def login_post():
             print(f"⚠️ No GPS coordinates provided, user {user_identifier} will not appear on map")
 
         conn.commit()
-        conn.close()
 
         # Log audit event
         log_audit_event(user_identifier, 'login', ip_address, f'Successful {login_type} login')
@@ -5821,34 +5820,35 @@ def login_post():
             'redirect': redirect_url
         })
 
-    conn.close()
+        # Failed login
+        log_audit_event(username, 'login_failed', ip_address, f'Failed {login_type} login attempt')
+        audit_user_login(username, success=False, ip_address=ip_address)
 
-    # Log failed login attempt
-    log_audit_event(username, 'login_failed', ip_address, f'Failed {login_type} login attempt')
-    audit_user_login(username, success=False, ip_address=ip_address)
+        # Security monitoring: log failed login
+        security_monitor.log_login_attempt(
+            username=username,
+            success=False,
+            ip_address=ip_address,
+            user_agent=request.headers.get('User-Agent', ''),
+            failure_reason='Invalid credentials'
+        )
+        security_monitor.log_audit(
+            username=username,
+            action_type='login_failed',
+            action_description=f'Failed {login_type} login attempt - Invalid credentials',
+            ip_address=ip_address,
+            user_agent=request.headers.get('User-Agent', ''),
+            status='failed',
+            error_message='Invalid username or password'
+        )
 
-    # Security monitoring: log failed login
-    security_monitor.log_login_attempt(
-        username=username,
-        success=False,
-        ip_address=ip_address,
-        user_agent=request.headers.get('User-Agent', ''),
-        failure_reason='Invalid credentials'
-    )
-    security_monitor.log_audit(
-        username=username,
-        action_type='login_failed',
-        action_description=f'Failed {login_type} login attempt - Invalid credentials',
-        ip_address=ip_address,
-        user_agent=request.headers.get('User-Agent', ''),
-        status='failed',
-        error_message='Invalid username or password'
-    )
+        return jsonify({
+            'success': False,
+            'error': 'Invalid credentials'
+        })
 
-    return jsonify({
-        'success': False,
-        'error': 'Invalid credentials'
-    })
+    finally:
+        release_db_connection(conn)
 
 
 @app.route('/change_first_login_password', methods=['POST'])
@@ -5981,7 +5981,7 @@ def change_first_login_password():
             })
 
         finally:
-            conn.close()
+            release_db_connection(conn)
 
     except Exception as e:
         print(f"Error changing first login password: {e}")
@@ -6031,7 +6031,7 @@ def get_parish_stats():
             'pass_rate': row[3]
         })
 
-    conn.close()
+    release_db_connection(conn)
     return jsonify(parish_stats)
 
 
@@ -6059,7 +6059,7 @@ def get_users():
         print(f"Error in get_users: {e}")
         return jsonify({'error': 'Database error'}), 500
     finally:
-        conn.close()
+        release_db_connection(conn)
 # These are the missing routes needed for your admin dashboard
 
 @app.route('/api/admin/audit_log')
@@ -6123,7 +6123,7 @@ def get_audit_log():
                     'details': f'{row[4]} login'
                 })
 
-        conn.close()
+        release_db_connection(conn)
         return jsonify(logs)
 
     except Exception as e:
@@ -6245,7 +6245,7 @@ def search_inspections():
                 'inspector': row[4] or 'N/A'
             })
 
-        conn.close()
+        release_db_connection(conn)
         return jsonify(results[:20])  # Limit total results to 20
 
     except Exception as e:
@@ -6288,7 +6288,7 @@ def get_inspector_tasks():
             # Tasks table doesn't exist yet
             tasks = []
 
-        conn.close()
+        release_db_connection(conn)
         return jsonify({'tasks': tasks})
 
     except Exception as e:
@@ -6317,11 +6317,11 @@ def update_task_status(task_id):  # Fixed parameter name to match route
         ''', (new_status, task_id, user_id))
 
         if cursor.rowcount == 0:
-            conn.close()
+            release_db_connection(conn)
             return jsonify({'error': 'Task not found or not assigned to you'}), 404
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
         return jsonify({'success': True})
 
     except Exception as e:
@@ -6347,7 +6347,7 @@ def respond_to_task(task_id):
         elif response == 'decline':
             new_status = 'Declined'
         else:
-            conn.close()
+            release_db_connection(conn)
             return jsonify({'error': 'Invalid response'}), 400
 
         cursor.execute('''
@@ -6357,11 +6357,11 @@ def respond_to_task(task_id):
         ''', (new_status, task_id, user_id))
 
         if cursor.rowcount == 0:
-            conn.close()
+            release_db_connection(conn)
             return jsonify({'error': 'Task not found or not assigned to you'}), 404
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
         return jsonify({'success': True, 'new_status': new_status})
 
     except Exception as e:
@@ -6393,7 +6393,7 @@ def get_unread_task_count():
             # Tasks table doesn't exist yet
             count = 0
 
-        conn.close()
+        release_db_connection(conn)
         return jsonify({'count': count})
 
     except Exception as e:
@@ -6438,7 +6438,7 @@ def get_inspector_performance():
                 'overdue': row[4]
             })
 
-        conn.close()
+        release_db_connection(conn)
         return jsonify({'inspectors': inspectors})
 
     except Exception as e:
@@ -6522,7 +6522,7 @@ def get_alerts():
                 'timestamp': datetime.now().isoformat()
             })
 
-        conn.close()
+        release_db_connection(conn)
         return jsonify(alerts)
 
     except Exception as e:
@@ -6586,7 +6586,7 @@ def get_inspection_locations():
         if filter_type != 'all':
             locations = [loc for loc in locations if loc['status'].lower() == filter_type.lower()]
 
-        conn.close()
+        release_db_connection(conn)
         return jsonify(locations)
 
     except Exception as e:
@@ -6650,7 +6650,7 @@ def get_reports():
                 'data': data
             }
 
-        conn.close()
+        release_db_connection(conn)
         return jsonify(report)
 
     except Exception as e:
@@ -6691,7 +6691,7 @@ def get_system_health():
                 'error_rate': 0.2 + (i * 0.01)
             })
 
-        conn.close()
+        release_db_connection(conn)
         return jsonify(health)
 
     except Exception as e:
@@ -6748,7 +6748,7 @@ def handle_tasks():
                     'status': row[4]
                 })
 
-            conn.close()
+            release_db_connection(conn)
             return jsonify(tasks)
 
         elif request.method == 'POST':
@@ -6779,7 +6779,7 @@ def handle_tasks():
             ''', (data['title'], assignee_id, assignee_name, data['due_date'], data.get('description', '')))
 
             conn.commit()
-            conn.close()
+            release_db_connection(conn)
             return jsonify({'success': True})
 
     except Exception as e:
@@ -6808,7 +6808,7 @@ def get_inspectors():
                 'name': row[1]
             })
 
-        conn.close()
+        release_db_connection(conn)
         return jsonify(inspectors)
 
     except Exception as e:
@@ -6855,7 +6855,7 @@ def get_security_metrics():
             'events': events
         }
 
-        conn.close()
+        release_db_connection(conn)
         return jsonify(metrics)
 
     except Exception as e:
@@ -6899,7 +6899,7 @@ def get_security_metrics():
                     'is_sent': row['sender_id'] == current_user_id
                 })
 
-            conn.close()
+            release_db_connection(conn)
             return jsonify(messages)
 
         except Exception as e:
@@ -6935,7 +6935,7 @@ def get_security_metrics():
             ''', (sender_id, recipient_id, content, datetime.now().isoformat()))
 
             conn.commit()
-            conn.close()
+            release_db_connection(conn)
 
             return jsonify({'success': True, 'message': 'Message sent successfully'})
 
@@ -6958,7 +6958,7 @@ def get_security_metrics():
         inspection = cursor.fetchone()
 
         if not inspection:
-            conn.close()
+            release_db_connection(conn)
             return "Small Hotels inspection not found", 404
 
         inspection_dict = dict(inspection)
@@ -6976,7 +6976,7 @@ def get_security_metrics():
         inspection_dict['obser'] = obser_scores
         inspection_dict['error'] = error_scores
 
-        conn.close()
+        release_db_connection(conn)
 
         # Parse photos from JSON string to Python list
         # json imported at top
@@ -7031,7 +7031,7 @@ def get_security_metrics():
                     'unread_count': unread_count
                 })
 
-            conn.close()
+            release_db_connection(conn)
             return jsonify(users)
 
         except Exception as e:
@@ -7057,7 +7057,7 @@ def get_security_metrics():
             ''', (user_id, current_user_id))
 
             conn.commit()
-            conn.close()
+            release_db_connection(conn)
 
             return jsonify({'success': True})
 
@@ -7087,7 +7087,7 @@ def get_security_metrics():
             result = c.fetchone()
             total_unread = result['total'] if result else 0
 
-            conn.close()
+            release_db_connection(conn)
 
             return jsonify({
                 'count': total_unread,
@@ -7119,7 +7119,7 @@ def get_security_metrics():
             ''', (user_id, admin_id))
 
             conn.commit()
-            conn.close()
+            release_db_connection(conn)
 
             return jsonify({'success': True})
 
@@ -7221,7 +7221,7 @@ def get_security_metrics():
                     print("Sample messages created!")
 
             conn.commit()
-            conn.close()
+            release_db_connection(conn)
 
             return """
             <h1>✅ Complete Messaging System Setup!</h1>
@@ -7280,7 +7280,7 @@ def get_security_metrics():
         # Check current session
         current_user_id = session.get('user_id')
 
-        conn.close()
+        release_db_connection(conn)
 
         html = f"""
         <style>
@@ -7395,7 +7395,7 @@ def get_security_metrics():
 
             if get_db_type() != 'postgresql':
                 conn.commit()
-            conn.close()
+            release_db_connection(conn)
 
             return "✅ Messaging system setup complete! <a href='/admin'>Back to Admin Dashboard</a>"
         except Exception as e:
@@ -7428,7 +7428,7 @@ def send_message():
         ''', (sender_id, recipient_id, content, datetime.now().isoformat()))
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
 
         return jsonify({'success': True, 'message': 'Message sent successfully'})
 
@@ -7487,7 +7487,7 @@ def log_audit_event(user, action, ip_address=None, details=None):
             ))
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
     except Exception as e:
         print(f"Error logging audit event: {e}")
 
@@ -7505,7 +7505,7 @@ def get_login_history():
                    for row in c.fetchall()]
         return jsonify(history)
     finally:
-        conn.close()
+        release_db_connection(conn)
 
 
 # Test route to check if user management is working
@@ -7519,7 +7519,7 @@ def test_users():
     c = conn.cursor()
     c.execute('SELECT id, username, email, role, is_flagged FROM users')
     users = c.fetchall()
-    conn.close()
+    release_db_connection(conn)
 
     html = "<h1>All Users in Database:</h1><ul>"
     for user in users:
@@ -7583,7 +7583,7 @@ def add_user():
             return jsonify({'success': True, 'message': 'User created successfully'})
 
         finally:
-            conn.close()
+            release_db_connection(conn)
 
     except Exception as e:
         print(f"Error creating user: {e}")
@@ -7612,7 +7612,7 @@ def get_unread_messages():
         result = c.fetchone()
         total_unread = result['total'] if result else 0
 
-        conn.close()
+        release_db_connection(conn)
 
         return jsonify({
             'count': total_unread,
@@ -7654,7 +7654,7 @@ def get_unread_messages():
 
             if get_db_type() != 'postgresql':
                 conn.commit()
-            conn.close()
+            release_db_connection(conn)
 
             return "✅ Messaging system setup complete! <a href='/admin'>Back to Admin Dashboard</a>"
         except Exception as e:
@@ -7679,7 +7679,7 @@ def mark_messages_read(user_id):
         ''', (user_id, admin_id))
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
 
         return jsonify({'success': True})
 
@@ -7738,7 +7738,7 @@ def update_user(user_id):
             return jsonify({'success': True, 'message': 'User updated successfully'})
 
         finally:
-            conn.close()
+            release_db_connection(conn)
 
     except Exception as e:
         print(f"Error updating user: {e}")
@@ -7778,7 +7778,7 @@ def flag_user(user_id):
                 {'success': True, 'message': f'User {"flagged" if is_flagged else "unflagged"} successfully'})
 
         finally:
-            conn.close()
+            release_db_connection(conn)
 
     except Exception as e:
         print(f"Error flagging user: {e}")
@@ -7817,7 +7817,7 @@ def delete_user(user_id):
             return jsonify({'success': True, 'message': 'User deleted successfully'})
 
         finally:
-            conn.close()
+            release_db_connection(conn)
 
     except Exception as e:
         print(f"Error deleting user: {e}")
@@ -7929,7 +7929,7 @@ def init_form_management_db():
     # Only commit if not using autocommit (SQLite)
     if get_db_type() != 'postgresql':
         conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
 
 # ==================================================
@@ -7958,7 +7958,7 @@ def form_management():
     ''')
 
     forms = c.fetchall()
-    conn.close()
+    release_db_connection(conn)
 
     return render_template('form_management.html', forms=forms)
 
@@ -7977,7 +7977,7 @@ def edit_form(form_id):
     form_template = result.fetchone()
 
     if not form_template:
-        conn.close()
+        release_db_connection(conn)
         return redirect(url_for('form_management'))
 
     # Get form items
@@ -7993,7 +7993,7 @@ def edit_form(form_id):
     c.execute('SELECT name FROM form_categories ORDER BY display_order')
     categories = [row[0] for row in c.fetchall()]
 
-    conn.close()
+    release_db_connection(conn)
 
     return render_template('form_editor.html',
                            form_template=form_template,
@@ -8056,7 +8056,7 @@ def create_form():
     c.execute('SELECT name FROM form_categories ORDER BY display_order')
     categories = [row[0] for row in c.fetchall()]
 
-    conn.close()
+    release_db_connection(conn)
 
     return render_template('form_editor.html',
                            form_template=None,
@@ -8109,7 +8109,7 @@ def save_form():
                   item['weight'], 1 if item.get('critical') else 0))
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
 
         return jsonify({'success': True, 'form_id': form_id})
 
@@ -8132,7 +8132,7 @@ def delete_form(form_id):
         execute_query(conn, 'UPDATE form_items SET active = 0 WHERE form_template_id = ?', (form_id,))
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
 
         return jsonify({'success': True})
 
@@ -8175,7 +8175,7 @@ def clone_form(form_id):
         ''', (new_form_id, form_id))
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
 
         return jsonify({'success': True, 'form_id': new_form_id})
 
@@ -8218,7 +8218,7 @@ def preview_form(form_id):
             'is_critical': item[3]
         })
 
-    conn.close()
+    release_db_connection(conn)
 
     return render_template('form_preview.html',
                            form_template=form_template,
@@ -8298,7 +8298,7 @@ def get_inspection_counts():
             key = form_type.lower().replace(' ', '_').replace('-', '_')
             counts[key] = count
 
-        conn.close()
+        release_db_connection(conn)
         return jsonify(counts)
 
     except Exception as e:
@@ -8333,7 +8333,7 @@ def get_active_forms():
             'item_count': row[4]
         })
 
-    conn.close()
+    release_db_connection(conn)
     return jsonify({'forms': forms})
 
 
@@ -8356,7 +8356,7 @@ def debug_forms():
     c.execute('SELECT * FROM form_items')
     items = c.fetchall()
 
-    conn.close()
+    release_db_connection(conn)
 
     return f"<h2>Form Templates ({len(templates)}):</h2><pre>{templates}</pre><br><br><h2>Form Items ({len(items)}):</h2><pre>{items}</pre>"
 
@@ -8700,7 +8700,7 @@ def migrate_all_checklists():
         results.append(f"❌ Meat Processing migration failed: {str(e)}")
 
     conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
     # Format results as HTML
     html_results = "<h1>Checklist Migration Results</h1><ul>"
@@ -8727,7 +8727,7 @@ def reset_database():
     c.execute('DELETE FROM form_categories')
 
     conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
     # Reinitialize
     init_form_management_db()
@@ -8763,7 +8763,7 @@ def get_form_items(form_template_id):
             'critical': bool(row[5])
         })
 
-    conn.close()
+    release_db_connection(conn)
     return items
 
 
@@ -8775,7 +8775,7 @@ def get_form_template_by_type(form_type):
     result = execute_query(conn, 'SELECT id FROM form_templates WHERE form_type = ? AND active = 1', (form_type,))
     row = result.fetchone()
 
-    conn.close()
+    release_db_connection(conn)
     return row[0] if row else None
 
 
@@ -8808,7 +8808,7 @@ def new_form():
         WHERE form_type = ? AND active = 1
     ''', ('Food Establishment',))
     form_info = result.fetchone()
-    conn.close()
+    release_db_connection(conn)
 
     last_edited_info = None
     if form_info and form_info[0]:  # if last_edited_by exists
@@ -8905,7 +8905,7 @@ def verify_forms():
             'checklist_items': items
         })
 
-    conn.close()
+    release_db_connection(conn)
 
     return render_template('admin_verify_forms.html', forms_data=forms_data)
 
@@ -8927,7 +8927,7 @@ def debug_forms_check():
     c.execute('SELECT * FROM form_items')
     items = c.fetchall()
 
-    conn.close()
+    release_db_connection(conn)
 
     return f"<h2>Form Templates ({len(templates)}):</h2><pre>{templates}</pre><br><br><h2>Form Items ({len(items)}):</h2><pre>{items}</pre>"
 
@@ -8954,7 +8954,7 @@ def migrate_food_checklist():
     template_row = result.fetchone()
 
     if not template_row:
-        conn.close()
+        release_db_connection(conn)
         return "Food Establishment template not found"
 
     template_id = template_row[0]
@@ -8964,7 +8964,7 @@ def migrate_food_checklist():
     existing_count = result.fetchone()[0]
 
     if existing_count > 0:
-        conn.close()
+        release_db_connection(conn)
         return f"<h2>⚠️ Items already exist</h2><p>Found {existing_count} items. <a href='/admin/verify_forms'>View them here</a></p><p><a href='/admin'>Back to Admin</a></p>"
 
     # Insert all 44 FOOD_CHECKLIST_ITEMS
@@ -8999,7 +8999,7 @@ def migrate_food_checklist():
         ''', (template_id, item_id, item_order, category, item['desc'], item['wt'], is_critical))
 
     conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
     return f"<h2>✅ Successfully migrated {len(FOOD_CHECKLIST_ITEMS)} items!</h2><p><a href='/admin/verify_forms'>View them</a> | <a href='/admin'>Back to Admin</a></p>"
 
@@ -9086,7 +9086,7 @@ def migrate_remaining_fixed():
         results.append(f"❌ Small Hotels failed: {str(e)}")
 
     conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
     return "<h1>Migration Results:</h1><ul>" + "".join(
         [f"<li>{r}</li>" for r in results]) + "</ul><br><a href='/admin/forms'>Check Form Management</a>"
@@ -9107,7 +9107,7 @@ def small_hotels_inspection_detail(id):
     inspection = cursor.fetchone()
 
     if not inspection:
-        conn.close()
+        release_db_connection(conn)
         return "Small Hotels inspection not found", 404
 
     inspection_dict = dict(inspection)
@@ -9122,7 +9122,7 @@ def small_hotels_inspection_detail(id):
         obser_scores[item['item_id']] = item['obser'] or '0'
         error_scores[item['item_id']] = item['error'] or '0'
 
-    conn.close()
+    release_db_connection(conn)
 
     # Extract and calculate the scores your template expects
     critical_score = int(inspection_dict.get('critical_score', 0))
@@ -9248,7 +9248,7 @@ def check_and_create_alert(inspection_id, inspector_name, form_type, score):
                 conn.commit()
                 print(f"Alert created: Inspection {inspection_id}, Score {score} below threshold {threshold_value}")
 
-        conn.close()
+        release_db_connection(conn)
     except Exception as e:
         print(f"Error creating alert: {str(e)}")
 
@@ -9289,7 +9289,7 @@ def save_threshold():
             ''', (chart_type, chart_type, threshold_value, enabled))
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
 
         return jsonify({
             'success': True,
@@ -9321,7 +9321,7 @@ def get_thresholds():
                 'enabled': row[2] == 1
             }
 
-        conn.close()
+        release_db_connection(conn)
 
         return jsonify({
             'success': True,
@@ -9354,7 +9354,7 @@ def create_threshold_alert():
         ''', (inspection_id, inspector_name, form_type, score, threshold_value))
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
 
         return jsonify({
             'success': True,
@@ -9383,7 +9383,7 @@ def acknowledge_alert(alert_id):
         ''', (acknowledged_by, alert_id))
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
 
         return jsonify({
             'success': True,
@@ -9422,7 +9422,7 @@ def list_threshold_alerts():
                 'created_at': row[9]
             })
 
-        conn.close()
+        release_db_connection(conn)
 
         return jsonify({
             'success': True,
@@ -9443,7 +9443,7 @@ def clear_acknowledged_alerts():
 
         conn.commit()
         deleted_count = c.rowcount
-        conn.close()
+        release_db_connection(conn)
 
         return jsonify({
             'success': True,
@@ -10386,7 +10386,7 @@ def generate_basic_summary_report(inspection_type, start_date, end_date):
         # Get comprehensive metrics (all the new advanced analytics)
         comprehensive_metrics = generate_comprehensive_metrics(inspection_type, start_date, end_date, conn)
 
-        conn.close()
+        release_db_connection(conn)
 
         # Build report data structure
         report_data = {
@@ -10492,7 +10492,7 @@ def generate_trend_analysis_report(inspection_type, start_date, end_date):
 
         c.execute(query, params)
         results = c.fetchall()
-        conn.close()
+        release_db_connection(conn)
 
         # Process results
         trend_data = []
@@ -10592,7 +10592,7 @@ def generate_failure_breakdown_report(inspection_type, start_date, end_date):
         c.execute(items_query, items_params)
         items_results = c.fetchall()
 
-        conn.close()
+        release_db_connection(conn)
 
         # Format results
         top_failed_items = [{'item': item, 'count': count} for item, count in items_results]
@@ -10650,7 +10650,7 @@ def generate_inspector_performance_report(inspection_type, start_date, end_date)
 
         c.execute(query, params)
         results = c.fetchall()
-        conn.close()
+        release_db_connection(conn)
 
         # Process results
         performance_data = []
@@ -10741,7 +10741,7 @@ def generate_scores_by_type_report(inspection_type, start_date, end_date):
                 'source': 'burial_site_inspections'
             })
 
-        conn.close()
+        release_db_connection(conn)
 
         return {
             'title': 'Inspection Scores by Type',
@@ -10838,7 +10838,7 @@ def generate_monthly_trends_report(inspection_type, start_date, end_date):
                         'pass_rate': round(pass_rate, 1)
                     })
 
-        conn.close()
+        release_db_connection(conn)
 
         # Sort by month
         monthly_data.sort(key=lambda x: x['month'])
@@ -10948,7 +10948,7 @@ def generate_establishment_ranking_report(inspection_type, start_date, end_date)
         c.execute(worst_query, params)
         worst_results = c.fetchall()
 
-        conn.close()
+        release_db_connection(conn)
 
         # Process results
         top_performers = []
@@ -11087,7 +11087,7 @@ def get_advanced_statistical_overview(inspection_type, start_date, end_date):
     # Quality indicators
     data_completeness = (len(all_scores) / total_inspections * 100) if total_inspections > 0 else 0
 
-    conn.close()
+    release_db_connection(conn)
 
     return {
         'totalInspections': total_inspections,
@@ -11148,7 +11148,7 @@ def calculate_trend_indicator(inspection_type, start_date, end_date):
     c.execute(query, params)
     weekly_scores = [row[1] for row in c.fetchall()]
 
-    conn.close()
+    release_db_connection(conn)
 
     if len(weekly_scores) < 2:
         return '➡️ Stable'
@@ -11205,7 +11205,7 @@ def assess_data_quality(inspection_type, start_date, end_date):
 
     quality_grade = 'Excellent' if completeness > 95 else 'Good' if completeness > 85 else 'Fair' if completeness > 70 else 'Poor'
 
-    conn.close()
+    release_db_connection(conn)
 
     return {
         'quality': quality_grade,
@@ -11283,7 +11283,7 @@ def generate_checklist_failure_analysis(inspection_type, start_date, end_date):
             'impact': impact
         })
 
-    conn.close()
+    release_db_connection(conn)
     return items
 
 def generate_inspector_performance(inspection_type, start_date, end_date):
@@ -11323,7 +11323,7 @@ def generate_inspector_performance(inspection_type, start_date, end_date):
             'efficiency': 'High' if pass_rate > 80 else 'Medium' if pass_rate > 60 else 'Low'
         })
 
-    conn.close()
+    release_db_connection(conn)
     return inspectors
 
 def generate_score_analysis(inspection_type, start_date, end_date):
@@ -11354,7 +11354,7 @@ def generate_score_analysis(inspection_type, start_date, end_date):
             'date': created_at
         })
 
-    conn.close()
+    release_db_connection(conn)
     return {
         'scores': scores,
         'trends': analyze_score_trends(scores)
@@ -11430,7 +11430,7 @@ def generate_recommendations(inspection_type, start_date, end_date):
         "🔄 Create feedback loops between inspectors and management for continuous improvement."
     ])
 
-    conn.close()
+    release_db_connection(conn)
     return recommendations[:5]  # Return top 5 recommendations
 
 def generate_geographic_analysis(inspection_type, start_date, end_date):
@@ -11887,7 +11887,7 @@ def form_builder():
     c = conn.cursor()
     c.execute('SELECT * FROM form_templates WHERE active = 1 ORDER BY name')
     templates = c.fetchall()
-    conn.close()
+    release_db_connection(conn)
 
     return render_template('admin_form_builder.html', templates=templates)
 
@@ -11912,7 +11912,7 @@ def get_form_templates():
             'created_date': row[5],
             'version': row[6]
         })
-    conn.close()
+    release_db_connection(conn)
 
     return jsonify({'templates': templates})
 
@@ -11947,7 +11947,7 @@ def get_form_items(template_id):
             'active': row[7],
             'created_date': row[8]
         })
-    conn.close()
+    release_db_connection(conn)
 
     return jsonify({'items': items})
 
@@ -11992,7 +11992,7 @@ def create_form_item():
     update_form_editor_tracking(data['form_template_id'], conn)
 
     conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
     return jsonify({'success': True, 'item_id': item_id, 'message': 'Item created successfully'})
 
@@ -12032,7 +12032,7 @@ def update_form_item(item_id):
         update_form_editor_tracking(template_id, conn)
 
     conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
     return jsonify({'success': True, 'message': 'Item updated successfully'})
 
@@ -12062,7 +12062,7 @@ def delete_form_item(item_id):
         update_form_editor_tracking(template_id, conn)
 
     conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
     return jsonify({'success': True, 'message': 'Item deleted successfully'})
 
@@ -12085,7 +12085,7 @@ def reorder_form_items():
                   (item['order'], item['id']))
 
     conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
     return jsonify({'success': True, 'message': 'Items reordered successfully'})
 
@@ -12152,7 +12152,7 @@ def increment_template_version(template_id):
     update_form_editor_tracking(template_id, conn)
 
     conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
     return jsonify({'success': True, 'new_version': new_version})
 
@@ -12177,7 +12177,7 @@ def get_form_template_info(template_id):
     ''', (template_id,))
 
     row = c.fetchone()
-    conn.close()
+    release_db_connection(conn)
 
     if not row:
         return jsonify({'error': 'Template not found'}), 404
@@ -12230,7 +12230,7 @@ def get_form_fields(template_id):
             'field_group': row[9]
         })
 
-    conn.close()
+    release_db_connection(conn)
     return jsonify({'fields': fields})
 
 
@@ -12279,7 +12279,7 @@ def create_form_field():
     update_form_editor_tracking(data['form_template_id'], conn)
 
     conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
     return jsonify({'success': True, 'field_id': field_id})
 
@@ -12327,7 +12327,7 @@ def update_form_field(field_id):
         update_form_editor_tracking(template_id, conn)
 
     conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
     return jsonify({'success': True})
 
@@ -12354,7 +12354,7 @@ def delete_form_field(field_id):
         update_form_editor_tracking(template_id, conn)
 
     conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
     return jsonify({'success': True})
 
@@ -12411,7 +12411,7 @@ def get_active_users_map():
             'last_activity': row[6]
         })
 
-    conn.close()
+    release_db_connection(conn)
     print(f"📍 Active Users Map API: Returning {len(users)} users with valid GPS coordinates")
     return jsonify({'users': users, 'count': len(users)})
 
@@ -12425,7 +12425,7 @@ def auto_migrate_checklists():
         # Check if any items exist
         c.execute('SELECT COUNT(*) FROM form_items')
         count = c.fetchone()[0]
-        conn.close()
+        release_db_connection(conn)
 
         if count == 0:
             print("⚡ No checklist items found. Running automatic migration...")
@@ -12500,7 +12500,7 @@ def seed_missing_form_items():
                 print(f"✅ Seeded {len(checklist)} items for {form_type}")
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
     except Exception as e:
         print(f"⚠️  seed_missing_form_items error: {str(e)}")
 
@@ -12564,11 +12564,11 @@ def auto_migrate_form_fields():
                     total_fields += 1
 
             conn.commit()
-            conn.close()
+            release_db_connection(conn)
             print(f"✅ Automatic form fields migration completed! Migrated {total_fields} fields")
         else:
             print(f"✓ Found {count} form fields in database")
-            conn.close()
+            release_db_connection(conn)
     except Exception as e:
         print(f"⚠️  Form fields auto-migration error: {str(e)}")
 
@@ -12626,7 +12626,7 @@ def api_get_checklist_items():
     template_row = result.fetchone() if result else None
 
     if not template_row:
-        conn.close()
+        release_db_connection(conn)
         return jsonify({'success': False, 'error': 'Form template not found'}), 404
 
     template_id = template_row[0]
@@ -12648,7 +12648,7 @@ def api_get_checklist_items():
             'category': row[5]
         })
 
-    conn.close()
+    release_db_connection(conn)
     return jsonify({'success': True, 'items': items})
 
 
@@ -12678,7 +12678,7 @@ def api_update_checklist_items():
         template_row = result.fetchone() if result else None
 
         if not template_row:
-            conn.close()
+            release_db_connection(conn)
             return jsonify({'success': False, 'error': 'Form template not found'}), 404
 
         template_id = template_row[0]
@@ -12718,12 +12718,12 @@ def api_update_checklist_items():
                      (admin_username, form_type))
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
         return jsonify({'success': True, 'message': f'Updated {len(items)} items, deleted {len(deleted_ids)} items'})
 
     except Exception as e:
         conn.rollback()
-        conn.close()
+        release_db_connection(conn)
         print(f"Error updating checklist items: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -12844,7 +12844,7 @@ if __name__ == '__main__':
                 conn.commit()
                 print(f"✅ AUTO-FIX: Food Establishment checklist now has 44 correct items including item #1")
 
-        conn.close()
+        release_db_connection(conn)
     except Exception as e:
         print(f"⚠️  Auto-fix checklist error: {e}")
 
