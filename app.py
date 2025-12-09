@@ -1001,7 +1001,7 @@ SMALL_HOTELS_CHECKLIST_ITEMS = [
     {"id": "4b", "description": "No evidence of cross-contamination during preparation", "critical": True},
     {"id": "4c", "description": "No evidence of cross-contamination during holding in refrigerators/coolers", "critical": True},
     {"id": "4d", "description": "Foods cooled according to recommended procedures", "critical": True},
-    {"id": "4e", "description": "Manual dishwashing wash, sanitize, rinse technique", "critical": True},
+    {"id": "4e", "description": "Manual dishwashing wash, rinse, sanitize, technique", "critical": True},
     {"id": "4f", "description": "Food contact surfaces washed-rinsed-sanitized before & after each use", "critical": False},
     {"id": "4g", "description": "Wiping cloths handled properly (sanitizing solution used)", "critical": False},
 
