@@ -5713,6 +5713,7 @@ def login_post():
     ip_address = request.remote_addr
 
     conn = get_db_connection()
+    error_occurred = False
     try:
         # Support login with either username OR email (for shared database with Zo-Zi Marketplace)
         c = execute_query(conn, "SELECT id, username, password, role, email, parish, first_login FROM users WHERE (username = %s OR email = %s) AND password = %s",
@@ -5847,8 +5848,11 @@ def login_post():
             'error': 'Invalid credentials'
         })
 
+    except Exception as e:
+        error_occurred = True
+        raise
     finally:
-        release_db_connection(conn)
+        release_db_connection(conn, error=error_occurred)
 
 
 @app.route('/change_first_login_password', methods=['POST'])

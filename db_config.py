@@ -201,10 +201,20 @@ def release_db_connection(conn, error=False):
         # Return PostgreSQL connection to pool (or close if errored)
         if _connection_pool is not None:
             try:
-                if error:
+                # Auto-detect bad connections even if error flag not set
+                is_bad_connection = error
+
+                # Check if connection is actually closed/broken
+                if not is_bad_connection and hasattr(conn, 'closed'):
+                    is_bad_connection = conn.closed != 0
+
+                if is_bad_connection:
                     # Connection had an error - close it instead of returning to pool
                     print(f"⚠️ Discarding bad connection from pool")
-                    conn.close()
+                    try:
+                        conn.close()
+                    except:
+                        pass  # Connection might already be closed
                     # Don't putconn - let pool create a fresh one
                 else:
                     # Connection is good - return to pool
@@ -240,14 +250,19 @@ def get_db_context():
     This is the RECOMMENDED way to get database connections.
     """
     conn = get_db_connection()
+    error_occurred = False
     try:
         yield conn
         conn.commit()  # Auto-commit on success
     except Exception as e:
-        conn.rollback()  # Auto-rollback on error
+        error_occurred = True
+        try:
+            conn.rollback()  # Auto-rollback on error
+        except:
+            pass  # Rollback might fail if connection is dead
         raise e
     finally:
-        release_db_connection(conn)
+        release_db_connection(conn, error=error_occurred)
 
 
 def dict_factory(cursor, row):
@@ -304,13 +319,15 @@ def execute_query(conn, query, params=None):
         conn = get_db_connection()
         results = execute_query(conn, "SELECT * FROM users WHERE id = ?", (user_id,))
     """
-    db_type = get_db_type()
+    # Detect actual connection type from the connection object itself
+    # This is critical when falling back from PostgreSQL to SQLite
+    is_postgresql = hasattr(conn, 'cursor_factory')  # PostgreSQL has cursor_factory
 
-    # Convert placeholders based on database type
-    if db_type == 'postgresql' and '?' in query:
+    # Convert placeholders based on ACTUAL connection type, not environment variable
+    if is_postgresql and '?' in query:
         # Convert SQLite placeholders (?) to PostgreSQL (%s)
         query = query.replace('?', '%s')
-    elif db_type == 'sqlite' and '%s' in query:
+    elif not is_postgresql and '%s' in query:
         # Convert PostgreSQL placeholders (%s) to SQLite (?)
         query = query.replace('%s', '?')
 
