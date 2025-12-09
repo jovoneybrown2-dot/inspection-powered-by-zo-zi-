@@ -75,18 +75,25 @@ def _init_connection_pool():
             if parsed.scheme == 'postgres':
                 database_url = database_url.replace('postgres://', 'postgresql://', 1)
 
+            # Add SSL configuration to DATABASE_URL if not present
+            # Use 'prefer' mode which tries SSL but falls back to non-SSL if needed
+            if 'sslmode' not in database_url:
+                separator = '&' if '?' in database_url else '?'
+                database_url = f"{database_url}{separator}sslmode=prefer&connect_timeout=10"
+
             # Create threaded connection pool
             print(f"🔌 Initializing PostgreSQL connection pool...")
             print(f"   Host: {parsed.hostname}:{parsed.port}")
             print(f"   Database: {parsed.path.lstrip('/')}")
+            print(f"   SSL Mode: prefer (falls back if SSL fails)")
 
             _connection_pool = psycopg2.pool.ThreadedConnectionPool(
-                minconn=5,   # Keep 5 connections always ready
+                minconn=2,   # Reduce minimum to avoid SSL issues on startup
                 maxconn=20,  # Allow up to 20 concurrent connections
                 dsn=database_url
             )
 
-            print("✅ PostgreSQL connection pool initialized (5-20 connections)")
+            print("✅ PostgreSQL connection pool initialized (2-20 connections)")
             return _connection_pool
 
         except ImportError as e:
