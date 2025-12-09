@@ -91,12 +91,12 @@ def _init_connection_pool():
             print(f"   Keepalives: enabled (prevents stale connections)")
 
             _connection_pool = psycopg2.pool.ThreadedConnectionPool(
-                minconn=1,   # Minimum connections (reduces stale connection risk)
-                maxconn=10,  # Maximum connections (sufficient for typical load)
+                minconn=5,   # Minimum connections
+                maxconn=200,  # Effectively unlimited for typical workloads
                 dsn=database_url
             )
 
-            print("✅ PostgreSQL connection pool initialized (1-10 connections)")
+            print("✅ PostgreSQL connection pool initialized (5-200 connections)")
             return _connection_pool
 
         except ImportError as e:

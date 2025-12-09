@@ -102,6 +102,13 @@ def get_current_inspector_name():
 app = Flask(__name__, template_folder='templates')
 app.secret_key = os.urandom(24)
 
+# Session configuration - Extended timeout (7 days)
+from datetime import timedelta
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True if using HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(name)s:%(message)s')
 
@@ -1334,39 +1341,51 @@ def login():
 def admin():
     if 'admin' not in session:
         return redirect(url_for('login'))
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("""
-        SELECT id, form_type, inspector_name, created_at, establishment_name, result, owner
-        FROM inspections
-        WHERE form_type IN (
-            'Food Establishment', 'Spirit Licence Premises', 'Swimming Pool',
-            'Small Hotel', 'Barbershop', 'Institutional Health'
-        )
-        UNION
-        SELECT id, 'Residential' AS form_type, inspector_name, created_at, premises_name, result, owner
-        FROM residential_inspections
-        UNION
-        SELECT id, 'Burial' AS form_type, '' AS inspector_name, created_at, applicant_name, 'Completed' AS result, deceased_name
-        FROM burial_site_inspections
-        UNION
-        SELECT id, 'Meat Processing' AS form_type, inspector_name, created_at, establishment_name, result, owner_operator
-        FROM meat_processing_inspections
-        ORDER BY created_at DESC
-    """)
-    forms = c.fetchall()
-    release_db_connection(conn)
-    return render_template('admin.html', forms=forms)
+
+    conn = None
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("""
+            SELECT id, form_type, inspector_name, created_at, establishment_name, result, owner
+            FROM inspections
+            WHERE form_type IN (
+                'Food Establishment', 'Spirit Licence Premises', 'Swimming Pool',
+                'Small Hotel', 'Barbershop', 'Institutional Health'
+            )
+            UNION
+            SELECT id, 'Residential' AS form_type, inspector_name, created_at, premises_name, result, owner
+            FROM residential_inspections
+            UNION
+            SELECT id, 'Burial' AS form_type, '' AS inspector_name, created_at, applicant_name, 'Completed' AS result, deceased_name
+            FROM burial_site_inspections
+            UNION
+            SELECT id, 'Meat Processing' AS form_type, inspector_name, created_at, establishment_name, result, owner_operator
+            FROM meat_processing_inspections
+            ORDER BY created_at DESC
+        """)
+        forms = c.fetchall()
+        return render_template('admin.html', forms=forms)
+
+    except Exception as e:
+        print(f"Error in admin route: {e}")
+        return render_template('admin.html', forms=[])
+
+    finally:
+        if conn:
+            release_db_connection(conn)
 
 
 @app.route('/admin_form_scores')
 def admin_form_scores():
     form_type = request.args.get('form_type', 'all')
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
+    conn = None
     try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        ph = get_placeholder()
+
         if form_type == 'all':
             cursor.execute("""
                 SELECT overall_score FROM inspections
@@ -1380,20 +1399,22 @@ def admin_form_scores():
             """)
             scores = cursor.fetchall()
         else:
-            cursor.execute("""
-                SELECT overall_score FROM inspections 
-                WHERE form_type = %s AND overall_score IS NOT NULL AND overall_score > 0
-            """, (form_type,))
+            query = f"""
+                SELECT overall_score FROM inspections
+                WHERE form_type = {ph} AND overall_score IS NOT NULL AND overall_score > 0
+            """
+            cursor.execute(query, (form_type,))
             scores = cursor.fetchall()
 
         return jsonify([score[0] for score in scores])
 
     except Exception as e:
-        print(f"Database error: {e}")
+        print(f"Error in admin_form_scores: {e}")
         return jsonify([]), 500
 
     finally:
-        release_db_connection(conn)
+        if conn:
+            release_db_connection(conn)
 
 
 def get_table_name_for_form_type(form_type):
@@ -1404,62 +1425,73 @@ def get_table_name_for_form_type(form_type):
 def admin_metrics():
     form_type = request.args.get('form_type', 'all')
     time_frame = request.args.get('time_frame', 'daily')
-    conn = get_db_connection()
-    c = conn.cursor()
 
-    # Use database-appropriate date function
-    date_func = "created_at::date" if get_db_type() == 'postgresql' else "strftime('%Y-%m-%d', created_at)"
+    conn = None
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
 
-    if form_type == 'all':
-        query = f"""
-            SELECT {date_func} AS date, result, COUNT(*) AS count
-            FROM (
-                SELECT created_at, result FROM inspections
-                WHERE form_type IN ('Food Establishment', 'Spirit Licence Premises', 'Swimming Pool', 'Small Hotel', 'Barbershop', 'Institutional Health')
-                UNION
-                SELECT created_at, result FROM residential_inspections
-                UNION
-                SELECT created_at, 'Completed' AS result FROM burial_site_inspections
-                UNION
-                SELECT created_at, result FROM meat_processing_inspections
-            ) AS all_inspections
-            GROUP BY date, result
-        """
-    else:
-        if form_type == 'Residential':
+        # Use database-appropriate date function and placeholder
+        date_func = "created_at::date" if get_db_type() == 'postgresql' else "strftime('%Y-%m-%d', created_at)"
+        ph = get_placeholder()
+
+        if form_type == 'all':
             query = f"""
                 SELECT {date_func} AS date, result, COUNT(*) AS count
-                FROM residential_inspections
+                FROM (
+                    SELECT created_at, result FROM inspections
+                    WHERE form_type IN ('Food Establishment', 'Spirit Licence Premises', 'Swimming Pool', 'Small Hotel', 'Barbershop', 'Institutional Health')
+                    UNION
+                    SELECT created_at, result FROM residential_inspections
+                    UNION
+                    SELECT created_at, 'Completed' AS result FROM burial_site_inspections
+                    UNION
+                    SELECT created_at, result FROM meat_processing_inspections
+                ) AS all_inspections
                 GROUP BY date, result
             """
-        elif form_type == 'Burial':
-            query = f"""
-                SELECT {date_func} AS date, 'Completed' AS result, COUNT(*) AS count
-                FROM burial_site_inspections
-                GROUP BY date, result
-            """
-        elif form_type == 'Meat Processing':
-            query = f"""
-                SELECT {date_func} AS date, result, COUNT(*) AS count
-                FROM meat_processing_inspections
-                GROUP BY date, result
-            """
+            c.execute(query)
         else:
-            query = f"""
-                SELECT {date_func} AS date, result, COUNT(*) AS count
-                FROM inspections
-                WHERE form_type = {ph}
-                GROUP BY date, result
-            """
-            c.execute(query, (form_type,))
-            results = c.fetchall()
-            release_db_connection(conn)
-            return jsonify(process_metrics(results, time_frame))
+            if form_type == 'Residential':
+                query = f"""
+                    SELECT {date_func} AS date, result, COUNT(*) AS count
+                    FROM residential_inspections
+                    GROUP BY date, result
+                """
+                c.execute(query)
+            elif form_type == 'Burial':
+                query = f"""
+                    SELECT {date_func} AS date, 'Completed' AS result, COUNT(*) AS count
+                    FROM burial_site_inspections
+                    GROUP BY date, result
+                """
+                c.execute(query)
+            elif form_type == 'Meat Processing':
+                query = f"""
+                    SELECT {date_func} AS date, result, COUNT(*) AS count
+                    FROM meat_processing_inspections
+                    GROUP BY date, result
+                """
+                c.execute(query)
+            else:
+                query = f"""
+                    SELECT {date_func} AS date, result, COUNT(*) AS count
+                    FROM inspections
+                    WHERE form_type = {ph}
+                    GROUP BY date, result
+                """
+                c.execute(query, (form_type,))
 
-    c.execute(query)
-    results = c.fetchall()
-    release_db_connection(conn)
-    return jsonify(process_metrics(results, time_frame))
+        results = c.fetchall()
+        return jsonify(process_metrics(results, time_frame))
+
+    except Exception as e:
+        print(f"Error in admin_metrics: {e}")
+        return jsonify({'error': str(e)}), 500
+
+    finally:
+        if conn:
+            release_db_connection(conn)
 
 
 def process_metrics(results, time_frame):
@@ -5749,11 +5781,39 @@ def login_post():
     # Continue with existing login logic
     error_occurred = False
     try:
+        # Check if user was found and role matches
+        if not user:
+            # Failed login - no user found
+            error_occurred = True
+            log_audit_event(username, 'login_failed', ip_address, f'Failed {login_type} login attempt')
+            audit_user_login(username, success=False, ip_address=ip_address)
 
-        if user and (
-                (login_type == 'inspector' and user['role'] == 'inspector') or
-                (login_type == 'admin' and user['role'] == 'admin') or
-                (login_type == 'medical_officer' and user['role'] == 'medical_officer')):
+            # Security monitoring: log failed login
+            security_monitor.log_login_attempt(
+                username=username,
+                success=False,
+                ip_address=ip_address,
+                user_agent=request.headers.get('User-Agent', ''),
+                failure_reason='Invalid credentials'
+            )
+            security_monitor.log_audit(
+                username=username,
+                action_type='login_failed',
+                action_description=f'Failed {login_type} login attempt - Invalid credentials',
+                ip_address=ip_address,
+                user_agent=request.headers.get('User-Agent', ''),
+                status='failed',
+                error_message='Invalid username or password'
+            )
+
+            return jsonify({
+                'success': False,
+                'error': 'Invalid credentials'
+            })
+
+        if (login_type == 'inspector' and user['role'] == 'inspector') or \
+           (login_type == 'admin' and user['role'] == 'admin') or \
+           (login_type == 'medical_officer' and user['role'] == 'medical_officer'):
 
             # Check if this is first login
             try:
@@ -5763,13 +5823,24 @@ def login_post():
 
             if first_login:
                 # User needs to change password before logging in
+                session.permanent = True  # Make session permanent
                 return jsonify({
                     'first_login': True,
                     'message': 'Please change your password'
                 })
 
-        # Use username if available, otherwise use email (for Zo-Zi Marketplace users)
-        user_identifier = user['username'] if user['username'] else user['email']
+            # Use username if available, otherwise use email (for Zo-Zi Marketplace users)
+            user_identifier = user['username'] if user['username'] else user['email']
+        else:
+            # Role mismatch
+            error_occurred = True
+            log_audit_event(username, 'login_failed', ip_address, f'Failed {login_type} login attempt - role mismatch')
+            audit_user_login(username, success=False, ip_address=ip_address)
+
+            return jsonify({
+                'success': False,
+                'error': 'Invalid credentials'
+            })
 
         session['user_id'] = user['id']
         session[login_type] = user_identifier
@@ -5837,6 +5908,9 @@ def login_post():
         # Log audit event
         log_audit_event(user_identifier, 'login', ip_address, f'Successful {login_type} login')
 
+        # Make session permanent (7 day lifetime)
+        session.permanent = True
+
         # Determine redirect URL
         if login_type == 'inspector':
             redirect_url = url_for('dashboard')
@@ -5849,33 +5923,6 @@ def login_post():
         return jsonify({
             'success': True,
             'redirect': redirect_url
-        })
-
-        # Failed login
-        log_audit_event(username, 'login_failed', ip_address, f'Failed {login_type} login attempt')
-        audit_user_login(username, success=False, ip_address=ip_address)
-
-        # Security monitoring: log failed login
-        security_monitor.log_login_attempt(
-            username=username,
-            success=False,
-            ip_address=ip_address,
-            user_agent=request.headers.get('User-Agent', ''),
-            failure_reason='Invalid credentials'
-        )
-        security_monitor.log_audit(
-            username=username,
-            action_type='login_failed',
-            action_description=f'Failed {login_type} login attempt - Invalid credentials',
-            ip_address=ip_address,
-            user_agent=request.headers.get('User-Agent', ''),
-            status='failed',
-            error_message='Invalid username or password'
-        )
-
-        return jsonify({
-            'success': False,
-            'error': 'Invalid credentials'
         })
 
     except Exception as e:
@@ -6483,6 +6530,8 @@ def get_inspector_performance():
 def get_alerts():
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
+
+    conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -6556,11 +6605,15 @@ def get_alerts():
                 'timestamp': datetime.now().isoformat()
             })
 
-        release_db_connection(conn)
         return jsonify(alerts)
 
     except Exception as e:
+        print(f"Error in get_alerts: {e}")
         return jsonify({'error': str(e)}), 500
+
+    finally:
+        if conn:
+            release_db_connection(conn)
 
 
 @app.route('/api/admin/inspection_locations')
@@ -8265,9 +8318,11 @@ def get_inspection_counts():
     if 'admin' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
 
+    conn = None
     try:
         conn = get_db_connection()
         c = conn.cursor()
+        ph = get_placeholder()
 
         # Get counts from main inspections table
         c.execute('''
@@ -8317,7 +8372,7 @@ def get_inspection_counts():
             'Food Establishment', 'Small Hotel', 'Swimming Pool',
             'Institutional Health', 'Spirit Licence Premises', 'Barbershop'
         ]
-        placeholders = ','.join(['%s' for _ in existing_form_types])
+        placeholders = ','.join([ph for _ in existing_form_types])
         c.execute(f'''
             SELECT ft.form_type, COUNT(i.id) as count
             FROM form_templates ft
@@ -8332,11 +8387,15 @@ def get_inspection_counts():
             key = form_type.lower().replace(' ', '_').replace('-', '_')
             counts[key] = count
 
-        release_db_connection(conn)
         return jsonify(counts)
 
     except Exception as e:
+        print(f"Error in get_inspection_counts: {e}")
         return jsonify({'error': str(e)}), 500
+
+    finally:
+        if conn:
+            release_db_connection(conn)
 
 @app.route('/api/forms/active')
 def get_active_forms():
@@ -9338,6 +9397,7 @@ def save_threshold():
 @app.route('/api/admin/get_thresholds', methods=['GET'])
 def get_thresholds():
     """Get all threshold settings"""
+    conn = None
     try:
         conn = get_db_connection()
         c = conn.cursor()
@@ -9355,15 +9415,18 @@ def get_thresholds():
                 'enabled': row[2] == 1
             }
 
-        release_db_connection(conn)
-
         return jsonify({
             'success': True,
             'thresholds': thresholds
         })
 
     except Exception as e:
+        print(f"Error in get_thresholds: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+    finally:
+        if conn:
+            release_db_connection(conn)
 
 @app.route('/api/admin/threshold_alerts', methods=['POST'])
 def create_threshold_alert():
@@ -11917,13 +11980,23 @@ def form_builder():
     if 'admin' not in session:
         return redirect(url_for('login'))
 
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('SELECT * FROM form_templates WHERE active = 1 ORDER BY name')
-    templates = c.fetchall()
-    release_db_connection(conn)
+    conn = None
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute('SELECT * FROM form_templates WHERE active = 1 ORDER BY name')
+        templates = c.fetchall()
 
-    return render_template('admin_form_builder.html', templates=templates)
+        return render_template('admin_form_builder.html', templates=templates)
+
+    except Exception as e:
+        print(f"Error in form_builder: {e}")
+        # Return empty templates on error
+        return render_template('admin_form_builder.html', templates=[])
+
+    finally:
+        if conn:
+            release_db_connection(conn)
 
 
 @app.route('/api/admin/forms/templates', methods=['GET'])
