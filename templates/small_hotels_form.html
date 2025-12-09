@@ -594,7 +594,7 @@
                         <td class="score-cell"><input type="number" class="score-input" name="obser_1a" min="0" value="{{ inspection.obser.get('1a', '') if inspection else '' }}"></td>
                         <td class="score-cell"><input type="number" class="score-input" name="error_1a" min="0" value="{{ inspection.error.get('1a', '') if inspection else '' }}"></td>
                     </tr>
-                    <tr>
+                    <tr class="critical-item">
                         <td>B</td>
                         <td>Food Handlers have valid food handlers permits</td>
                         <td class="score-cell"><input type="number" class="score-input" name="obser_1b" min="0" value="{{ inspection.obser.get('1b', '') if inspection else '' }}"></td>
