@@ -1,6 +1,6 @@
 import sqlite3
 from datetime import datetime
-from db_config import get_db_connection, get_db_type
+from db_config import get_db_connection, get_db_type, release_db_connection
 
 def get_auto_increment():
     """Return the correct auto-increment syntax for the current database"""
@@ -361,32 +361,38 @@ def init_db():
 
 def save_inspection(data):
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute(f'''INSERT INTO inspections (establishment_name, address, inspector_name, inspection_date, inspection_time,
-                 type_of_establishment, no_of_employees, purpose_of_visit, action, result, food_inspected, food_condemned,
-                 critical_score, overall_score, comments, inspector_signature, received_by, form_type, scores, created_at,
-                 inspector_code, license_no, owner, photo_data)
-                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
-              (data['establishment_name'], data['address'], data['inspector_name'], data['inspection_date'],
-               data['inspection_time'], data['type_of_establishment'], data['no_of_employees'],
-               data['purpose_of_visit'], data['action'], data['result'], data['food_inspected'],
-               data['food_condemned'], data['critical_score'], data['overall_score'], data['comments'],
-               data['inspector_signature'], data['received_by'], data['form_type'], data['scores'],
-               data['created_at'], data['inspector_code'], data['license_no'], data['owner'],
-               data.get('photo_data', '[]')))
-    conn.commit()
-    if get_db_type() == 'postgresql':
-        c.execute('SELECT lastval()')
-        inspection_id = c.fetchone()[0]
-    else:
-        inspection_id = c.lastrowid
-    conn.close()
-    return inspection_id
+    try:
+        c = conn.cursor()
+        c.execute(f'''INSERT INTO inspections (establishment_name, address, inspector_name, inspection_date, inspection_time,
+                     type_of_establishment, no_of_employees, purpose_of_visit, action, result, food_inspected, food_condemned,
+                     critical_score, overall_score, comments, inspector_signature, received_by, form_type, scores, created_at,
+                     inspector_code, license_no, owner, photo_data)
+                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
+                  (data['establishment_name'], data['address'], data['inspector_name'], data['inspection_date'],
+                   data['inspection_time'], data['type_of_establishment'], data['no_of_employees'],
+                   data['purpose_of_visit'], data['action'], data['result'], data['food_inspected'],
+                   data['food_condemned'], data['critical_score'], data['overall_score'], data['comments'],
+                   data['inspector_signature'], data['received_by'], data['form_type'], data['scores'],
+                   data['created_at'], data['inspector_code'], data['license_no'], data['owner'],
+                   data.get('photo_data', '[]')))
+        conn.commit()
+        if get_db_type() == 'postgresql':
+            c.execute('SELECT lastval()')
+            inspection_id = c.fetchone()[0]
+        else:
+            inspection_id = c.lastrowid
+        return inspection_id
+    except Exception as e:
+        conn.rollback()
+        print(f"Error saving inspection: {e}")
+        raise
+    finally:
+        release_db_connection(conn)
 
 def save_burial_inspection(data):
     conn = get_db_connection()
-    c = conn.cursor()
     try:
+        c = conn.cursor()
         if data.get('id'):
             c.execute(f'''UPDATE burial_site_inspections SET
                          inspection_date = %s, applicant_name = %s, deceased_name = %s, burial_location = %s,
@@ -414,15 +420,17 @@ def save_burial_inspection(data):
                        data['proposed_grave_type'], data['general_remarks'], data['inspector_signature'],
                        data['received_by'], data.get('photo_data', '[]'), datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
         conn.commit()
-    except sqlite3.Error as e:
+    except Exception as e:
+        conn.rollback()
         print(f"Database error: {e}")
+        raise
     finally:
-        conn.close()
+        release_db_connection(conn)
 
 def save_residential_inspection(data):
     conn = get_db_connection()
-    c = conn.cursor()
     try:
+        c = conn.cursor()
         if data.get('id'):
             c.execute("""
                             UPDATE residential_inspections
@@ -461,7 +469,7 @@ def save_residential_inspection(data):
                 datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 data.get('photo_data', '[]')
             ))
-            conn.commit()
+        conn.commit()
 
         if data.get('id'):
             inspection_id = data['id']
@@ -470,17 +478,18 @@ def save_residential_inspection(data):
             inspection_id = c.fetchone()[0]
         else:
             inspection_id = c.lastrowid
-    except sqlite3.Error as e:
+        return inspection_id
+    except Exception as e:
+        conn.rollback()
         print(f"Database error: {e}")
-        inspection_id = None
+        raise
     finally:
-        conn.close()
-    return inspection_id
+        release_db_connection(conn)
 
 def save_meat_processing_inspection(data):
     conn = get_db_connection()
-    c = conn.cursor()
     try:
+        c = conn.cursor()
         if data.get('id'):
             c.execute("""
                 UPDATE meat_processing_inspections
@@ -524,7 +533,7 @@ def save_meat_processing_inspection(data):
                 data['received_by'], datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                 data.get('photo_data', '[]')
             ))
-            conn.commit()
+        conn.commit()
 
         if data.get('id'):
             inspection_id = data['id']
@@ -533,20 +542,23 @@ def save_meat_processing_inspection(data):
             inspection_id = c.fetchone()[0]
         else:
             inspection_id = c.lastrowid
-    except sqlite3.Error as e:
+        return inspection_id
+    except Exception as e:
+        conn.rollback()
         print(f"Database error: {e}")
-        inspection_id = None
+        raise
     finally:
-        conn.close()
-    return inspection_id
+        release_db_connection(conn)
 
 def get_inspections():
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment, created_at, result FROM inspections")
-    inspections = c.fetchall()
-    conn.close()
-    return inspections
+    try:
+        c = conn.cursor()
+        c.execute("SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment, created_at, result FROM inspections")
+        inspections = c.fetchall()
+        return inspections
+    finally:
+        release_db_connection(conn)
 
 def get_inspections_by_inspector(inspector_name, inspection_type='all'):
     conn = get_db_connection()
@@ -606,35 +618,44 @@ def get_inspections_by_inspector(inspector_name, inspection_type='all'):
 
 def get_burial_inspections():
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("SELECT id, applicant_name, deceased_name, created_at, 'Completed' AS status FROM burial_site_inspections")
-    inspections = c.fetchall()
-    conn.close()
-    return inspections
+    try:
+        c = conn.cursor()
+        c.execute("SELECT id, applicant_name, deceased_name, created_at, 'Completed' AS status FROM burial_site_inspections")
+        inspections = c.fetchall()
+        return inspections
+    finally:
+        release_db_connection(conn)
 
 def get_residential_inspections():
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("SELECT id, premises_name, inspection_date, result FROM residential_inspections")
-    inspections = c.fetchall()
-    conn.close()
-    return inspections
+    try:
+        c = conn.cursor()
+        c.execute("SELECT id, premises_name, inspection_date, result FROM residential_inspections")
+        inspections = c.fetchall()
+        return inspections
+    finally:
+        release_db_connection(conn)
 
 def get_meat_processing_inspections():
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("SELECT id, establishment_name, inspection_date, result FROM meat_processing_inspections")
-    inspections = c.fetchall()
-    conn.close()
-    return inspections
+    try:
+        c = conn.cursor()
+        c.execute("SELECT id, establishment_name, inspection_date, result FROM meat_processing_inspections")
+        inspections = c.fetchall()
+        return inspections
+    finally:
+        release_db_connection(conn)
 
 def get_inspection_details(inspection_id):
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("SELECT * FROM inspections WHERE id = %s", (inspection_id,))
-    inspection = c.fetchone()
+    try:
+        c = conn.cursor()
+        c.execute("SELECT * FROM inspections WHERE id = %s", (inspection_id,))
+        inspection = c.fetchone()
 
-    if inspection:
+        if not inspection:
+            return None
+
         if inspection[24] == 'Food Establishment':
             scores = [int(x) for x in inspection[25].split(',')] if inspection[25] else [0] * 45
             inspection_dict = {
@@ -701,18 +722,18 @@ def get_inspection_details(inspection_id):
                 'inspector_code': inspection[26] or '',
                 'photo_data': inspection[27] if len(inspection) > 27 else '[]'
             }
-        conn.close()
-        return inspection_dict
-    conn.close()
-    return None
+            return inspection_dict
+    finally:
+        release_db_connection(conn)
 
 def get_burial_inspection_details(inspection_id):
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("SELECT * FROM burial_site_inspections WHERE id = %s", (inspection_id,))
-    inspection = c.fetchone()
-    conn.close()
-    if inspection:
+    try:
+        c = conn.cursor()
+        c.execute("SELECT * FROM burial_site_inspections WHERE id = %s", (inspection_id,))
+        inspection = c.fetchone()
+        if not inspection:
+            return None
         return {
             'id': inspection[0],
             'inspection_date': inspection[1] or '',
@@ -732,7 +753,8 @@ def get_burial_inspection_details(inspection_id):
             'created_at': inspection[15] or '',
             'photo_data': inspection[16] if len(inspection) > 16 else '[]'
         }
-    return None
+    finally:
+        release_db_connection(conn)
 
 def get_residential_inspection_details(inspection_id):
     conn = get_db_connection()

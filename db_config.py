@@ -2,10 +2,15 @@
 Database Abstraction Layer
 Supports both SQLite (development) and PostgreSQL (production)
 Switch between databases using the DATABASE_URL environment variable
+Includes connection pooling for PostgreSQL to handle concurrent users
 """
 import os
 import sqlite3
 from urllib.parse import urlparse
+from contextlib import contextmanager
+
+# Global connection pool (initialized on first use)
+_connection_pool = None
 
 
 class HybridRow:
@@ -42,12 +47,70 @@ class HybridRow:
         return iter(self._row)
 
 
+def _init_connection_pool():
+    """
+    Initialize PostgreSQL connection pool (called once on first connection).
+
+    Pool configuration:
+    - minconn: Minimum connections kept alive (5)
+    - maxconn: Maximum connections allowed (20)
+    - These limits prevent overwhelming PostgreSQL server
+    """
+    global _connection_pool
+
+    if _connection_pool is not None:
+        return _connection_pool
+
+    database_url = os.getenv('DATABASE_URL', '')
+
+    if database_url and (database_url.startswith('postgres://') or database_url.startswith('postgresql://')):
+        try:
+            import psycopg2.pool
+            from psycopg2.extensions import cursor as BaseCursor
+
+            # Parse the DATABASE_URL
+            parsed = urlparse(database_url)
+
+            # Handle both postgres:// and postgresql:// schemes
+            if parsed.scheme == 'postgres':
+                database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
+            # Create threaded connection pool
+            print(f"🔌 Initializing PostgreSQL connection pool...")
+            print(f"   Host: {parsed.hostname}:{parsed.port}")
+            print(f"   Database: {parsed.path.lstrip('/')}")
+
+            _connection_pool = psycopg2.pool.ThreadedConnectionPool(
+                minconn=5,   # Keep 5 connections always ready
+                maxconn=20,  # Allow up to 20 concurrent connections
+                dsn=database_url
+            )
+
+            print("✅ PostgreSQL connection pool initialized (5-20 connections)")
+            return _connection_pool
+
+        except ImportError as e:
+            print(f"⚠️  PostgreSQL pool import failed: {e}")
+            return None
+        except Exception as e:
+            print(f"⚠️  PostgreSQL pool initialization failed: {e}")
+            return None
+
+    return None
+
+
 def get_db_connection():
     """
-    Get database connection based on DATABASE_URL environment variable.
+    Get database connection from pool (PostgreSQL) or direct connection (SQLite).
+
+    For PostgreSQL: Returns a connection from the pool (fast, reusable)
+    For SQLite: Returns a new connection (suitable for development)
 
     Returns:
         Database connection object (SQLite or PostgreSQL)
+
+    IMPORTANT: For PostgreSQL, you MUST return the connection using
+    release_db_connection() or use the get_db_context() context manager.
 
     Examples:
         # SQLite (default for development)
@@ -60,10 +123,16 @@ def get_db_connection():
 
     # Check if PostgreSQL is configured
     if database_url and (database_url.startswith('postgres://') or database_url.startswith('postgresql://')):
-        # Use PostgreSQL
+        # Use PostgreSQL with connection pooling
         try:
             import psycopg2
             import psycopg2.extras
+
+            # Initialize pool if not already done
+            pool = _init_connection_pool()
+
+            if pool is None:
+                raise Exception("Connection pool not available")
 
             # Custom cursor class that uses HybridRow
             class HybridCursor(psycopg2.extensions.cursor):
@@ -79,20 +148,13 @@ def get_db_connection():
                     rows = super().fetchall()
                     return [HybridRow(self, row) for row in rows]
 
-            # Parse the DATABASE_URL
-            parsed = urlparse(database_url)
+            # Get connection from pool
+            conn = pool.getconn()
 
-            # Handle both postgres:// and postgresql:// schemes
-            # Some providers (like Heroku) use postgres:// but psycopg2 needs postgresql://
-            if parsed.scheme == 'postgres':
-                database_url = database_url.replace('postgres://', 'postgresql://', 1)
-
-            # Connect to PostgreSQL with custom cursor
-            print(f"🔌 Connecting to PostgreSQL: {parsed.hostname}:{parsed.port}/{parsed.path.lstrip('/')}")
-            conn = psycopg2.connect(database_url, cursor_factory=HybridCursor)
+            # Set custom cursor factory
+            conn.cursor_factory = HybridCursor
             conn.autocommit = False  # Enable transaction control
 
-            print("✅ PostgreSQL connection successful!")
             return conn
 
         except ImportError as e:
@@ -100,7 +162,6 @@ def get_db_connection():
             print("   Falling back to SQLite.")
         except Exception as e:
             print(f"⚠️  PostgreSQL connection failed: {e}")
-            print(f"   Database URL format: {parsed.hostname if 'parsed' in locals() else 'Could not parse'}")
             print("   Falling back to SQLite.")
 
     # Use SQLite (default)
@@ -108,6 +169,60 @@ def get_db_connection():
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row  # Make rows accessible by column name
     return conn
+
+
+def release_db_connection(conn):
+    """
+    Return a PostgreSQL connection to the pool, or close SQLite connection.
+
+    Args:
+        conn: Database connection to release
+
+    Example:
+        conn = get_db_connection()
+        try:
+            # ... use connection ...
+        finally:
+            release_db_connection(conn)
+    """
+    if conn is None:
+        return
+
+    database_url = os.getenv('DATABASE_URL', '')
+
+    if database_url and (database_url.startswith('postgres://') or database_url.startswith('postgresql://')):
+        # Return PostgreSQL connection to pool
+        if _connection_pool is not None:
+            _connection_pool.putconn(conn)
+    else:
+        # Close SQLite connection
+        conn.close()
+
+
+@contextmanager
+def get_db_context():
+    """
+    Context manager for safe database connection handling.
+    Automatically returns connection to pool or closes it.
+
+    Usage:
+        with get_db_context() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM users")
+            conn.commit()
+        # Connection automatically returned to pool
+
+    This is the RECOMMENDED way to get database connections.
+    """
+    conn = get_db_connection()
+    try:
+        yield conn
+        conn.commit()  # Auto-commit on success
+    except Exception as e:
+        conn.rollback()  # Auto-rollback on error
+        raise e
+    finally:
+        release_db_connection(conn)
 
 
 def dict_factory(cursor, row):

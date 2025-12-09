@@ -33,6 +33,83 @@ tr.critical-item:hover,
         font-size: 12px !important;
     }
 
+    /* FIX: pair-table was causing horizontal overflow on tablets */
+    .pair-table {
+        width: 100% !important;
+        max-width: 100% !important;
+        font-size: 11px !important;
+    }
+
+    .pair-table td {
+        padding: 8px 4px !important;
+        font-size: 11px !important;
+        width: auto !important;
+    }
+
+    /* FIX: Make tables scrollable instead of breaking layout */
+    table {
+        width: 100% !important;
+        max-width: 100% !important;
+        font-size: 11px !important;
+        display: block !important;
+        overflow-x: auto !important;
+    }
+
+    table thead, table tbody, table tr {
+        display: table !important;
+        width: 100% !important;
+        table-layout: fixed !important;
+    }
+
+    th, td {
+        padding: 6px 3px !important;
+        font-size: 10px !important;
+        word-wrap: break-word !important;
+    }
+
+    /* FIX: Signature row - stack vertically on tablets */
+    .signature-row {
+        display: block !important;
+        flex-direction: column !important;
+    }
+
+    .comments-area {
+        margin-right: 0 !important;
+        margin-bottom: 15px;
+        width: 100% !important;
+    }
+
+    /* FIX: Make form sections stack properly */
+    .form-section {
+        padding: 15px !important;
+        margin-bottom: 15px !important;
+    }
+
+    /* FIX: Input fields full width on mobile */
+    input, select, textarea {
+        width: 100% !important;
+        max-width: 100% !important;
+        font-size: 14px !important;
+        padding: 10px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* FIX: Score boxes smaller but tap-friendly */
+    .score-box {
+        width: 60px !important;
+        font-size: 14px !important;
+    }
+
+    /* FIX: Barcode container */
+    .barcode-container {
+        flex-wrap: wrap !important;
+    }
+
+    .barcode {
+        width: 80px !important;
+        height: 25px !important;
+    }
+
     .form-header {
         padding: 8px !important;
         margin-bottom: 15px !important;
