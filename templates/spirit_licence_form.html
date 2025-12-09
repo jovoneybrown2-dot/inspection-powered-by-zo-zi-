@@ -461,6 +461,7 @@
             <table>
                 <thead>
                     <tr>
+                        <th style="width: 40px;">#</th>
                         <th>Item</th>
                         <th>Wt.</th>
                         <th>Score</th>
@@ -470,10 +471,11 @@
                 <tbody>
                     <!-- BUILDING Section: Items 1-2 -->
                     <tr class="header-row">
-                        <td colspan="4">Building</td>
+                        <td colspan="5">Building</td>
                     </tr>
                     {% for item in checklist if item.id >= 1 and item.id <= 2 %}
                     <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
                         <td>{{ item.desc }}</td>
                         <td>{{ item.wt }}</td>
                         <td>
@@ -488,10 +490,11 @@
 
                     <!-- WALLS Section: Item 3 -->
                     <tr class="header-row">
-                        <td colspan="4">Walls</td>
+                        <td colspan="5">Walls</td>
                     </tr>
                     {% for item in checklist if item.id == 3 %}
                     <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
                         <td>{{ item.desc }}</td>
                         <td>{{ item.wt }}</td>
                         <td>
@@ -506,10 +509,11 @@
 
                     <!-- FLOORS Section: Items 4-5 -->
                     <tr class="header-row">
-                        <td colspan="4">Floors</td>
+                        <td colspan="5">Floors</td>
                     </tr>
                     {% for item in checklist if item.id >= 4 and item.id <= 5 %}
                     <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
                         <td>{{ item.desc }}</td>
                         <td>{{ item.wt }}</td>
                         <td>
@@ -524,10 +528,11 @@
 
                     <!-- SERVICE COUNTER Section: Items 6-7 -->
                     <tr class="header-row">
-                        <td colspan="4">Service Counter</td>
+                        <td colspan="5">Service Counter</td>
                     </tr>
                     {% for item in checklist if item.id >= 6 and item.id <= 7 %}
                     <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
                         <td>{{ item.desc }}</td>
                         <td>{{ item.wt }}</td>
                         <td>
@@ -542,10 +547,11 @@
 
                     <!-- LIGHTING Section: Item 8 -->
                     <tr class="header-row">
-                        <td colspan="4">Lighting</td>
+                        <td colspan="5">Lighting</td>
                     </tr>
                     {% for item in checklist if item.id == 8 %}
                     <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
                         <td>{{ item.desc }}</td>
                         <td>{{ item.wt }}</td>
                         <td>
@@ -560,10 +566,11 @@
 
                     <!-- WASHING AND SANITIZATION Section: Items 9-11 -->
                     <tr class="header-row">
-                        <td colspan="4">Washing and Sanitization Facilities</td>
+                        <td colspan="5">Washing and Sanitization Facilities</td>
                     </tr>
                     {% for item in checklist if item.id >= 9 and item.id <= 11 %}
                     <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
                         <td>{{ item.desc }}</td>
                         <td>{{ item.wt }}</td>
                         <td>
@@ -578,10 +585,11 @@
 
                     <!-- WATER SUPPLY Section: Items 12-13 -->
                     <tr class="header-row">
-                        <td colspan="4">Water Supply</td>
+                        <td colspan="5">Water Supply</td>
                     </tr>
                     {% for item in checklist if item.id >= 12 and item.id <= 13 %}
                     <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
                         <td>{{ item.desc }}</td>
                         <td>{{ item.wt }}</td>
                         <td>
@@ -596,10 +604,11 @@
 
                     <!-- STORAGE FACILITIES Section: Items 14-16 -->
                     <tr class="header-row">
-                        <td colspan="4">Storage Facilities</td>
+                        <td colspan="5">Storage Facilities</td>
                     </tr>
                     {% for item in checklist if item.id >= 14 and item.id <= 16 %}
                     <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
                         <td>{{ item.desc }}</td>
                         <td>{{ item.wt }}</td>
                         <td>
@@ -614,10 +623,11 @@
 
                     <!-- SANITARY FACILITIES Section: Items 17-21 -->
                     <tr class="header-row">
-                        <td colspan="4">Sanitary Facilities</td>
+                        <td colspan="5">Sanitary Facilities</td>
                     </tr>
                     {% for item in checklist if item.id >= 17 and item.id <= 21 %}
                     <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
                         <td>{{ item.desc }}</td>
                         <td>{{ item.wt }}</td>
                         <td>
@@ -632,10 +642,11 @@
 
                     <!-- SOLID WASTE MANAGEMENT Section: Items 22-24 -->
                     <tr class="header-row">
-                        <td colspan="4">Solid Waste Management</td>
+                        <td colspan="5">Solid Waste Management</td>
                     </tr>
                     {% for item in checklist if item.id >= 22 and item.id <= 24 %}
                     <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
                         <td>{{ item.desc }}</td>
                         <td>{{ item.wt }}</td>
                         <td>
@@ -650,10 +661,11 @@
 
                     <!-- PEST CONTROL Section: Item 25 -->
                     <tr class="header-row">
-                        <td colspan="4">Pest Control</td>
+                        <td colspan="5">Pest Control</td>
                     </tr>
                     {% for item in checklist if item.id == 25 %}
                     <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
                         <td>{{ item.desc }}</td>
                         <td>{{ item.wt }}</td>
                         <td>
