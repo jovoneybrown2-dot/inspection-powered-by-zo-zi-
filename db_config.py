@@ -76,16 +76,17 @@ def _init_connection_pool():
                 database_url = database_url.replace('postgres://', 'postgresql://', 1)
 
             # Add SSL configuration to DATABASE_URL if not present
-            # Use 'prefer' mode which tries SSL but falls back to non-SSL if needed
+            # Use 'disable' mode to avoid SSL handshake failures
+            # Render.com PostgreSQL supports both SSL and non-SSL connections
             if 'sslmode' not in database_url:
                 separator = '&' if '?' in database_url else '?'
-                database_url = f"{database_url}{separator}sslmode=prefer&connect_timeout=10"
+                database_url = f"{database_url}{separator}sslmode=disable&connect_timeout=10"
 
             # Create threaded connection pool
             print(f"🔌 Initializing PostgreSQL connection pool...")
             print(f"   Host: {parsed.hostname}:{parsed.port}")
             print(f"   Database: {parsed.path.lstrip('/')}")
-            print(f"   SSL Mode: prefer (falls back if SSL fails)")
+            print(f"   SSL Mode: disabled (avoiding SSL handshake failures)")
 
             _connection_pool = psycopg2.pool.ThreadedConnectionPool(
                 minconn=2,   # Reduce minimum to avoid SSL issues on startup

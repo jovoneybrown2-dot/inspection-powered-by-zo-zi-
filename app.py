@@ -5706,19 +5706,46 @@ def get_parish_coordinates(parish):
 @app.route('/login', methods=['POST'])
 def login_post():
     from db_config import execute_query, release_db_connection
+    import time
 
     username = request.form['username']
     password = request.form['password']
     login_type = request.form['login_type']
     ip_address = request.remote_addr
 
-    conn = get_db_connection()
+    # Retry logic for SSL errors
+    max_retries = 3
+    for attempt in range(max_retries):
+        conn = get_db_connection()
+        error_occurred = False
+        try:
+            # Support login with either username OR email (for shared database with Zo-Zi Marketplace)
+            c = execute_query(conn, "SELECT id, username, password, role, email, parish, first_login FROM users WHERE (username = %s OR email = %s) AND password = %s",
+                      (username, username, password))
+            user = c.fetchone()
+            # If we get here, the query succeeded - break out of retry loop
+            break
+        except Exception as e:
+            error_occurred = True
+            release_db_connection(conn, error=error_occurred)
+
+            # Check if this is an SSL error worth retrying
+            error_msg = str(e).lower()
+            is_ssl_error = any(keyword in error_msg for keyword in [
+                'ssl error', 'decryption failed', 'bad record mac'
+            ])
+
+            if is_ssl_error and attempt < max_retries - 1:
+                print(f"⚠️  SSL error on login attempt {attempt + 1}/{max_retries}, retrying...")
+                time.sleep(0.1 * (attempt + 1))  # Brief exponential backoff
+                continue
+            else:
+                # Not SSL error or out of retries - propagate the error
+                raise
+
+    # Continue with existing login logic
     error_occurred = False
     try:
-        # Support login with either username OR email (for shared database with Zo-Zi Marketplace)
-        c = execute_query(conn, "SELECT id, username, password, role, email, parish, first_login FROM users WHERE (username = %s OR email = %s) AND password = %s",
-                  (username, username, password))
-        user = c.fetchone()
 
         if user and (
                 (login_type == 'inspector' and user['role'] == 'inspector') or
