@@ -469,13 +469,219 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in checklist %}
-                    <tr>
-                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
+                    <!-- BUILDING Section: Items 1-2 -->
+                    <tr class="header-row">
+                        <td colspan="5"><strong>Building</strong></td>
+                    </tr>
+                    {% set item_counter = namespace(value=0) %}
+                    {% for item in checklist if item.id >= 1 and item.id <= 2 %}
+                    {% set item_counter.value = item_counter.value + 1 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item_counter.value }}</td>
                         <td>{{ item.description or item.desc }}</td>
                         <td>{{ item.wt }}</td>
                         <td>
-                            <select name="score_{{ item.id }}" class="score-input">
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- WALLS Section: Item 3 -->
+                    <tr class="header-row">
+                        <td colspan="5"><strong>Walls</strong></td>
+                    </tr>
+                    {% for item in checklist if item.id == 3 %}
+                    {% set item_counter.value = item_counter.value + 1 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item_counter.value }}</td>
+                        <td>{{ item.description or item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- FLOORS Section: Items 4-5 -->
+                    <tr class="header-row">
+                        <td colspan="5"><strong>Floors</strong></td>
+                    </tr>
+                    {% for item in checklist if item.id >= 4 and item.id <= 5 %}
+                    {% set item_counter.value = item_counter.value + 1 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item_counter.value }}</td>
+                        <td>{{ item.description or item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- SERVICE COUNTER Section: Items 6-7 -->
+                    <tr class="header-row">
+                        <td colspan="5"><strong>Service Counter</strong></td>
+                    </tr>
+                    {% for item in checklist if item.id >= 6 and item.id <= 7 %}
+                    {% set item_counter.value = item_counter.value + 1 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item_counter.value }}</td>
+                        <td>{{ item.description or item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- LIGHTING Section: Item 8 -->
+                    <tr class="header-row">
+                        <td colspan="5"><strong>Lighting</strong></td>
+                    </tr>
+                    {% for item in checklist if item.id == 8 %}
+                    {% set item_counter.value = item_counter.value + 1 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item_counter.value }}</td>
+                        <td>{{ item.description or item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- WASHING AND SANITIZATION FACILITIES Section: Items 9-11 -->
+                    <tr class="header-row">
+                        <td colspan="5"><strong>Washing and Sanitization Facilities</strong></td>
+                    </tr>
+                    {% for item in checklist if item.id >= 9 and item.id <= 11 %}
+                    {% set item_counter.value = item_counter.value + 1 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item_counter.value }}</td>
+                        <td>{{ item.description or item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- WATER SUPPLY Section: Items 12-13 -->
+                    <tr class="header-row">
+                        <td colspan="5"><strong>Water Supply</strong></td>
+                    </tr>
+                    {% for item in checklist if item.id >= 12 and item.id <= 13 %}
+                    {% set item_counter.value = item_counter.value + 1 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item_counter.value }}</td>
+                        <td>{{ item.description or item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- STORAGE FACILITIES Section: Items 14-16 -->
+                    <tr class="header-row">
+                        <td colspan="5"><strong>Storage Facilities</strong></td>
+                    </tr>
+                    {% for item in checklist if item.id >= 14 and item.id <= 16 %}
+                    {% set item_counter.value = item_counter.value + 1 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item_counter.value }}</td>
+                        <td>{{ item.description or item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- SANITARY FACILITIES Section: Items 17-21 -->
+                    <tr class="header-row">
+                        <td colspan="5"><strong>Sanitary Facilities</strong></td>
+                    </tr>
+                    {% for item in checklist if item.id >= 17 and item.id <= 21 %}
+                    {% set item_counter.value = item_counter.value + 1 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item_counter.value }}</td>
+                        <td>{{ item.description or item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- SOLID WASTE MANAGEMENT Section: Items 22-24 -->
+                    <tr class="header-row">
+                        <td colspan="5"><strong>Solid Waste Management</strong></td>
+                    </tr>
+                    {% for item in checklist if item.id >= 22 and item.id <= 24 %}
+                    {% set item_counter.value = item_counter.value + 1 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item_counter.value }}</td>
+                        <td>{{ item.description or item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- PEST CONTROL Section: Item 25 -->
+                    <tr class="header-row">
+                        <td colspan="5"><strong>Pest Control</strong></td>
+                    </tr>
+                    {% for item in checklist if item.id == 25 %}
+                    {% set item_counter.value = item_counter.value + 1 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item_counter.value }}</td>
+                        <td>{{ item.description or item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
                                 <option value="0">0</option>
                                 <option value="{{ item.wt }}">{{ item.wt }}</option>
                             </select>

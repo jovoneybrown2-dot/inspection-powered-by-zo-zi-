@@ -892,40 +892,40 @@ MEAT_PROCESSING_CHECKLIST_ITEMS = [
 ]
 
 SPIRIT_LICENCE_CHECKLIST_ITEMS = [
-    {'id': 1, 'description': 'Sound, clean and in good repair', 'wt': 3},
-    {'id': 2, 'description': 'No smoking sign displayed at entrance to premises', 'wt': 3},
-    {'id': 3, 'description': 'Sound, clean and in good repair', 'wt': 3},
+    {'id': 1, 'description': 'Sound, clean and in good repair', 'wt': 3, 'critical': False},
+    {'id': 2, 'description': 'No smoking sign displayed at entrance to premises', 'wt': 3, 'critical': False},
+    {'id': 3, 'description': 'Sound, clean and in good repair', 'wt': 3, 'critical': False},
 
-    {'id': 4, 'description': 'Constructed of impervious, non-slip material', 'wt': 3},
-    {'id': 5, 'description': 'Clean, drained and in good repair', 'wt': 3},
+    {'id': 4, 'description': 'Constructed of impervious, non-slip material', 'wt': 3, 'critical': False},
+    {'id': 5, 'description': 'Clean, drained and in good repair', 'wt': 3, 'critical': False},
 
-    {'id': 6, 'description': 'Constructed of impervious material', 'wt': 3},
-    {'id': 7, 'description': 'Designed, clean and in good repair', 'wt': 3},
+    {'id': 6, 'description': 'Constructed of impervious material', 'wt': 3, 'critical': False},
+    {'id': 7, 'description': 'Designed, clean and in good repair', 'wt': 3, 'critical': False},
 
-    {'id': 8, 'description': 'Lighting provided as required', 'wt': 3},
+    {'id': 8, 'description': 'Lighting provided as required', 'wt': 3, 'critical': False},
 
-    {'id': 9, 'description': 'Fitted with at least double compartment sink', 'wt': 5},
-    {'id': 10, 'description': 'Soap and sanitizer provided', 'wt': 5},
-    {'id': 11, 'description': 'Equipped handwashing facility provided', 'wt': 5},
+    {'id': 9, 'description': 'Fitted with at least double compartment sink', 'wt': 5, 'critical': True},
+    {'id': 10, 'description': 'Soap and sanitizer provided', 'wt': 5, 'critical': True},
+    {'id': 11, 'description': 'Equipped handwashing facility provided', 'wt': 5, 'critical': True},
 
-    {'id': 12, 'description': 'Potable', 'wt': 5},
-    {'id': 13, 'description': 'Piped', 'wt': 5},
+    {'id': 12, 'description': 'Potable', 'wt': 5, 'critical': True},
+    {'id': 13, 'description': 'Piped', 'wt': 5, 'critical': True},
 
-    {'id': 14, 'description': 'Clean and adequate storage of glasses & utensils', 'wt': 5},
-    {'id': 15, 'description': 'Free of insects and other vermins', 'wt': 5},
-    {'id': 16, 'description': 'Being used for its intended purpose', 'wt': 5},
+    {'id': 14, 'description': 'Clean and adequate storage of glasses & utensils', 'wt': 5, 'critical': True},
+    {'id': 15, 'description': 'Free of insects and other vermins', 'wt': 5, 'critical': True},
+    {'id': 16, 'description': 'Being used for its intended purpose', 'wt': 5, 'critical': True},
 
-    {'id': 17, 'description': 'Toilet facility provided', 'wt': 5},
-    {'id': 18, 'description': 'Adequate, accessible with lavatory basin and soap', 'wt': 5},
-    {'id': 19, 'description': 'Satisfactory', 'wt': 5},
-    {'id': 20, 'description': 'Urinal(s) provided', 'wt': 3},
-    {'id': 21, 'description': 'Satisfactory', 'wt': 3},
+    {'id': 17, 'description': 'Toilet facility provided', 'wt': 5, 'critical': True},
+    {'id': 18, 'description': 'Adequate, accessible with lavatory basin and soap', 'wt': 5, 'critical': True},
+    {'id': 19, 'description': 'Satisfactory', 'wt': 5, 'critical': True},
+    {'id': 20, 'description': 'Urinal(s) provided', 'wt': 3, 'critical': False},
+    {'id': 21, 'description': 'Satisfactory', 'wt': 3, 'critical': False},
 
-    {'id': 22, 'description': 'Covered, adequate, pest proof and clean receptacles', 'wt': 4},
-    {'id': 23, 'description': 'Provision made for satisfactory disposal of waste', 'wt': 3},
-    {'id': 24, 'description': 'Premises free of litter and unnecessary articles', 'wt': 2},
+    {'id': 22, 'description': 'Covered, adequate, pest proof and clean receptacles', 'wt': 4, 'critical': False},
+    {'id': 23, 'description': 'Provision made for satisfactory disposal of waste', 'wt': 3, 'critical': False},
+    {'id': 24, 'description': 'Premises free of litter and unnecessary articles', 'wt': 2, 'critical': False},
 
-    {'id': 25, 'description': 'Premises free of rodents, insects and vermins', 'wt': 5}
+    {'id': 25, 'description': 'Premises free of rodents, insects and vermins', 'wt': 5, 'critical': True}
 ]
 
 # Swimming Pool Checklist - CORRECTED WEIGHTS
