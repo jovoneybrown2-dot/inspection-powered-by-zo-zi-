@@ -3,18 +3,32 @@
 /* Critical Item Shading - Gray background for critical checklist items */
 tr.critical-item,
 .critical-item {
-    background-color: #e5e7eb !important; /* Light gray for critical items */
+    background-color: #d0d0d0 !important; /* Gray for critical items - matches detail view */
 }
 
 tr.critical-item td,
 .critical-item td {
-    background-color: #e5e7eb !important;
+    background-color: #d0d0d0 !important;
+}
+
+tr.critical-item .score-cell {
+    background-color: #d0d0d0 !important;
+}
+
+tr.critical-item .score-input,
+.critical-item .score-input {
+    background: #e8e8e8 !important; /* Slightly lighter for input fields */
 }
 
 /* Darker shade for critical items on hover */
 tr.critical-item:hover,
 .critical-item:hover {
-    background-color: #d1d5db !important;
+    background-color: #c0c0c0 !important;
+}
+
+tr.critical-item:hover td,
+.critical-item:hover td {
+    background-color: #c0c0c0 !important;
 }
 
 /* Base tablet fixes for all forms */
