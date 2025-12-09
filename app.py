@@ -970,7 +970,7 @@ SWIMMING_POOL_CHECKLIST_ITEMS = [
 SMALL_HOTELS_CHECKLIST_ITEMS = [
     # 1 - Documentation (8%)
     {"id": "1a", "description": "Action plan for foodborne illness occurrence", "critical": False},
-    {"id": "1b", "description": "Food Handlers have valid food handlers permits", "critical": True},
+    {"id": "1b", "description": "Food Handlers have valid food handlers permits", "critical": False},
     {"id": "1c", "description": "Relevant policy in place to restrict activities of sick employees", "critical": False},
     {"id": "1d", "description": "Establishments have a written policy for the proper disposal of waste", "critical": False},
     {"id": "1e", "description": "Cleaning schedule for equipment utensil etc available", "critical": False},
@@ -993,7 +993,7 @@ SMALL_HOTELS_CHECKLIST_ITEMS = [
     {"id": "3e", "description": "Products free of infestation", "critical": False},
     {"id": "3f", "description": "No pesticides or other hazardous chemicals in food stores", "critical": True},
     {"id": "3g", "description": "Satisfactory condition of refrigeration units", "critical": False},
-    {"id": "3h", "description": "Refrigerated foods < 4°C", "critical": True},
+    {"id": "3h", "description": "Refrigerated foods ≤, 4°C", "critical": True},
     {"id": "3i", "description": "Frozen foods -18°C", "critical": True},
 
     # 4 - Food Holding and Preparation Practices (8%)
@@ -1001,7 +1001,7 @@ SMALL_HOTELS_CHECKLIST_ITEMS = [
     {"id": "4b", "description": "No evidence of cross-contamination during preparation", "critical": True},
     {"id": "4c", "description": "No evidence of cross-contamination during holding in refrigerators/coolers", "critical": True},
     {"id": "4d", "description": "Foods cooled according to recommended procedures", "critical": True},
-    {"id": "4e", "description": "Manual dishwashing wash, rinse, sanitize, rinse technique", "critical": True},
+    {"id": "4e", "description": "Manual dishwashing wash, sanitize, rinse technique", "critical": True},
     {"id": "4f", "description": "Food contact surfaces washed-rinsed-sanitized before & after each use", "critical": False},
     {"id": "4g", "description": "Wiping cloths handled properly (sanitizing solution used)", "critical": False},
 
@@ -1051,7 +1051,7 @@ SMALL_HOTELS_CHECKLIST_ITEMS = [
     # 12 - Solid Waste Storage Area (4%)
     {"id": "12d", "description": "Insect and vermin-proof containers provided where required", "critical": False},
     {"id": "12e", "description": "The area around each waste container kept clean", "critical": True},
-    {"id": "12f", "description": "Effluent from waste bins disposed of in a sanitary manner", "critical": False},
+    {"id": "12f", "description": "Effluent from waste bins handled of in a sanitary manner", "critical": False},
     {"id": "12g", "description": "Frequency of garbage removal adequate", "critical": False},
 
     # 13 - Disposal of solid waste
