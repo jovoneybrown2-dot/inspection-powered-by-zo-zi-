@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spirit Licence Premises Inspection Form</title>
+    <script src="{{ url_for('static', filename='js/offline-forms.js') }}" defer></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            font-size: 16px;
+            background: #f4f4f4;
+            line-height: 1.5;
+        }
+        .form-container {
+            background: white;
+            padding: 40px;
+            width: 8.5in;
+            max-width: 8.5in;
+            margin: 0 auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            min-height: 11in;
+        }
+        h1 {
+            font-size: 22px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        p {
+            margin: 10px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+            font-size: 15px;
+        }
+        th {
+            background: #f4f4f4;
+        }
+        tr.critical {
+            background: #e6e6e6;
+        }
+        .header-row {
+            font-weight: bold;
+            background: #f0f0f0;
+        }
+        select, textarea, input[type="text"], input[type="date"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            font-size: 15px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            resize: vertical;
+        }
+
+        /* Score column specific styling */
+        th:nth-child(3), td:nth-child(3) {
+            width: 80px;
+            min-width: 80px;
+        }
+
+        /* Make score dropdowns wider and more visible */
+        .score-input {
+            width: 70px !important;
+            min-width: 70px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+            padding: 8px 5px !important;
+        }
+        .buttons {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 0 10px;
+            font-size: 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        #submit-btn { background-color: #ff9900; }
+        #submit-btn:hover { background-color: #e68a00; }
+        #print-btn { background-color: #007bff; }
+        #print-btn:hover { background-color: #0069d9; }
+        #save-btn { background-color: #28a745; }
+        #save-btn:hover { background-color: #218838; }
+        #share-btn { background-color: #17a2b8; }
+        #share-btn:hover { background-color: #138496; }
+        #back-btn { background-color: #6c757d; }
+        #back-btn:hover { background-color: #5a6268; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            width: 300px;
+            text-align: center;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+        .modal-content p {
+            color: green;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .modal-content .btn {
+            background-color: #6c757d;
+        }
+        .modal-content .btn:hover {
+            background-color: #5a6268;
+        }
+
+        /* PHOTO ATTACHMENT STYLES */
+        .photo-button-container {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1000;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            border: 2px solid #4CAF50;
+        }
+
+        .photo-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+
+        .photo-button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .photo-button svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .photo-count-badge {
+            background: #ff5722;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        .photo-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .photo-modal.active {
+            display: flex;
+        }
+
+        .photo-modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .photo-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .photo-modal-header h3 {
+            margin: 0;
+            color: #333;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-modal:hover {
+            color: #000;
+        }
+
+        .photo-input-group {
+            margin-bottom: 20px;
+        }
+
+        .photo-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .photo-input-group input,
+        .photo-input-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .photo-input-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .photo-preview {
+            width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .capture-photo-btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .capture-photo-btn:hover {
+            background: #1976D2;
+        }
+
+        .add-photo-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .add-photo-btn:hover {
+            background: #45a049;
+        }
+
+        .add-photo-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .photos-list {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .photos-list h4 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .photo-item {
+            background: #f9f9f9;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .photo-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .photo-item-number {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .delete-photo-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .delete-photo-btn:hover {
+            background: #d32f2f;
+        }
+
+        .photo-item-comment {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .photo-thumbnail {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-top: 8px;
+            cursor: pointer;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/inspection-forms-responsive.css') }}">
+</head>
+<body>
+    <form id="spirit-licence-form" method="POST" action="{{ url_for('submit_spirit_licence') }}" data-offline-form="true">
+        <div class="form-container">
+            <h1>Spirit Licence Premises Inspection Form</h1>
+            <table>
+                <tr>
+                    <td style="width: 50%; vertical-align: top;">
+                        <table>
+                            <tr>
+                                <td>Name of Establishment:</td>
+                                <td><input type="text" name="establishment_name" required></td>
+                            </tr>
+                            <tr>
+                                <td>Owner/Operator:</td>
+                                <td><input type="text" name="owner_operator" required></td>
+                            </tr>
+                            <tr>
+                                <td>Address of Establishment:</td>
+                                <td><input type="text" name="address" required></td>
+                            </tr>
+                            <tr>
+                                <td>Purpose of Visit:</td>
+                                <td><input type="text" name="purpose_of_visit" required></td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="width: 50%; vertical-align: top;">
+                        <table>
+                            <tr>
+                                <td>Type of Establishment:</td>
+                                <td><input type="text" name="type_of_establishment" required></td>
+                            </tr>
+                            <tr>
+                                <td>Inspector Name:</td>
+                                <td><input type="text" name="inspector_name" required></td>
+                            </tr>
+                            <tr>
+                                <td>Inspection Date:</td>
+                                <td><input type="date" name="inspection_date" required></td>
+                            </tr>
+                            <tr>
+                                <td>Critical Score:</td>
+                                <td><input type="text" id="critical_score" name="critical_score" readonly value="0"></td>
+                            </tr>
+                            <tr>
+                                <td>Overall Score:</td>
+                                <td><input type="text" id="overall_score" name="overall_score" readonly value="0"></td>
+                            </tr>
+                            <tr>
+                                <td>Status:</td>
+                                <td>
+                                    <select name="status" required>
+                                        <option value="Satisfactory">Satisfactory</option>
+                                        <option value="Unsatisfactory">Unsatisfactory</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>No. of Employees:</td>
+                                <td><input type="number" name="no_of_employees" required></td>
+                            </tr>
+                            <tr>
+                                <td>No. with FHC:</td>
+                                <td><input type="number" name="no_with_fhc" required></td>
+                            </tr>
+                            <tr>
+                                <td>No. W/O FHC:</td>
+                                <td><input type="number" name="no_wo_fhc" required></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+            <h2>Inspection Checklist</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">#</th>
+                        <th>Item</th>
+                        <th>Wt.</th>
+                        <th>Score</th>
+                        <th>Inspector's Comments</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- BUILDING Section: Items 1-2 -->
+                    <tr class="header-row">
+                        <td colspan="5">Building</td>
+                    </tr>
+                    {% for item in checklist if item.id >= 1 and item.id <= 2 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- WALLS Section: Item 3 -->
+                    <tr class="header-row">
+                        <td colspan="5">Walls</td>
+                    </tr>
+                    {% for item in checklist if item.id == 3 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- FLOORS Section: Items 4-5 -->
+                    <tr class="header-row">
+                        <td colspan="5">Floors</td>
+                    </tr>
+                    {% for item in checklist if item.id >= 4 and item.id <= 5 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- SERVICE COUNTER Section: Items 6-7 -->
+                    <tr class="header-row">
+                        <td colspan="5">Service Counter</td>
+                    </tr>
+                    {% for item in checklist if item.id >= 6 and item.id <= 7 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- LIGHTING Section: Item 8 -->
+                    <tr class="header-row">
+                        <td colspan="5">Lighting</td>
+                    </tr>
+                    {% for item in checklist if item.id == 8 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- WASHING AND SANITIZATION Section: Items 9-11 -->
+                    <tr class="header-row">
+                        <td colspan="5">Washing and Sanitization Facilities</td>
+                    </tr>
+                    {% for item in checklist if item.id >= 9 and item.id <= 11 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- WATER SUPPLY Section: Items 12-13 -->
+                    <tr class="header-row">
+                        <td colspan="5">Water Supply</td>
+                    </tr>
+                    {% for item in checklist if item.id >= 12 and item.id <= 13 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- STORAGE FACILITIES Section: Items 14-16 -->
+                    <tr class="header-row">
+                        <td colspan="5">Storage Facilities</td>
+                    </tr>
+                    {% for item in checklist if item.id >= 14 and item.id <= 16 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- SANITARY FACILITIES Section: Items 17-21 -->
+                    <tr class="header-row">
+                        <td colspan="5">Sanitary Facilities</td>
+                    </tr>
+                    {% for item in checklist if item.id >= 17 and item.id <= 21 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- SOLID WASTE MANAGEMENT Section: Items 22-24 -->
+                    <tr class="header-row">
+                        <td colspan="5">Solid Waste Management</td>
+                    </tr>
+                    {% for item in checklist if item.id >= 22 and item.id <= 24 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- PEST CONTROL Section: Item 25 -->
+                    <tr class="header-row">
+                        <td colspan="5">Pest Control</td>
+                    </tr>
+                    {% for item in checklist if item.id == 25 %}
+                    <tr class="{% if item.is_critical or item.critical %}critical{% endif %}">
+                        <td style="text-align: center; font-weight: bold;">{{ item.id }}</td>
+                        <td>{{ item.desc }}</td>
+                        <td>{{ item.wt }}</td>
+                        <td>
+                            <select name="score_{{ item.id }}" class="score-input{% if item.is_critical or item.critical %} critical-item{% endif %}">
+                                <option value="0">0</option>
+                                <option value="{{ item.wt }}">{{ item.wt }}</option>
+                            </select>
+                        </td>
+                        <td><input type="text" name="comment_{{ item.id }}"></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <table>
+                <tr>
+                    <td>Inspector's Signature:</td>
+                    <td><input type="text" name="inspector_signature" required></td>
+                </tr>
+                <tr>
+                    <td>Rec'd By:</td>
+                    <td>
+                        <button type="button" onclick="openSignaturePad()" style="padding:8px 16px; background:#4CAF50; color:white; border:none; border-radius:5px; cursor:pointer;">
+                            ✍️ Click to Sign
+                        </button>
+                        <div id="signaturePreview" style="margin-top:10px; display:none;">
+                            <img id="signatureImage" style="border:1px solid #ccc; max-width:250px; background:white;" />
+                            <button type="button" onclick="clearSignature()" style="margin-left:10px; padding:4px 8px; background:#dc3545; color:white; border:none; border-radius:3px; cursor:pointer; font-size:12px;">
+                                ❌ Clear
+                            </button>
+                        </div>
+                        <input type="hidden" name="received_by" id="receivedBySignature" />
+                    </td>
+                </tr>
+            </table>
+            <div class="buttons">
+                <button id="submit-btn" class="btn" type="submit">Submit</button>
+                <button id="print-btn" class="btn" type="button" onclick="window.print()">Print</button>
+                <button id="save-btn" class="btn" type="button" onclick="alert('Save functionality not implemented yet.')">Save</button>
+                <button id="share-btn" class="btn" type="button" onclick="alert('Share functionality not implemented yet.')">Share</button>
+                <a href="{{ url_for('dashboard') }}" id="back-btn" class="btn">Back to Dashboard</a>
+            </div>
+        </div>
+    </form>
+
+    <!-- PHOTO BUTTON (Floating, Scrolls with Form) -->
+    <div class="photo-button-container">
+        <button type="button" class="photo-button" onclick="openPhotoModal()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            Add Photo
+        </button>
+        <div class="photo-count-badge" id="photoCountBadge">0</div>
+    </div>
+
+    <!-- PHOTO MODAL -->
+    <div class="photo-modal" id="photoModal">
+        <div class="photo-modal-content">
+            <div class="photo-modal-header">
+                <h3>📷 Add Inspection Photo</h3>
+                <button type="button" class="close-modal" onclick="closePhotoModal()">&times;</button>
+            </div>
+
+            <div class="photo-input-group">
+                <label>Photo Number/Reference:</label>
+                <input type="text" id="photoNumber" placeholder="e.g., Photo 1, Item 9, Sanitary Issue">
+            </div>
+
+            <div class="photo-input-group">
+                <label>Comment/Description:</label>
+                <textarea id="photoComment" placeholder="Describe what the photo shows..."></textarea>
+            </div>
+
+            <input type="file" id="photoFileInput" accept="image/*" capture="environment" onchange="handlePhotoSelect(event)">
+
+            <button type="button" class="capture-photo-btn" onclick="triggerPhotoCapture()">
+                📸 Take/Select Photo
+            </button>
+
+            <img id="photoPreview" class="photo-preview" style="display: none;">
+
+            <button type="button" class="add-photo-btn" id="addPhotoBtn" onclick="addPhoto()" disabled>
+                ✅ Add Photo to Inspection
+            </button>
+
+            <div class="photos-list" id="photosList" style="display: none;">
+                <h4>📎 Attached Photos (<span id="photosCount">0</span>)</h4>
+                <div id="photosContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'modern_success_popup.html' %}
+
+    <script>
+        // Photo Management
+        let inspectionPhotos = [];
+        let currentPhotoData = null;
+
+        function openPhotoModal() {
+            document.getElementById('photoModal').classList.add('active');
+        }
+
+        function closePhotoModal() {
+            document.getElementById('photoModal').classList.remove('active');
+            resetPhotoForm();
+        }
+
+        function triggerPhotoCapture() {
+            document.getElementById('photoFileInput').click();
+        }
+
+        function handlePhotoSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentPhotoData = e.target.result;
+                document.getElementById('photoPreview').src = currentPhotoData;
+                document.getElementById('photoPreview').style.display = 'block';
+                document.getElementById('addPhotoBtn').disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function addPhoto() {
+            const number = document.getElementById('photoNumber').value.trim();
+            const comment = document.getElementById('photoComment').value.trim();
+
+            if (!number) {
+                alert('Please enter a photo number or reference');
+                return;
+            }
+
+            if (!currentPhotoData) {
+                alert('Please capture or select a photo first');
+                return;
+            }
+
+            const photo = {
+                id: Date.now(),
+                number: number,
+                comment: comment,
+                data: currentPhotoData,
+                timestamp: new Date().toISOString()
+            };
+
+            inspectionPhotos.push(photo);
+            updatePhotosList();
+            resetPhotoForm();
+            updatePhotoCount();
+        }
+
+        function deletePhoto(photoId) {
+            if (confirm('Remove this photo from the inspection?')) {
+                inspectionPhotos = inspectionPhotos.filter(p => p.id !== photoId);
+                updatePhotosList();
+                updatePhotoCount();
+            }
+        }
+
+        function updatePhotosList() {
+            const container = document.getElementById('photosContainer');
+            const listSection = document.getElementById('photosList');
+
+            if (inspectionPhotos.length === 0) {
+                listSection.style.display = 'none';
+                return;
+            }
+
+            listSection.style.display = 'block';
+            document.getElementById('photosCount').textContent = inspectionPhotos.length;
+
+            container.innerHTML = inspectionPhotos.map(photo => `
+                <div class="photo-item">
+                    <div class="photo-item-header">
+                        <span class="photo-item-number">📷 ${photo.number}</span>
+                        <button type="button" class="delete-photo-btn" onclick="deletePhoto(${photo.id})">Delete</button>
+                    </div>
+                    <div class="photo-item-comment">${photo.comment || 'No comment'}</div>
+                    <img src="${photo.data}" class="photo-thumbnail" onclick="viewPhotoFullSize('${photo.data}')">
+                </div>
+            `).join('');
+        }
+
+        function viewPhotoFullSize(dataUrl) {
+            window.open(dataUrl, '_blank');
+        }
+
+        function resetPhotoForm() {
+            document.getElementById('photoNumber').value = '';
+            document.getElementById('photoComment').value = '';
+            document.getElementById('photoFileInput').value = '';
+            document.getElementById('photoPreview').style.display = 'none';
+            document.getElementById('addPhotoBtn').disabled = true;
+            currentPhotoData = null;
+        }
+
+        function updatePhotoCount() {
+            document.getElementById('photoCountBadge').textContent = inspectionPhotos.length;
+        }
+
+        // Real-time score calculation
+        const scoreInputs = document.querySelectorAll('.score-input');
+        const criticalScoreInput = document.getElementById('critical_score');
+        const overallScoreInput = document.getElementById('overall_score');
+
+        function updateScores() {
+            let overallScore = 0;
+            let criticalScore = 0;
+
+            scoreInputs.forEach(input => {
+                const score = parseInt(input.value) || 0;
+                overallScore += score;
+                if (input.classList.contains('critical-item')) {
+                    criticalScore += score;
+                }
+            });
+
+            criticalScoreInput.value = criticalScore;
+            overallScoreInput.value = overallScore;
+        }
+
+        scoreInputs.forEach(input => {
+            input.addEventListener('change', updateScores);
+        });
+
+       // Initial score calculation
+        updateScores();
+
+        // Modern popup form submission
+        document.getElementById('spirit-licence-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submit-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Submitting...';
+            submitBtn.disabled = true;
+
+            const formData = new FormData(this);
+
+            // Add photos as JSON
+            formData.append('photos', JSON.stringify(inspectionPhotos));
+
+            fetch(this.getAttribute('action'), {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success' || data.message === 'Submit successfully') {
+                    showModernSuccessPopup(data);
+                    // Clear photos after successful submission
+                    inspectionPhotos = [];
+                    updatePhotoCount();
+                    updatePhotosList();
+                } else {
+                    alert('Error: ' + (data.message || 'Unknown error occurred'));
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while submitting the form');
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+
+        // Apply critical shading based on database flags
+        (function applyCriticalShading() {
+            {% if checklist %}
+            const criticalItems = {{ checklist | tojson }};
+
+            // Create a map of item ID to critical status
+            const criticalMap = {};
+            criticalItems.forEach(item => {
+                if (item.is_critical || item.critical) {
+                    criticalMap[item.id] = true;
+                }
+            });
+
+            // Find all table rows with item IDs and apply critical-item class
+            document.addEventListener('DOMContentLoaded', function() {
+                const tableRows = document.querySelectorAll('.inspection-table tbody tr, table tbody tr');
+                tableRows.forEach(row => {
+                    const firstCell = row.querySelector('td:first-child');
+                    if (firstCell) {
+                        const itemId = firstCell.textContent.trim().toLowerCase();
+                        if (criticalMap[itemId]) {
+                            row.classList.add('critical-item');
+                        }
+                    }
+                });
+            });
+            {% endif %}
+        })();
+    </script>
+
+    <!-- Signature Pad -->
+    {% include 'signature_pad.html' %}
+
+    {% include 'zozi_badge.html' %}
+
+    <!-- Admin Inline Edit Mode -->
+    {% if admin_mode %}
+    {% include 'admin_inline_edit.html' %}
+    {% endif %}
+</body>
+</html>

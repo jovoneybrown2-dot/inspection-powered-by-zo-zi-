@@ -626,11 +626,11 @@
                     </tr>
                     {% endfor %}
 
-                    <!-- PERSONNEL (18-22) -->
+                    <!-- PERSONNEL (18-20) -->
                     <tr>
                         <td colspan="3" class="section-header">PERSONNEL</td>
                     </tr>
-                    {% for item in checklist if item.id >= 18 and item.id <= 22 %}
+                    {% for item in checklist if item.id >= 18 and item.id <= 20 %}
                     <tr class="{% if item.is_critical or item.critical %}critical-item{% endif %}">
                         <td>{{ '%02d'|format(item.id) }} {{ item.desc }}</td>
                         <td class="score-cell">{{ item.wt }}</td>
