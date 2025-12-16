@@ -927,7 +927,6 @@ SPIRIT_LICENCE_CHECKLIST_ITEMS = [
 
     {'id': 25, 'description': 'Premises free of rodents, insects and vermins', 'wt': 5, 'critical': True}
 ]
-
 # Swimming Pool Checklist - CORRECTED WEIGHTS
 SWIMMING_POOL_CHECKLIST_ITEMS = [
     {"id": "1A", "desc": "Written procedures for microbiological monitoring of pool water implemented", "wt": 5, "category": "Documentation"},
@@ -1192,7 +1191,7 @@ def get_form_checklist_items(form_type, fallback_list=None):
 
         # Get all active items for this template, ordered
         c.execute(f'''
-            SELECT id, item_order, category, description, weight, is_critical
+            SELECT id, item_order, category, description, weight, is_critical, item_id
             FROM form_items
             WHERE form_template_id = {ph} AND active = 1
             ORDER BY item_order
@@ -1202,8 +1201,10 @@ def get_form_checklist_items(form_type, fallback_list=None):
         for row in c.fetchall():
             # Convert to format expected by forms
             is_crit = bool(row[5])  # Convert to boolean
+            # Use item_id if available, otherwise fall back to item_order
+            item_id = row[6] if len(row) > 6 and row[6] else row[1]
             item = {
-                'id': row[1],  # item_order becomes the ID for compatibility
+                'id': item_id,  # Use item_id field (e.g., '01', '02') for proper matching
                 'desc': row[3],  # description
                 'description': row[3],  # alternative key
                 'wt': row[4],  # weight
