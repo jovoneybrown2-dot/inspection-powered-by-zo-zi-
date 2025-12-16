@@ -7617,6 +7617,38 @@ def test_users():
 
     return html
 
+@app.route('/diagnostic_admin_check_zozi_temp')
+def diagnostic_admin_check():
+    """Temporary diagnostic route - DELETE AFTER USE"""
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT id, username, email, role FROM users WHERE role = 'admin'")
+        admins = c.fetchall()
+
+        c.execute("SELECT COUNT(*) FROM users")
+        total = c.fetchone()[0]
+
+        release_db_connection(conn)
+
+        html = "<h1>🔍 Admin Users Diagnostic</h1>"
+        html += f"<p><strong>Total users:</strong> {total}</p>"
+
+        if not admins:
+            html += "<p style='color:red;'><strong>❌ NO ADMIN USERS FOUND!</strong></p>"
+            html += "<p>Need to create an admin user via Render shell:</p>"
+            html += "<pre>python reset_admin_password.py YourPassword</pre>"
+        else:
+            html += f"<p style='color:green;'><strong>✓ Found {len(admins)} admin user(s):</strong></p>"
+            html += "<ul>"
+            for admin in admins:
+                html += f"<li>ID: {admin[0]}, Username: {admin[1]}, Email: {admin[2]}, Role: {admin[3]}</li>"
+            html += "</ul>"
+
+        return html
+    except Exception as e:
+        return f"<h1>Error</h1><pre>{str(e)}</pre>"
+
 @app.route('/api/admin/users', methods=['POST'])
 def add_user():
     """Add a new user to the system"""
