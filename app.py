@@ -7649,6 +7649,89 @@ def diagnostic_admin_check():
     except Exception as e:
         return f"<h1>Error</h1><pre>{str(e)}</pre>"
 
+@app.route('/emergency_reset_admin_password_zozi_temp', methods=['GET', 'POST'])
+def emergency_reset_admin():
+    """Emergency admin password reset - DELETE AFTER USE"""
+    if request.method == 'GET':
+        return '''
+        <html>
+        <head><title>Emergency Admin Password Reset</title></head>
+        <body style="font-family: Arial; padding: 40px; max-width: 600px; margin: 0 auto;">
+            <h1>🔧 Emergency Admin Password Reset</h1>
+            <p><strong>Warning:</strong> This is a temporary emergency route. Delete after use!</p>
+            <form method="POST">
+                <div style="margin: 20px 0;">
+                    <label style="display: block; margin-bottom: 5px;">New Admin Password:</label>
+                    <input type="password" name="new_password" required style="padding: 10px; width: 100%; font-size: 16px;">
+                </div>
+                <div style="margin: 20px 0;">
+                    <label style="display: block; margin-bottom: 5px;">Confirm Password:</label>
+                    <input type="password" name="confirm_password" required style="padding: 10px; width: 100%; font-size: 16px;">
+                </div>
+                <button type="submit" style="padding: 12px 30px; background: #4CAF50; color: white; border: none; font-size: 16px; cursor: pointer;">
+                    Reset Admin Password
+                </button>
+            </form>
+        </body>
+        </html>
+        '''
+
+    # POST request - reset password
+    try:
+        from db_config import get_placeholder
+        ph = get_placeholder()
+
+        new_password = request.form.get('new_password', '').strip()
+        confirm_password = request.form.get('confirm_password', '').strip()
+
+        if not new_password or len(new_password) < 6:
+            return "<h1>Error</h1><p>Password must be at least 6 characters</p><a href='/emergency_reset_admin_password_zozi_temp'>Try again</a>"
+
+        if new_password != confirm_password:
+            return "<h1>Error</h1><p>Passwords don't match</p><a href='/emergency_reset_admin_password_zozi_temp'>Try again</a>"
+
+        conn = get_db_connection()
+        c = conn.cursor()
+
+        # Find admin users
+        c.execute(f"SELECT id, username FROM users WHERE role = {ph}", ('admin',))
+        admins = c.fetchall()
+
+        if not admins:
+            # Create new admin if none exists
+            c.execute(f"INSERT INTO users (username, email, password, role, parish, first_login) VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph})",
+                     ('admin', 'admin@inspection.gov.jm', new_password, 'admin', 'Kingston', 0))
+            conn.commit()
+            release_db_connection(conn)
+            return f'''
+            <html><body style="font-family: Arial; padding: 40px;">
+                <h1 style="color: green;">✅ Success!</h1>
+                <p>Admin user created!</p>
+                <p><strong>Username:</strong> admin</p>
+                <p><strong>Password:</strong> {new_password}</p>
+                <p><a href="/">Go to login page</a></p>
+            </body></html>
+            '''
+        else:
+            # Reset password for first admin
+            admin_id = admins[0][0]
+            admin_username = admins[0][1]
+            c.execute(f"UPDATE users SET password = {ph}, first_login = 0 WHERE id = {ph}", (new_password, admin_id))
+            conn.commit()
+            release_db_connection(conn)
+            return f'''
+            <html><body style="font-family: Arial; padding: 40px;">
+                <h1 style="color: green;">✅ Success!</h1>
+                <p>Admin password reset!</p>
+                <p><strong>Username:</strong> {admin_username}</p>
+                <p><strong>New Password:</strong> {new_password}</p>
+                <p><a href="/">Go to login page</a></p>
+            </body></html>
+            '''
+
+    except Exception as e:
+        return f"<h1>Error</h1><pre>{str(e)}</pre>"
+
 @app.route('/api/admin/users', methods=['POST'])
 def add_user():
     """Add a new user to the system"""
