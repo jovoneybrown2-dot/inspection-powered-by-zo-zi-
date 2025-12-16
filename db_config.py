@@ -161,24 +161,26 @@ def get_db_connection():
             # Get connection from pool
             conn = pool.getconn()
 
-            # Validate connection is alive before using it
+            # Set custom cursor factory
+            conn.cursor_factory = HybridCursor
+            conn.autocommit = False  # Enable transaction control
+
+            # Validate connection is alive (after setting autocommit)
             try:
-                # Test the connection with a simple query
                 with conn.cursor() as test_cursor:
                     test_cursor.execute('SELECT 1')
+                    test_cursor.fetchone()
             except Exception as e:
                 # Connection is bad, close it and get a new one
                 print(f"⚠️ Got bad connection from pool, getting fresh one: {e}")
                 try:
-                    conn.close()
+                    pool.putconn(conn, close=True)  # Return and close bad connection
                 except:
                     pass
                 # Get a fresh connection
                 conn = pool.getconn()
-
-            # Set custom cursor factory
-            conn.cursor_factory = HybridCursor
-            conn.autocommit = False  # Enable transaction control
+                conn.cursor_factory = HybridCursor
+                conn.autocommit = False
 
             return conn
 
