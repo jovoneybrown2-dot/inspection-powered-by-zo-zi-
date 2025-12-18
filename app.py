@@ -1436,18 +1436,41 @@ def admin_metrics():
         date_func = "created_at::date" if get_db_type() == 'postgresql' else "strftime('%Y-%m-%d', created_at)"
         ph = get_placeholder()
 
+        # Calculate date range based on time_frame
+        now = datetime.now()
+        if time_frame == '5min':
+            start_date = now - timedelta(hours=24)
+        elif time_frame == '30min':
+            start_date = now - timedelta(days=7)
+        elif time_frame == '1hour':
+            start_date = now - timedelta(days=7)
+        elif time_frame == 'daily':
+            start_date = now - timedelta(days=30)
+        elif time_frame == 'weekly':
+            start_date = now - timedelta(weeks=52)
+        elif time_frame == 'monthly':
+            start_date = now - timedelta(days=365)
+        else:
+            start_date = now - timedelta(days=30)
+
+        date_filter = f"created_at >= '{start_date.strftime('%Y-%m-%d')}'"
+
         if form_type == 'all':
             query = f"""
                 SELECT {date_func} AS date, result, COUNT(*) AS count
                 FROM (
                     SELECT created_at, result FROM inspections
                     WHERE form_type IN ('Food Establishment', 'Spirit Licence Premises', 'Swimming Pool', 'Small Hotel', 'Barbershop', 'Institutional Health')
+                    AND {date_filter}
                     UNION
                     SELECT created_at, result FROM residential_inspections
+                    WHERE {date_filter}
                     UNION
                     SELECT created_at, 'Completed' AS result FROM burial_site_inspections
+                    WHERE {date_filter}
                     UNION
                     SELECT created_at, result FROM meat_processing_inspections
+                    WHERE {date_filter}
                 ) AS all_inspections
                 GROUP BY date, result
             """
@@ -1457,6 +1480,7 @@ def admin_metrics():
                 query = f"""
                     SELECT {date_func} AS date, result, COUNT(*) AS count
                     FROM residential_inspections
+                    WHERE {date_filter}
                     GROUP BY date, result
                 """
                 c.execute(query)
@@ -1464,6 +1488,7 @@ def admin_metrics():
                 query = f"""
                     SELECT {date_func} AS date, 'Completed' AS result, COUNT(*) AS count
                     FROM burial_site_inspections
+                    WHERE {date_filter}
                     GROUP BY date, result
                 """
                 c.execute(query)
@@ -1471,6 +1496,7 @@ def admin_metrics():
                 query = f"""
                     SELECT {date_func} AS date, result, COUNT(*) AS count
                     FROM meat_processing_inspections
+                    WHERE {date_filter}
                     GROUP BY date, result
                 """
                 c.execute(query)
@@ -1478,7 +1504,7 @@ def admin_metrics():
                 query = f"""
                     SELECT {date_func} AS date, result, COUNT(*) AS count
                     FROM inspections
-                    WHERE form_type = {ph}
+                    WHERE form_type = {ph} AND {date_filter}
                     GROUP BY date, result
                 """
                 c.execute(query, (form_type,))
@@ -1497,7 +1523,18 @@ def admin_metrics():
 
 def process_metrics(results, time_frame):
     data = {'dates': [], 'pass': [], 'fail': []}
-    date_format = '%Y-%m-%d' if time_frame == 'daily' else '%Y-%m' if time_frame == 'monthly' else '%Y'
+
+    # Set date format based on timeframe
+    if time_frame in ['5min', '30min', '1hour']:
+        date_format = '%Y-%m-%d'  # For intraday, group by day
+    elif time_frame == 'daily':
+        date_format = '%Y-%m-%d'
+    elif time_frame == 'weekly':
+        date_format = '%Y-W%U'  # Year and week number
+    elif time_frame == 'monthly':
+        date_format = '%Y-%m'
+    else:
+        date_format = '%Y-%m-%d'
 
     # Track totals
     total_pass = 0
@@ -1510,10 +1547,17 @@ def process_metrics(results, time_frame):
 
         # Handle both string dates (SQLite) and date objects (PostgreSQL)
         if isinstance(date, str):
-            formatted_date = datetime.strptime(date, '%Y-%m-%d').strftime(date_format)
+            date_obj = datetime.strptime(date, '%Y-%m-%d')
         else:
             # It's already a date object from PostgreSQL
-            formatted_date = date.strftime(date_format)
+            date_obj = date
+
+        # Format date based on timeframe
+        if time_frame == 'weekly':
+            # Get ISO week number for proper weekly grouping
+            formatted_date = f"{date_obj.year}-W{date_obj.isocalendar()[1]:02d}"
+        else:
+            formatted_date = date_obj.strftime(date_format)
 
         if formatted_date not in data['dates']:
             data['dates'].append(formatted_date)
@@ -1528,6 +1572,12 @@ def process_metrics(results, time_frame):
         else:
             data['fail'][idx] += count
             total_fail += count
+
+    # Sort dates chronologically
+    if data['dates']:
+        combined = list(zip(data['dates'], data['pass'], data['fail']))
+        combined.sort(key=lambda x: x[0])
+        data['dates'], data['pass'], data['fail'] = map(list, zip(*combined))
 
     # Add summary statistics
     data['total_inspections'] = total_pass + total_fail
