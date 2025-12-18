@@ -472,6 +472,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/inspection-forms-responsive.css') }}">
 </head>
 <body>
+    <!-- Inspec Logo Watermark -->
+    <div style="position: fixed; top: 20px; left: 20px; z-index: 1000; pointer-events: none;">
+        <img src="{{ url_for('static', filename='inspec.JPG') }}" alt="Inspec" style="height: 60px; width: auto; opacity: 0.3; object-fit: contain;">
+    </div>
+
     <form id="burialForm" method="POST" action="{{ url_for('submit_burial') }}" data-offline-form="true">
         <div class="form-container">
             <h1>Burial Site Inspection Report</h1>

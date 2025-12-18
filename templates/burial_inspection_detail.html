@@ -136,6 +136,12 @@
     </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/inspection-details-responsive.css') }}">
 </head>
+<body>
+    <!-- Inspec Logo -->
+    <div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+        <img src="{{ url_for('static', filename='inspec.JPG') }}" alt="Inspec" style="height: 80px; width: auto; object-fit: contain;">
+    </div>
+
     <div class="main-content-wrapper">
         <!-- Photos Sidebar -->
         <div class="photos-sidebar">
