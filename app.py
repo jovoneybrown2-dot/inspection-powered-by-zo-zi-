@@ -6633,19 +6633,19 @@ def get_alerts():
         # Check for inspectors with high workload today
         if get_db_type() == 'postgresql':
             cursor.execute('''
-                SELECT inspector_name, COUNT(*) as count
+                SELECT inspector_name, COUNT(*) as inspection_count
                 FROM inspections
                 WHERE created_at::date = CURRENT_DATE AND inspector_name IS NOT NULL
                 GROUP BY inspector_name
-                HAVING count > 5
+                HAVING COUNT(*) > 5
             ''')
         else:
             cursor.execute('''
-                SELECT inspector_name, COUNT(*) as count
+                SELECT inspector_name, COUNT(*) as inspection_count
                 FROM inspections
                 WHERE date(created_at) = date('now') AND inspector_name IS NOT NULL
                 GROUP BY inspector_name
-                HAVING count > 5
+                HAVING COUNT(*) > 5
             ''')
 
         for row in cursor.fetchall():

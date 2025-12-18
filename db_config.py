@@ -52,9 +52,10 @@ def _init_connection_pool():
     Initialize PostgreSQL connection pool (called once on first connection).
 
     Pool configuration:
-    - minconn: Minimum connections kept alive (5)
-    - maxconn: Maximum connections allowed (20)
-    - These limits prevent overwhelming PostgreSQL server
+    - minconn: Minimum connections kept alive (10)
+    - maxconn: Maximum connections allowed (500)
+    - Supports 500+ concurrent inspectors with proper connection recycling
+    - Connections are released immediately after each query for maximum efficiency
     """
     global _connection_pool
 
@@ -90,13 +91,18 @@ def _init_connection_pool():
             print(f"   SSL Mode: disabled (avoiding SSL handshake failures)")
             print(f"   Keepalives: enabled (prevents stale connections)")
 
+            # Get max connections from environment or default to 500
+            # Set DB_MAX_CONNECTIONS in Render to match your PostgreSQL plan limit
+            max_connections = int(os.getenv('DB_MAX_CONNECTIONS', '500'))
+            min_connections = min(10, max_connections // 10)  # 10% of max, minimum 10
+
             _connection_pool = psycopg2.pool.ThreadedConnectionPool(
-                minconn=5,   # Minimum connections
-                maxconn=200,  # Effectively unlimited for typical workloads
+                minconn=min_connections,   # Minimum connections kept alive
+                maxconn=max_connections,   # Supports concurrent inspectors
                 dsn=database_url
             )
 
-            print("✅ PostgreSQL connection pool initialized (5-200 connections)")
+            print(f"✅ PostgreSQL connection pool initialized ({min_connections}-{max_connections} connections)")
             return _connection_pool
 
         except ImportError as e:

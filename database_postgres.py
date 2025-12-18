@@ -3,7 +3,7 @@ from psycopg2.extras import RealDictCursor
 from datetime import datetime
 import os
 from dotenv import load_dotenv
-from db_config import get_db_connection
+from db_config import get_db_connection, release_db_connection
 
 load_dotenv()
 
@@ -21,7 +21,7 @@ def init_db():
         count = cursor.fetchone()[0]
         print(f"PostgreSQL database connected successfully. Users: {count}")
         cursor.close()
-        conn.close()
+        release_db_connection(conn)
         return True
     except Exception as e:
         print(f"Database connection error: {e}")
@@ -55,7 +55,7 @@ def save_inspection(data):
     inspection_id = cursor.fetchone()[0]
     conn.commit()
     cursor.close()
-    conn.close()
+    release_db_connection(conn)
     return inspection_id
 
 def save_burial_inspection(data):
@@ -94,7 +94,7 @@ def save_burial_inspection(data):
         conn.rollback()
     finally:
         cursor.close()
-        conn.close()
+        release_db_connection(conn)
 
 def save_residential_inspection(data):
     """Save residential inspection"""
@@ -150,7 +150,7 @@ def save_residential_inspection(data):
         conn.rollback()
     finally:
         cursor.close()
-        conn.close()
+        release_db_connection(conn)
     return inspection_id
 
 def get_inspections():
@@ -160,7 +160,7 @@ def get_inspections():
     cursor.execute("SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment, created_at, result FROM inspections ORDER BY created_at DESC")
     inspections = cursor.fetchall()
     cursor.close()
-    conn.close()
+    release_db_connection(conn)
     return inspections
 
 def get_inspections_by_inspector(inspector_name, inspection_type='all'):
@@ -265,7 +265,7 @@ def get_inspections_by_inspector(inspector_name, inspection_type='all'):
             print(f"Error fetching {inspection_type} inspections: {e}")
 
     cursor.close()
-    conn.close()
+    release_db_connection(conn)
     return all_inspections
 
 def get_burial_inspections():
@@ -279,7 +279,7 @@ def get_burial_inspections():
         print(f"Error fetching burial inspections: {e}")
         inspections = []
     cursor.close()
-    conn.close()
+    release_db_connection(conn)
     return inspections
 
 def get_residential_inspections():
@@ -289,7 +289,7 @@ def get_residential_inspections():
     cursor.execute("SELECT id, premises_name, inspection_date, result FROM residential_inspections ORDER BY created_at DESC")
     inspections = cursor.fetchall()
     cursor.close()
-    conn.close()
+    release_db_connection(conn)
     return inspections
 
 def get_inspection_details(inspection_id):
@@ -365,10 +365,10 @@ def get_inspection_details(inspection_id):
                 'inspector_code': inspection[26] or ''
             }
         cursor.close()
-        conn.close()
+        release_db_connection(conn)
         return inspection_dict
     cursor.close()
-    conn.close()
+    release_db_connection(conn)
     return None
 
 def get_burial_inspection_details(inspection_id):
@@ -378,7 +378,7 @@ def get_burial_inspection_details(inspection_id):
     cursor.execute("SELECT * FROM burial_site_inspections WHERE id = %s", (inspection_id,))
     inspection = cursor.fetchone()
     cursor.close()
-    conn.close()
+    release_db_connection(conn)
     if inspection:
         return {
             'id': inspection[0],
@@ -411,7 +411,7 @@ def get_residential_inspection_details(inspection_id):
         cursor.execute("SELECT item_id, score FROM residential_checklist_scores WHERE form_id = %s", (inspection_id,))
         checklist_scores = dict(cursor.fetchall())
         cursor.close()
-        conn.close()
+        release_db_connection(conn)
         return {
             'id': inspection[0],
             'premises_name': inspection[1] or '',
@@ -439,7 +439,7 @@ def get_residential_inspection_details(inspection_id):
             'checklist_scores': checklist_scores
         }
     cursor.close()
-    conn.close()
+    release_db_connection(conn)
     return None
 
 def get_small_hotels_inspection_details(form_id):
@@ -452,7 +452,7 @@ def get_small_hotels_inspection_details(form_id):
 
     if not inspection:
         cursor.close()
-        conn.close()
+        release_db_connection(conn)
         return None
 
     inspection_dict = dict(inspection)
@@ -471,7 +471,7 @@ def get_small_hotels_inspection_details(form_id):
     inspection_dict['error'] = error_scores
 
     cursor.close()
-    conn.close()
+    release_db_connection(conn)
     return inspection_dict
 
 def get_spirit_licence_inspection_details(form_id):
@@ -484,7 +484,7 @@ def get_spirit_licence_inspection_details(form_id):
 
     if not inspection:
         cursor.close()
-        conn.close()
+        release_db_connection(conn)
         return None
 
     inspection_dict = dict(inspection)
@@ -510,7 +510,7 @@ def get_spirit_licence_inspection_details(form_id):
     inspection_dict['parsed_comments'] = parsed_comments
 
     cursor.close()
-    conn.close()
+    release_db_connection(conn)
     return inspection_dict
 
 def save_meat_processing_inspection(data):
@@ -588,13 +588,13 @@ def save_meat_processing_inspection(data):
             conn.commit()
 
         cursor.close()
-        conn.close()
+        release_db_connection(conn)
         return inspection_id
     except Exception as e:
         print(f"Error saving meat processing inspection: {e}")
         conn.rollback()
         cursor.close()
-        conn.close()
+        release_db_connection(conn)
         raise
 
 def get_meat_processing_inspections():
@@ -604,7 +604,7 @@ def get_meat_processing_inspections():
     cursor.execute("SELECT id, establishment_name, inspection_date, result FROM meat_processing_inspections ORDER BY created_at DESC")
     inspections = cursor.fetchall()
     cursor.close()
-    conn.close()
+    release_db_connection(conn)
     return inspections
 
 def get_meat_processing_inspection_details(inspection_id):
@@ -627,7 +627,7 @@ def get_meat_processing_inspection_details(inspection_id):
         logging.info(f"📸 DB DEBUG - photo_data first 200 chars: {str(photo_data_value)[:200] if photo_data_value else 'None'}")
 
         cursor.close()
-        conn.close()
+        release_db_connection(conn)
         return {
             'id': inspection[0],
             'establishment_name': inspection[1] or '',
@@ -661,7 +661,7 @@ def get_meat_processing_inspection_details(inspection_id):
             'checklist_scores': checklist_scores
         }
     cursor.close()
-    conn.close()
+    release_db_connection(conn)
     return None
 
 def update_database_schema():

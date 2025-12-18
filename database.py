@@ -357,7 +357,7 @@ def init_db():
     # Only commit if not using autocommit (SQLite)
     if get_db_type() != 'postgresql':
         conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
 def save_inspection(data):
     conn = get_db_connection()
@@ -613,7 +613,7 @@ def get_inspections_by_inspector(inspector_name, inspection_type='all'):
                          ORDER BY inspection_date DESC""", (inspector_name, inspection_type, inspection_type))
 
     inspections = c.fetchall()
-    conn.close()
+    release_db_connection(conn)
     return inspections
 
 def get_burial_inspections():
@@ -764,7 +764,7 @@ def get_residential_inspection_details(inspection_id):
     if inspection:
         c.execute("SELECT item_id, score FROM residential_checklist_scores WHERE form_id = %s", (inspection_id,))
         checklist_scores = dict(c.fetchall())
-        conn.close()
+        release_db_connection(conn)
         return {
             'id': inspection[0],
             'premises_name': inspection[1] or '',
@@ -791,7 +791,7 @@ def get_residential_inspection_details(inspection_id):
             'photo_data': inspection[22] if len(inspection) > 22 else '[]',
             'checklist_scores': checklist_scores
         }
-    conn.close()
+    release_db_connection(conn)
     return None
 
 def get_meat_processing_inspection_details(inspection_id):
@@ -803,7 +803,7 @@ def get_meat_processing_inspection_details(inspection_id):
         c.execute("SELECT item_id, score FROM meat_processing_checklist_scores WHERE form_id = %s", (inspection_id,))
         # Convert integer keys to zero-padded string keys to match template expectations
         checklist_scores = {str(item_id).zfill(2): score for item_id, score in c.fetchall()}
-        conn.close()
+        release_db_connection(conn)
         return {
             'id': inspection[0],
             'establishment_name': inspection[1] or '',
@@ -836,7 +836,7 @@ def get_meat_processing_inspection_details(inspection_id):
             'photo_data': inspection[28] if len(inspection) > 28 else '[]',
             'checklist_scores': checklist_scores
         }
-    conn.close()
+    release_db_connection(conn)
     return None
 
 
@@ -849,7 +849,7 @@ def get_small_hotels_inspection_details(form_id):
     inspection = cursor.fetchone()
 
     if not inspection:
-        conn.close()
+        release_db_connection(conn)
         return None
 
     inspection_dict = dict(inspection)
@@ -867,7 +867,7 @@ def get_small_hotels_inspection_details(form_id):
     inspection_dict['obser'] = obser_scores
     inspection_dict['error'] = error_scores
 
-    conn.close()
+    release_db_connection(conn)
     return inspection_dict
 
 
@@ -880,7 +880,7 @@ def get_spirit_licence_inspection_details(form_id):
     inspection = cursor.fetchone()
 
     if not inspection:
-        conn.close()
+        release_db_connection(conn)
         return None
 
     inspection_dict = dict(inspection)
@@ -908,7 +908,7 @@ def get_spirit_licence_inspection_details(form_id):
                     parsed_comments[parts[0].strip()] = parts[1].strip()
     inspection_dict['parsed_comments'] = parsed_comments
 
-    conn.close()
+    release_db_connection(conn)
     return inspection_dict
 
 def update_database_schema():
@@ -967,6 +967,9 @@ def update_database_schema():
         "CREATE INDEX IF NOT EXISTS idx_inspections_form_type ON inspections(form_type)",
         "CREATE INDEX IF NOT EXISTS idx_inspections_date ON inspections(inspection_date)",
         "CREATE INDEX IF NOT EXISTS idx_inspections_inspector ON inspections(inspector_name)",
+        "CREATE INDEX IF NOT EXISTS idx_inspections_created_at ON inspections(created_at)",
+        "CREATE INDEX IF NOT EXISTS idx_inspections_result ON inspections(result)",
+        "CREATE INDEX IF NOT EXISTS idx_residential_result ON residential_inspections(result)",
         "CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)",
         "CREATE INDEX IF NOT EXISTS idx_login_history_user ON login_history(user_id)"
     ]
@@ -978,7 +981,7 @@ def update_database_schema():
             pass
 
     conn.commit()
-    conn.close()
+    release_db_connection(conn)
 
 if __name__ == "__main__":
     init_db()

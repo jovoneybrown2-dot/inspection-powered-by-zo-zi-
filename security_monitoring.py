@@ -7,7 +7,7 @@ import os
 import hashlib
 import json
 from datetime import datetime, timedelta
-from db_config import get_db_connection, get_db_type, execute_query
+from db_config import get_db_connection, release_db_connection, get_db_type, execute_query
 
 # Jamaica timezone offset (EST - no daylight saving)
 JAMAICA_UTC_OFFSET = timedelta(hours=-5)
@@ -152,7 +152,7 @@ class SecurityMonitor:
         )''')
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
 
     def calculate_file_hash(self, filepath):
         """Calculate SHA-256 hash of a file"""
@@ -191,7 +191,7 @@ class SecurityMonitor:
                              (file_path, file_hash, file_size, modified_date))
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
         return True
 
     def check_file_integrity(self):
@@ -257,7 +257,7 @@ class SecurityMonitor:
                          (get_jamaica_time(), 'verified', file_path))
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
 
         return violations
 
@@ -286,7 +286,7 @@ class SecurityMonitor:
         ))
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
 
     def log_login_attempt(self, username, success, ip_address='', user_agent='', failure_reason='', session_id=''):
         """Log a login attempt"""
@@ -316,7 +316,7 @@ class SecurityMonitor:
                       f'User {username} has {failed_count} failed login attempts in the last 30 minutes', username))
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
 
     def log_database_activity(self, username, operation, table_name, record_id=None, changes='', ip_address=''):
         """Log database operations (CREATE, UPDATE, DELETE)"""
@@ -327,7 +327,7 @@ class SecurityMonitor:
                  (username, operation, table_name, record_id, changes, ip_address))
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
 
     def get_security_overview(self):
         """Get security overview statistics"""
@@ -352,7 +352,7 @@ class SecurityMonitor:
         # Unacknowledged alerts
         unacknowledged_alerts = self._execute(conn, 'SELECT COUNT(*) FROM security_alerts WHERE acknowledged = 0').fetchone()[0]
 
-        conn.close()
+        release_db_connection(conn)
 
         return {
             'file_integrity': {
@@ -380,7 +380,7 @@ class SecurityMonitor:
 
         logs = self._execute(conn, '''SELECT * FROM audit_log
                    ORDER BY timestamp DESC LIMIT %s''', (limit,)).fetchall()
-        conn.close()
+        release_db_connection(conn)
 
         return logs
 
@@ -390,7 +390,7 @@ class SecurityMonitor:
 
         attempts = self._execute(conn, '''SELECT * FROM login_attempts
                    ORDER BY timestamp DESC LIMIT %s''', (limit,)).fetchall()
-        conn.close()
+        release_db_connection(conn)
 
         return attempts
 
@@ -400,7 +400,7 @@ class SecurityMonitor:
 
         activity = self._execute(conn, '''SELECT * FROM database_activity
                    ORDER BY timestamp DESC LIMIT %s''', (limit,)).fetchall()
-        conn.close()
+        release_db_connection(conn)
 
         return activity
 
@@ -412,7 +412,7 @@ class SecurityMonitor:
             alerts = self._execute(conn, 'SELECT * FROM security_alerts ORDER BY timestamp DESC').fetchall()
         else:
             alerts = self._execute(conn, 'SELECT * FROM security_alerts WHERE acknowledged = 0 ORDER BY timestamp DESC').fetchall()
-        conn.close()
+        release_db_connection(conn)
 
         return alerts
 
@@ -426,14 +426,14 @@ class SecurityMonitor:
                  (acknowledged_by, get_jamaica_time(), alert_id))
 
         conn.commit()
-        conn.close()
+        release_db_connection(conn)
 
     def get_file_integrity_details(self):
         """Get detailed file integrity information"""
         conn = get_db_connection()
 
         files = self._execute(conn, 'SELECT * FROM file_integrity ORDER BY last_checked DESC').fetchall()
-        conn.close()
+        release_db_connection(conn)
 
         return files
 
@@ -443,7 +443,7 @@ class SecurityMonitor:
 
         changes = self._execute(conn, '''SELECT * FROM system_changes
                    ORDER BY timestamp DESC LIMIT %s''', (limit,)).fetchall()
-        conn.close()
+        release_db_connection(conn)
 
         return changes
 

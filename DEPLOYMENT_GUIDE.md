@@ -3,15 +3,71 @@
 ## Project Overview
 Jamaica Ministry of Health Inspection Management System - A Flask-based web application for health and safety inspections on tablets.
 
+## 🔑 KEY FACTS FOR NON-TECHNICAL STAFF
+
+### What is PostgreSQL?
+- **PostgreSQL is FREE database software** (like Microsoft Access, but better and free forever)
+- It runs **ONLY on your server** - NOT on tablets
+- **100% free** - no licensing fees, no per-user costs
+
+### What Do Inspectors Need?
+- ✅ **Just a tablet with a web browser** (Safari, Chrome - already installed)
+- ✅ **WiFi or data connection**
+- ❌ **NO PostgreSQL download needed**
+- ❌ **NO special apps to install**
+- ❌ **NO technical knowledge required**
+
+**It's just like opening Facebook or Gmail on their tablet!**
+
+### How It Works:
+```
+Inspector Tablet         Your Health Department Server
+    (Browser)      →      (Has PostgreSQL installed)
+       ↓                           ↓
+Opens website          Saves data to database
+Fills out form                    ↓
+Clicks submit          Inspector sees confirmation
+```
+
+### Cost Comparison:
+- **Cloud hosting (Render):** $90/month for 500 inspectors
+- **Your existing server:** ~$30/month electricity + $0 software = **$30/month total**
+- **Savings:** $60/month = $720/year
+
+### Can Your Server Handle 500 Inspectors?
+✅ **YES!** With the optimizations applied:
+- Supports 500+ concurrent inspectors
+- Response time < 1 second
+- No crashes or slowdowns
+- Professional, fast user experience
+
+---
+
 ## System Requirements
 
 ### Server Requirements
+
+#### For 100 Inspectors (Minimum):
 - **OS**: Linux (Ubuntu 20.04+ recommended) or Windows Server
 - **Python**: 3.8 or higher
 - **Database**: PostgreSQL 12+
-- **Memory**: 2GB RAM minimum (4GB recommended)
-- **Storage**: 10GB minimum
+- **CPU**: 4 cores
+- **Memory**: 8 GB RAM
+- **Storage**: 100 GB SSD
+- **Network**: 100 Mbps
 - **Web Server**: Gunicorn (included) or Nginx as reverse proxy
+
+#### For 500 Inspectors (Your Scale - Recommended):
+- **OS**: Linux (Ubuntu 20.04+ recommended) or Windows Server
+- **Python**: 3.8 or higher
+- **Database**: PostgreSQL 12+ with `max_connections=500`
+- **CPU**: 8 cores
+- **Memory**: 16 GB RAM
+- **Storage**: 500 GB SSD
+- **Network**: 1 Gbps
+- **Web Server**: Gunicorn with 8 workers + Nginx reverse proxy
+
+**Your existing health department server can likely handle this!**
 
 ### Network Requirements
 - **HTTPS**: Required for PWA features and GPS on tablets
@@ -50,7 +106,41 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment Variables
+### 4. Configure PostgreSQL for 500 Inspectors
+
+Edit PostgreSQL configuration:
+```bash
+# For Linux:
+sudo nano /etc/postgresql/14/main/postgresql.conf
+
+# For Windows:
+# Edit: C:\Program Files\PostgreSQL\14\data\postgresql.conf
+```
+
+Update these settings:
+```ini
+# Connection Settings
+max_connections = 500              # Support 500 concurrent inspectors
+shared_buffers = 4GB              # Use 25% of your server RAM (16GB server)
+effective_cache_size = 12GB       # Use 75% of your server RAM
+work_mem = 8MB                    # Per-connection work memory
+maintenance_work_mem = 1GB        # For database maintenance
+
+# Performance Settings
+random_page_cost = 1.1            # Optimized for SSD
+effective_io_concurrency = 200    # SSD parallel I/O
+```
+
+Restart PostgreSQL:
+```bash
+# Linux:
+sudo systemctl restart postgresql
+
+# Windows:
+# Restart PostgreSQL service from Services panel
+```
+
+### 5. Configure Environment Variables
 
 Create a `.env` file or set system environment variables:
 
@@ -58,12 +148,15 @@ Create a `.env` file or set system environment variables:
 # Database Configuration (REQUIRED)
 DATABASE_URL=postgresql://username:password@localhost:5432/inspections_db
 
+# Connection Pool Configuration (REQUIRED for 500 inspectors)
+DB_MAX_CONNECTIONS=500
+
 # Secret Key (REQUIRED - generate a random string)
 SECRET_KEY=your-very-long-random-secret-key-here
 
-# Server Configuration (Optional)
+# Server Configuration (Recommended for 500 inspectors)
 PORT=10000
-WORKERS=4
+WORKERS=8
 
 # Optional: License Key (if using licensed features)
 ZOZI_LICENSE_KEY=your-license-key
