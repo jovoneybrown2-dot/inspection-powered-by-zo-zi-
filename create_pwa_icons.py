@@ -21,15 +21,15 @@ def create_rounded_rectangle_mask(size, radius):
 
     return mask
 
-def create_pwa_icon(input_path, output_path, size, corner_radius_percent=20):
+def create_pwa_icon(input_path, output_path, size, corner_radius_percent=8):
     """
-    Create a PWA icon with rounded corners
+    Create a PWA icon with slightly rounded corners (square with soft edges)
 
     Args:
         input_path: Path to input image (inspec.JPG)
         output_path: Path to save output icon
         size: Size in pixels (e.g., 192, 512)
-        corner_radius_percent: Percentage of size to use for corner radius (default 20%)
+        corner_radius_percent: Percentage of size to use for corner radius (default 8% for slight curve)
     """
     print(f"Creating {size}x{size} icon...")
 
@@ -40,37 +40,53 @@ def create_pwa_icon(input_path, output_path, size, corner_radius_percent=20):
     if img.mode != 'RGBA':
         img = img.convert('RGBA')
 
-    # Find the main icon content (crop out excess dark space)
-    # We'll focus on the center rounded square portion
+    # Get original dimensions
     width, height = img.size
 
-    # Calculate crop box to focus on the rounded square icon
-    # The actual icon appears to be roughly centered with some padding
-    crop_margin = int(width * 0.15)  # 15% margin from edges
+    # Focus ONLY on the square icon content (remove circular magnifying glass frame)
+    # Crop very tight to show just the square with icons inside
+    # The actual square content is roughly from 28% to 72% of the image
+    crop_margin_horizontal = int(width * 0.28)   # 28% from left/right - removes circular frame
+    crop_margin_vertical = int(height * 0.25)     # 25% from top - removes top of circular frame
+    crop_margin_bottom = int(height * 0.38)       # 38% from bottom - removes magnifying glass handle
+
     crop_box = (
-        crop_margin,           # left
-        crop_margin,           # top
-        width - crop_margin,   # right
-        height - crop_margin   # bottom
+        crop_margin_horizontal,              # left
+        crop_margin_vertical,                # top
+        width - crop_margin_horizontal,      # right
+        height - crop_margin_bottom          # bottom
     )
 
-    # Crop to focus on main icon
+    # Crop to the square icon portion
     img_cropped = img.crop(crop_box)
+
+    # Make it square (in case crop wasn't perfectly square)
+    crop_width = crop_box[2] - crop_box[0]
+    crop_height = crop_box[3] - crop_box[1]
+    square_size = min(crop_width, crop_height)
+
+    # Center crop to square
+    if crop_width > crop_height:
+        diff = crop_width - crop_height
+        img_cropped = img_cropped.crop((diff // 2, 0, crop_width - diff // 2, crop_height))
+    elif crop_height > crop_width:
+        diff = crop_height - crop_width
+        img_cropped = img_cropped.crop((0, diff // 2, crop_width, crop_height - diff // 2))
 
     # Resize to target size with high-quality resampling
     img_resized = img_cropped.resize((size, size), Image.Resampling.LANCZOS)
 
-    # Calculate corner radius
+    # Calculate corner radius (8% = slight curve, not too rounded)
     corner_radius = int(size * (corner_radius_percent / 100))
 
-    # Create rounded mask
+    # Create rounded mask with slight curves
     mask = create_rounded_rectangle_mask((size, size), corner_radius)
 
-    # Create output image with transparency
-    output = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    # Create output image with dark background (matching the icon style)
+    output = Image.new('RGBA', (size, size), (26, 26, 46, 255))  # Dark blue-gray background
 
-    # Apply the mask to create rounded corners
-    output.paste(img_resized, (0, 0))
+    # Apply the mask to create slightly rounded corners
+    output.paste(img_resized, (0, 0), img_resized)
     output.putalpha(mask)
 
     # Save the icon
@@ -151,11 +167,11 @@ def main():
         (512, 'icon-512.png'),
     ]
 
-    # Create rounded corner icons (for display)
-    print("\n📦 Creating display icons (with rounded corners):")
+    # Create square icons with slightly curved edges (for display)
+    print("\n📦 Creating display icons (square with slightly curved edges):")
     for size, filename in icon_sizes:
         output_path = os.path.join(static_dir, filename)
-        create_rounded_rectangle_mask_icon(input_image, output_path, size, corner_radius_percent=22)
+        create_rounded_rectangle_mask_icon(input_image, output_path, size, corner_radius_percent=8)
 
     # Create maskable icons (square with safe area padding)
     print("\n📦 Creating maskable icons (for adaptive icons):")
@@ -171,7 +187,7 @@ def main():
     # Create apple-touch-icon (180x180 for iOS)
     print("\n🍎 Creating Apple Touch Icon:")
     apple_icon_path = os.path.join(static_dir, 'apple-touch-icon.png')
-    create_rounded_rectangle_mask_icon(input_image, apple_icon_path, 180, corner_radius_percent=22)
+    create_rounded_rectangle_mask_icon(input_image, apple_icon_path, 180, corner_radius_percent=8)
 
     # Create favicon sizes
     print("\n🌐 Creating Favicons:")
@@ -182,7 +198,7 @@ def main():
 
     for size, filename in favicon_sizes:
         output_path = os.path.join(static_dir, filename)
-        create_rounded_rectangle_mask_icon(input_image, output_path, size, corner_radius_percent=20)
+        create_rounded_rectangle_mask_icon(input_image, output_path, size, corner_radius_percent=8)
 
     print("\n✅ All icons created successfully!")
     print("\nNext steps:")
