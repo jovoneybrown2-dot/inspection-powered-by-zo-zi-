@@ -20,6 +20,9 @@ def init_db():
     # Enable autocommit for schema changes (prevents transaction errors on ALTER failures)
     if get_db_type() == 'postgresql':
         conn.autocommit = True
+    else:
+        # SQLite: Set isolation level to None for autocommit mode
+        conn.isolation_level = None
 
     c = conn.cursor()
 
@@ -213,9 +216,10 @@ def init_db():
     try:
         c.execute("ALTER TABLE users ADD COLUMN first_login INTEGER DEFAULT 1")
         print("✓ Added first_login column to users table")
-    except Exception:  # Catches both SQLite and PostgreSQL errors
-        # Column already exists
-        pass
+    except Exception as e:  # Catches both SQLite and PostgreSQL errors
+        # Column already exists or other error
+        if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
+            print(f"⚠️  Warning: Could not add first_login column: {e}")
 
     # Insert users
     users = [
