@@ -27,14 +27,14 @@ def reset_database():
         init_db()
         print(f"✅ Database created successfully with all required columns")
 
-        # Sync barbershop checklist to ensure correct weights
-        print(f"🔄 Syncing barbershop checklist weights...")
+        # Sync ALL form checklists to ensure correct weights
+        print(f"🔄 Syncing all form checklists...")
         try:
-            from sync_barbershop_checklist import sync_barbershop_checklist
-            sync_barbershop_checklist()
-            print(f"✅ Barbershop checklist synced (100 overall, 60 critical)")
+            from sync_all_checklists import sync_all_checklists
+            sync_all_checklists()
+            print(f"✅ All form checklists synced")
         except Exception as e:
-            print(f"⚠️  Warning: Could not sync barbershop checklist: {e}")
+            print(f"⚠️  Warning: Could not sync form checklists: {e}")
 
         return True
     except Exception as e:
