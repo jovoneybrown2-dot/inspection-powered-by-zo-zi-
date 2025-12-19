@@ -198,6 +198,7 @@ def init_db():
                   role TEXT NOT NULL,
                   email TEXT,
                   parish TEXT,
+                  first_login INTEGER DEFAULT 1,
                   is_flagged INTEGER DEFAULT 0)''')
 
     # Migration: Add parish column if it doesn't exist
