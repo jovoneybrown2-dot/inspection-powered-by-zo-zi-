@@ -316,6 +316,14 @@ def init_db():
                   created_date {timestamp},
                   FOREIGN KEY (form_template_id) REFERENCES form_templates(id))''')
 
+    # Migration: Add item_id column to form_items if it doesn't exist
+    try:
+        c.execute("ALTER TABLE form_items ADD COLUMN item_id TEXT")
+        print("✓ Added item_id column to form_items table")
+    except Exception:
+        # Column already exists (catches both SQLite and PostgreSQL errors)
+        pass
+
     # Form categories table
     c.execute(f'''CREATE TABLE IF NOT EXISTS form_categories
                  (id {auto_inc},
