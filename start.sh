@@ -1,7 +1,7 @@
 #!/bin/bash
-# Render startup script - resets database and starts gunicorn
+# Render startup script - initializes database and starts gunicorn
 
-echo "🔄 Resetting SQLite database to ensure correct schema..."
+echo "🔄 Initializing database and syncing checklists..."
 python reset_db.py
 
 echo "🚀 Starting gunicorn..."

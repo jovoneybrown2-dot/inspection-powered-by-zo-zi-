@@ -1,31 +1,29 @@
 #!/usr/bin/env python3
 """
-Force reset SQLite database - deletes existing database and recreates with proper schema.
-This runs automatically on Render startup to ensure database has correct schema.
+Initialize database and sync checklists on startup.
+PRESERVES existing data - does NOT delete the database.
+Only ensures schema exists and checklists are up to date.
 """
 import os
 import sys
 
-def reset_database():
-    """Delete and recreate the SQLite database"""
+def init_database():
+    """Initialize database schema and sync checklists WITHOUT deleting data"""
     db_path = os.getenv('SQLITE_DB_PATH', 'inspections.db')
 
     # Check if database exists
     if os.path.exists(db_path):
-        print(f"🗑️  Deleting old database: {db_path}")
-        try:
-            os.remove(db_path)
-            print(f"✅ Old database deleted")
-        except Exception as e:
-            print(f"❌ Failed to delete database: {e}")
-            return False
+        print(f"✓ Found existing database: {db_path}")
+        print(f"  Preserving all existing inspection data...")
+    else:
+        print(f"📁 Creating new database: {db_path}")
 
-    # Initialize new database with proper schema
-    print(f"🔄 Creating fresh database with correct schema...")
+    # Initialize database schema (only creates tables if they don't exist)
+    print(f"🔄 Ensuring database schema is up to date...")
     try:
         from database import init_db
         init_db()
-        print(f"✅ Database created successfully with all required columns")
+        print(f"✅ Database schema initialized")
 
         # Sync ALL form checklists to ensure correct weights
         print(f"🔄 Syncing all form checklists...")
@@ -38,9 +36,9 @@ def reset_database():
 
         return True
     except Exception as e:
-        print(f"❌ Failed to create database: {e}")
+        print(f"❌ Failed to initialize database: {e}")
         return False
 
 if __name__ == "__main__":
-    success = reset_database()
+    success = init_database()
     sys.exit(0 if success else 1)
