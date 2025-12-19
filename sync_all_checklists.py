@@ -125,6 +125,17 @@ def sync_barbershop_checklist():
         return False
 
 
+def sync_meat_processing_checklist():
+    """Sync meat processing checklist"""
+    try:
+        from sync_meat_processing_checklist import sync_meat_processing_checklist as sync_func
+        sync_func()
+        return True
+    except Exception as e:
+        print(f"❌ Meat Processing sync failed: {e}")
+        return False
+
+
 def sync_all_checklists():
     """Sync all form checklists to database"""
     print("=" * 60)
@@ -140,6 +151,10 @@ def sync_all_checklists():
     # Sync Barbershop
     print("\n2. Barbershop Form...")
     results.append(('Barbershop', sync_barbershop_checklist()))
+
+    # Sync Meat Processing
+    print("\n3. Meat Processing Form...")
+    results.append(('Meat Processing', sync_meat_processing_checklist()))
 
     # Summary
     print("\n" + "=" * 60)
