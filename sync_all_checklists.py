@@ -69,29 +69,28 @@ def sync_institutional_checklist():
 
         # Sync each item
         for item in INSTITUTIONAL_CHECKLIST_ITEMS:
-            item_id = item['id']
+            item_order = int(item['id'])
 
             cursor.execute(f"""
                 SELECT id FROM form_items
-                WHERE form_template_id = {ph} AND item_id = {ph}
-            """, (template_id, item_id))
+                WHERE form_template_id = {ph} AND item_order = {ph}
+            """, (template_id, item_order))
             existing = cursor.fetchone()
 
             if existing:
                 cursor.execute(f"""
                     UPDATE form_items
-                    SET description = {ph}, weight = {ph}, is_critical = {ph},
-                        item_order = {ph}, active = 1
-                    WHERE form_template_id = {ph} AND item_id = {ph}
+                    SET description = {ph}, weight = {ph}, is_critical = {ph}, active = 1
+                    WHERE form_template_id = {ph} AND item_order = {ph}
                 """, (item['desc'], item['wt'], 1 if item['critical'] else 0,
-                      int(item_id), template_id, item_id))
+                      template_id, item_order))
             else:
                 cursor.execute(f"""
                     INSERT INTO form_items
-                    (form_template_id, item_order, category, description, weight, is_critical, active, item_id)
-                    VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, 1, {ph})
-                """, (template_id, int(item_id), '', item['desc'], item['wt'],
-                      1 if item['critical'] else 0, item_id))
+                    (form_template_id, item_order, category, description, weight, is_critical, active)
+                    VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, 1)
+                """, (template_id, item_order, '', item['desc'], item['wt'],
+                      1 if item['critical'] else 0))
 
         conn.commit()
 
