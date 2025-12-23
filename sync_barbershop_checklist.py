@@ -74,31 +74,32 @@ def sync_barbershop_checklist():
         inserted = 0
 
         for item in BARBERSHOP_CHECKLIST_ITEMS:
+            item_id = item['id']  # Keep as string: '01', '02', etc.
             item_order = int(item['id'])
 
-            # Check if item exists
+            # Check if item exists (by item_id first, then item_order)
             cursor.execute(f"""
                 SELECT id, weight, is_critical FROM form_items
-                WHERE form_template_id = {ph} AND item_order = {ph}
-            """, (template_id, item_order))
+                WHERE form_template_id = {ph} AND (item_id = {ph} OR (item_id IS NULL AND item_order = {ph}))
+            """, (template_id, item_id, item_order))
             existing = cursor.fetchone()
 
             if existing:
                 # Update existing item
                 cursor.execute(f"""
                     UPDATE form_items
-                    SET description = {ph}, weight = {ph}, is_critical = {ph}, active = 1
-                    WHERE form_template_id = {ph} AND item_order = {ph}
-                """, (item['desc'], item['wt'], 1 if item['critical'] else 0, template_id, item_order))
+                    SET description = {ph}, weight = {ph}, is_critical = {ph}, item_id = {ph}, active = 1
+                    WHERE id = {ph}
+                """, (item['desc'], item['wt'], 1 if item['critical'] else 0, item_id, existing[0]))
                 updated += 1
                 print(f"  Updated item {item['id']}: {item['desc']} (wt={item['wt']})")
             else:
                 # Insert new item
                 cursor.execute(f"""
                     INSERT INTO form_items
-                    (form_template_id, item_order, category, description, weight, is_critical, active)
-                    VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, 1)
-                """, (template_id, item_order, '', item['desc'], item['wt'], 1 if item['critical'] else 0))
+                    (form_template_id, item_order, item_id, category, description, weight, is_critical, active)
+                    VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, 1)
+                """, (template_id, item_order, item_id, '', item['desc'], item['wt'], 1 if item['critical'] else 0))
                 inserted += 1
                 print(f"  Inserted item {item['id']}: {item['desc']} (wt={item['wt']})")
 
