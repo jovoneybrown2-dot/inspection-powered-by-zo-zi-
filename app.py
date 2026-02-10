@@ -132,14 +132,20 @@ def init_database_async():
         time.sleep(2)
 
         try:
-            if not os.path.exists('inspections.db'):
+            # For PostgreSQL, always run init_db to ensure tables exist
+            # For SQLite, only run if database file doesn't exist
+            if get_db_type() == 'postgresql':
+                print("Checking/initializing PostgreSQL database...")
+                init_db()
+                print("✅ Database initialized successfully!")
+            elif not os.path.exists('inspections.db'):
                 print("Database not found. Initializing...")
                 init_db()
-                print("Database initialized successfully!")
+                print("✅ Database initialized successfully!")
         except Exception as e:
             print(f"⚠️ Database init error: {e}")
 
-        # Run PostgreSQL migrations if using PostgreSQL
+        # Run PostgreSQL migrations after init_db
         if get_db_type() == 'postgresql':
             try:
                 print("Running PostgreSQL migrations...")
@@ -13005,6 +13011,38 @@ if __name__ == '__main__':
         release_db_connection(conn)
     except Exception as e:
         print(f"⚠️  Auto-fix checklist error: {e}")
+
+@app.route('/init-database-secret-route-2026')
+def initialize_database():
+    """Emergency database initialization endpoint"""
+    try:
+        from database import init_db
+        init_db()
+
+        # Check if users exist
+        conn = get_db_connection()
+        c = conn.cursor()
+        ph = get_placeholder()
+        c.execute("SELECT COUNT(*) FROM users")
+        user_count = c.fetchone()[0]
+        release_db_connection(conn)
+
+        return f"""
+        <h1>✅ Database Initialized!</h1>
+        <p>Users in database: {user_count}</p>
+        <h2>Default Login:</h2>
+        <ul>
+            <li><strong>Admin:</strong> username=<code>admin</code>, password=<code>Admin901!secure</code></li>
+            <li><strong>Inspector:</strong> username=<code>inspector1</code>, password=<code>Insp123!secure</code></li>
+        </ul>
+        <p><a href="/">Go to Login Page</a></p>
+        """
+    except Exception as e:
+        return f"""
+        <h1>❌ Error</h1>
+        <p>{str(e)}</p>
+        <pre>{repr(e)}</pre>
+        """
 
 if __name__ == '__main__':
     # Only run Flask dev server if executed directly (not via Gunicorn)

@@ -82,25 +82,36 @@ def run_migration():
 
             print("✅ tasks table updated successfully")
 
-        # Ensure users table has is_flagged column
+        # Ensure users table has is_flagged column (only if table exists)
         print("Checking users table...")
         cursor.execute("""
-            SELECT column_name FROM information_schema.columns
-            WHERE table_name='users'
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables
+                WHERE table_name = 'users'
+            )
         """)
-        user_columns = [row[0] for row in cursor.fetchall()]
+        users_exists = cursor.fetchone()[0]
 
-        if 'is_flagged' not in user_columns:
-            print("Adding is_flagged column to users...")
-            cursor.execute("ALTER TABLE users ADD COLUMN is_flagged INTEGER DEFAULT 0")
-            conn.commit()
+        if users_exists:
+            cursor.execute("""
+                SELECT column_name FROM information_schema.columns
+                WHERE table_name='users'
+            """)
+            user_columns = [row[0] for row in cursor.fetchall()]
 
-        if 'first_login' not in user_columns:
-            print("Adding first_login column to users...")
-            cursor.execute("ALTER TABLE users ADD COLUMN first_login INTEGER DEFAULT 1")
-            conn.commit()
+            if 'is_flagged' not in user_columns:
+                print("Adding is_flagged column to users...")
+                cursor.execute("ALTER TABLE users ADD COLUMN is_flagged INTEGER DEFAULT 0")
+                conn.commit()
 
-        print("✅ users table updated successfully")
+            if 'first_login' not in user_columns:
+                print("Adding first_login column to users...")
+                cursor.execute("ALTER TABLE users ADD COLUMN first_login INTEGER DEFAULT 1")
+                conn.commit()
+
+            print("✅ users table updated successfully")
+        else:
+            print("⚠️  users table does not exist yet - will be created by init_db()")
 
         # Add critical_score to meat_processing_inspections
         print("Checking meat_processing_inspections table...")
