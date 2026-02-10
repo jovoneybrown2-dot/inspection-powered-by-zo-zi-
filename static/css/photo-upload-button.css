@@ -1,0 +1,72 @@
+/* Circular Photo Upload Button - Applies to ALL Forms */
+
+.add-photo-btn {
+    /* Circle shape */
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 50% !important;
+
+    /* Styling */
+    background: #4CAF50 !important;
+    color: white !important;
+    border: 3px solid #45a049 !important;
+    cursor: pointer !important;
+
+    /* Icon and text positioning */
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 8px !important;
+
+    /* Text styling */
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+
+    /* Shadow for depth */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+
+    /* Smooth transitions */
+    transition: all 0.3s ease !important;
+}
+
+.add-photo-btn:hover {
+    background: #45a049 !important;
+    transform: scale(1.1) !important;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.add-photo-btn:active {
+    transform: scale(0.95) !important;
+}
+
+.add-photo-btn:disabled {
+    background: #cccccc !important;
+    border-color: #999999 !important;
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
+    transform: none !important;
+}
+
+/* Icon before text */
+.add-photo-btn::before {
+    content: "📷";
+    font-size: 20px;
+    display: block;
+    margin-bottom: 2px;
+}
+
+/* Responsive sizing for mobile */
+@media (max-width: 768px) {
+    .add-photo-btn {
+        width: 50px !important;
+        height: 50px !important;
+        font-size: 9px !important;
+    }
+
+    .add-photo-btn::before {
+        font-size: 18px;
+    }
+}
