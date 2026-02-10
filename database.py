@@ -16,15 +16,17 @@ def get_insert_ignore():
 
 def init_db():
     conn = get_db_connection()
-
-    # Enable autocommit for schema changes (prevents transaction errors on ALTER failures)
-    if get_db_type() == 'postgresql':
-        conn.autocommit = True
-    else:
-        # SQLite: Set isolation level to None for autocommit mode
-        conn.isolation_level = None
-
     c = conn.cursor()
+
+    # For PostgreSQL, we need to commit after each schema change
+    # to avoid transaction errors with ALTER TABLE
+    def safe_commit():
+        """Commit changes safely for both database types"""
+        try:
+            conn.commit()
+        except Exception as e:
+            print(f"⚠️  Commit warning: {e}")
+            pass
 
     # Get database-specific syntax
     auto_inc = get_auto_increment()
@@ -161,6 +163,7 @@ def init_db():
     # Migration: Add staff_compliment column if it doesn't exist
     try:
         c.execute("ALTER TABLE meat_processing_inspections ADD COLUMN staff_compliment INTEGER")
+        safe_commit()
         print("✓ Added staff_compliment column to meat_processing_inspections table")
     except Exception:
         # Column already exists (catches both SQLite and PostgreSQL errors)
@@ -207,6 +210,7 @@ def init_db():
     # Migration: Add parish column if it doesn't exist
     try:
         c.execute("ALTER TABLE users ADD COLUMN parish TEXT")
+        safe_commit()
         print("✓ Added parish column to users table")
     except Exception:  # Catches both SQLite and PostgreSQL errors
         # Column already exists
@@ -215,6 +219,7 @@ def init_db():
     # Migration: Add first_login column if it doesn't exist
     try:
         c.execute("ALTER TABLE users ADD COLUMN first_login INTEGER DEFAULT 1")
+        safe_commit()
         print("✓ Added first_login column to users table")
     except Exception as e:  # Catches both SQLite and PostgreSQL errors
         # Column already exists or other error
@@ -269,11 +274,13 @@ def init_db():
     # Add is_read column if it doesn't exist
     try:
         c.execute("ALTER TABLE messages ADD COLUMN is_read INTEGER DEFAULT 0")
+        safe_commit()
     except Exception:  # Catches both SQLite and PostgreSQL errors
         pass  # Column already exists
 
     # Set existing messages as read
     c.execute("UPDATE messages SET is_read = 1 WHERE is_read IS NULL")
+    safe_commit()
 
     # User sessions table for tracking active logins
     c.execute(f'''CREATE TABLE IF NOT EXISTS user_sessions
@@ -319,6 +326,7 @@ def init_db():
     # Migration: Add item_id column to form_items if it doesn't exist
     try:
         c.execute("ALTER TABLE form_items ADD COLUMN item_id TEXT")
+        safe_commit()
         print("✓ Added item_id column to form_items table")
     except Exception:
         # Column already exists (catches both SQLite and PostgreSQL errors)
@@ -367,9 +375,8 @@ def init_db():
         else:
             c.execute('INSERT OR IGNORE INTO form_templates (name, description, form_type) VALUES (?, ?, ?)', template)
 
-    # Only commit if not using autocommit (SQLite)
-    if get_db_type() != 'postgresql':
-        conn.commit()
+    # Final commit for all schema changes
+    safe_commit()
     release_db_connection(conn)
 
 def save_inspection(data):
