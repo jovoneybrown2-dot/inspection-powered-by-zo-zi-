@@ -373,14 +373,17 @@ def init_db():
     release_db_connection(conn)
 
 def save_inspection(data):
+    from db_config import get_placeholder
+    ph = get_placeholder()
     conn = get_db_connection()
     try:
         c = conn.cursor()
-        c.execute(f'''INSERT INTO inspections (establishment_name, address, inspector_name, inspection_date, inspection_time,
+        query = f'''INSERT INTO inspections (establishment_name, address, inspector_name, inspection_date, inspection_time,
                      type_of_establishment, no_of_employees, purpose_of_visit, action, result, food_inspected, food_condemned,
                      critical_score, overall_score, comments, inspector_signature, received_by, form_type, scores, created_at,
                      inspector_code, license_no, owner, photo_data)
-                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
+                     VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph})'''
+        c.execute(query,
                   (data['establishment_name'], data['address'], data['inspector_name'], data['inspection_date'],
                    data['inspection_time'], data['type_of_establishment'], data['no_of_employees'],
                    data['purpose_of_visit'], data['action'], data['result'], data['food_inspected'],

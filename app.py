@@ -2281,8 +2281,8 @@ def submit_form(form_type):
             c = conn.cursor()
             for item in FOOD_CHECKLIST_ITEMS:
                 score = request.form.get(f'score_{item["id"]}', '0')
-                c.execute(f"INSERT INTO inspection_items (inspection_id, item_id, details) VALUES ({ph}, {ph}, {ph})",
-                          (inspection_id, item["id"], score))
+                query = f"INSERT INTO inspection_items (inspection_id, item_id, details) VALUES ({ph}, {ph}, {ph})"
+                c.execute(query, (inspection_id, item["id"], score))
             conn.commit()
             release_db_connection(conn)
 
