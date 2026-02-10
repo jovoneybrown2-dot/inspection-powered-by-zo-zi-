@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, user-scalable=yes">
 
     <!-- PWA Meta Tags -->
     <meta name="application-name" content="Inspec">
@@ -1273,6 +1273,83 @@
             --welcome-hover: #64DE00;
             --form-bg: rgba(255, 255, 255, 0.95);
             --border-color: #e0e6ed;
+        }
+
+        /* ========== TABLET OPTIMIZATION - MAINTAINS DESKTOP LAYOUT ========== */
+
+        /* Tablets in Portrait (768px - 1024px) */
+        @media only screen and (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+            body {
+                min-width: 1024px; /* Force desktop layout width */
+            }
+
+            html {
+                zoom: 0.8; /* Scale down entire page to fit nicely */
+            }
+
+            /* Smooth font rendering */
+            * {
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
+
+            /* Optimize touch targets */
+            button, a, .tab, input, select {
+                min-height: 44px;
+                min-width: 44px;
+            }
+
+            /* Better scrolling */
+            .tab-container,
+            .results,
+            .modal-content {
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        /* Tablets in Landscape (1024px - 1366px) */
+        @media only screen and (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+            /* Desktop layout already perfect, just optimize scrolling */
+            * {
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        /* Small tablets (600px - 767px) - iPad Mini, etc */
+        @media only screen and (min-width: 600px) and (max-width: 767px) {
+            body {
+                min-width: 1024px; /* Force desktop layout */
+            }
+
+            html {
+                zoom: 0.7; /* Scale down more for smaller tablets */
+            }
+
+            * {
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
+        }
+
+        /* Large tablets and iPad Pro (1024px+) */
+        @media only screen and (min-width: 1024px) and (max-width: 1366px) {
+            /* Keep desktop layout as-is */
+            .container {
+                max-width: 1400px;
+                margin: 0 auto;
+            }
+        }
+
+        /* Optimize for iPad specifically */
+        @supports (-webkit-touch-callout: none) {
+            /* iOS Safari specific optimizations */
+            body {
+                -webkit-text-size-adjust: 100%;
+            }
+
+            input, textarea, select {
+                font-size: 16px; /* Prevents zoom on focus in iOS */
+            }
         }
 
 
