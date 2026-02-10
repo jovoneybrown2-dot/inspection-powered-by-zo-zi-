@@ -1,0 +1,65 @@
+================================================================================
+WRHA INSPECTION SYSTEM - PARISH LICENSE KEYS
+================================================================================
+
+CONFIDENTIAL - DO NOT SHARE PUBLICLY
+
+Generated: February 9, 2026
+Version: 1.0.0
+Expires: December 31, 2026
+
+================================================================================
+
+PARISH: Westmoreland
+LICENSE KEY: ZOZI-3515-124D-1AD4
+EXPIRY DATE: 2026-12-31
+
+--------------------------------------------------------------------------------
+
+PARISH: Hanover
+LICENSE KEY: ZOZI-336B-BD96-22EB
+EXPIRY DATE: 2026-12-31
+
+--------------------------------------------------------------------------------
+
+PARISH: St. James
+LICENSE KEY: ZOZI-39D2-0A50-C06A
+EXPIRY DATE: 2026-12-31
+
+--------------------------------------------------------------------------------
+
+PARISH: Trelawny
+LICENSE KEY: ZOZI-65C4-833E-AC66
+EXPIRY DATE: 2026-12-31
+
+================================================================================
+
+IMPORTANT INSTRUCTIONS:
+
+1. Each parish MUST use their assigned license key
+2. Keys are tied to Installation ID (auto-generated on first run)
+3. DO NOT share keys between parishes
+4. Keys expire on December 31, 2026
+5. Contact Zo-Zi for license renewal
+
+================================================================================
+
+CONFIGURATION:
+
+Add to .env file on each parish server:
+
+ZOZI_LICENSE_KEY=ZOZI-XXXX-XXXX-XXXX
+
+Replace ZOZI-XXXX-XXXX-XXXX with the parish-specific key above.
+
+================================================================================
+
+SUPPORT CONTACT:
+
+Developer: Jovoney Brown (Zo-Zi Inspection Systems)
+Email: support@zozi-inspections.com
+Phone: [Your Contact Number]
+
+For license renewal, technical support, or issues.
+
+================================================================================
