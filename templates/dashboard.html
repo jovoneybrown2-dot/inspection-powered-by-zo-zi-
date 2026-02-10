@@ -2,19 +2,15 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=1024, initial-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
     <!-- PWA Meta Tags -->
     <meta name="application-name" content="Inspec">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Inspec">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#2196F3">
-
-    <!-- iOS Safari specific meta tags for fullscreen -->
-    <meta name="format-detection" content="telephone=no">
-    <meta name="apple-touch-fullscreen" content="yes">
 
     <!-- Icons for PWA -->
     <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
@@ -1279,21 +1275,6 @@
             --border-color: #e0e6ed;
         }
 
-        /* Tablet-specific optimizations - maintain desktop layout */
-        @media only screen and (min-width: 768px) and (max-width: 1024px) {
-            /* Ensure smooth rendering on tablets */
-            * {
-                -webkit-font-smoothing: antialiased;
-                -moz-osx-font-smoothing: grayscale;
-            }
-
-            /* Optimize scrolling on tablets */
-            .tab-container,
-            .results,
-            .modal-content {
-                -webkit-overflow-scrolling: touch;
-            }
-        }
 
     </style>
 </head>

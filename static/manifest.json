@@ -1,13 +1,12 @@
 {
-  "name": "WRHA Inspection System",
+  "name": "Inspec",
   "short_name": "Inspec",
   "description": "Ministry of Health Inspection Management System",
-  "start_url": "/dashboard",
-  "scope": "/",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#1a1a2e",
   "theme_color": "#2196F3",
-  "orientation": "any",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "/static/icon-72.png",
