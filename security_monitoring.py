@@ -67,7 +67,11 @@ class SecurityMonitor:
                 print("✓ Old audit_log table backed up as audit_log_legacy")
         except Exception as e:
             # Table doesn't exist or other error - that's fine, we'll create it fresh
-            pass
+            # Rollback any failed transaction
+            try:
+                conn.rollback()
+            except:
+                pass
 
         # File integrity monitoring table
         self._execute(conn, f'''CREATE TABLE IF NOT EXISTS file_integrity (
