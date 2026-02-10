@@ -406,17 +406,19 @@ def save_inspection(data):
         release_db_connection(conn)
 
 def save_burial_inspection(data):
+    from db_config import get_placeholder
+    ph = get_placeholder()
     conn = get_db_connection()
     try:
         c = conn.cursor()
         if data.get('id'):
             c.execute(f'''UPDATE burial_site_inspections SET
-                         inspection_date = %s, applicant_name = %s, deceased_name = %s, burial_location = %s,
-                         site_description = %s, proximity_water_source = %s, proximity_perimeter_boundaries = %s,
-                         proximity_road_pathway = %s, proximity_trees = %s, proximity_houses_buildings = %s,
-                         proposed_grave_type = %s, general_remarks = %s, inspector_signature = %s,
-                         received_by = %s, photo_data = %s, created_at = %s
-                         WHERE id = %s''',
+                         inspection_date = {ph}, applicant_name = {ph}, deceased_name = {ph}, burial_location = {ph},
+                         site_description = {ph}, proximity_water_source = {ph}, proximity_perimeter_boundaries = {ph},
+                         proximity_road_pathway = {ph}, proximity_trees = {ph}, proximity_houses_buildings = {ph},
+                         proposed_grave_type = {ph}, general_remarks = {ph}, inspector_signature = {ph},
+                         received_by = {ph}, photo_data = {ph}, created_at = {ph}
+                         WHERE id = {ph}''',
                       (data['inspection_date'], data['applicant_name'], data['deceased_name'], data['burial_location'],
                        data['site_description'], data['proximity_water_source'], data['proximity_perimeter_boundaries'],
                        data['proximity_road_pathway'], data['proximity_trees'], data['proximity_houses_buildings'],
@@ -429,7 +431,7 @@ def save_burial_inspection(data):
                         site_description, proximity_water_source, proximity_perimeter_boundaries, proximity_road_pathway,
                         proximity_trees, proximity_houses_buildings, proposed_grave_type, general_remarks,
                         inspector_signature, received_by, photo_data, created_at)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
+                        VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph})''',
                       (data['inspection_date'], data['applicant_name'], data['deceased_name'], data['burial_location'],
                        data['site_description'], data['proximity_water_source'], data['proximity_perimeter_boundaries'],
                        data['proximity_road_pathway'], data['proximity_trees'], data['proximity_houses_buildings'],
@@ -444,19 +446,21 @@ def save_burial_inspection(data):
         release_db_connection(conn)
 
 def save_residential_inspection(data):
+    from db_config import get_placeholder
+    ph = get_placeholder()
     conn = get_db_connection()
     try:
         c = conn.cursor()
         if data.get('id'):
-            c.execute("""
+            c.execute(f"""
                             UPDATE residential_inspections
-                            SET premises_name = %s, owner = %s, address = %s, inspector_name = %s,
-                                inspection_date = %s, inspector_code = %s, treatment_facility = %s, vector = %s,
-                                result = %s, onsite_system = %s, building_construction_type = %s, purpose_of_visit = %s,
-                                action = %s, no_of_bedrooms = %s, total_population = %s, critical_score = %s,
-                                overall_score = %s, comments = %s, inspector_signature = %s, received_by = %s,
-                                created_at = %s, photo_data = %s
-                            WHERE id = %s
+                            SET premises_name = {ph}, owner = {ph}, address = {ph}, inspector_name = {ph},
+                                inspection_date = {ph}, inspector_code = {ph}, treatment_facility = {ph}, vector = {ph},
+                                result = {ph}, onsite_system = {ph}, building_construction_type = {ph}, purpose_of_visit = {ph},
+                                action = {ph}, no_of_bedrooms = {ph}, total_population = {ph}, critical_score = {ph},
+                                overall_score = {ph}, comments = {ph}, inspector_signature = {ph}, received_by = {ph},
+                                created_at = {ph}, photo_data = {ph}
+                            WHERE id = {ph}
                         """,
                         (data['premises_name'], data['owner'], data['address'], data['inspector_name'],
                          data['inspection_date'], data['inspector_code'], data['treatment_facility'], data['vector'],
@@ -467,14 +471,14 @@ def save_residential_inspection(data):
                          data.get('created_at', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
                          data.get('photo_data', '[]'), data['id']))
         else:
-            c.execute("""
+            c.execute(f"""
                 INSERT INTO residential_inspections (
                     premises_name, owner, address, inspector_name,
                     inspection_date, inspector_code, treatment_facility, vector, result, onsite_system,
                     building_construction_type, purpose_of_visit, action, no_of_bedrooms, total_population,
                     critical_score, overall_score, comments, inspector_signature, received_by, created_at, photo_data
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph})
             """, (
                 data['premises_name'], data['owner'], data['address'], data['inspector_name'],
                 data['inspection_date'], data['inspector_code'], data['treatment_facility'], data['vector'],
@@ -503,20 +507,22 @@ def save_residential_inspection(data):
         release_db_connection(conn)
 
 def save_meat_processing_inspection(data):
+    from db_config import get_placeholder
+    ph = get_placeholder()
     conn = get_db_connection()
     try:
         c = conn.cursor()
         if data.get('id'):
-            c.execute("""
+            c.execute(f"""
                 UPDATE meat_processing_inspections
-                SET establishment_name = %s, owner_operator = %s, address = %s, inspector_name = %s,
-                    establishment_no = %s, overall_score = %s, food_contact_surfaces = %s, water_samples = %s,
-                    product_samples = %s, types_of_products = %s, staff_fhp = %s, staff_compliment = %s, water_public = %s,
-                    water_private = %s, type_processing = %s, type_slaughter = %s, purpose_of_visit = %s,
-                    inspection_date = %s, inspector_code = %s, result = %s, telephone_no = %s,
-                    registration_status = %s, action = %s, comments = %s, inspector_signature = %s,
-                    received_by = %s, created_at = %s, photo_data = %s
-                WHERE id = %s
+                SET establishment_name = {ph}, owner_operator = {ph}, address = {ph}, inspector_name = {ph},
+                    establishment_no = {ph}, overall_score = {ph}, food_contact_surfaces = {ph}, water_samples = {ph},
+                    product_samples = {ph}, types_of_products = {ph}, staff_fhp = {ph}, staff_compliment = {ph}, water_public = {ph},
+                    water_private = {ph}, type_processing = {ph}, type_slaughter = {ph}, purpose_of_visit = {ph},
+                    inspection_date = {ph}, inspector_code = {ph}, result = {ph}, telephone_no = {ph},
+                    registration_status = {ph}, action = {ph}, comments = {ph}, inspector_signature = {ph},
+                    received_by = {ph}, created_at = {ph}, photo_data = {ph}
+                WHERE id = {ph}
             """, (
                 data['establishment_name'], data['owner_operator'], data['address'], data['inspector_name'],
                 data['establishment_no'], data['overall_score'], data['food_contact_surfaces'], data['water_samples'],
@@ -528,7 +534,7 @@ def save_meat_processing_inspection(data):
                 data.get('photo_data', '[]'), data['id']
             ))
         else:
-            c.execute("""
+            c.execute(f"""
                 INSERT INTO meat_processing_inspections (
                     establishment_name, owner_operator, address, inspector_name,
                     establishment_no, overall_score, food_contact_surfaces, water_samples,
@@ -538,7 +544,7 @@ def save_meat_processing_inspection(data):
                     registration_status, action, comments, inspector_signature,
                     received_by, created_at, photo_data
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph})
             """, (
                 data['establishment_name'], data['owner_operator'], data['address'], data['inspector_name'],
                 data['establishment_no'], data['overall_score'], data['food_contact_surfaces'], data['water_samples'],
@@ -577,55 +583,56 @@ def get_inspections():
         release_db_connection(conn)
 
 def get_inspections_by_inspector(inspector_name, inspection_type='all'):
+    from db_config import get_placeholder
+    ph = get_placeholder()
     conn = get_db_connection()
     c = conn.cursor()
 
     if inspection_type == 'all':
         # Get all inspection types for this inspector
-        c.execute("""
+        c.execute(f"""
             SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment,
                    created_at, result, form_type
             FROM inspections
-            WHERE inspector_name = %s
+            WHERE inspector_name = {ph}
             UNION
             SELECT id, premises_name as establishment_name, inspector_name, inspection_date,
                    'Residential' as type_of_establishment, created_at, result, 'Residential' as form_type
             FROM residential_inspections
-            WHERE inspector_name = %s
+            WHERE inspector_name = {ph}
             UNION
             SELECT id, establishment_name, inspector_name, inspection_date,
                    'Meat Processing' as type_of_establishment, created_at, result, 'Meat Processing' as form_type
             FROM meat_processing_inspections
-            WHERE inspector_name = %s
+            WHERE inspector_name = {ph}
             UNION
             SELECT id, deceased_name as establishment_name, inspector_name, inspection_date,
                    'Burial' as type_of_establishment, created_at, 'Completed' as result, 'Burial' as form_type
             FROM burial_site_inspections
-            WHERE inspector_name = %s
+            WHERE inspector_name = {ph}
             ORDER BY created_at DESC
         """, (inspector_name, inspector_name, inspector_name, inspector_name))
     else:
         # Filter by inspection type
         if inspection_type == 'Residential':
-            c.execute("""SELECT id, premises_name as establishment_name, inspector_name, inspection_date,
+            c.execute(f"""SELECT id, premises_name as establishment_name, inspector_name, inspection_date,
                          'Residential' as type_of_establishment, created_at, result, 'Residential' as form_type
                          FROM residential_inspections
-                         WHERE inspector_name = %s ORDER BY inspection_date DESC""", (inspector_name,))
+                         WHERE inspector_name = {ph} ORDER BY inspection_date DESC""", (inspector_name,))
         elif inspection_type == 'Meat Processing':
-            c.execute("""SELECT id, establishment_name, inspector_name, inspection_date,
+            c.execute(f"""SELECT id, establishment_name, inspector_name, inspection_date,
                          'Meat Processing' as type_of_establishment, created_at, result, 'Meat Processing' as form_type
                          FROM meat_processing_inspections
-                         WHERE inspector_name = %s ORDER BY inspection_date DESC""", (inspector_name,))
+                         WHERE inspector_name = {ph} ORDER BY inspection_date DESC""", (inspector_name,))
         elif inspection_type == 'Burial':
-            c.execute("""SELECT id, deceased_name as establishment_name, inspector_name, inspection_date,
+            c.execute(f"""SELECT id, deceased_name as establishment_name, inspector_name, inspection_date,
                          'Burial' as type_of_establishment, created_at, 'Completed' as result, 'Burial' as form_type
                          FROM burial_site_inspections
-                         WHERE inspector_name = %s ORDER BY inspection_date DESC""", (inspector_name,))
+                         WHERE inspector_name = {ph} ORDER BY inspection_date DESC""", (inspector_name,))
         else:
-            # Fixed: Use %s for all placeholders
-            c.execute("""SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment,
+            c.execute(f"""SELECT id, establishment_name, inspector_name, inspection_date, type_of_establishment,
                          created_at, result, form_type FROM inspections
-                         WHERE inspector_name = %s AND (form_type = %s OR type_of_establishment = %s)
+                         WHERE inspector_name = {ph} AND (form_type = {ph} OR type_of_establishment = {ph})
                          ORDER BY inspection_date DESC""", (inspector_name, inspection_type, inspection_type))
 
     inspections = c.fetchall()
@@ -663,10 +670,12 @@ def get_meat_processing_inspections():
         release_db_connection(conn)
 
 def get_inspection_details(inspection_id):
+    from db_config import get_placeholder
+    ph = get_placeholder()
     conn = get_db_connection()
     try:
         c = conn.cursor()
-        c.execute("SELECT * FROM inspections WHERE id = %s", (inspection_id,))
+        c.execute(f"SELECT * FROM inspections WHERE id = {ph}", (inspection_id,))
         inspection = c.fetchone()
 
         if not inspection:
@@ -705,7 +714,7 @@ def get_inspection_details(inspection_id):
                 'photo_data': inspection[27] if len(inspection) > 27 else '[]'
             }
         else:
-            c.execute("SELECT item_id, details, obser, error FROM inspection_items WHERE inspection_id = %s", (inspection_id,))
+            c.execute(f"SELECT item_id, details, obser, error FROM inspection_items WHERE inspection_id = {ph}", (inspection_id,))
             items = c.fetchall()
             scores = {int(item[0]): item[1] for item in items if item[1]}
             inspection_dict = {
@@ -743,10 +752,12 @@ def get_inspection_details(inspection_id):
         release_db_connection(conn)
 
 def get_burial_inspection_details(inspection_id):
+    from db_config import get_placeholder
+    ph = get_placeholder()
     conn = get_db_connection()
     try:
         c = conn.cursor()
-        c.execute("SELECT * FROM burial_site_inspections WHERE id = %s", (inspection_id,))
+        c.execute(f"SELECT * FROM burial_site_inspections WHERE id = {ph}", (inspection_id,))
         inspection = c.fetchone()
         if not inspection:
             return None
@@ -773,12 +784,14 @@ def get_burial_inspection_details(inspection_id):
         release_db_connection(conn)
 
 def get_residential_inspection_details(inspection_id):
+    from db_config import get_placeholder
+    ph = get_placeholder()
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT * FROM residential_inspections WHERE id = %s", (inspection_id,))
+    c.execute(f"SELECT * FROM residential_inspections WHERE id = {ph}", (inspection_id,))
     inspection = c.fetchone()
     if inspection:
-        c.execute("SELECT item_id, score FROM residential_checklist_scores WHERE form_id = %s", (inspection_id,))
+        c.execute(f"SELECT item_id, score FROM residential_checklist_scores WHERE form_id = {ph}", (inspection_id,))
         checklist_scores = dict(c.fetchall())
         release_db_connection(conn)
         return {
@@ -811,12 +824,14 @@ def get_residential_inspection_details(inspection_id):
     return None
 
 def get_meat_processing_inspection_details(inspection_id):
+    from db_config import get_placeholder
+    ph = get_placeholder()
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT * FROM meat_processing_inspections WHERE id = %s", (inspection_id,))
+    c.execute(f"SELECT * FROM meat_processing_inspections WHERE id = {ph}", (inspection_id,))
     inspection = c.fetchone()
     if inspection:
-        c.execute("SELECT item_id, score FROM meat_processing_checklist_scores WHERE form_id = %s", (inspection_id,))
+        c.execute(f"SELECT item_id, score FROM meat_processing_checklist_scores WHERE form_id = {ph}", (inspection_id,))
         # Convert integer keys to zero-padded string keys to match template expectations
         checklist_scores = {str(item_id).zfill(2): score for item_id, score in c.fetchall()}
         release_db_connection(conn)
@@ -857,11 +872,13 @@ def get_meat_processing_inspection_details(inspection_id):
 
 
 def get_small_hotels_inspection_details(form_id):
+    from db_config import get_placeholder
+    ph = get_placeholder()
     conn = get_db_connection()
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Small Hotel'", (form_id,))
+    cursor.execute(f"SELECT * FROM inspections WHERE id = {ph} AND form_type = 'Small Hotel'", (form_id,))
     inspection = cursor.fetchone()
 
     if not inspection:
@@ -871,7 +888,7 @@ def get_small_hotels_inspection_details(form_id):
     inspection_dict = dict(inspection)
 
     # Get individual scores
-    cursor.execute("SELECT item_id, obser, error FROM inspection_items WHERE inspection_id = %s", (form_id,))
+    cursor.execute(f"SELECT item_id, obser, error FROM inspection_items WHERE inspection_id = {ph}", (form_id,))
     items = cursor.fetchall()
 
     obser_scores = {}
@@ -888,11 +905,13 @@ def get_small_hotels_inspection_details(form_id):
 
 
 def get_spirit_licence_inspection_details(form_id):
+    from db_config import get_placeholder
+    ph = get_placeholder()
     conn = get_db_connection()
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM inspections WHERE id = %s AND form_type = 'Spirit Licence Premises'", (form_id,))
+    cursor.execute(f"SELECT * FROM inspections WHERE id = {ph} AND form_type = 'Spirit Licence Premises'", (form_id,))
     inspection = cursor.fetchone()
 
     if not inspection:
