@@ -131,31 +131,52 @@ def init_database_async():
         # Give Gunicorn 2 seconds to bind to port first
         time.sleep(2)
 
-        # DIAGNOSTIC: Check if fix is deployed
-        print("="*70)
-        print("🔍 DIAGNOSTIC: Checking if db_config.py fix is deployed...")
-        import inspect
-        import db_config as dbcfg
-        source = inspect.getsource(dbcfg.get_db_connection)
-        if "conn.autocommit" in source:
-            print("❌ OLD CODE: conn.autocommit found - fix NOT deployed!")
-        else:
-            print("✅ NEW CODE: no conn.autocommit - fix IS deployed!")
-        print("="*70)
+        # Use file lock to prevent multiple workers from initializing simultaneously
+        import fcntl
+        lock_file = '/tmp/db_init.lock'
 
         try:
-            # For PostgreSQL, always run init_db to ensure tables exist
-            # For SQLite, only run if database file doesn't exist
-            if get_db_type() == 'postgresql':
-                print("Checking/initializing PostgreSQL database...")
-                init_db()
-                print("✅ Database initialized successfully!")
-            elif not os.path.exists('inspections.db'):
-                print("Database not found. Initializing...")
-                init_db()
-                print("✅ Database initialized successfully!")
+            with open(lock_file, 'w') as f:
+                # Try to acquire exclusive lock (non-blocking)
+                try:
+                    fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    print("🔒 Acquired database initialization lock")
+
+                    # DIAGNOSTIC: Check if fix is deployed
+                    print("="*70)
+                    print("🔍 DIAGNOSTIC: Checking if db_config.py fix is deployed...")
+                    import inspect
+                    import db_config as dbcfg
+                    source = inspect.getsource(dbcfg.get_db_connection)
+                    if "conn.autocommit" in source:
+                        print("❌ OLD CODE: conn.autocommit found - fix NOT deployed!")
+                    else:
+                        print("✅ NEW CODE: no conn.autocommit - fix IS deployed!")
+                    print("="*70)
+
+                    # For PostgreSQL, always run init_db to ensure tables exist
+                    # For SQLite, only run if database file doesn't exist
+                    if get_db_type() == 'postgresql':
+                        print("Checking/initializing PostgreSQL database...")
+                        init_db()
+                        print("✅ Database initialized successfully!")
+                    elif not os.path.exists('inspections.db'):
+                        print("Database not found. Initializing...")
+                        init_db()
+                        print("✅ Database initialized successfully!")
+
+                    # Release lock
+                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                    print("🔓 Released database initialization lock")
+
+                except IOError:
+                    # Another worker already has the lock - skip initialization
+                    print("⏭️  Another worker is initializing database - skipping")
+                    return
+
         except Exception as e:
             print(f"⚠️ Database init error: {e}")
+            return
 
         # Run PostgreSQL migrations after init_db
         if get_db_type() == 'postgresql':
