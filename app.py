@@ -5460,6 +5460,15 @@ def init_db():
         ip_address TEXT,
         FOREIGN KEY (user_id) REFERENCES users(id)
     )''')
+    c.execute(f'''CREATE TABLE IF NOT EXISTS user_sessions (
+        id {auto_inc},
+        username TEXT NOT NULL,
+        session_id TEXT NOT NULL,
+        login_time {timestamp},
+        logout_time TIMESTAMP,
+        is_active INTEGER DEFAULT 1,
+        ip_address TEXT
+    )''')
     c.execute(f'''CREATE TABLE IF NOT EXISTS messages (
         id {auto_inc},
         sender_id INTEGER NOT NULL,
@@ -5693,12 +5702,12 @@ def init_db():
             conn.commit()
             logging.info("✅ Deleted existing Inspection app users")
 
-            # Insert admin user
+            # Insert admin user (first_login = 0 to skip password change)
             c.execute(f"""
-                INSERT INTO users (username, password, role, email, parish)
-                VALUES ({ph}, {ph}, {ph}, {ph}, {ph})
+                INSERT INTO users (username, password, role, email, parish, first_login)
+                VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, 0)
                 ON CONFLICT (username) DO UPDATE
-                SET password = EXCLUDED.password, role = EXCLUDED.role, email = EXCLUDED.email, parish = EXCLUDED.parish
+                SET password = EXCLUDED.password, role = EXCLUDED.role, email = EXCLUDED.email, parish = EXCLUDED.parish, first_login = 0
             """, ('admin', 'Admin901!secure', 'admin', 'admin@inspection.local', 'Westmoreland'))
 
             # Insert 3 specific inspector users with secure passwords
