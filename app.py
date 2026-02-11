@@ -5713,15 +5713,14 @@ def init_db():
         logging.error(f"Error populating usernames for existing users: {str(e)}")
         pass
 
-    # Delete and recreate Inspection app users with specific credentials
+    # Create or update Inspection app users with specific credentials (no deletion!)
     try:
         ph = get_placeholder()  # Get correct placeholder for database type
 
         if get_db_type() == 'postgresql':
-            # Delete existing Inspection app users to ensure clean state
-            c.execute("DELETE FROM users WHERE username IN ('inspector1', 'inspector2', 'inspector3', 'admin')")
-            conn.commit()
-            logging.info("✅ Deleted existing Inspection app users")
+            # DON'T delete users - just use ON CONFLICT to update if they exist
+            # This prevents losing users that admins create in User Management
+            logging.info("✅ Creating/updating default Inspection app users")
 
             # Insert admin user (first_login = 0 to skip password change)
             c.execute(f"""
@@ -5756,20 +5755,17 @@ def init_db():
             conn.commit()
             logging.info("✅ Created Inspection app users: admin, inspector1, inspector2, inspector3")
         else:
-            # SQLite - use INSERT OR REPLACE instead of ON CONFLICT
-            # Delete existing users first
-            c.execute("DELETE FROM users WHERE username IN ('inspector1', 'inspector2', 'inspector3', 'admin')")
-            conn.commit()
-            logging.info("✅ Deleted existing Inspection app users")
+            # SQLite - use INSERT OR IGNORE to avoid duplicates (don't delete!)
+            logging.info("✅ Creating/updating default Inspection app users")
 
-            # Insert users with correct credentials
-            c.execute('INSERT INTO users (username, password, role, email, parish) VALUES (?, ?, ?, ?, ?)',
+            # Insert users with correct credentials (INSERT OR IGNORE skips if exists)
+            c.execute('INSERT OR IGNORE INTO users (username, password, role, email, parish) VALUES (?, ?, ?, ?, ?)',
                       ('admin', 'Admin901!secure', 'admin', 'admin@inspection.local', 'Westmoreland'))
-            c.execute('INSERT INTO users (username, password, role, email, parish) VALUES (?, ?, ?, ?, ?)',
+            c.execute('INSERT OR IGNORE INTO users (username, password, role, email, parish) VALUES (?, ?, ?, ?, ?)',
                       ('inspector1', 'Insp123!secure', 'inspector', 'inspector1@inspection.local', 'Westmoreland'))
-            c.execute('INSERT INTO users (username, password, role, email, parish) VALUES (?, ?, ?, ?, ?)',
+            c.execute('INSERT OR IGNORE INTO users (username, password, role, email, parish) VALUES (?, ?, ?, ?, ?)',
                       ('inspector2', 'Insp456!secure', 'inspector', 'inspector2@inspection.local', 'Westmoreland'))
-            c.execute('INSERT INTO users (username, password, role, email, parish) VALUES (?, ?, ?, ?, ?)',
+            c.execute('INSERT OR IGNORE INTO users (username, password, role, email, parish) VALUES (?, ?, ?, ?, ?)',
                       ('inspector3', 'Insp789!secure', 'inspector', 'inspector3@inspection.local', 'Westmoreland'))
             conn.commit()
             logging.info("✅ Created Inspection app users: admin, inspector1, inspector2, inspector3")
