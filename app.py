@@ -12932,6 +12932,14 @@ def init_app_migrations_async():
             print("🔄 Running app-level migrations...")
             init_db()
             init_form_management_db()
+
+            # Run user_sessions migration
+            try:
+                from migrate_user_sessions import migrate_user_sessions
+                migrate_user_sessions()
+            except Exception as e:
+                print(f"⚠️  User sessions migration warning: {e}")
+
             auto_migrate_checklists()
             auto_migrate_form_fields()
 
@@ -12954,6 +12962,14 @@ init_app_migrations_async()
 
 
 if __name__ == '__main__':
+    # AUTO-FIX: Run database migrations on startup
+    print("\n🔄 Running database migrations...")
+    try:
+        from migrate_user_sessions import migrate_user_sessions
+        migrate_user_sessions()
+    except Exception as e:
+        print(f"⚠️  Migration warning: {e}")
+
     # AUTO-FIX: Ensure Food Establishment has correct 44 items on startup
     try:
         conn = get_db_connection()

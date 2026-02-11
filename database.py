@@ -286,7 +286,7 @@ def init_db():
     c.execute(f'''CREATE TABLE IF NOT EXISTS user_sessions
                  (id {auto_inc},
                   username TEXT NOT NULL,
-                  user_role TEXT,
+                  user_role VARCHAR(50),
                   login_time TEXT NOT NULL,
                   logout_time TEXT,
                   last_activity TEXT,
