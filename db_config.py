@@ -169,9 +169,10 @@ def get_db_connection():
 
             # Set custom cursor factory
             conn.cursor_factory = HybridCursor
-            conn.autocommit = False  # Enable transaction control
+            # Note: Don't set autocommit here - let connection pool manage transaction state
+            # Setting autocommit causes "set_session cannot be used inside a transaction" error
 
-            # Validate connection is alive (after setting autocommit)
+            # Validate connection is alive
             try:
                 with conn.cursor() as test_cursor:
                     test_cursor.execute('SELECT 1')
@@ -186,7 +187,6 @@ def get_db_connection():
                 # Get a fresh connection
                 conn = pool.getconn()
                 conn.cursor_factory = HybridCursor
-                conn.autocommit = False
 
             return conn
 
