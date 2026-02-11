@@ -13042,34 +13042,63 @@ if __name__ == '__main__':
 
 @app.route('/init-database-secret-route-2026')
 def initialize_database():
-    """Emergency database initialization endpoint"""
+    """Emergency database initialization endpoint - Creates admin user"""
+    conn = None
     try:
-        from database import init_db
-        init_db()
-
-        # Check if users exist
+        # Get fresh connection and ensure we're not in a bad transaction state
         conn = get_db_connection()
         c = conn.cursor()
-        ph = get_placeholder()
-        c.execute("SELECT COUNT(*) FROM users")
-        user_count = c.fetchone()[0]
+
+        # Rollback any pending transaction first
+        try:
+            conn.rollback()
+        except:
+            pass
+
+        # Create admin user directly
+        print("Creating admin user via emergency route...")
+        c.execute("""
+            INSERT INTO users (username, password, role, email, parish)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (username) DO UPDATE
+            SET password = EXCLUDED.password,
+                role = EXCLUDED.role,
+                email = EXCLUDED.email,
+                parish = EXCLUDED.parish
+        """, ('admin', 'Admin901!secure', 'admin', 'admin@inspection.local', 'Westmoreland'))
+
+        conn.commit()
+        print("✅ Admin user created successfully!")
+
+        # Check if users exist
+        c.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'")
+        admin_count = c.fetchone()[0]
+
         release_db_connection(conn)
 
         return f"""
-        <h1>✅ Database Initialized!</h1>
-        <p>Users in database: {user_count}</p>
-        <h2>Default Login:</h2>
+        <h1>✅ Admin User Created Successfully!</h1>
+        <p>Admin users in database: {admin_count}</p>
+        <h2>🎉 You can now login:</h2>
         <ul>
-            <li><strong>Admin:</strong> username=<code>admin</code>, password=<code>Admin901!secure</code></li>
-            <li><strong>Inspector:</strong> username=<code>inspector1</code>, password=<code>Insp123!secure</code></li>
+            <li><strong>Username:</strong> <code>admin</code></li>
+            <li><strong>Password:</strong> <code>Admin901!secure</code></li>
         </ul>
-        <p><a href="/">Go to Login Page</a></p>
+        <p><a href="/" style="font-size: 20px; padding: 10px 20px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">Go to Login Page</a></p>
         """
     except Exception as e:
+        if conn:
+            try:
+                conn.rollback()
+            except:
+                pass
+            release_db_connection(conn, error=True)
+
         return f"""
         <h1>❌ Error</h1>
         <p>{str(e)}</p>
         <pre>{repr(e)}</pre>
+        <p><a href="/init-database-secret-route-2026">Try Again</a></p>
         """
 
 if __name__ == '__main__':
