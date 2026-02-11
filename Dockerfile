@@ -1,5 +1,6 @@
 # Dockerfile for Food Inspection Management System
 # Supports both SQLite and PostgreSQL databases
+# Updated: 2026-02-11 - Force cache rebuild for db_config.py fix
 
 # Use official Python runtime as base image
 FROM python:3.12-slim
