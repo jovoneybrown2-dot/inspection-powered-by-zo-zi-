@@ -131,6 +131,18 @@ def init_database_async():
         # Give Gunicorn 2 seconds to bind to port first
         time.sleep(2)
 
+        # DIAGNOSTIC: Check if fix is deployed
+        print("="*70)
+        print("🔍 DIAGNOSTIC: Checking if db_config.py fix is deployed...")
+        import inspect
+        import db_config as dbcfg
+        source = inspect.getsource(dbcfg.get_db_connection)
+        if "conn.autocommit" in source:
+            print("❌ OLD CODE: conn.autocommit found - fix NOT deployed!")
+        else:
+            print("✅ NEW CODE: no conn.autocommit - fix IS deployed!")
+        print("="*70)
+
         try:
             # For PostgreSQL, always run init_db to ensure tables exist
             # For SQLite, only run if database file doesn't exist
@@ -5395,10 +5407,6 @@ def init_messages_db():
     from db_config import get_db_type
 
     conn = get_db_connection()
-
-    if get_db_type() == 'postgresql':
-        conn.autocommit = True
-
     c = conn.cursor()
 
     auto_inc = get_auto_increment()
@@ -5427,11 +5435,6 @@ def init_db():
     from db_config import get_db_type
 
     conn = get_db_connection()
-
-    # Enable autocommit for schema changes (prevents transaction errors on ALTER failures)
-    if get_db_type() == 'postgresql':
-        conn.autocommit = True
-
     c = conn.cursor()
 
     # Get database-specific syntax
@@ -7983,11 +7986,6 @@ def init_form_management_db():
     from db_config import get_db_type
 
     conn = get_db_connection()
-
-    # Enable autocommit for schema changes (prevents transaction errors on ALTER failures)
-    if get_db_type() == 'postgresql':
-        conn.autocommit = True
-
     c = conn.cursor()
 
     # Get database-specific syntax
