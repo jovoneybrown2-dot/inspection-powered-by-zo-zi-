@@ -19,15 +19,18 @@ def init_db():
 
     # For PostgreSQL, we need to commit after each schema change
     # to avoid transaction errors with ALTER TABLE
-    def safe_commit():
-        """Commit changes safely for both database types"""
+    def safe_execute(sql, description="SQL"):
+        """Execute SQL and handle transaction errors"""
         try:
+            c.execute(sql)
             conn.commit()
+            print(f"✅ {description}")
         except Exception as e:
-            print(f"❌ COMMIT ERROR: {e}")
+            print(f"❌ ERROR in {description}: {e}")
+            conn.rollback()  # Rollback failed transaction
             import traceback
             traceback.print_exc()
-            raise  # Re-raise to prevent silent failures
+            raise  # Re-raise to stop initialization
 
     # Get database-specific syntax
     auto_inc = get_auto_increment()
@@ -35,7 +38,7 @@ def init_db():
     insert_ignore = get_insert_ignore()
 
     # Inspections table
-    c.execute(f'''CREATE TABLE IF NOT EXISTS inspections
+    safe_execute(f'''CREATE TABLE IF NOT EXISTS inspections
                  (id {auto_inc},
                   establishment_name TEXT,
                   address TEXT,
@@ -66,7 +69,7 @@ def init_db():
                   photo_data TEXT)''')
 
     # Inspection items table
-    c.execute(f'''CREATE TABLE IF NOT EXISTS inspection_items
+    safe_execute(f'''CREATE TABLE IF NOT EXISTS inspection_items
                  (id {auto_inc},
                   inspection_id INTEGER,
                   item_id TEXT,
@@ -76,7 +79,7 @@ def init_db():
                   FOREIGN KEY (inspection_id) REFERENCES inspections(id))''')
 
     # Burial site inspections table
-    c.execute(f'''CREATE TABLE IF NOT EXISTS burial_site_inspections
+    safe_execute(f'''CREATE TABLE IF NOT EXISTS burial_site_inspections
                  (id {auto_inc},
                   inspection_date TEXT,
                   applicant_name TEXT,
@@ -96,7 +99,7 @@ def init_db():
                   photo_data TEXT)''')
 
     # Residential inspections table
-    c.execute(f'''CREATE TABLE IF NOT EXISTS residential_inspections
+    safe_execute(f'''CREATE TABLE IF NOT EXISTS residential_inspections
                  (id {auto_inc},
                   premises_name TEXT,
                   owner TEXT,
@@ -122,7 +125,7 @@ def init_db():
                   photo_data TEXT)''')
 
     # Residential checklist scores table
-    c.execute(f'''CREATE TABLE IF NOT EXISTS residential_checklist_scores
+    safe_execute(f'''CREATE TABLE IF NOT EXISTS residential_checklist_scores
                  (id {auto_inc},
                   form_id INTEGER,
                   item_id INTEGER,
@@ -130,7 +133,7 @@ def init_db():
                   FOREIGN KEY (form_id) REFERENCES residential_inspections(id))''')
 
     # Meat processing inspections table
-    c.execute(f'''CREATE TABLE IF NOT EXISTS meat_processing_inspections
+    safe_execute(f'''CREATE TABLE IF NOT EXISTS meat_processing_inspections
                  (id {auto_inc},
                   establishment_name TEXT,
                   owner_operator TEXT,
@@ -164,14 +167,13 @@ def init_db():
     # Migration: Add staff_compliment column if it doesn't exist
     try:
         c.execute("ALTER TABLE meat_processing_inspections ADD COLUMN staff_compliment INTEGER")
-        safe_commit()
         print("✓ Added staff_compliment column to meat_processing_inspections table")
     except Exception:
         # Column already exists (catches both SQLite and PostgreSQL errors)
         pass
 
     # Meat processing checklist scores table
-    c.execute(f'''CREATE TABLE IF NOT EXISTS meat_processing_checklist_scores
+    safe_execute(f'''CREATE TABLE IF NOT EXISTS meat_processing_checklist_scores
                  (id {auto_inc},
                   form_id INTEGER,
                   item_id INTEGER,
@@ -179,7 +181,7 @@ def init_db():
                   FOREIGN KEY (form_id) REFERENCES meat_processing_inspections(id))''')
 
     # Threshold settings table (for alert system)
-    c.execute(f'''CREATE TABLE IF NOT EXISTS threshold_settings
+    safe_execute(f'''CREATE TABLE IF NOT EXISTS threshold_settings
                  (chart_type TEXT NOT NULL,
                   inspection_type TEXT NOT NULL,
                   threshold_value REAL NOT NULL,
@@ -188,7 +190,7 @@ def init_db():
                   PRIMARY KEY (chart_type, inspection_type))''')
 
     # Threshold alerts table (for low score notifications)
-    c.execute(f'''CREATE TABLE IF NOT EXISTS threshold_alerts
+    safe_execute(f'''CREATE TABLE IF NOT EXISTS threshold_alerts
                  (id {auto_inc},
                   inspection_id INTEGER NOT NULL,
                   inspector_name TEXT NOT NULL,
@@ -198,7 +200,7 @@ def init_db():
                   created_at {timestamp})''')
 
     # Users table
-    c.execute(f'''CREATE TABLE IF NOT EXISTS users
+    safe_execute(f'''CREATE TABLE IF NOT EXISTS users
                  (id {auto_inc},
                   username TEXT NOT NULL UNIQUE,
                   password TEXT NOT NULL,
@@ -211,7 +213,6 @@ def init_db():
     # Migration: Add parish column if it doesn't exist
     try:
         c.execute("ALTER TABLE users ADD COLUMN parish TEXT")
-        safe_commit()
         print("✓ Added parish column to users table")
     except Exception:  # Catches both SQLite and PostgreSQL errors
         # Column already exists
@@ -220,7 +221,6 @@ def init_db():
     # Migration: Add first_login column if it doesn't exist
     try:
         c.execute("ALTER TABLE users ADD COLUMN first_login INTEGER DEFAULT 1")
-        safe_commit()
         print("✓ Added first_login column to users table")
     except Exception as e:  # Catches both SQLite and PostgreSQL errors
         # Column already exists or other error
@@ -241,7 +241,7 @@ def init_db():
     c.executemany("INSERT INTO users (username, password, role) VALUES (%s, %s, %s) ON CONFLICT (username) DO NOTHING", users)
 
     # Login history table (required by login route)
-    c.execute(f'''CREATE TABLE IF NOT EXISTS login_history
+    safe_execute(f'''CREATE TABLE IF NOT EXISTS login_history
                  (id {auto_inc},
                   user_id INTEGER NOT NULL,
                   username TEXT NOT NULL,
@@ -252,7 +252,7 @@ def init_db():
                   FOREIGN KEY (user_id) REFERENCES users(id))''')
 
     # Contacts table
-    c.execute(f'''CREATE TABLE IF NOT EXISTS contacts
+    safe_execute(f'''CREATE TABLE IF NOT EXISTS contacts
                  (user_id INTEGER,
                   contact_id INTEGER,
                   PRIMARY KEY (user_id, contact_id),
@@ -260,7 +260,7 @@ def init_db():
                   FOREIGN KEY (contact_id) REFERENCES users(id))''')
 
     # Messages table
-    c.execute(f'''CREATE TABLE IF NOT EXISTS messages
+    safe_execute(f'''CREATE TABLE IF NOT EXISTS messages
                  (id {auto_inc},
                   sender_id INTEGER NOT NULL,
                   receiver_id INTEGER NOT NULL,
@@ -273,16 +273,14 @@ def init_db():
     # Add is_read column if it doesn't exist
     try:
         c.execute("ALTER TABLE messages ADD COLUMN is_read INTEGER DEFAULT 0")
-        safe_commit()
     except Exception:  # Catches both SQLite and PostgreSQL errors
         pass  # Column already exists
 
     # Set existing messages as read
     c.execute("UPDATE messages SET is_read = 1 WHERE is_read IS NULL")
-    safe_commit()
 
     # User sessions table for tracking active logins
-    c.execute(f'''CREATE TABLE IF NOT EXISTS user_sessions
+    safe_execute(f'''CREATE TABLE IF NOT EXISTS user_sessions
                  (id {auto_inc},
                   username TEXT NOT NULL,
                   user_role VARCHAR(50),
@@ -296,7 +294,7 @@ def init_db():
                   is_active INTEGER DEFAULT 1)''')
 
     # Form templates table for dynamic form management
-    c.execute(f'''CREATE TABLE IF NOT EXISTS form_templates
+    safe_execute(f'''CREATE TABLE IF NOT EXISTS form_templates
                  (id {auto_inc},
                   name TEXT NOT NULL UNIQUE,
                   description TEXT,
@@ -310,7 +308,7 @@ def init_db():
                   last_edited_role TEXT)''')
 
     # Form items table for checklist items
-    c.execute(f'''CREATE TABLE IF NOT EXISTS form_items
+    safe_execute(f'''CREATE TABLE IF NOT EXISTS form_items
                  (id {auto_inc},
                   form_template_id INTEGER NOT NULL,
                   item_order INTEGER NOT NULL,
@@ -325,21 +323,20 @@ def init_db():
     # Migration: Add item_id column to form_items if it doesn't exist
     try:
         c.execute("ALTER TABLE form_items ADD COLUMN item_id TEXT")
-        safe_commit()
         print("✓ Added item_id column to form_items table")
     except Exception:
         # Column already exists (catches both SQLite and PostgreSQL errors)
         pass
 
     # Form categories table
-    c.execute(f'''CREATE TABLE IF NOT EXISTS form_categories
+    safe_execute(f'''CREATE TABLE IF NOT EXISTS form_categories
                  (id {auto_inc},
                   name TEXT NOT NULL,
                   description TEXT,
                   display_order INTEGER DEFAULT 0)''')
 
     # Form fields table for dynamic form fields
-    c.execute(f'''CREATE TABLE IF NOT EXISTS form_fields
+    safe_execute(f'''CREATE TABLE IF NOT EXISTS form_fields
                  (id {auto_inc},
                   form_template_id INTEGER NOT NULL,
                   field_name TEXT NOT NULL,
@@ -373,8 +370,9 @@ def init_db():
         c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (%s, %s, %s) ON CONFLICT (name) DO NOTHING', template)
 
     # Final commit for all schema changes
-    safe_commit()
+    conn.commit()
     release_db_connection(conn)
+    print("✅ All database tables initialized successfully")
 
 def save_inspection(data):
     from db_config import get_placeholder
