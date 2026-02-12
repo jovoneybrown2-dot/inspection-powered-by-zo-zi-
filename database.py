@@ -25,8 +25,10 @@ def init_db():
         try:
             conn.commit()
         except Exception as e:
-            print(f"⚠️  Commit warning: {e}")
-            pass
+            print(f"❌ COMMIT ERROR: {e}")
+            import traceback
+            traceback.print_exc()
+            raise  # Re-raise to prevent silent failures
 
     # Get database-specific syntax
     auto_inc = get_auto_increment()
