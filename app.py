@@ -12933,6 +12933,14 @@ def init_app_migrations_async():
             init_db()
             init_form_management_db()
 
+            # Run PostgreSQL migrations first (adds missing columns to existing tables)
+            if get_db_type() == 'postgresql':
+                try:
+                    from migrate_postgres import migrate_postgres
+                    migrate_postgres()
+                except Exception as e:
+                    print(f"⚠️  PostgreSQL migration warning: {e}")
+
             # Run user_sessions migration
             try:
                 from migrate_user_sessions import migrate_user_sessions

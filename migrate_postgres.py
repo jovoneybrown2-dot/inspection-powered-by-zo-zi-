@@ -24,20 +24,53 @@ def migrate_postgres():
     errors = 0
 
     try:
-        # Migration 1: Add user_role column to user_sessions
-        print("\n📋 Migration 1: Add user_role to user_sessions table")
-        try:
-            c.execute("""
-                ALTER TABLE user_sessions
-                ADD COLUMN IF NOT EXISTS user_role VARCHAR(50)
-            """)
-            conn.commit()
-            print("   ✅ user_role column added/verified")
-            migrations_run += 1
-        except Exception as e:
-            print(f"   ⚠️  Migration 1 warning: {e}")
-            conn.rollback()
-            errors += 1
+        # Migration 1: Add missing columns to user_sessions table
+        print("\n📋 Migration 1: Add missing columns to user_sessions table")
+
+        # Check which columns exist
+        c.execute("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = 'user_sessions'
+        """)
+        existing_columns = {row[0] for row in c.fetchall()}
+        print(f"   Existing columns: {existing_columns}")
+
+        # Define required columns
+        required_columns = {
+            'user_role': 'VARCHAR(50)',
+            'login_time': 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP',
+            'logout_time': 'TEXT',
+            'last_activity': 'TEXT',
+            'location_lat': 'REAL',
+            'location_lng': 'REAL',
+            'parish': 'TEXT',
+            'ip_address': 'TEXT',
+            'is_active': 'INTEGER DEFAULT 1'
+        }
+
+        # Add missing columns
+        columns_added = 0
+        for col_name, col_type in required_columns.items():
+            if col_name not in existing_columns:
+                try:
+                    # For NOT NULL columns with no default, make them nullable
+                    safe_col_type = col_type.replace('NOT NULL', '').strip()
+                    c.execute(f"ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS {col_name} {safe_col_type}")
+                    conn.commit()
+                    print(f"   ✅ Added column: {col_name}")
+                    columns_added += 1
+                except Exception as e:
+                    print(f"   ⚠️  Failed to add {col_name}: {e}")
+                    conn.rollback()
+                    errors += 1
+
+        if columns_added == 0:
+            print("   ✅ All required columns already exist")
+        else:
+            print(f"   ✅ Added {columns_added} missing columns")
+
+        migrations_run += 1
 
         # Add more migrations here as needed
         # Migration 2: Example
