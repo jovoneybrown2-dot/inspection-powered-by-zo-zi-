@@ -1,18 +1,17 @@
-import sqlite3
 from datetime import datetime
 from db_config import get_db_connection, get_db_type, release_db_connection
 
 def get_auto_increment():
-    """Return the correct auto-increment syntax for the current database"""
-    return 'SERIAL PRIMARY KEY' if get_db_type() == 'postgresql' else 'INTEGER PRIMARY KEY AUTOINCREMENT'
+    """PostgreSQL auto-increment syntax"""
+    return 'SERIAL PRIMARY KEY'
 
 def get_timestamp_default():
-    """Return the correct timestamp default for the current database"""
-    return 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP' if get_db_type() == 'postgresql' else 'TEXT DEFAULT CURRENT_TIMESTAMP'
+    """PostgreSQL timestamp default"""
+    return 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP'
 
 def get_insert_ignore():
-    """Return the correct INSERT IGNORE syntax for the current database"""
-    return 'ON CONFLICT DO NOTHING' if get_db_type() == 'postgresql' else 'OR IGNORE'
+    """PostgreSQL INSERT IGNORE syntax"""
+    return 'ON CONFLICT DO NOTHING'
 
 def init_db():
     conn = get_db_connection()
@@ -238,10 +237,8 @@ def init_db():
         ('inspector6', 'Insp678!secure', 'inspector'),
         ('admin', 'Admin901!secure', 'admin')
     ]
-    if get_db_type() == 'postgresql':
-        c.executemany(f"INSERT INTO users (username, password, role) VALUES (%s, %s, %s) ON CONFLICT (username) DO NOTHING", users)
-    else:
-        c.executemany("INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)", users)
+    # PostgreSQL only
+    c.executemany("INSERT INTO users (username, password, role) VALUES (%s, %s, %s) ON CONFLICT (username) DO NOTHING", users)
 
     # Login history table (required by login route)
     c.execute(f'''CREATE TABLE IF NOT EXISTS login_history
@@ -371,11 +368,9 @@ def init_db():
         ('Meat Processing Inspection', 'Meat processing plant and slaughter place inspection', 'Meat Processing')
     ]
 
+    # PostgreSQL only
     for template in existing_templates:
-        if get_db_type() == 'postgresql':
-            c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (%s, %s, %s) ON CONFLICT (name) DO NOTHING', template)
-        else:
-            c.execute('INSERT OR IGNORE INTO form_templates (name, description, form_type) VALUES (?, ?, ?)', template)
+        c.execute('INSERT INTO form_templates (name, description, form_type) VALUES (%s, %s, %s) ON CONFLICT (name) DO NOTHING', template)
 
     # Final commit for all schema changes
     safe_commit()
