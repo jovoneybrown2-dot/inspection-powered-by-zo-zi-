@@ -72,6 +72,33 @@ def migrate_postgres():
 
         migrations_run += 1
 
+        # Migration 2: Make session_id column nullable (it's not in current schema)
+        print("\n📋 Migration 2: Make session_id nullable in user_sessions")
+        try:
+            # Check if session_id exists and is NOT NULL
+            c.execute("""
+                SELECT column_name, is_nullable
+                FROM information_schema.columns
+                WHERE table_name = 'user_sessions' AND column_name = 'session_id'
+            """)
+            session_id_col = c.fetchone()
+
+            if session_id_col:
+                if session_id_col[1] == 'NO':  # is_nullable = NO
+                    c.execute("ALTER TABLE user_sessions ALTER COLUMN session_id DROP NOT NULL")
+                    conn.commit()
+                    print("   ✅ session_id is now nullable")
+                else:
+                    print("   ✅ session_id is already nullable")
+                migrations_run += 1
+            else:
+                print("   ℹ️  session_id column doesn't exist (expected)")
+                migrations_run += 1
+        except Exception as e:
+            print(f"   ⚠️  Migration 2 warning: {e}")
+            conn.rollback()
+            errors += 1
+
         # Add more migrations here as needed
         # Migration 2: Example
         # print("\n📋 Migration 2: Description")
