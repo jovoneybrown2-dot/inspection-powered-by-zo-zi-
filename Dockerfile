@@ -54,9 +54,11 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 # CMD ["python", "app.py"]
 
 # For production: Gunicorn
+# Using 1 worker for now to fix session issues (sessions don't persist across workers)
+# TODO: Implement Redis or PostgreSQL session storage for multi-worker support
 CMD gunicorn \
     --bind 0.0.0.0:${PORT} \
-    --workers 4 \
+    --workers 1 \
     --timeout 120 \
     --access-logfile - \
     --error-logfile - \
