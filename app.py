@@ -12930,8 +12930,27 @@ def init_app_migrations_async():
 
         try:
             print("🔄 Running app-level migrations...")
-            init_db()
-            init_form_management_db()
+
+            # CRITICAL: Initialize database tables first
+            try:
+                print("📋 Initializing core database tables...")
+                init_db()
+                print("✅ Core database tables initialized")
+            except Exception as e:
+                print(f"❌ CRITICAL ERROR initializing core tables: {e}")
+                import traceback
+                traceback.print_exc()
+                raise  # Re-raise to prevent app from starting with incomplete DB
+
+            try:
+                print("📋 Initializing form management tables...")
+                init_form_management_db()
+                print("✅ Form management tables initialized")
+            except Exception as e:
+                print(f"❌ CRITICAL ERROR initializing form tables: {e}")
+                import traceback
+                traceback.print_exc()
+                raise  # Re-raise to prevent app from starting with incomplete DB
 
             # Run PostgreSQL migrations first (adds missing columns to existing tables)
             if get_db_type() == 'postgresql':
