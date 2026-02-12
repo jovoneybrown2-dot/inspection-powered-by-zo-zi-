@@ -12988,6 +12988,42 @@ def init_app_migrations_async():
 init_app_migrations_async()
 
 
+@app.route('/force_init_tables')
+def force_init_tables():
+    """EMERGENCY: Manually initialize all database tables"""
+    try:
+        from database import init_db
+        from form_management_system import init_form_management_db
+
+        init_db()
+        init_form_management_db()
+
+        # Verify tables exist
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("""
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
+            ORDER BY table_name
+        """)
+        tables = [row[0] for row in c.fetchall()]
+        release_db_connection(conn)
+
+        return f"""
+        <h1>✅ Database Initialization Complete</h1>
+        <p>Created {len(tables)} tables:</p>
+        <ul>{''.join([f'<li>{t}</li>' for t in tables])}</ul>
+        <p><a href="/admin">Go to Admin Dashboard</a></p>
+        """
+    except Exception as e:
+        import traceback
+        return f"""
+        <h1>❌ Error</h1>
+        <pre>{str(e)}\n\n{traceback.format_exc()}</pre>
+        """, 500
+
+
 if __name__ == '__main__':
     # AUTO-FIX: Run database migrations on startup
     print("\n🔄 Running database migrations...")
