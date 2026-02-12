@@ -167,9 +167,11 @@ def init_db():
     # Migration: Add staff_compliment column if it doesn't exist
     try:
         c.execute("ALTER TABLE meat_processing_inspections ADD COLUMN staff_compliment INTEGER")
+        conn.commit()
         print("✓ Added staff_compliment column to meat_processing_inspections table")
-    except Exception:
-        # Column already exists (catches both SQLite and PostgreSQL errors)
+    except Exception as e:
+        # Column already exists or table doesn't exist yet - rollback and continue
+        conn.rollback()
         pass
 
     # Meat processing checklist scores table
@@ -213,17 +215,21 @@ def init_db():
     # Migration: Add parish column if it doesn't exist
     try:
         c.execute("ALTER TABLE users ADD COLUMN parish TEXT")
+        conn.commit()
         print("✓ Added parish column to users table")
     except Exception:  # Catches both SQLite and PostgreSQL errors
         # Column already exists
+        conn.rollback()
         pass
 
     # Migration: Add first_login column if it doesn't exist
     try:
         c.execute("ALTER TABLE users ADD COLUMN first_login INTEGER DEFAULT 1")
+        conn.commit()
         print("✓ Added first_login column to users table")
     except Exception as e:  # Catches both SQLite and PostgreSQL errors
         # Column already exists or other error
+        conn.rollback()
         if "duplicate column" not in str(e).lower() and "already exists" not in str(e).lower():
             print(f"⚠️  Warning: Could not add first_login column: {e}")
 
@@ -273,11 +279,18 @@ def init_db():
     # Add is_read column if it doesn't exist
     try:
         c.execute("ALTER TABLE messages ADD COLUMN is_read INTEGER DEFAULT 0")
+        conn.commit()
     except Exception:  # Catches both SQLite and PostgreSQL errors
+        conn.rollback()
         pass  # Column already exists
 
     # Set existing messages as read
-    c.execute("UPDATE messages SET is_read = 1 WHERE is_read IS NULL")
+    try:
+        c.execute("UPDATE messages SET is_read = 1 WHERE is_read IS NULL")
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        pass
 
     # User sessions table for tracking active logins
     safe_execute(f'''CREATE TABLE IF NOT EXISTS user_sessions
@@ -323,9 +336,11 @@ def init_db():
     # Migration: Add item_id column to form_items if it doesn't exist
     try:
         c.execute("ALTER TABLE form_items ADD COLUMN item_id TEXT")
+        conn.commit()
         print("✓ Added item_id column to form_items table")
     except Exception:
         # Column already exists (catches both SQLite and PostgreSQL errors)
+        conn.rollback()
         pass
 
     # Form categories table
